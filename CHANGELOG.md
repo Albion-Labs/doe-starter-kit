@@ -7,6 +7,17 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.1.0] — 2026-02-28
+
+### Added
+- **DOE Kit awareness** — `/stand-up`, `/crack-on`, `/sitrep`, and `/wrap` now check `~/doe-starter-kit` if it exists
+- `/stand-up` and `/crack-on` show kit version + pending change count at session start
+- `/sitrep` shows `DOE KIT` row with version and sync status
+- `/wrap` nudges `/sync-kit` when DOE files have changed since last sync
+- All four commands recommend `/sync-kit` when pending changes are detected
+
+---
+
 ## [v1.0.0] — 2026-02-28
 
 Initial release. 40 files across 8 directories.

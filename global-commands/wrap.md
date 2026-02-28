@@ -6,6 +6,7 @@ Before ending this session, complete all steps in order.
 2. **Update tasks/todo.md** — Make sure all completed steps have timestamps. Move any completed features to Done if needed.
 3. **Check for learnings** — If anything failed and was fixed, or a useful pattern was discovered, log it to learnings.md or ~/.claude/CLAUDE.md.
 4. **Commit and push** — Make sure all work is committed. No uncommitted changes should remain.
+5. **DOE Kit sync check** — If `~/doe-starter-kit` exists, quick-diff key syncable files (CLAUDE.md, ~/.claude/commands/*.md, .githooks/*, .claude/hooks/*.py) against the starter kit. If any files have changed since the last sync (especially if new universal learnings were added to `~/.claude/CLAUDE.md` this session), add a nudge line at the end of the housekeeping output: `💡 [N] DOE files changed since last sync — consider running /sync-kit`. If everything is synced, skip silently.
 
 ## Step 2: Gather Session Metrics
 
