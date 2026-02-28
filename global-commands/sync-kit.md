@@ -2,16 +2,21 @@ First, check if ~/doe-starter-kit is accessible. If not, run: /add-dir ~/doe-sta
 
 Then read directives/starter-kit-sync.md and follow it precisely. The directive covers:
 
-1. Diff all syncable files between this project and ~/doe-starter-kit. If nothing has changed, say "Starter kit is up to date — nothing to sync" and stop.
-2. For files that differ, identify which changes are universal DOE improvements vs project-specific content
-3. For each changed file, strip ALL project-specific content (names, paths, data, examples) and replace with generic equivalents
-4. Show me the diff for each file before applying — wait for my approval
-5. Copy approved files to ~/doe-starter-kit/
-6. Verify: grep for project-specific references — must return zero results
-7. Commit to the starter kit repo with message: "Sync from [project name]: [summary of what changed]"
-8. Push to GitHub
+1. Pull latest from GitHub first — another project may have synced since your last pull
+2. Diff all syncable files between this project and ~/doe-starter-kit. If nothing has changed, say "Starter kit is up to date — nothing to sync" and stop.
+3. Three-way comparison: show what the starter kit has, what this project has, and the diff. Flag any starter kit content that this project doesn't have (it came from another project — preserve it).
+4. For files that differ, identify which changes are universal DOE improvements vs project-specific content
+5. Strip ALL project-specific content (names, paths, data, examples) and replace with generic equivalents
+6. Create a safety backup (git stash) before writing anything
+7. Apply changes surgically — merge improvements in, never replace whole files
+8. Show me the exact edits before applying — wait for my approval
+9. Verify: grep for project-specific references — must return zero results
+10. Commit to the starter kit repo with message: "Sync from [project name]: [summary of what changed]"
+11. Push to GitHub
 
 Rules:
+- NEVER replace a file wholesale. Merge additively — add new content, update changed content, preserve existing starter kit content.
+- If the starter kit has something this project doesn't, keep it. It came from another project.
 - Only sync universal DOE improvements. Never sync project-specific tasks, data, plans, or domain content.
 - If unsure whether something is universal or project-specific, ask me.
 - Show diffs before writing. Don't commit without my sign-off.

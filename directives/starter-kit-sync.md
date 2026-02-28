@@ -16,7 +16,14 @@ Keep the universal DOE Claude Code Starter Kit repository in sync with improveme
 /add-dir ~/doe-starter-kit
 ```
 
-### Step 2: Check if anything changed
+### Step 2: Pull latest from GitHub
+Before comparing anything, make sure the local starter kit is up to date. Another project may have synced improvements since you last pulled.
+```bash
+cd ~/doe-starter-kit && git pull
+```
+If there are local uncommitted changes, stop and ask the user how to handle them before proceeding.
+
+### Step 3: Check if anything changed
 Compare files that exist in both the current project and the starter kit. If all syncable files are identical, say "Starter kit is up to date — nothing to sync" and stop.
 
 Files to compare:
@@ -30,7 +37,18 @@ Files to compare:
 - SYSTEM-MAP.md (structure documentation)
 - .claude/claude-chat-sync-prompt.md
 
-### Step 3: Strip project-specific content
+### Step 4: Three-way comparison
+For each file that differs, show THREE things:
+1. **What the starter kit currently has** (this may include improvements from other projects)
+2. **What this project has** (may include project-specific customizations)
+3. **The diff between them**
+
+This prevents silently overwriting improvements synced from other projects. If the starter kit has content that this project doesn't, flag it explicitly:
+> "The starter kit has [X] that this project doesn't — this was likely synced from another project. I'll preserve it."
+
+IMPORTANT: Never replace a file wholesale. Merge improvements additively — add new rules, update changed rules, but keep existing starter kit content that isn't present in the current project.
+
+### Step 5: Strip project-specific content
 Before copying anything to the starter kit, remove ALL project-specific references:
 - Project names (e.g. "Monty", "Broker Platform")
 - Project-specific file paths (e.g. monty-app-v0.12.3.html)
@@ -44,12 +62,21 @@ Replace with generic equivalents:
 - Specific HTML filenames → "your-app.html"
 - Project-specific examples → generic examples
 
-### Step 4: Apply changes
-Copy stripped files to the starter kit directory. For files that exist in both:
-- Diff first, show what's changing
-- Preserve any starter-kit-only content (e.g. setup instructions, template comments)
+### Step 6: Create safety backup
+Before writing any changes, create a backup branch so changes can be rolled back:
+```bash
+cd ~/doe-starter-kit
+git stash push -m "Pre-sync backup from [project name] $(date +%Y-%m-%d_%H:%M)"
+```
+If there's nothing to stash (working tree clean), that's fine — git log is the safety net.
 
-### Step 5: Verify
+### Step 7: Apply changes
+Merge stripped improvements into the starter kit directory. For files that exist in both:
+- Apply changes surgically (add/update specific sections, don't replace whole files)
+- Preserve any starter-kit-only content (e.g. setup instructions, template comments, improvements from other projects)
+- Show the user the exact edits being made, not just a summary
+
+### Step 8: Verify
 ```bash
 # Zero project-specific references
 grep -ri "monty\|broker\|pleasantly" ~/doe-starter-kit/ --include="*.md" --include="*.py" --include="*.json"
@@ -64,7 +91,7 @@ grep 'yourproject' ~/doe-starter-kit/execution/audit_claims.py
 grep -ri "monty\|broker" ~/.claude/commands/
 ```
 
-### Step 6: Commit to starter kit
+### Step 9: Commit to starter kit
 ```bash
 cd ~/doe-starter-kit
 git add -A
@@ -72,6 +99,11 @@ git diff --staged --stat
 # Show diff, wait for sign-off
 git commit -m "Sync from [project]: [what changed]"
 git push
+```
+
+If the stash was used in Step 6, drop it after successful push:
+```bash
+git stash drop
 ```
 
 ## What NOT to sync
@@ -89,3 +121,5 @@ git push
 - If a new trigger was added to CLAUDE.md, check if it references project-specific directives — if so, genericize the directive path
 - If a new command references project-specific files, either genericize it or don't sync it
 - If audit_claims.py gained new universal checks, sync those but leave the extension point comment intact
+- If the starter kit has content this project doesn't have, ALWAYS preserve it — it came from another project's sync
+- If git pull in Step 2 reveals conflicts, stop and show the user — do not auto-resolve
