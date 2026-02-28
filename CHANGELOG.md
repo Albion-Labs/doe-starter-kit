@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.1.1] — 2026-02-28
+
+### Added
+- `/wrap` footer now shows DOE Kit version and sync status as the last line before closing
+
+---
+
 ## [v1.1.0] — 2026-02-28
 
 ### Added

@@ -414,8 +414,11 @@ List commits in chronological order (oldest first, newest last).
 ══════════════════════════════════════════════
   STATE.md ✅ | todo.md ✅ | stats.json ✅ | Committed ✅
   Session [N] | Streak: [X] days | Lifetime: [Y] commits
+  DOE Kit: vX.Y.Z · [synced ✓ / N pending — /sync-kit]
 ══════════════════════════════════════════════
 ```
+
+The DOE Kit line uses the same check as step 5 (housekeeping). If `~/doe-starter-kit` doesn't exist, omit the line. Show `synced ✓` if all syncable files match, or `N pending — /sync-kit` if any differ.
 
 ## Important Rules
 
