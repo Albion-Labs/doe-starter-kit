@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "lifetime": {
+    "totalSessions": 0,
+    "totalCommits": 0,
+    "totalLinesAdded": 0,
+    "totalLinesRemoved": 0,
+    "totalFilesTouched": 0,
+    "totalStepsCompleted": 0,
+    "totalLearningsLogged": 0,
+    "totalBadgesEarned": 0,
+    "firstSessionDate": null
+  },
+  "streak": {
+    "current": 0,
+    "best": 0,
+    "lastSessionDate": null
+  },
+  "highScores": {
+    "bestSessionScore": 0,
+    "bestSessionDate": null,
+    "bestSessionTitle": null,
+    "bestRawScore": 0,
+    "bestMultiplier": 1.0
+  },
+  "badges": {
+    "allTimeEarned": {}
+  },
+  "recentSessions": []
+}

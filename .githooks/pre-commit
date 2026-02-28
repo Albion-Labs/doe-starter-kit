@@ -1,0 +1,18 @@
+#!/bin/sh
+# Run fast claim audit checks before committing.
+# Runs only checks marked fast=True — typically <1 second.
+# To skip (emergency only): git commit --no-verify
+
+python3 execution/audit_claims.py --hook > /dev/null 2>&1
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "═══ Pre-commit audit found issues ═══"
+    echo ""
+    python3 execution/audit_claims.py --hook 2>&1 | grep -E "FAIL|WARN"
+    echo ""
+    echo "Run 'python3 execution/audit_claims.py' for full details."
+    echo "Fix issues or use --no-verify to skip."
+    exit 1
+fi

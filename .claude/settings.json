@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "write|create|edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/protect_directives.py",
+            "description": "Block unilateral writes to directives/"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/block_secrets_in_code.py",
+            "description": "Block secrets outside .env"
+          }
+        ]
+      },
+      {
+        "matcher": "bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/block_dangerous_commands.py",
+            "description": "Block destructive commands"
+          }
+        ]
+      }
+    ]
+  }
+}

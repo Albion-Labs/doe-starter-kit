@@ -1,0 +1,1 @@
+Read the current codebase state — recent commits, open tasks, file structure, any messy bits. Then roast it. Be genuinely funny, specific to what you actually see (not generic jokes), and brutally honest. Reference real file names, real code patterns, real decisions. Think comedy roast, not code review. Keep it to a few paragraphs max — hit hard, get out.
