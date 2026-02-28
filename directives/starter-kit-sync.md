@@ -91,14 +91,35 @@ grep 'yourproject' ~/doe-starter-kit/execution/audit_claims.py
 grep -ri "monty\|broker" ~/.claude/commands/
 ```
 
-### Step 9: Commit to starter kit
+### Step 9: Update CHANGELOG.md and version
+Before committing, update `CHANGELOG.md`:
+1. Read the current version from the latest `## [vX.Y.Z]` heading in CHANGELOG.md
+2. Determine the new version:
+   - **Patch** (v1.0.1): bug fixes, wording improvements, small tweaks
+   - **Minor** (v1.1.0): new commands, new directives, new hooks, new features
+   - **Major** (v2.0.0): breaking changes to CLAUDE.md rules or directory structure
+3. Add a new `## [vX.Y.Z] — YYYY-MM-DD` section at the top (below the header) with subsections:
+   - `### Added` — new files, commands, features
+   - `### Changed` — modified behaviour, updated wording
+   - `### Fixed` — bug fixes, compatibility fixes
+   - `### Removed` — deleted files or features
+   Only include subsections that have entries.
+4. Show the user the changelog entry for approval.
+
+### Step 10: Commit, tag, and push
 ```bash
 cd ~/doe-starter-kit
 git add -A
 git diff --staged --stat
 # Show diff, wait for sign-off
-git commit -m "Sync from [project]: [what changed]"
-git push
+git commit -m "v[X.Y.Z]: Sync from [project] — [what changed]"
+git tag v[X.Y.Z]
+git push && git push --tags
+```
+
+Then create a GitHub release:
+```bash
+gh release create v[X.Y.Z] --title "v[X.Y.Z] — [short description]" --notes "[changelog entry content]"
 ```
 
 If the stash was used in Step 6, drop it after successful push:

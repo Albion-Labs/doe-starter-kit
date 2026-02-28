@@ -45,7 +45,7 @@ When you improve the DOE system during project work (new rules, better directive
 # "Sync DOE improvements to the starter kit — read directives/starter-kit-sync.md first"
 ```
 
-The sync directive handles stripping project-specific content and verifying the result.
+The sync directive handles stripping project-specific content, verifying the result, updating the changelog, bumping the version, and creating a GitHub release.
 
 ## Customizing for Your Project
 
@@ -57,6 +57,10 @@ See **CUSTOMIZATION.md** for the full guide. Short version:
 4. Clear task/session content, keep structure
 5. Add project-specific audit checks to `audit_claims.py`
 
+## Versioning
+
+The starter kit uses semantic versioning with GitHub releases. Every `/sync-kit` run that pushes changes will bump the version, update CHANGELOG.md, tag the commit, and create a release. See CHANGELOG.md for the full history.
+
 ## File Count
 
-39 files across 8 directories. See SYSTEM-MAP.md for the complete map.
+41 files across 8 directories. See SYSTEM-MAP.md for the complete map.

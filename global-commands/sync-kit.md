@@ -11,8 +11,9 @@ Then read directives/starter-kit-sync.md and follow it precisely. The directive 
 7. Apply changes surgically — merge improvements in, never replace whole files
 8. Show me the exact edits before applying — wait for my approval
 9. Verify: grep for project-specific references — must return zero results
-10. Commit to the starter kit repo with message: "Sync from [project name]: [summary of what changed]"
-11. Push to GitHub
+10. Update CHANGELOG.md with what changed, bump the version (patch/minor/major)
+11. Commit to the starter kit repo with message: "v[X.Y.Z]: Sync from [project] — [summary]"
+12. Tag the version, push, push tags, create GitHub release
 
 Rules:
 - NEVER replace a file wholesale. Merge additively — add new content, update changed content, preserve existing starter kit content.
@@ -21,3 +22,4 @@ Rules:
 - If unsure whether something is universal or project-specific, ask me.
 - Show diffs before writing. Don't commit without my sign-off.
 - If directives/starter-kit-sync.md doesn't exist, tell me — the starter kit may not be set up yet.
+- Version bumps: patch for fixes/tweaks, minor for new commands/directives/features, major for breaking CLAUDE.md or structure changes.
