@@ -31,6 +31,7 @@ IMPORTANT: Never do execution inline when a script exists. Check `execution/` fi
 - **YOU MUST NOT store secrets outside `.env`.** No API keys in code, comments, or logs.
 - Deliverables go to cloud services (Google Sheets, Slides, etc.) where I can access them directly.
 - Clean up `.tmp/` after tasks complete. Intermediate files are disposable.
+- **YOU MUST NOT edit `~/doe-starter-kit` directly.** All starter kit changes go through `/sync-doe` which handles versioning, tagging, and GitHub releases. Never commit to the starter kit repo outside this procedure.
 - **YOU MUST NOT force-push, revert commits, or delete branches without explicit permission.** If something needs rolling back, show me what you want to revert and why first.
 - **When a hook blocks an action or flags a missing update, resolve it immediately before continuing.** Do not acknowledge and move on — treat hook feedback as a blocker, not a notification. Complete the flagged action, then confirm to the user in this format:
   ```
