@@ -23,3 +23,56 @@ Rules:
 - Show diffs before writing. Don't commit without my sign-off.
 - If directives/starter-kit-sync.md doesn't exist, tell me — the starter kit may not be set up yet.
 - Version bumps: patch for fixes/tweaks, minor for new commands/directives/features, major for breaking CLAUDE.md or structure changes.
+
+## Result Summary (REQUIRED)
+
+After completing all steps — or when stopping early because nothing changed — ALWAYS end the sync output with this bordered result box. This is the last thing printed, no exceptions.
+
+Pick the matching status:
+
+**Nothing to sync:**
+```
+┌──────────────────────────────────────────────────────┐
+│  🔄 SYNC RESULT                                     │
+├──────────────────────────────────────────────────────┤
+│  ⏭️  NO CHANGES                                      │
+│  [1-2 line explanation — e.g. "All syncable files    │
+│  are identical between project and starter kit."]    │
+│  Kit: vX.Y.Z (unchanged)                            │
+└──────────────────────────────────────────────────────┘
+```
+
+**Changes approved and pushed:**
+```
+┌──────────────────────────────────────────────────────┐
+│  🔄 SYNC RESULT                                     │
+├──────────────────────────────────────────────────────┤
+│  ✅ SYNCED                                           │
+│  [1-2 line summary of what was synced]               │
+│  Kit: vX.Y.Z → vX.Y.Z                               │
+└──────────────────────────────────────────────────────┘
+```
+
+**User declined proposed changes:**
+```
+┌──────────────────────────────────────────────────────┐
+│  🔄 SYNC RESULT                                     │
+├──────────────────────────────────────────────────────┤
+│  ❌ REJECTED                                         │
+│  [What was proposed and why it was declined]         │
+│  Kit: vX.Y.Z (unchanged)                            │
+└──────────────────────────────────────────────────────┘
+```
+
+**Blocked by an issue:**
+```
+┌──────────────────────────────────────────────────────┐
+│  🔄 SYNC RESULT                                     │
+├──────────────────────────────────────────────────────┤
+│  ⚠️  BLOCKED                                         │
+│  [What went wrong — e.g. conflicts, missing dir]    │
+│  Kit: vX.Y.Z (unchanged)                            │
+└──────────────────────────────────────────────────────┘
+```
+
+Adapt box width to fit the longest content line. Pad all lines so the right border aligns.
