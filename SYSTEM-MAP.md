@@ -93,6 +93,7 @@ All slash commands install to `~/.claude/commands/` so they work across every DO
 | pitch.md | `~/.claude/commands/` | Type `/pitch` — generate 3-5 product improvement ideas based on current state |
 | audit.md | `~/.claude/commands/` | Type `/audit` — full claim audit with explanations |
 | quick-audit.md | `~/.claude/commands/` | Type `/quick-audit` — fast checks only (<1 second) |
+| vitals.md | `~/.claude/commands/` | Type `/vitals` — workspace health check (git, audit, DOE sync, STATE alignment, temp files) |
 | stand-up.md | `~/.claude/commands/` | Type `/stand-up` — start session clock, read state, present plan, wait for sign-off |
 | crack-on.md | `~/.claude/commands/` | Type `/crack-on` — start session clock, pick up next step, commit, push, stop |
 | roast.md | `~/.claude/commands/` | Type `/roast` — comedy roast of the codebase |
@@ -167,6 +168,7 @@ SESSION END (or /wrap)
 | `/shower-thought` | One weird programming observation. Two sentences max. |
 | `/audit` | Full claim audit — all checks, detailed explanations |
 | `/quick-audit` | Fast checks only (<1 second) — front-matter, staleness, task format |
+| `/vitals` | Workspace health check — git, audit, DOE sync, STATE alignment, temp files |
 | `/sitrep` | Mid-session situation report — progress bar, commits, elapsed time, blockers, context usage |
 | `/sync-doe` | Sync universal DOE improvements from current project to the starter kit repo |
 
@@ -221,6 +223,7 @@ MACHINE (lives on your computer, applies to all projects)
     ├── shower-thought.md
     ├── audit.md
     ├── quick-audit.md
+    ├── vitals.md
     ├── sitrep.md
     └── sync-doe.md
 ```

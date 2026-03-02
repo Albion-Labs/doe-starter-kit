@@ -2,7 +2,7 @@ Before showing the reference below, run a quick health check:
 
 1. **Version:** Read `~/.claude/.doe-kit-version`. If it exists, show the version and install date. If not, show "DOE Kit: not installed — run `./setup.sh` from the starter kit".
 
-2. **Installation check:** List all `.md` files in `~/.claude/commands/` and compare against the 12 expected commands below. Report installed count (e.g. "12/12 commands installed" or "10/12 commands installed — missing: /audit, /quick-audit").
+2. **Installation check:** List all `.md` files in `~/.claude/commands/` and compare against the 13 expected commands below. Report installed count (e.g. "13/13 commands installed" or "11/13 commands installed — missing: /audit, /quick-audit").
 
 3. **Update check:** Run `gh release view --repo iPolyphian/doe-starter-kit --json tagName -q .tagName` to get the latest release version. Compare with the installed version from step 1. If newer, show: "Update available: vX.Y.Z → run `cd ~/doe-starter-kit && git pull && ./setup.sh`". If current, show "✓ up to date". If the command fails (offline, no gh CLI), skip silently and just show "update check: skipped (offline or gh CLI not available)".
 
@@ -10,7 +10,7 @@ Format the health check as a compact status block:
 
 ```
 DOE Kit v1.3.0 (installed 02/03/26) · ✓ up to date
-12/12 commands installed
+13/13 commands installed
 ```
 
 Or if issues are found:
@@ -27,7 +27,7 @@ Then show the full reference below.
 
 # Slash Commands
 
-Quick reference for all 12 `/commands`. These are global — install once with `./setup.sh`, available in every project.
+Quick reference for all 13 `/commands`. These are global — install once with `./setup.sh`, available in every project.
 
 ---
 
@@ -56,6 +56,9 @@ Full claim audit — checks governed docs, task format, roadmap consistency, orp
 
 ### `/quick-audit`
 Fast checks only (<1 second) — front-matter, staleness, task format, version match. Says "All clear" if clean. **Use at:** quick pre-commit sanity check.
+
+### `/vitals`
+Workspace health check — git status, quick audit, DOE Kit sync, STATE.md alignment, stale temp files. Shows a bordered summary with ✓/⚠️ per check. Reports only, doesn't fix. **Use at:** session start (after stand-up), before wrapping, or any time you want a quick sanity check.
 
 ---
 

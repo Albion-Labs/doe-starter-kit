@@ -6,7 +6,8 @@ Before ending this session, complete all steps in order.
 2. **Update tasks/todo.md** — Make sure all completed steps have timestamps. Move any completed features to Done if needed.
 3. **Check for learnings** — If anything failed and was fixed, or a useful pattern was discovered, log it to learnings.md or ~/.claude/CLAUDE.md.
 4. **Commit and push** — Make sure all work is committed. No uncommitted changes should remain.
-5. **DOE Kit sync check** — If `~/doe-starter-kit` exists, quick-diff key syncable files (CLAUDE.md, ~/.claude/commands/*.md, .githooks/*, .claude/hooks/*.py) against the starter kit. If any files have changed since the last sync (especially if new universal learnings were added to `~/.claude/CLAUDE.md` this session), add a nudge line at the end of the housekeeping output: `💡 [N] DOE files changed since last sync — consider running /sync-doe`. If everything is synced, skip silently.
+5. **DOE Kit sync check** — If `~/doe-starter-kit` exists, quick-diff key syncable files (CLAUDE.md, ~/.claude/commands/*.md, .githooks/*, .claude/hooks/*.py) against the starter kit. If any files have changed since the last sync (especially if new universal learnings were added to `~/.claude/CLAUDE.md` this session), record the count for the System Checks section. If everything is synced, record as synced.
+6. **Quick audit** — Run `python3 execution/audit_claims.py --hook` (fast checks only). Record the PASS/WARN/FAIL counts for the System Checks section. If any FAIL items exist, fix them before proceeding. WARN items can be noted and left for the next session.
 
 ## Step 2: Gather Session Metrics
 
@@ -408,17 +409,43 @@ List commits in chronological order (oldest first, newest last).
   [What to do next session — pull from todo.md]
 ```
 
-### Part 12: Footer
+### Part 12: System Checks & Footer
 
+Show audit results and DOE Kit sync status in a bordered block, then the session summary line.
+
+If all clear:
+```
+  🔍 SYSTEM CHECKS
+  ┌──────────────────────────────────────────────────────────┐
+  │  Audit:   5 PASS · 0 WARN · 0 FAIL ✓                   │
+  │  DOE Kit: v1.3.0 · synced ✓                             │
+  └──────────────────────────────────────────────────────────┘
+```
+
+If issues found, expand with detail lines:
+```
+  🔍 SYSTEM CHECKS
+  ┌──────────────────────────────────────────────────────────┐
+  │  Audit:   3 PASS · 1 WARN · 1 FAIL ⚠️                   │
+  │    FAIL  HTML file is v0.15.0 but STATE.md says v0.15.1 │
+  │    WARN  learnings.md — 2 minor versions behind         │
+  │  DOE Kit: v1.3.0 · 2 files changed — /sync-doe ⚠️       │
+  └──────────────────────────────────────────────────────────┘
+```
+
+Rules:
+- Always show both Audit and DOE Kit lines inside the border.
+- If audit has only PASS results, show one line with counts + ✓.
+- If audit has WARN or FAIL, show summary line + indented detail for each non-PASS finding.
+- DOE Kit line: show `synced ✓` if all files match, or `N files changed — /sync-doe ⚠️` if any differ. If `~/doe-starter-kit` doesn't exist, show `DOE Kit: not installed` (no warning).
+
+Then the session summary (outside the border):
 ```
 ══════════════════════════════════════════════
   STATE.md ✅ | todo.md ✅ | stats.json ✅ | Committed ✅
   Session [N] | Streak: [X] days | Lifetime: [Y] commits
-  DOE Kit: vX.Y.Z · [synced ✓ / N pending — /sync-doe]
 ══════════════════════════════════════════════
 ```
-
-The DOE Kit line uses the same check as step 5 (housekeeping). If `~/doe-starter-kit` doesn't exist, omit the line. Show `synced ✓` if all syncable files match, or `N pending — /sync-doe` if any differ.
 
 ## Important Rules
 

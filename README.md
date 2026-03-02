@@ -30,7 +30,7 @@ A template repository containing everything you need to run Claude Code with gua
 - **STATE.md** — Session memory (blockers, current position)
 - **Directives** — SOPs for documentation governance, claim auditing, starter kit sync
 - **Audit system** — Automated false-positive detection with pre-commit hook
-- **12 slash commands** — session lifecycle, quality checks, utilities, and infrastructure (see below)
+- **13 slash commands** — session lifecycle, quality checks, utilities, and infrastructure (see below)
 - **Session timer** — `/stand-up` and `/crack-on` start a clock, `/sitrep` and `/wrap` report elapsed time
 - **Gamification** — Session scoring, badges, streaks, leaderboard, themed wrap-up cards
 - **Git hooks** — Pre-commit claim audit, commit message cleanup
@@ -43,12 +43,12 @@ A template repository containing everything you need to run Claude Code with gua
 
 ## Slash Commands
 
-12 commands in `global-commands/`. Install with `./setup.sh` or copy manually. Run `/commands` inside Claude Code for the full reference and installation health check.
+13 commands in `global-commands/`. Install with `./setup.sh` or copy manually. Run `/commands` inside Claude Code for the full reference and installation health check.
 
 | Category | Commands | Purpose |
 |----------|----------|---------|
 | **Session Lifecycle** | `/stand-up`, `/crack-on`, `/sitrep`, `/wrap` | Start sessions, track progress, end with gamified wrap-up |
-| **Quality** | `/audit`, `/quick-audit` | Claim auditing — full suite or fast pre-commit checks |
+| **Quality** | `/audit`, `/quick-audit`, `/vitals` | Claim auditing, workspace health checks |
 | **Utility** | `/pitch`, `/roast`, `/eli5`, `/shower-thought` | Feature ideas, code roasts, ELI5, programming observations |
 | **Infrastructure** | `/sync-doe`, `/commands` | Sync DOE improvements; installation health check |
 
@@ -83,4 +83,4 @@ The starter kit uses semantic versioning with GitHub releases. Every `/sync-doe`
 
 ## File Count
 
-41 files across 8 directories. See SYSTEM-MAP.md for the complete map.
+42 files across 8 directories. See SYSTEM-MAP.md for the complete map.

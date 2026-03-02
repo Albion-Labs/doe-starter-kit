@@ -7,6 +7,19 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.4.0] — 2026-03-02
+
+### Added
+- **`/vitals`** — new workspace health check command: git status, quick audit, DOE Kit sync, STATE.md alignment, stale temp files. Bordered output with ✓/⚠️ per check.
+
+### Changed
+- **`/wrap`** — added quick audit to Step 1 housekeeping; replaced plain footer with bordered "System Checks" section showing audit results and DOE Kit sync status together
+- **`/commands`** — updated to 13 commands, added `/vitals` under Quality category
+- **README** — command count 12 → 13, added `/vitals` to Quality row in table
+- **SYSTEM-MAP** — added vitals.md to file table, command reference, and directory tree
+
+---
+
 ## [v1.3.0] — 2026-03-02
 
 ### Added
