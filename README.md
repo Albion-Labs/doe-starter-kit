@@ -9,11 +9,18 @@ A template repository containing everything you need to run Claude Code with gua
 ## Quick Start
 
 1. Clone this repo or copy files into your project
-2. Copy `global-commands/*.md` to `~/.claude/commands/` (one-time machine setup)
-3. Copy `universal-claude-md-template.md` to `~/.claude/CLAUDE.md` (if you don't have one)
-4. Run `git config core.hooksPath .githooks` to activate hooks
-5. Start Claude Code — it reads CLAUDE.md automatically
-6. Type `/stand-up` to begin your first session
+2. Run `./setup.sh` (installs commands, activates hooks, writes version receipt)
+3. Start Claude Code and type `/stand-up`
+
+<details>
+<summary>Manual setup (if you prefer not to use the script)</summary>
+
+1. Copy `global-commands/*.md` (except README.md) to `~/.claude/commands/`
+2. Copy `universal-claude-md-template.md` to `~/.claude/CLAUDE.md` (if you don't have one)
+3. Run `git config core.hooksPath .githooks` to activate hooks
+4. Start Claude Code — it reads CLAUDE.md automatically
+
+</details>
 
 ## What's Included
 
@@ -23,7 +30,7 @@ A template repository containing everything you need to run Claude Code with gua
 - **STATE.md** — Session memory (blockers, current position)
 - **Directives** — SOPs for documentation governance, claim auditing, starter kit sync
 - **Audit system** — Automated false-positive detection with pre-commit hook
-- **11 slash commands** — `/stand-up`, `/crack-on`, `/wrap` (gamified), `/sitrep`, `/sync-doe`, `/pitch`, `/audit`, `/roast`, `/eli5`, `/quick-audit`, `/shower-thought`
+- **12 slash commands** — session lifecycle, quality checks, utilities, and infrastructure (see below)
 - **Session timer** — `/stand-up` and `/crack-on` start a clock, `/sitrep` and `/wrap` report elapsed time
 - **Gamification** — Session scoring, badges, streaks, leaderboard, themed wrap-up cards
 - **Git hooks** — Pre-commit claim audit, commit message cleanup
@@ -33,6 +40,19 @@ A template repository containing everything you need to run Claude Code with gua
 
 - **CUSTOMIZATION.md** — What to keep, what to customize, what to clear for your project
 - **SYSTEM-MAP.md** — Complete file-by-file documentation and relationship map
+
+## Slash Commands
+
+12 commands in `global-commands/`. Install with `./setup.sh` or copy manually. Run `/commands` inside Claude Code for the full reference and installation health check.
+
+| Category | Commands | Purpose |
+|----------|----------|---------|
+| **Session Lifecycle** | `/stand-up`, `/crack-on`, `/sitrep`, `/wrap` | Start sessions, track progress, end with gamified wrap-up |
+| **Quality** | `/audit`, `/quick-audit` | Claim auditing — full suite or fast pre-commit checks |
+| **Utility** | `/pitch`, `/roast`, `/eli5`, `/shower-thought` | Feature ideas, code roasts, ELI5, programming observations |
+| **Infrastructure** | `/sync-doe`, `/commands` | Sync DOE improvements; installation health check |
+
+**Smart filter:** The lifecycle commands check for DOE Kit sync opportunities. When comparing CLAUDE.md, they distinguish universal changes (Operating Rules, Guardrails, etc.) from project-specific additions (Directory Structure, triggers) — so you only get nudged when there's something genuinely worth syncing.
 
 ## Syncing Improvements From Projects
 

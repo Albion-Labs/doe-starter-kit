@@ -1,0 +1,96 @@
+Before showing the reference below, run a quick health check:
+
+1. **Version:** Read `~/.claude/.doe-kit-version`. If it exists, show the version and install date. If not, show "DOE Kit: not installed — run `./setup.sh` from the starter kit".
+
+2. **Installation check:** List all `.md` files in `~/.claude/commands/` and compare against the 12 expected commands below. Report installed count (e.g. "12/12 commands installed" or "10/12 commands installed — missing: /audit, /quick-audit").
+
+3. **Update check:** Run `gh release view --repo iPolyphian/doe-starter-kit --json tagName -q .tagName` to get the latest release version. Compare with the installed version from step 1. If newer, show: "Update available: vX.Y.Z → run `cd ~/doe-starter-kit && git pull && ./setup.sh`". If current, show "✓ up to date". If the command fails (offline, no gh CLI), skip silently and just show "update check: skipped (offline or gh CLI not available)".
+
+Format the health check as a compact status block:
+
+```
+DOE Kit v1.3.0 (installed 02/03/26) · ✓ up to date
+12/12 commands installed
+```
+
+Or if issues are found:
+
+```
+DOE Kit v1.3.0 (installed 02/03/26) · update available: v1.4.0
+10/12 commands installed — missing: /audit, /quick-audit
+→ Run: cd ~/doe-starter-kit && git pull && ./setup.sh
+```
+
+Then show the full reference below.
+
+---
+
+# Slash Commands
+
+Quick reference for all 12 `/commands`. These are global — install once with `./setup.sh`, available in every project.
+
+---
+
+## Session Lifecycle
+
+Commands that bookend your work sessions. `/stand-up` and `/crack-on` start the session timer (writes to `.tmp/.session-start`), which `/sitrep` and `/wrap` read for elapsed time.
+
+### `/stand-up`
+Reads project state (CLAUDE.md, STATE.md, todo.md, learnings.md). Shows what's in progress and what's next. Presents a plan and waits for sign-off before doing anything. **Use at:** session start.
+
+### `/crack-on`
+Same context read as `/stand-up`, but picks up the next incomplete step and executes it immediately. One step — commit, push, stop, report. **Use at:** mid-session, when you want to resume without planning.
+
+### `/sitrep`
+Mid-session situation report. Shows mission, progress bar, completed/active/pending steps, commits, elapsed time, context usage, blockers, and queue. Read-only — no changes made. **Use at:** any time, to check status.
+
+### `/wrap`
+End-of-session routine. Updates STATE.md, todo.md, learnings.md. Computes session stats, awards badges, prints a themed wrap-up card with score, timeline, and leaderboard. **Use at:** session end.
+
+---
+
+## Quality
+
+### `/audit`
+Full claim audit — checks governed docs, task format, roadmap consistency, orphan claims, staleness, and project-specific checks. Explains all FAIL/WARN items. **Use at:** before releases, periodic validation.
+
+### `/quick-audit`
+Fast checks only (<1 second) — front-matter, staleness, task format, version match. Says "All clear" if clean. **Use at:** quick pre-commit sanity check.
+
+---
+
+## Utility
+
+### `/pitch`
+Generates 3–5 product ideas with structured pitches (size, type, value, effort). Only adds to ROADMAP.md with explicit approval. **Use when:** you want fresh feature ideas.
+
+### `/roast`
+Reads the codebase and roasts it. Specific, brutal, funny — references real files and real decisions, not generic jokes. **Use when:** you need a laugh.
+
+### `/eli5`
+Explains the current project and active work as if to a curious 5-year-old. Dinosaurs and biscuits included. **Use when:** you need to reset perspective or simplify complexity.
+
+### `/shower-thought`
+One genuinely interesting programming observation or paradox. Two sentences max. **Use when:** you want a break.
+
+---
+
+## Infrastructure
+
+### `/sync-doe`
+Syncs universal DOE framework improvements from the current project back to the starter kit repo (`~/doe-starter-kit`). Strips project-specific content, shows diffs for approval, commits, tags, pushes, and creates a GitHub release. **Use after:** completing [INFRA] features or discovering universal improvements.
+
+### `/commands`
+This command. Shows installation health check and the full command reference. **Use when:** you want to verify your setup or check for updates.
+
+---
+
+## Smart Filter (DOE Kit Sync Checks)
+
+The four lifecycle commands (`/stand-up`, `/crack-on`, `/sitrep`, `/wrap`) check whether your project has DOE changes worth syncing to the starter kit. When comparing CLAUDE.md, they use a smart filter:
+
+**Counts as pending** — changes to universal DOE sections: Operating Rules, Guardrails, Code Hygiene, Self-Annealing, Break Glass, Architecture: DOE.
+
+**Ignored** — project-specific additions: Directory Structure entries, Progressive Disclosure triggers, project-specific comments. Rule of thumb: additions on top of the kit template are project-specific; modifications to existing template content are universal.
+
+If pending changes are detected, the commands suggest running `/sync-doe`.

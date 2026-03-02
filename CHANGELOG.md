@@ -7,6 +7,24 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.3.0] — 2026-03-02
+
+### Added
+- **`setup.sh`** — one-command installer: copies commands to `~/.claude/commands/`, copies universal CLAUDE.md template (if none exists), activates git hooks, writes version receipt to `~/.claude/.doe-kit-version`
+- **`/commands`** — new slash command replacing `/README`. Shows full command reference by category, checks installation status (missing commands), and checks GitHub for kit updates
+- **Slash Commands section in README** — category table with smart filter explanation, links to `/commands` for full reference
+- **Manual setup fallback** — collapsible details block in Quick Start for users who prefer not to use the script
+
+### Changed
+- Quick Start simplified from 6 steps to 3 (clone → `./setup.sh` → `/stand-up`)
+- `global-commands/README.md` is now a short GitHub directory readme (no longer doubles as a command)
+- Command count updated from 11 → 12 across README and command reference
+
+### Removed
+- `/README` command — replaced by `/commands`
+
+---
+
 ## [v1.2.1] — 2026-03-01
 
 ### Changed
