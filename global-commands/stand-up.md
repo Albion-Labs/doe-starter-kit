@@ -53,7 +53,6 @@ Card rules:
   - **Commits/session trend:** Calculate average commits across recent sessions. If trending down or consistently low (< 2), suggest aiming higher.
   - **Steps completed trend:** Calculate average steps completed per session. If consistently 0, flag it.
   - **Time-of-day patterns:** Check session dates/times. If most sessions are very late (after midnight), note the pattern.
-  - **Score trends:** If average score is declining across recent sessions, note it.
   Show 2-3 bullets max. Keep coaching tone constructive and specific — use real numbers. If stats.json doesn't exist or has no recentSessions, omit the FOCUS section entirely.
 - BORDER: size the box to fit the longest content line. All lines padded with spaces so the right border │ aligns consistently. Same conventions as /sitrep and /vitals.
 

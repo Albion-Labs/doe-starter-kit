@@ -7,6 +7,21 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.7.0] — 2026-03-02
+
+### Changed
+- **`/wrap`** — lightweight rewrite. Removed scoring/badges/genre system. One dramatic narrative (no genre selection), added session haiku, one-stat highlight, fortune cookie footer. Leaderboard now shows commits/lines instead of scores. Vibe check determined inline instead of by script.
+- **`/roast`** — removed score trend and badge pattern analysis bullets (stats.json no longer has these fields)
+- **`/stand-up`** — removed "score trends" FOCUS bullet
+- **`/eod`** — removed SCORE line from card, simplified session list to title + duration (no scores/badges)
+- **`/commands`** — updated `/wrap` and `/roast` descriptions to reflect lightweight wrap
+
+### Removed
+- Scoring formula, badge definitions, genre selection, multiplier system, high score tracking from `/wrap`
+- `execution/wrap_stats.py` scoring logic (978 → ~150 lines, now metrics + streak only)
+
+---
+
 ## [v1.6.0] — 2026-03-02
 
 ### Added

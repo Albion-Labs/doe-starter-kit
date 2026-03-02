@@ -31,7 +31,6 @@ Show a single bordered card:
 │  EOD · DD/MM/YY                                             │
 ├────────────────────────────────────────────────────────────┤
 │  SESSIONS  N today (X wrapped, Y active)                    │
-│  SCORE     X pts (+ current if unwrapped)                   │
 │  STREAK    Day N                                            │
 │                                                             │
 │  DAY STATS                                                  │
@@ -40,9 +39,9 @@ Show a single bordered card:
 │  N plan files created · N learnings logged                  │
 │                                                             │
 │  SESSIONS                                                   │
-│  1. TITLE              score  badges        duration        │
-│  2. TITLE              score  badges        duration        │
-│  3. (active)             —                  duration        │
+│  1. TITLE                                   duration        │
+│  2. TITLE                                   duration        │
+│  3. (active)                                duration        │
 │                                                             │
 │  WHAT GOT DONE                                              │
 │  [INFRA] Summary of shipped/completed work                  │
@@ -60,10 +59,9 @@ Show a single bordered card:
 ## Card Rules
 
 - **SESSIONS:** Count from stats.json `recentSessions` for today + check for active session (`.tmp/.session-start` exists). Show "N today (X wrapped)" if no active session, or "N today (X wrapped, 1 active)" if session clock is running.
-- **SCORE:** Sum all `finalScore` values from today's wrapped sessions. If there's an active unwrapped session, note it: "X pts (+ active session unwrapped)".
 - **STREAK:** From stats.json `streak.current`. Show "Day N".
 - **DAY STATS:** Aggregate from git commands. Count commits, files touched, insertions/deletions. Count features completed and steps completed from todo.md. Count plan files from git log. Count learnings from git log.
-- **SESSIONS list:** Show each wrapped session from stats.json: title, finalScore, badge emojis (compact, no labels), sessionDuration. If there's an active session, show it last as "(active)" with duration computed from `.tmp/.session-start` to now. Newest first.
+- **SESSIONS list:** Show each wrapped session from stats.json: title, sessionDuration. If there's an active session, show it last as "(active)" with duration computed from `.tmp/.session-start` to now. Newest first.
 - **WHAT GOT DONE:** This is the key section. Read all commit messages from today. Group them by feature/task using the headings in todo.md (both ## Current and ## Done). Classify each group as [APP] or [INFRA] using the type tags from todo.md headings. Summarise each group in plain English — describe what actually happened, not raw commit messages. Order: shipped features first, then in-progress features, then housekeeping/planning. If only one type exists, skip the other.
 - **POSITION AT EOD:** From STATE.md active feature + todo.md progress (count [x] vs [ ] steps). Queue from todo.md ## Queue (show feature names + type tags). Blockers from STATE.md ## Blockers & Edge Cases ("None" if empty).
 - **DAY VIBE:** Pick the best match:
