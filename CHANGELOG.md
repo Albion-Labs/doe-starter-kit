@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.7.3] — 2026-03-03
+
+### Changed
+- **`/stand-up` (status mode)** — reordered card: PHASE GOAL now appears above PROGRESS for better readability. Added NEXT STEP line showing the first uncompleted step from todo.md, so the immediate task is always visible at a glance.
+
+---
+
 ## [v1.7.2] — 2026-03-03
 
 ### Fixed
