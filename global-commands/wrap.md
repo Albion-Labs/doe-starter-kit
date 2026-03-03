@@ -126,16 +126,18 @@ Use `result.leaderboard` (already consolidated per day, 10 entries). Mark today'
 
 ```
   📋 LAST 10 DAYS
-  ┌────────────┬────────────┬────────┬──────────────────────────────┐
-  │ 02/03 *    │  4 / +146  │  day 3 │ THE BLUEPRINT OFFENSIVE      │
-  │ 01/03      │ 18 / +1297 │  day 2 │ THE LAST CARD (+5 more)      │
-  │ 28/02      │ 59 / +2627 │  day 1 │ THE VERSION WARS (+8)        │
-  │ 27/02      │         -- │     -- │ --                           │
-  │ ...        │            │        │                              │
-  └────────────┴────────────┴────────┴──────────────────────────────┘
+  ┌────────────┬──────────────┬──────────────────────────────┐
+  │ Date       │ Commits/Lines│ Title                        │
+  ├────────────┼──────────────┼──────────────────────────────┤
+  │ 02/03 *    │   4 / +146   │ THE BLUEPRINT OFFENSIVE      │
+  │ 01/03      │  18 / +1297  │ THE LAST CARD (+5 more)      │
+  │ 28/02      │  59 / +2627  │ THE VERSION WARS (+8)        │
+  │ 27/02      │           -- │ --                           │
+  │ ...        │              │                              │
+  └────────────┴──────────────┴──────────────────────────────┘
 ```
 
-Column format: `date | commits / +lines | streak day | title`. Adapt column widths to fit content.
+Always include the header row and separator. Adapt column widths to fit content.
 
 ### Part 7: Vibe Check
 
