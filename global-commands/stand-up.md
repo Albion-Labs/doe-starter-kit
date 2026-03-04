@@ -57,7 +57,7 @@ Card rules:
   - **Steps completed trend:** Calculate average steps completed per session. If consistently 0, flag it.
   - **Time-of-day patterns:** Check session dates/times. If most sessions are very late (after midnight), note the pattern.
   Show 2-3 bullets max. Keep coaching tone constructive and specific — use real numbers. If stats.json doesn't exist or has no recentSessions, omit the FOCUS section entirely.
-- BORDER: Fixed width — always 60 `─` characters between `│` borders (62 total per line). All content lines: `│` + 2 spaces + content + trailing spaces + `│` = 62 chars. If content would exceed 56 characters, truncate with `…`. Never dynamically size — the box is always the same width.
+- BORDER: Fixed width — always 60 `─` characters between `│` borders (62 total per line). All content lines: `│` + 2 spaces + content + trailing spaces + `│` = 62 chars. If content would exceed 56 characters, truncate with `…`. Never dynamically size — the box is always the same width. **Generate boxes programmatically** — use a Python snippet with `.ljust(W)` to pad content lines to the exact inner width. Never hand-pad bordered output. Use ASCII-only inside borders (no emojis, no `·`, `✓`, `⚠️`, `—`, `…`) — use `--` for separators, commas for lists.
 
 Wait for sign-off before executing anything.
 
@@ -104,5 +104,5 @@ Card rules:
 - BLOCKERS: from STATE.md ## Blockers & Edge Cases. Show content or "None".
 - DECISIONS: scan STATE.md for any pending decisions, open questions, or items needing user input. "None" if nothing found.
 - QUEUE: first feature heading from ## Queue in todo.md. Show name + type tag, or "Empty" if nothing queued.
-- BORDER: Fixed width — always 60 `─` characters between `│` borders (62 total per line). All content lines: `│` + 2 spaces + content + trailing spaces + `│` = 62 chars. If content would exceed 56 characters, truncate with `…`. Never dynamically size — the box is always the same width.
-- This is READ-ONLY. Do not start the session clock. Do not modify any files. Do not execute anything.
+- BORDER: Fixed width — always 60 `─` characters between `│` borders (62 total per line). All content lines: `│` + 2 spaces + content + trailing spaces + `│` = 62 chars. If content would exceed 56 characters, truncate with `…`. Never dynamically size — the box is always the same width. **Generate boxes programmatically** — use a Python snippet with `.ljust(W)` to pad content lines to the exact inner width. Never hand-pad bordered output. Use ASCII-only inside borders (no emojis, no `·`, `✓`, `⚠️`, `—`, `…`) — use `--` for separators, commas for lists.
+- This is READ-ONLY. Do not start the session clock. Do not modify any files. Do not execute anything (except the box-generation snippet).
