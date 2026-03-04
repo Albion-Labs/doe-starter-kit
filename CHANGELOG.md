@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.11.4] — 2026-03-04
+
+### Changed
+- **Commands README** — updated from 15 to 22 commands, added Visual category (`/project-recap`, `/diff-review`, `/plan-review`, `/generate-visual-plan`, `/generate-web-diagram`, `/generate-slides`), added `/fact-check` to Quality, reorganised table layout
+
+---
+
 ## [v1.11.3] — 2026-03-04
 
 ### Changed
