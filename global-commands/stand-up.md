@@ -1,6 +1,6 @@
 This command has two modes. Check which mode to use **before doing anything else**:
 
-- Run `ls .tmp/.session-start-$$ 2>/dev/null && echo "SESSION_ACTIVE" || echo "NO_SESSION"`
+- Run `ls .tmp/.session-start 2>/dev/null && echo "SESSION_ACTIVE" || echo "NO_SESSION"`
 - If `NO_SESSION` → **Kick-off mode** (below)
 - If `SESSION_ACTIVE` → **Status mode** (further below)
 
@@ -8,7 +8,7 @@ This command has two modes. Check which mode to use **before doing anything else
 
 ## Kick-off mode (no active session)
 
-Start the session clock: run `mkdir -p .tmp && for f in .tmp/.session-start-*; do pid="${f##*-}"; kill -0 "$pid" 2>/dev/null || rm -f "$f"; done && date -u +%Y-%m-%dT%H:%M:%S+00:00 > .tmp/.session-start-$$`
+Start the session clock: run `mkdir -p .tmp && date -u +%Y-%m-%dT%H:%M:%S+00:00 > .tmp/.session-start`
 
 Read CLAUDE.md, tasks/todo.md, STATE.md, and learnings.md.
 

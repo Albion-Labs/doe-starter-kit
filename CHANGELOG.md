@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.11.6] — 2026-03-04
+
+### Fixed
+- **Session timer** — replaced per-PID `.session-start-$$` with single `.tmp/.session-start` file across 6 commands (`/stand-up`, `/crack-on`, `/sitrep`, `/wrap`, `/eod`, `/commands`). `$$` returned a different subshell PID per Bash tool call, making the timer unreliable. Worktrees handle multi-session isolation, so per-PID files were unnecessary.
+
+---
+
 ## [v1.11.5] — 2026-03-04
 
 ### Changed
