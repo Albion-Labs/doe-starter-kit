@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.12.2] — 2026-03-04
+
+### Added
+- **`/sync-doe` analysis box** — new required Analysis Box section showing a bordered diff summary with header (version right-aligned), context summary, numbered file list, verdict, and recommendation. Displayed before proposing changes so the user can approve or reject from a clear overview.
+
+---
+
 ## [v1.12.1] — 2026-03-04
 
 ### Added

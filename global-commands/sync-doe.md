@@ -24,6 +24,38 @@ Rules:
 - If directives/starter-kit-sync.md doesn't exist, tell me — the starter kit may not be set up yet.
 - Version bumps: patch for fixes/tweaks, minor for new commands/directives/features, major for breaking CLAUDE.md or structure changes.
 
+## Analysis Box (REQUIRED)
+
+After diffing all syncable files, present the analysis in a bordered box BEFORE proposing any changes. This is the decision-support summary the user reads to approve or reject. **Generate programmatically** — compute W from content, use `.ljust(W)` padding, Unicode box-drawing borders. Content inside borders must be ASCII-only.
+
+Structure:
+- **Header row:** "UPDATES TO DOE" left-aligned, current kit version (from `~/.claude/.doe-kit-version`) right-aligned, with `├─┤` separator below
+- **Summary:** 2-3 lines of context about what was compared and the state of the diffs
+- **Numbered list:** One entry per file that differs, with a short explanation of whether the diff is universal or project-specific
+- **VERDICT:** 1-2 lines — are there universal changes worth syncing?
+- **RECOMMENDATION:** 1-2 lines — merge, skip, or ask for clarification
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  UPDATES TO DOE                                             vX.Y.Z  │
+├──────────────────────────────────────────────────────────────────────┤
+│  [2-3 line summary of what was compared]                            │
+│                                                                     │
+│  1. [file] -- [universal/project-specific] ([detail])               │
+│  2. [file] -- [universal/project-specific] ([detail])               │
+│                                                                     │
+│  VERDICT                                                            │
+│                                                                     │
+│  [Assessment of whether changes are worth syncing]                  │
+│                                                                     │
+│  RECOMMENDATION                                                     │
+│                                                                     │
+│  [Merge / skip / ask user about specific items]                     │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+If the user approves, proceed with the sync. If not, skip to the Result Summary.
+
 ## Result Summary (REQUIRED)
 
 After completing all steps — or when stopping early because nothing changed — ALWAYS end the sync output with this bordered result box. This is the last thing printed, no exceptions.
