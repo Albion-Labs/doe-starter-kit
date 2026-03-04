@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.9.3] — 2026-03-04
+
+### Fixed
+- **`wrap_stats.py` step counting** — `count_steps_completed_today()` counted all `[x]` steps with today's date, inflating `stepsCompleted` across multiple sessions on the same day. Replaced with `count_steps_completed_since()` which parses the `HH:MM DD/MM/YY` timestamp and only counts steps completed after the session start time.
+
+---
+
 ## [v1.9.2] — 2026-03-04
 
 ### Fixed

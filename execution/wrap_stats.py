@@ -77,15 +77,30 @@ def gather_git_metrics(since: str) -> dict:
 
 # ── Todo parsing ─────────────────────────────────────────────
 
-def count_steps_completed_today(todo_path: Path) -> int:
+def count_steps_completed_since(todo_path: Path, session_start: str) -> int:
+    """Count [x] steps completed after the session start time."""
     if not todo_path.exists():
         return 0
-    today_str = datetime.now().strftime("%d/%m/%y")
+    try:
+        start_dt = datetime.fromisoformat(session_start)
+        if start_dt.tzinfo is None:
+            start_dt = start_dt.replace(tzinfo=timezone.utc)
+        start_dt = start_dt.astimezone(None)  # convert to local
+    except (ValueError, TypeError):
+        return 0
     count = 0
     for line in todo_path.read_text(encoding="utf-8").split("\n"):
         if re.match(r"^\s*(?:\d+\.\s*)?\[x\]", line, re.IGNORECASE):
-            if "completed" in line and today_str in line:
-                count += 1
+            m = re.search(r"completed\s+(\d{1,2}):(\d{2})\s+(\d{1,2})/(\d{1,2})/(\d{2})", line)
+            if m:
+                hh, mm = int(m.group(1)), int(m.group(2))
+                dd, mo, yy = int(m.group(3)), int(m.group(4)), 2000 + int(m.group(5))
+                try:
+                    completed_dt = datetime(yy, mo, dd, hh, mm).astimezone(None)
+                    if completed_dt >= start_dt:
+                        count += 1
+                except ValueError:
+                    pass
     return count
 
 
@@ -261,7 +276,7 @@ def main():
     stats_path = PROJECT_ROOT / args.stats
 
     metrics = gather_git_metrics(args.since)
-    steps = count_steps_completed_today(todo_path)
+    steps = count_steps_completed_since(todo_path, args.session_start)
     stats = load_stats(stats_path)
     streak = compute_streak(stats)
     duration = compute_session_duration(args.session_start)
