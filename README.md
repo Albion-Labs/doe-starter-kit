@@ -24,17 +24,19 @@ A template repository containing everything you need to run Claude Code with gua
 
 ## What's Included
 
-**Framework (39 files)**
+**Framework (43 files)**
 
 - **CLAUDE.md** — 9 operating rules, progressive disclosure triggers, guardrails
 - **STATE.md** — Session memory (blockers, current position)
 - **Directives** — SOPs for documentation governance, claim auditing, starter kit sync
 - **Audit system** — Automated false-positive detection with pre-commit hook
+- **Multi-agent coordination** — Wave management, task claiming, heartbeats, merge protocol for parallel Claude Code sessions (`/hq` dashboard)
 - **14 slash commands** — session lifecycle, quality checks, utilities, and infrastructure (see below)
 - **Session timer** — `/stand-up` (in kick-off mode) and `/crack-on` start a clock, `/sitrep` and `/wrap` report elapsed time
 - **Gamification** — Session scoring, badges, streaks, leaderboard, themed wrap-up cards
 - **Git hooks** — Pre-commit claim audit, commit message cleanup
 - **Guardrail hooks** — Block secrets, protect directives, prevent dangerous commands
+- **Context monitoring** — Warns at 60% context usage, stops at 80% for graceful handoff
 
 **Guides**
 
@@ -83,4 +85,4 @@ The starter kit uses semantic versioning with GitHub releases. Every `/sync-doe`
 
 ## File Count
 
-42 files across 8 directories. See SYSTEM-MAP.md for the complete map.
+46 files across 8 directories. See SYSTEM-MAP.md for the complete map.

@@ -560,6 +560,35 @@ def check_roadmap_consistency(report: AuditReport):
         ))
 
 
+@register("universal", fast=True)
+def check_active_wave(report: AuditReport):
+    """Warn if a multi-agent wave is active (results may be incomplete)."""
+    waves_dir = TMP / "waves"
+    if not waves_dir.is_dir():
+        return  # No waves directory — single-terminal mode, skip silently
+
+    for wave_file in sorted(waves_dir.glob("*.json")):
+        try:
+            data = json.loads(wave_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        if data.get("status") == "active":
+            wave_id = data.get("waveId", wave_file.stem)
+            task_count = len(data.get("tasks", []))
+            report.add(Finding(
+                Severity.WARN, "active_wave",
+                f"Wave '{wave_id}' is active ({task_count} tasks) — audit results may be incomplete until merge",
+                file=f".tmp/waves/{wave_file.name}",
+            ))
+            return
+
+    # If waves dir exists but no active wave, all clear
+    report.add(Finding(
+        Severity.PASS, "active_wave",
+        "No active wave — audit results are complete",
+    ))
+
+
 @register("universal", fast=False)
 def check_orphan_claims(report: AuditReport):
     """Done items without corresponding git commits."""

@@ -7,6 +7,18 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.8.0] — 2026-03-04
+
+### Added
+- **Multi-agent coordination system** — `execution/multi_agent.py` for running 2-4 parallel Claude Code sessions. Wave management, task claiming, session registry, heartbeats, merge protocol, cost tracking. All state in `.tmp/waves/`.
+- **`/hq` command** — `.claude/commands/hq.md` project-level dashboard. Shows wave status, terminal liveness, task progress, cost estimates, merge order. Modes: no_wave (help), active (live dashboard).
+- **Heartbeat hook** — `.claude/hooks/heartbeat.py` PostToolUse hook updating session liveness every 30s during active waves. Stale sessions (>2 min) are detectable and reclaimable.
+- **Context monitor hook** — `.claude/hooks/context_monitor.py` PostToolUse hook tracking estimated context usage. Warns at 60%, stops at 80% for graceful handoff. Model-aware budgets during waves (haiku: 30k, sonnet: 80k, opus: 200k).
+- **Active wave audit check** — `check_active_wave` in `audit_claims.py` warns when a wave is active and results may be incomplete until merge. Runs in fast/hook mode.
+- **PostToolUse hooks in settings.json** — heartbeat and context monitor fire after every tool use
+
+---
+
 ## [v1.7.4] — 2026-03-03
 
 ### Removed

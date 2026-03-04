@@ -1,5 +1,21 @@
 {
   "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/heartbeat.py",
+            "description": "Update session heartbeat every 2 min during active waves"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/context_monitor.py",
+            "description": "Warn at 60% context usage, stop at 80% with graceful handoff"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "write|create|edit",

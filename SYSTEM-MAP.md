@@ -37,7 +37,7 @@ CLAUDE.md tells Claude to check these before starting work:
 | File | Goes to | Lines | Purpose |
 |------|---------|-------|---------|
 | CLAUDE.md | `./CLAUDE.md` | ~115 | The operating system. 9 rules, guardrails with proof requirement, break glass procedure, code hygiene. Auto-loaded. |
-| settings.json | `./.claude/settings.json` | 29 | 3 PreToolUse hooks (stop hook removed — enforcement via CLAUDE.md Rule 8) |
+| settings.json | `./.claude/settings.json` | ~40 | 3 PreToolUse hooks + 2 PostToolUse hooks (heartbeat, context monitor) |
 | SYSTEM-MAP.md | `./SYSTEM-MAP.md` | — | This breakdown. For you, not Claude. |
 | CUSTOMIZATION.md | `./CUSTOMIZATION.md` | — | What to keep, customize, or clear when starting a new project. For you, not Claude. |
 
@@ -48,6 +48,8 @@ CLAUDE.md tells Claude to check these before starting work:
 | protect_directives.py | `./.claude/hooks/` | Blocks editing existing SOPs. Allows creating new ones. |
 | block_secrets_in_code.py | `./.claude/hooks/` | Blocks API keys outside .env |
 | block_dangerous_commands.py | `./.claude/hooks/` | Blocks force-push, rm -rf, etc |
+| heartbeat.py | `./.claude/hooks/` | PostToolUse: updates session heartbeat every 30s during active waves |
+| context_monitor.py | `./.claude/hooks/` | PostToolUse: warns at 60% context usage, stops at 80% for graceful handoff |
 | commit-msg | `./.githooks/` | Strips AI co-author trailers from git commits |
 | pre-commit | `./.githooks/` | Runs fast claim audit checks before every commit. Blocks on FAILs. |
 
@@ -81,8 +83,15 @@ CLAUDE.md tells Claude to check these before starting work:
 
 | File | Goes to | Purpose |
 |------|---------|---------|
-| audit_claims.py | `./execution/` | Automated false-positive detection. 5 universal checks. Extensible with project-specific checks via `@register()` decorator. |
+| audit_claims.py | `./execution/` | Automated false-positive detection. 6 universal checks (incl. active wave detection). Extensible with project-specific checks via `@register()` decorator. |
 | wrap_stats.py | `./execution/` | Deterministic session scoring. Gathers git metrics, computes streak/multiplier/score/badges, updates stats.json, outputs JSON for `/wrap` to render. |
+
+### 🔀 Multi-Agent Coordination (optional — for parallel Claude Code sessions)
+
+| File | Goes to | Purpose |
+|------|---------|---------|
+| multi_agent.py | `./execution/` | Wave management, task claiming, session registry, heartbeats, merge protocol, cost tracking. All state in `.tmp/waves/`. |
+| hq.md | `./.claude/commands/` | Type `/hq` — project-level dashboard for wave status, terminal liveness, task progress, merge order. |
 
 ### ⚡ The Commands (global — install once, available in every project)
 
@@ -134,14 +143,17 @@ SESSION START
 DURING WORK
 │
 ├─→ Rule #8 before every commit: check STATE.md + learnings.md + governed docs
-├─→ .claude/settings.json → fires hooks before actions
+├─→ .claude/settings.json → fires hooks before/after actions
 │   ├─→ protect_directives.py → blocks edits to existing SOPs
 │   ├─→ block_secrets_in_code.py → blocks API keys outside .env
-│   └─→ block_dangerous_commands.py → blocks force-push, rm -rf, etc.
+│   ├─→ block_dangerous_commands.py → blocks force-push, rm -rf, etc.
+│   ├─→ heartbeat.py → updates session heartbeat during waves
+│   └─→ context_monitor.py → warns when context is running low
 ├─→ .githooks/pre-commit → runs fast claim audit before every commit
 │
 ├─→ execution/ → Claude runs scripts instead of inline code
 │   ├─→ audit_claims.py → automated false-positive detection
+│   ├─→ multi_agent.py → wave coordination for parallel sessions
 │   └─→ wrap_stats.py → deterministic session scoring for /wrap
 ├─→ .claude/plans/ → Claude reads feature designs
 ├─→ .tmp/ → scratch space for intermediate files
@@ -197,15 +209,20 @@ PROJECT (lives in your repo, shared via git)
 │   └── starter-kit-sync.md
 ├── execution/
 │   ├── audit_claims.py
+│   ├── multi_agent.py
 │   └── wrap_stats.py
 ├── .claude/
 │   ├── settings.json
 │   ├── stats.json
 │   ├── claude-chat-sync-prompt.md
+│   ├── commands/
+│   │   └── hq.md
 │   ├── hooks/
 │   │   ├── protect_directives.py
 │   │   ├── block_secrets_in_code.py
-│   │   └── block_dangerous_commands.py
+│   │   ├── block_dangerous_commands.py
+│   │   ├── heartbeat.py
+│   │   └── context_monitor.py
 │   └── plans/
 │       └── gamified-wrap.md
 ├── .githooks/
@@ -232,4 +249,4 @@ MACHINE (lives on your computer, applies to all projects)
     └── sync-doe.md
 ```
 
-Total: 39 files across 8 directories. If you see a file not on this list, it shouldn't be there.
+Total: 43 files across 8 directories. If you see a file not on this list, it shouldn't be there.
