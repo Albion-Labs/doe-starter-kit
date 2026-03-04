@@ -28,16 +28,15 @@ Rules:
 
 After completing all steps — or when stopping early because nothing changed — ALWAYS end the sync output with this bordered result box. This is the last thing printed, no exceptions.
 
-Pick the matching status:
+Pick the matching status. **Generate boxes programmatically** — use a Python snippet with `.ljust(W)` to pad content lines to the exact inner width. Never hand-pad bordered output. Use ASCII-only inside borders (no emojis, no Unicode arrows) — use `->` instead of `→`, text labels instead of emoji icons.
 
 **Nothing to sync:**
 ```
 ┌──────────────────────────────────────────────────────┐
-│  🔄 SYNC RESULT                                     │
+│  SYNC RESULT                                         │
 ├──────────────────────────────────────────────────────┤
-│  ⏭️  NO CHANGES                                      │
-│  [1-2 line explanation — e.g. "All syncable files    │
-│  are identical between project and starter kit."]    │
+│  NO CHANGES                                          │
+│  [1-2 line explanation]                              │
 │  Kit: vX.Y.Z (unchanged)                            │
 └──────────────────────────────────────────────────────┘
 ```
@@ -45,20 +44,20 @@ Pick the matching status:
 **Changes approved and pushed:**
 ```
 ┌──────────────────────────────────────────────────────┐
-│  🔄 SYNC RESULT                                     │
+│  SYNC RESULT                                         │
 ├──────────────────────────────────────────────────────┤
-│  ✅ SYNCED                                           │
+│  SYNCED                                              │
 │  [1-2 line summary of what was synced]               │
-│  Kit: vX.Y.Z → vX.Y.Z                               │
+│  Kit: vX.Y.Z -> vX.Y.Z                              │
 └──────────────────────────────────────────────────────┘
 ```
 
 **User declined proposed changes:**
 ```
 ┌──────────────────────────────────────────────────────┐
-│  🔄 SYNC RESULT                                     │
+│  SYNC RESULT                                         │
 ├──────────────────────────────────────────────────────┤
-│  ❌ REJECTED                                         │
+│  REJECTED                                            │
 │  [What was proposed and why it was declined]         │
 │  Kit: vX.Y.Z (unchanged)                            │
 └──────────────────────────────────────────────────────┘
@@ -67,10 +66,10 @@ Pick the matching status:
 **Blocked by an issue:**
 ```
 ┌──────────────────────────────────────────────────────┐
-│  🔄 SYNC RESULT                                     │
+│  SYNC RESULT                                         │
 ├──────────────────────────────────────────────────────┤
-│  ⚠️  BLOCKED                                         │
-│  [What went wrong — e.g. conflicts, missing dir]    │
+│  BLOCKED                                             │
+│  [What went wrong -- e.g. conflicts, missing dir]   │
 │  Kit: vX.Y.Z (unchanged)                            │
 └──────────────────────────────────────────────────────┘
 ```

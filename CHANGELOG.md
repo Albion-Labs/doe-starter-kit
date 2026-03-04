@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.10.1] — 2026-03-04
+
+### Fixed
+- **`sync-doe.md` result box templates** — removed emojis from inside bordered boxes (they render double-width, breaking alignment). Added programmatic box generation rule and ASCII-only constraint matching other commands.
+
+---
+
 ## [v1.10.0] — 2026-03-04
 
 ### Changed
