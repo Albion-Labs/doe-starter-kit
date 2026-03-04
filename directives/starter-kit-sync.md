@@ -74,7 +74,21 @@ If there's nothing to stash (working tree clean), that's fine — git log is the
 Merge stripped improvements into the starter kit directory. For files that exist in both:
 - Apply changes surgically (add/update specific sections, don't replace whole files)
 - Preserve any starter-kit-only content (e.g. setup instructions, template comments, improvements from other projects)
-- Show the user the exact edits being made, not just a summary
+- After applying, run `git diff --stat` and `git diff` in the kit repo
+- Present the diff summary in a bordered box for approval before proceeding. **Generate programmatically** — compute W from content, use `.ljust(W)` padding, Unicode box-drawing borders. Content inside borders must be ASCII-only.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  DIFF SUMMARY                                          N files changed│
+├──────────────────────────────────────────────────────────────────────┤
+│  1. [file] ([+N/-N]) -- [what changed]                              │
+│  2. [file] (NEW) -- [what it is]                                    │
+│                                                                     │
+│  Net: [summary, e.g. "CLAUDE.md 117 -> 83 lines"]                  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+Wait for explicit user approval before proceeding to Step 8.
 
 ### Step 8: Verify
 ```bash
@@ -104,7 +118,7 @@ Before committing, update `CHANGELOG.md`:
    - `### Fixed` — bug fixes, compatibility fixes
    - `### Removed` — deleted files or features
    Only include subsections that have entries.
-4. Show the user the changelog entry for approval.
+4. Present the changelog entry in a bordered box for approval. **Generate programmatically** — compute W from content, use `.ljust(W)` padding, Unicode box-drawing borders. Content inside borders must be ASCII-only. Structure: header row with "CHANGELOG" left-aligned and version + date right-aligned, separator, 2-line plain English summary, then ADDED/CHANGED/FIXED/REMOVED sections with bulleted items. Wait for explicit approval before proceeding.
 
 ### Step 10: Commit, tag, and push
 ```bash

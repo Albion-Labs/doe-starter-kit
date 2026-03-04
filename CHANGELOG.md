@@ -7,6 +7,27 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.12.3] — 2026-03-04
+
+Compressed CLAUDE.md from 117 to 83 lines by moving Break Glass to a directive and tightening 3 rules. Overhauled /sitrep.
+
+### Added
+- `directives/break-glass.md` — emergency recovery procedure (extracted from CLAUDE.md)
+- Progressive Disclosure trigger for break-glass directive
+- `/sitrep` COMPLETED section — cumulative session work log
+- `/sitrep` push status indicator (pushed/committed)
+- `/sitrep` DOE version in header row
+
+### Changed
+- CLAUDE.md compressed: Rule 1 (planning), Rule 8 (pre-commit checks), hook response format (117 → 83 lines)
+- `/sitrep` reordered: ACTIVE shown first, DONE second, PENDING renamed to UP NEXT (capped at 5)
+- `/sitrep` box auto-stretches to fit content instead of truncating
+- `directives/starter-kit-sync.md` — Steps 7 and 9 now require bordered boxes (diff summary + changelog) for approval
+
+### Removed
+- Break Glass section from CLAUDE.md (moved to directive)
+- `/sitrep` BLOCKERS, QUEUE, and DOE KIT rows (DOE version moved to header)
+
 ## [v1.12.2] — 2026-03-04
 
 ### Added
