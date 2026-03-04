@@ -48,33 +48,75 @@ Build the full wrap-up and print it as one block. Use the script's JSON output f
 Write a dramatic title and 3-4 line narrative about the session. Always reference specific files, features, or data from this session. Be melodramatic — think movie poster tagline meets opening crawl. One style, every time:
 
 ```
-          ╔══════════════════════════════════════╗
-          ║                                      ║
-          ║   [P R O J E C T   N A M E]          ║
-          ║                                      ║
-          ║   Episode [N]: [TITLE IN CAPS]       ║
-          ║                                      ║
-          ╚══════════════════════════════════════╝
+╔══════════════════════════════════════════╗
+║                                          ║
+║        P R O J E C T   N A M E          ║
+║                                          ║
+║     Episode [N]: [TITLE IN CAPS]         ║
+║                                          ║
+╚══════════════════════════════════════════╝
 
-  [Dramatic opening line about the state of the codebase.]
-  [Line referencing what was actually built this session.]
-  [Line referencing specific challenges or data wrangled.]
-  [Line about what lies ahead, trailing off into the distance...]
+[Dramatic opening line about the state of the codebase.]
+[Line referencing what was actually built this session.]
+[Line referencing specific challenges or data wrangled.]
+[Line about what lies ahead, trailing off into the distance...]
 ```
 
-Episode N = `result.stats.lifetime.totalSessions`. Title and crawl MUST reference actual features, real files, and real problems.
+The project name is the current directory name (uppercased), displayed with spaces between each letter for a large, bold feel (e.g. `M O N T Y`). Episode N = `result.stats.lifetime.totalSessions`. Title and crawl MUST reference actual features, real files, and real problems. **Generate the title card programmatically** — use `.center(W)` to center each `║` line within the exact inner width (W = 42 minimum, expand if the spaced name or episode title is wider than 38 chars). Never hand-pad the title card. **Output the title card box inside a code fence** (triple backticks) so the terminal preserves leading spaces for centering. The narrative lines go below the code fence as plain markdown paragraphs — no leading spaces, no indentation. Each line is its own paragraph.
 
-### Part 2: Haiku
+### Part 2: Vibe Check
 
-Write a genuine 5-7-5 haiku about the specific work done this session. Reference real files, features, or changes — not generic coding platitudes.
+Determine the vibe from what actually happened this session:
+- Smooth session, no failures, 5+ commits → `😎 Smooth sailing`
+- Clean but small session → `😌 Clean & quiet`
+- Had failures but recovered → `💪 Hard-fought win`
+- Had failures, messy → `🫠 We got there eventually`
+- Single quick fix → `🩹 Quick patch`
+- Massive output (1000+ lines) → `🏭 Factory floor`
+- Mostly docs/config changes → `🧹 Housekeeping`
 
 ```
-🎋 [line 1 — 5 syllables]
-   [line 2 — 7 syllables]
-   [line 3 — 5 syllables]
+  🎭 VIBE: [mood]
 ```
 
-### Part 3: The Numbers
+### Part 3: The Journey
+
+```
+  📜 THE JOURNEY
+  [2-4 lines telling the specific story of what happened this session.
+   Reference real files, real problems, real solutions.
+   If it was a grind, say so. If something clicked, celebrate it.
+   Be genuine — not generic summaries.]
+```
+
+### Part 4: Commits
+
+List commits in chronological order from `result.metrics.commitLog`.
+
+```
+  🔖 COMMITS
+     • [short hash] [message]
+     • [short hash] [message]
+```
+
+### Part 5: Decisions & Learnings
+
+```
+  📝 DECISIONS LOGGED
+     • [decisions written to STATE.md, or "None this session"]
+
+  🧠 LEARNINGS CAPTURED
+     • [learnings written, or "None this session"]
+```
+
+### Part 6: Next Up
+
+```
+  🎯 NEXT UP
+  [What to do next session — pull from todo.md]
+```
+
+### Part 7: The Numbers
 
 Use `result.metrics` for all values.
 
@@ -90,12 +132,12 @@ Use `result.metrics` for all values.
 ══════════════════════════════════════════════
 ```
 
-### Part 4: Session Timeline
+### Part 8: Session Timeline
 
 Use `result.metrics.commitLog` for commit times and messages. Read `.tmp/.session-start-$$` for the start time.
 
 ```
-  SESSION TIMELINE
+  ⏱️ SESSION TIMELINE
   ┌───────┬──────────────────────────────────────────────┬──────┬──────┐
   │ 20:30 │ Session started                              │      │      │
   │ 20:44 │ Add feature showcase page (v0.13.4)          │  14m │  70% │
@@ -111,7 +153,7 @@ Rules:
 - Total at bottom: minutes from session start to now, and 100%.
 - If `.tmp/.session-start-$$` doesn't exist, skip this section and print: `⏱️ No session timeline — start with /crack-on or /stand-up`.
 
-### Part 5: One-Stat Highlight
+### Part 9: One-Stat Highlight
 
 Pick the single most impressive metric from this session and frame it with witty context. Priority order: (1) lines added if >= 500, (2) commits if >= 10, (3) files touched if >= 8, (4) steps completed if >= 3, (5) lines removed if > lines added, (6) whatever is most notable.
 
@@ -121,7 +163,7 @@ Pick the single most impressive metric from this session and frame it with witty
 
 Example: `⭐ +1,297 lines — that's roughly 26 pages of code. Someone's been busy.`
 
-### Part 6: Last 10 Days Leaderboard
+### Part 10: Last 10 Days Leaderboard
 
 Use `result.leaderboard` (already consolidated per day, 10 entries). Mark today's row with `*`. Days with null commits show `--`.
 
@@ -140,65 +182,13 @@ Use `result.leaderboard` (already consolidated per day, 10 entries). Mark today'
 
 Always include the header row and separator. Adapt column widths to fit content. Model column shows `[name] / [thinking]` abbreviated: hi = high, md = medium, lo = low. Use the model and thinking level from the current session for today's row. For past days, pull from `stats.json` `recentSessions` if available, otherwise show `--`.
 
-### Part 7: Vibe Check
-
-Determine the vibe from what actually happened this session:
-- Smooth session, no failures, 5+ commits → `😎 Smooth sailing`
-- Clean but small session → `😌 Clean & quiet`
-- Had failures but recovered → `💪 Hard-fought win`
-- Had failures, messy → `🫠 We got there eventually`
-- Single quick fix → `🩹 Quick patch`
-- Massive output (1000+ lines) → `🏭 Factory floor`
-- Mostly docs/config changes → `🧹 Housekeeping`
-
-```
-  🎭 VIBE: [mood]
-```
-
-### Part 8: The Journey
-
-```
-  📜 THE JOURNEY
-  [2-4 lines telling the specific story of what happened this session.
-   Reference real files, real problems, real solutions.
-   If it was a grind, say so. If something clicked, celebrate it.
-   Be genuine — not generic summaries.]
-```
-
-### Part 9: Commits
-
-List commits in chronological order from `result.metrics.commitLog`.
-
-```
-  🔖 COMMITS
-     • [short hash] [message]
-     • [short hash] [message]
-```
-
-### Part 10: Decisions & Learnings
-
-```
-  📝 DECISIONS LOGGED
-     • [decisions written to STATE.md, or "None this session"]
-
-  🧠 LEARNINGS CAPTURED
-     • [learnings written, or "None this session"]
-```
-
-### Part 11: Next Up
-
-```
-  🎯 NEXT UP
-  [What to do next session — pull from todo.md]
-```
-
-### Part 12: System Checks & Footer
+### Part 11: System Checks & Footer
 
 Show audit results and DOE Kit sync status in a bordered block:
 
 If all clear:
 ```
-  SYSTEM CHECKS
+  🔍 SYSTEM CHECKS
   ┌──────────────────────────────────────────────────────────┐
   │  Audit:   5 PASS, 0 WARN, 0 FAIL -- all clear           │
   │  DOE Kit: v1.3.0 -- synced                               │
@@ -207,7 +197,7 @@ If all clear:
 
 If issues found, expand with detail lines:
 ```
-  SYSTEM CHECKS
+  🔍 SYSTEM CHECKS
   ┌──────────────────────────────────────────────────────────┐
   │  Audit:   3 PASS, 1 WARN, 1 FAIL                        │
   │    FAIL  HTML file is v0.15.0 but STATE.md says v0.15.1  │
@@ -224,10 +214,10 @@ Rules:
 
 Then the footer:
 ```
-══════════════════════════════════════════════
+════════════════════════════════════════════════════════════════
   STATE.md ✅ | todo.md ✅ | stats.json ✅ | Committed ✅
   Session [N] · 🔥 Day [streak] · Lifetime: [Y] commits
-══════════════════════════════════════════════
+════════════════════════════════════════════════════════════════
 ```
 
 ## Important Rules

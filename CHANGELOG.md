@@ -7,6 +7,14 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.11.1] — 2026-03-04
+
+### Changed
+- **`/wrap` title card** — project name now uses spaced-out uppercase text (e.g. `M O N T Y`) centered in the box, generated from the current directory name. Narrative lines render as plain paragraphs below the code fence (no indentation).
+- **`/wrap` output** — removed haiku section. Parts renumbered from 12 to 11. Narrative sections (vibe, journey, commits, decisions, next up) now appear before data tables (numbers, timeline, leaderboard).
+
+---
+
 ## [v1.11.0] — 2026-03-04
 
 ### Added
