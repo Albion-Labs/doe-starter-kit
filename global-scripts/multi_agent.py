@@ -1697,14 +1697,13 @@ def _analyze_wave(wave_data):
                     if not verify_str:
                         findings.append(("BLOCK", f"Task '{tid}' [auto] criterion {i}: missing Verify: pattern"))
                     else:
-                        import re as _re
                         valid_patterns = [
                             r"^run:\s+.+$",
                             r"^file:\s+.+\s+exists$",
                             r"^file:\s+.+\s+contains\s+.+$",
                             r"^html:\s+.+\s+has\s+.+$",
                         ]
-                        if not any(_re.match(p, verify_str.strip()) for p in valid_patterns):
+                        if not any(re.match(p, verify_str.strip()) for p in valid_patterns):
                             findings.append(("BLOCK", f"Task '{tid}' [auto] criterion {i}: invalid Verify: pattern '{verify_str}'"))
 
             # Write promoted criteria back
