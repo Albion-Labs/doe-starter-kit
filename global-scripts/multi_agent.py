@@ -503,7 +503,7 @@ def cmd_claim(as_json=False, parent_pid=None):
 # --complete
 # ══════════════════════════════════════════════════════════════
 
-def cmd_complete(task_id, tokens=0, commits=0):
+def cmd_complete(task_id, tokens=0, commits=0, skip_verify=False):
     """Mark a task as completed."""
     wave_path, wave_data = find_active_wave()
     if not wave_data:
@@ -514,11 +514,44 @@ def cmd_complete(task_id, tokens=0, commits=0):
     sid = get_session_id()
 
     # Verify task exists in wave
-    task_ids = [t["taskId"] for t in wave_data.get("tasks", [])]
+    tasks = wave_data.get("tasks", [])
+    task_ids = [t["taskId"] for t in tasks]
     if task_id not in task_ids:
         print(f"ERROR: Task '{task_id}' not found in wave '{wave_id}'")
         print(f"  Available: {', '.join(task_ids)}")
         sys.exit(1)
+
+    # Verification gate
+    if not skip_verify:
+        task = next(t for t in tasks if t["taskId"] == task_id)
+        criteria = task.get("acceptanceCriteria", [])
+        auto_criteria = []
+        for ac in criteria:
+            if isinstance(ac, dict) and ac.get("type", "auto") == "auto" and ac.get("verify"):
+                auto_criteria.append(ac["verify"])
+            elif isinstance(ac, str):
+                auto_criteria.append(ac)
+
+        if auto_criteria:
+            try:
+                sys.path.insert(0, str(PROJECT_ROOT))
+                from execution.verify import run_all_criteria, run_build_step
+                build = run_build_step()
+                if build and build["status"] == "FAIL":
+                    print(f"VERIFICATION BLOCKED: Build failed — {build['detail']}")
+                    print("  Fix the build or use --skip-verify to bypass")
+                    sys.exit(1)
+                results = run_all_criteria(auto_criteria)
+                failures = [r for r in results if r["status"] == "FAIL"]
+                for r in results:
+                    print(f"  [{r['status']}] {r['criterion']}")
+                if failures:
+                    print(f"\nVERIFICATION BLOCKED: {len(failures)}/{len(results)} criteria failed")
+                    print("  Fix failures or use --skip-verify to bypass")
+                    sys.exit(1)
+                print(f"  Verification: {len(results)}/{len(results)} passed\n")
+            except ImportError:
+                print("  WARN: execution/verify.py not found — skipping verification")
 
     # Mark complete (atomic)
     def _complete(claims_data):
@@ -2045,6 +2078,8 @@ def main():
                         help="Commit count to record (for --complete)")
     parser.add_argument("--parent-pid", dest="parent_pid", type=int, metavar="PID",
                         help="Claude Code PID for per-terminal session-id files (pass $PPID)")
+    parser.add_argument("--skip-verify", dest="skip_verify", action="store_true",
+                        help="Skip verification gate on --complete (for docs-only changes)")
     parser.add_argument("--project-root", dest="project_root", metavar="DIR",
                         help="Override project root (default: current directory)")
 
@@ -2079,7 +2114,7 @@ def main():
     elif args.claim:
         cmd_claim(as_json=args.json, parent_pid=args.parent_pid)
     elif args.task_id:
-        cmd_complete(args.task_id, tokens=args.tokens, commits=args.commits)
+        cmd_complete(args.task_id, tokens=args.tokens, commits=args.commits, skip_verify=args.skip_verify)
     elif args.status:
         cmd_status(as_json=args.json)
     elif args.dashboard:
