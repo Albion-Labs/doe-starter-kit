@@ -26,8 +26,8 @@ def main():
         return
 
     # Check elapsed time via temp file (avoids reading sessions.json on every call)
-    pid = os.getpid()
-    marker = PROJECT_ROOT / ".tmp" / f".last-heartbeat-{pid}"
+    # Use fixed filename — PID changes per subprocess invocation
+    marker = PROJECT_ROOT / ".tmp" / ".last-heartbeat"
 
     now = time.time()
     if marker.exists():
@@ -43,12 +43,18 @@ def main():
     marker.parent.mkdir(parents=True, exist_ok=True)
     marker.write_text(str(now))
 
-    subprocess.run(
-        ["python3", str(Path.home() / ".claude" / "scripts" / "multi_agent.py"), "--heartbeat"],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-    )
+    # Read session ID from the session file written by --claim
+    session_id_file = PROJECT_ROOT / ".tmp" / ".session-id"
+    cmd = ["python3", str(Path.home() / ".claude" / "scripts" / "multi_agent.py"), "--heartbeat"]
+    if session_id_file.exists():
+        try:
+            sid = session_id_file.read_text().strip()
+            if sid:
+                cmd.extend(["--session", sid])
+        except OSError:
+            pass
+
+    subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True)
 
     print(json.dumps({}))
 

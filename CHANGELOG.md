@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.14.0] — 2026-03-05
+
+Critical multi-agent bug fixes from adversarial review.
+
+### Fixed
+- **Heartbeat hook** — uses fixed marker file (not per-PID) and reads session ID from `.tmp/.session-id` written by `--claim`
+- **Context monitor** — corrected field names (`claimedTask`/`taskId` instead of `currentTask`/`id`), reads session ID from file instead of PID matching
+- **Merge command** — auto-detects default branch (`master`/`main`) instead of hardcoding `master`
+
+### Added
+- `--claim` now writes `.tmp/.session-id` for hooks to read consistent session identity
+
+---
+
 ## [v1.13.10] — 2026-03-05
 
 Visual-explainer Progressive Disclosure triggers.

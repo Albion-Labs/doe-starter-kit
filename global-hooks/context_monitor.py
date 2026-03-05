@@ -87,13 +87,18 @@ def _detect_budget():
         return DEFAULT_BUDGET
 
     try:
-        sessions = json.loads(sessions_file.read_text())
-        pid_str = str(os.getpid())
+        # Read session ID from the file written by --claim
+        session_id_file = TMP_DIR / ".session-id"
+        if not session_id_file.exists():
+            return DEFAULT_BUDGET
+        sid = session_id_file.read_text().strip()
+        if not sid:
+            return DEFAULT_BUDGET
 
+        sessions = json.loads(sessions_file.read_text())
         for session in sessions.get("sessions", []):
-            sid = session.get("sessionId", "")
-            if pid_str in sid:
-                task_id = session.get("currentTask")
+            if session.get("sessionId", "") == sid:
+                task_id = session.get("claimedTask")
                 if task_id:
                     return _budget_for_task(task_id)
     except (json.JSONDecodeError, OSError):
@@ -108,7 +113,7 @@ def _budget_for_task(task_id):
         for f in sorted(WAVES_DIR.glob("wave-*.json")):
             wave = json.loads(f.read_text())
             for task in wave.get("tasks", []):
-                if task.get("id") == task_id:
+                if task.get("taskId") == task_id:
                     model = task.get("model", "sonnet")
                     return MODEL_BUDGETS.get(model, DEFAULT_BUDGET)
     except (json.JSONDecodeError, OSError):

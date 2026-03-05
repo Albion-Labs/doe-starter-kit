@@ -61,6 +61,24 @@ def get_session_id():
     return _session_override or f"terminal-{os.getpid()}"
 
 
+def _detect_default_branch():
+    """Auto-detect the default branch (master or main)."""
+    # Try remote HEAD first
+    result = subprocess.run(
+        ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
+        cwd=PROJECT_ROOT, capture_output=True, text=True,
+    )
+    if result.returncode == 0:
+        # refs/remotes/origin/main -> main
+        return result.stdout.strip().split("/")[-1]
+    # Fallback: check if master exists, else main
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", "master"],
+        cwd=PROJECT_ROOT, capture_output=True, text=True,
+    )
+    return "master" if result.returncode == 0 else "main"
+
+
 def _compute_duration(start_iso, end_iso):
     """Human-readable duration between two ISO timestamps. Returns str like '42m' or '1h 15m'."""
     try:
@@ -443,6 +461,11 @@ def cmd_claim(as_json=False):
         "branch": branch,
     })
 
+    # Write session ID file so hooks (heartbeat, context monitor) can find it
+    session_id_file = PROJECT_ROOT / ".tmp" / ".session-id"
+    session_id_file.parent.mkdir(parents=True, exist_ok=True)
+    session_id_file.write_text(sid)
+
     # Output
     if as_json:
         result = {**claimed_task, "worktree": wt_path, "branch": branch}
@@ -798,14 +821,15 @@ def cmd_merge(as_json=False):
         capture_output=True, text=True,
     ).stdout.strip()
 
-    if current_branch != "master":
+    default_branch = _detect_default_branch()
+    if current_branch != default_branch:
         result = subprocess.run(
-            ["git", "checkout", "master"],
+            ["git", "checkout", default_branch],
             cwd=PROJECT_ROOT,
             capture_output=True, text=True,
         )
         if result.returncode != 0:
-            print(f"ERROR: Could not checkout master: {result.stderr.strip()}")
+            print(f"ERROR: Could not checkout {default_branch}: {result.stderr.strip()}")
             sys.exit(1)
 
     # Check for uncommitted changes
