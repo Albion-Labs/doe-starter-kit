@@ -7,6 +7,17 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.17.1] — 2026-03-05
+
+Solo verification discipline — contract enforcement for all modes, not just waves.
+
+### Changed
+- **`/crack-on`** — contract pre-flight (validates Verify: patterns before starting) + post-completion verification (runs all criteria before marking steps done)
+- **`/stand-up`** — kick-off mode surfaces contract health for next step (informational CONTRACT line in card)
+- **Commands README** — updated /stand-up and /crack-on descriptions, added contract enforcement section
+
+---
+
 ## [v1.17.0] — 2026-03-05
 
 Mandatory task contracts with executable verification patterns.

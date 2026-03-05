@@ -6,17 +6,19 @@ Quick reference for all custom `/commands`. These are global — available in ev
 
 **DOE Kit awareness:** `/stand-up` (kick-off), `/crack-on`, `/sitrep`, and `/wrap` check `~/doe-starter-kit` if it exists. All use smart diffing for CLAUDE.md (only universal sections trigger `*`, project-specific sections are ignored). Kit version is pinned in STATE.md.
 
+**Contract enforcement:** `/stand-up` (kick-off) surfaces contract health for the next step (informational). `/crack-on` validates contracts before starting work and runs verification before marking steps done. Both enforce the same discipline that `--complete` provides in wave mode.
+
 ---
 
 ## Session Lifecycle
 
 ### `/stand-up`
-Context-aware dual-mode command. **Kick-off mode** (no active session): starts the clock, reads project state, shows a bordered kick-off card with project name (right-aligned), feature, progress, DOE Kit status, last session summary, plan, and coaching focus. Waits for sign-off. **Status mode** (session already running): shows a bordered status card with progress, momentum, recent activity, and queue.
-*Added 28/02/26 · Updated 02/03/26*
+Context-aware dual-mode command. **Kick-off mode** (no active session): starts the clock, reads project state, shows a bordered kick-off card with project name (right-aligned), feature, progress, DOE Kit status, contract health, last session summary, plan, and coaching focus. Waits for sign-off. **Status mode** (session already running): shows a bordered status card with progress, momentum, recent activity, and queue.
+*Added 28/02/26 · Updated 05/03/26*
 
 ### `/crack-on`
-Same context read as stand-up kick-off mode, but picks up the next incomplete step immediately. One step at a time — commit, push, stop, report. Starts the session timer.
-*Added 28/02/26 · Updated 02/03/26*
+Same context read as stand-up kick-off mode, but picks up the next incomplete step immediately. Validates task contracts before starting (pre-flight) and runs all Verify: patterns before marking steps done (post-completion). One step at a time — commit, push, stop, report. Starts the session timer.
+*Added 28/02/26 · Updated 05/03/26*
 
 ### `/sitrep`
 Mid-session situation report. Shows current feature progress, completed/active/pending steps, session commits, elapsed time, DOE Kit sync status, blockers, and queue. Read-only.
