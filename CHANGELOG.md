@@ -7,6 +7,16 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.17.2] — 2026-03-05
+
+Pre-commit contract verification hook — hard gate for solo mode.
+
+### Added
+- **`execution/check_contract.py`** — parses todo.md, finds current step's contract, blocks commit if any criteria unchecked
+- **`global-hooks/pre-commit`** — contract verification section appended (gated by `SKIP_CONTRACT_CHECK=1` env var)
+
+---
+
 ## [v1.17.1] — 2026-03-05
 
 Solo verification discipline — contract enforcement for all modes, not just waves.

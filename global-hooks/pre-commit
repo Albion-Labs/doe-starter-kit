@@ -1,0 +1,65 @@
+#!/bin/sh
+# Run fast claim audit checks before committing.
+# Runs only checks marked fast=True — typically <1 second.
+# To skip (emergency only): git commit --no-verify
+
+python3 execution/audit_claims.py --hook > /dev/null 2>&1
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "═══ Pre-commit audit found issues ═══"
+    echo ""
+    python3 execution/audit_claims.py --hook 2>&1 | grep -E "FAIL|WARN"
+    echo ""
+    echo "Run 'python3 execution/audit_claims.py' for full details."
+    echo "Fix issues or use --no-verify to skip."
+    exit 1
+fi
+
+# ─── Audit sweep (warnings only — never blocks commit) ───
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null)
+
+# Check for console.log in JS/TS files
+JS_FILES=$(echo "$STAGED_FILES" | grep -E '\.(js|ts|jsx|tsx)$' || true)
+if [ -n "$JS_FILES" ]; then
+    for f in $JS_FILES; do
+        MATCHES=$(git diff --cached -- "$f" | grep -E '^\+.*console\.log' || true)
+        if [ -n "$MATCHES" ]; then
+            echo "⚠ console.log in $f (consider removing before production)" >&2
+        fi
+    done
+fi
+
+# Check for TODO without a reference (e.g. TODO(name) or TODO #123)
+if [ -n "$STAGED_FILES" ]; then
+    for f in $STAGED_FILES; do
+        MATCHES=$(git diff --cached -- "$f" | grep -E '^\+.*TODO' | grep -vE 'TODO\s*\(|TODO\s*#' || true)
+        if [ -n "$MATCHES" ]; then
+            echo "⚠ TODO without reference in $f — use TODO(name) or TODO #123" >&2
+        fi
+    done
+fi
+
+# Check for hardcoded localhost URLs
+if [ -n "$STAGED_FILES" ]; then
+    for f in $STAGED_FILES; do
+        MATCHES=$(git diff --cached -- "$f" | grep -E '^\+.*(localhost|127\.0\.0\.1|0\.0\.0\.0):[0-9]+' || true)
+        if [ -n "$MATCHES" ]; then
+            echo "⚠ Hardcoded localhost URL in $f — use config/env variable instead" >&2
+        fi
+    done
+fi
+
+# ─── Contract verification (solo mode gate) ───
+# Checks current todo.md step's contract criteria are all [x] before allowing commit.
+# Skip with: SKIP_CONTRACT_CHECK=1 git commit -m '...'
+# Skip ALL hooks with: git commit --no-verify
+
+if [ "${SKIP_CONTRACT_CHECK:-0}" != "1" ]; then
+    python3 execution/check_contract.py 2>&1
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+fi
