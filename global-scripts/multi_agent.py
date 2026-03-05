@@ -963,10 +963,39 @@ def cmd_merge(as_json=False):
             print(f"  Skip: {tid} ({reason})")
     print()
 
+    # Collect criteria from all tasks for regression checks
+    def _get_auto_criteria(task):
+        criteria = []
+        for ac in task.get("acceptanceCriteria", []):
+            if isinstance(ac, dict) and ac.get("type", "auto") == "auto" and ac.get("verify"):
+                criteria.append(ac["verify"])
+            elif isinstance(ac, str):
+                criteria.append(ac)
+        return criteria
+
+    def _run_pre_merge_baseline(already_merged_tasks):
+        """Run criteria from already-merged tasks as baseline."""
+        all_criteria = []
+        for t in already_merged_tasks:
+            all_criteria.extend(_get_auto_criteria(t))
+        if not all_criteria:
+            return {}
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT))
+            from execution.verify import run_all_criteria
+            results = run_all_criteria(all_criteria)
+            return {r["criterion"]: r["status"] for r in results}
+        except ImportError:
+            return {}
+
     for item in merge_queue:
         tid = item["taskId"]
         branch = item["branch"]
+        task = item["task"]
         print(f"  Merging: {tid} ({branch})")
+
+        # Pre-merge baseline: run criteria from already-merged tasks
+        pre_merge = _run_pre_merge_baseline([m_item["task"] for m_item in merge_queue if m_item["taskId"] in merged])
 
         result = subprocess.run(
             ["git", "merge", branch, "--no-ff",
@@ -992,6 +1021,27 @@ def cmd_merge(as_json=False):
             break
 
         print(f"  Merged: {tid}")
+
+        # Post-merge regression check: re-run pre-merge criteria
+        if pre_merge:
+            try:
+                from execution.verify import run_all_criteria
+                post_results = run_all_criteria(list(pre_merge.keys()))
+                regressions = []
+                for r in post_results:
+                    pre_status = pre_merge.get(r["criterion"], "SKIP")
+                    if pre_status == "PASS" and r["status"] == "FAIL":
+                        regressions.append(r)
+                if regressions:
+                    print(f"  REGRESSION after merging {tid}:")
+                    for reg in regressions:
+                        print(f"    [FAIL] {reg['criterion']}")
+                        print(f"           {reg['detail']}")
+                    print(f"  {len(regressions)} regression(s) detected — was PASS before merge")
+                else:
+                    print(f"  Regression check: {len(post_results)} criteria OK")
+            except ImportError:
+                pass
 
         # Run audit if available
         if audit_script.exists():
