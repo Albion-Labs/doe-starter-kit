@@ -78,6 +78,7 @@ When a task matches a trigger below, load the linked doc before starting:
 - Adding/removing a dataset, changing legal/regulatory position, or completing a feature → read `directives/documentation-governance.md` for the governed docs checklist and front-matter format
 - Auditing claims, preparing for a demo, or completing a phase → read `directives/claim-auditing.md`, then run `python3 execution/audit_claims.py` (or use `/audit`)
 - Syncing DOE improvements to the starter kit repo, or completing an [INFRA] feature → read `directives/starter-kit-sync.md`
+- Pulling DOE kit updates into the project → read `directives/starter-kit-pull.md`
 - Something went seriously wrong (bad commit, corrupted file, data damage) → read `directives/break-glass.md` and follow it
 
 <!-- Add project-specific triggers as the system grows -->

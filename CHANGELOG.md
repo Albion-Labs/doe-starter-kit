@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.13.0] — 2026-03-05
+
+Added /pull-doe — the reverse of /sync-doe. Pulls kit updates into a project with version-aware diffing, file categorization, and safe merging.
+
+### Added
+- `/pull-doe` command — reverse sync (kit → project) with version-aware diffing, analysis box, and result summary
+- `directives/starter-kit-pull.md` — 15-step pull procedure with file categorization (global installs, hooks, CLAUDE.md, templates, directives, execution scripts)
+- Progressive Disclosure trigger for starter-kit-pull directive
+
+### Changed
+- `/sync-doe` — added cross-reference to `/pull-doe` for reverse direction
+
+---
+
 ## [v1.12.7] — 2026-03-05
 
 Upgraded /crack-on to bordered card format matching stand-up, sitrep, and other commands.

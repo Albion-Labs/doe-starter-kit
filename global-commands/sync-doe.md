@@ -15,6 +15,8 @@ Then read directives/starter-kit-sync.md and follow it precisely. The directive 
 11. Commit to the starter kit repo with message: "v[X.Y.Z]: Sync from [project] — [summary]"
 12. Tag the version, push, push tags, create GitHub release
 
+To pull kit updates INTO this project (reverse direction), use `/pull-doe`.
+
 Rules:
 - NEVER replace a file wholesale. Merge additively — add new content, update changed content, preserve existing starter kit content.
 - If the starter kit has something this project doesn't, keep it. It came from another project.
