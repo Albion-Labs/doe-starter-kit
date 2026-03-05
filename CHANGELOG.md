@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.16.0] — 2026-03-05
+
+Restructured ROADMAP.md with new sections for better project planning visibility.
+
+### Added
+- **ROADMAP.md** — 4 new sections: Suggested Next (Claude's strategic recommendation), Must Plan (important items needing scoping), Claude Suggested Ideas (AI-pitched additions), plus HTML comment block with section rules for Claude
+- **ROADMAP.md** — every entry now requires a `*(pitched/added DD/MM/YY)*` timestamp
+
+### Changed
+- **CLAUDE.md Rule 9** — pitch routing now specifies Ideas (casual) vs Must Plan (important) sections
+- **ROADMAP.md** — description updated from "living notepad" to "sections flow from most concrete to most speculative"
+
+---
+
 ## [v1.15.1] — 2026-03-05
 
 Remove Last 10 Days leaderboard from /wrap.
