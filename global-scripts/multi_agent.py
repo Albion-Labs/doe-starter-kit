@@ -58,7 +58,7 @@ _session_override = None
 
 
 def get_session_id():
-    """Session ID — explicit override or PID-based."""
+    """Session ID — explicit override, session-id file, or PID-based fallback."""
     return _session_override or f"terminal-{os.getpid()}"
 
 
@@ -2030,6 +2030,17 @@ def main():
     global _session_override
     if args.session_id:
         _session_override = args.session_id
+    elif args.parent_pid:
+        # Read session ID from PID-specific file (written by --claim --parent-pid)
+        # This makes --complete, --fail, --abandon resolve the correct session
+        sid_file = PROJECT_ROOT / ".tmp" / f".session-id-{args.parent_pid}"
+        if sid_file.exists():
+            try:
+                sid = sid_file.read_text().strip()
+                if sid:
+                    _session_override = sid
+            except OSError:
+                pass
 
     if args.wave_file:
         cmd_init_wave(args.wave_file)

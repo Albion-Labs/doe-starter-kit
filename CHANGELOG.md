@@ -7,6 +7,16 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.14.4] — 2026-03-05
+
+Round 4 fix: session ID resolution for all commands.
+
+### Fixed
+- **CRITICAL: --complete/--fail/--abandon session resolution** — `--parent-pid` now auto-reads `.session-id-{pid}` file and sets `_session_override` in `main()`, so ALL commands resolve the correct session ID. Previously only `--claim` and hooks could find the session.
+- **agent-launch instructions** — ALL multi_agent.py commands now include `--parent-pid $PPID` (claim, complete, fail, abandon)
+
+---
+
 ## [v1.14.3] — 2026-03-05
 
 Round 3 fix: per-terminal isolation via Claude Code PID.

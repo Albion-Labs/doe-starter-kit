@@ -102,7 +102,15 @@ Wait for the user's response.
 
   Monitor: /hq
   ```
-  IMPORTANT: `--parent-pid $PPID` passes the Claude Code PID so hooks can find this terminal's session. After claiming, the agent MUST cd into the worktree path printed by the claim output — hooks use `Path.cwd()` and coordination files live in the main project root.
+  IMPORTANT: `--parent-pid $PPID` passes the Claude Code PID so hooks and commands can find this terminal's session. After claiming, the agent MUST cd into the worktree path printed by the claim output.
+
+  ALL subsequent multi_agent.py commands in this terminal MUST include `--parent-pid $PPID`:
+  ```
+  python3 ~/.claude/scripts/multi_agent.py --complete <taskId> --parent-pid $PPID
+  python3 ~/.claude/scripts/multi_agent.py --fail <taskId> --parent-pid $PPID
+  python3 ~/.claude/scripts/multi_agent.py --abandon <taskId> --parent-pid $PPID
+  ```
+  Without `--parent-pid`, session ownership checks will fail because each CLI invocation gets a new PID.
 
 - **"edit"** → Ask what to change (models, ownership, task split), update the wave file, re-run preview.
 
