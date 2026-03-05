@@ -23,19 +23,56 @@ For each feature identified in Step 1, check if a plan exists:
 
 **If no plan exists for a feature:**
 
-Create one. Read the relevant codebase files (existing patterns, data structures, UI conventions from `learnings.md`) to understand what the feature needs. Write a plan to `.claude/plans/<feature-name>.md` covering:
+Create one. Before writing, read the codebase to understand context:
+- `learnings.md` for project patterns, UI conventions, CSS prefix convention, card function patterns
+- `STATE.md` for current position and blockers
+- Existing `src/` files to understand the architecture and patterns to follow
+- Existing plans in `.claude/plans/` for format reference
 
-- **What:** One-paragraph summary of the feature
-- **File ownership:** Which files/sections this task will create or modify (critical for wave safety)
-- **Implementation approach:** Key technical decisions, patterns to follow, data sources to use
-- **Acceptance criteria:** Testable conditions for "done"
-- **Edge cases:** Known gotchas or things to watch for
+Write the plan to `.claude/plans/<feature-name>.md` using the **standard plan format** (match existing plans exactly):
 
-Present the plan to the user:
+```markdown
+# Feature Name
+
+## Context
+One paragraph: why this feature, what it builds on, what data/APIs it needs (or "no new data — uses existing X, Y, Z"). Note if parallelisable with other features and why (file ownership boundaries).
+
+## Design
+**UI pattern:** How it presents (overlay, panel, card, etc.) and where it fits in the existing UI.
+**User flow:** Numbered steps from trigger to completion.
+**Layout:** ASCII wireframe if the feature has visual output (match briefing-pack.md style).
+**CSS prefix:** `xx-` (2-3 letter prefix per feature, check learnings.md ## UI Patterns).
+**Key functions:**
+- `mainFunction(args)` — what it does
+- `helperFunction(args)` — what it does
+
+## File Ownership
+Explicit list of files this feature will CREATE or MODIFY. Critical for multi-agent safety.
+- NEW: `src/js/feature.js` — [what it contains]
+- NEW: `src/styles/feature.css` — [what it contains]
+- MODIFY: `src/js/map.js` — [what changes, e.g. "add button to toolbar"]
+- READS: `src/data/geo.js`, `src/data/elections.js` — [no modifications]
+
+## Steps
+Each step includes a recommended model + thinking level.
+
+### Step 1 → vX.Y.0: [Step name] — model: [Opus/Sonnet/Haiku] · thinking: [high/medium/low]
+- [Specific implementation details]
+- [What to build, what to wire up]
+
+### Step 2 → vX.Y.1: Housekeeping — model: Sonnet · thinking: low
+- Changelog, roadmap COMPLETE, showcase entry, retro
+
+## Not in Scope
+- [Things explicitly excluded to prevent scope creep]
+```
+
+Present the plan to the user. Show the **full plan content** (not a summary) so they can review it properly:
+
 ```
 No plan found for [Feature Name]. Here's a proposed plan:
 
-[plan summary — key points only, not the whole file]
+[full plan content]
 
 Written to: .claude/plans/<feature-name>.md
 OK to proceed? (yes / edit / cancel)
@@ -45,7 +82,7 @@ OK to proceed? (yes / edit / cancel)
 - **"edit"** → Ask what to change, update the plan, re-present
 - **"cancel"** → Stop
 
-If multiple features need plans, present them together so the user can approve in one go.
+If multiple features need plans, present them one at a time so the user can review each properly.
 
 Do NOT proceed to wave creation until every feature has an approved plan.
 
