@@ -60,9 +60,12 @@ STATE.md        # Session memory — blockers, current position (check at sessio
 ```
 
 ## Self-Annealing
-When something fails: read the full error message and trace → fix the script → retest → update the relevant learnings file so the system handles this edge case next time. Classify before writing:
+When something fails: read the full error → diagnose WHY (not just what) → fix → retest → log. Classify before writing:
 - **Project-specific** (references this project's configs, names, custom setup) → add directly to `learnings.md`
 - **Universal** (general pattern any project could hit — API behaviour, library gotchas, execution patterns) → add directly to `~/.claude/CLAUDE.md`
+
+**Routine failures:** one-line learning with source tag. E.g. `- macOS sed -i requires '' backup arg. [retro: feature-name]`
+**Significant failures** (cost >30 min, broke production, or recurred): use structured format in learnings.md — What happened, Root cause, Fix applied, Prevention added. If the failure pattern recurs, create a directive or hook to prevent it.
 
 Every failure makes the system stronger.
 

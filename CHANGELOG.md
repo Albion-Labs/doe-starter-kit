@@ -7,6 +7,16 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.13.6] — 2026-03-05
+
+Self-annealing enhancement — root cause analysis and structured format for significant failures.
+
+### Changed
+- **Self-Annealing** section in CLAUDE.md — added "diagnose WHY" step, two-tier format (routine one-liners vs structured significant failures)
+- **learnings.md** template — added structured failure format with What/Root cause/Fix/Prevention fields
+
+---
+
 ## [v1.13.5] — 2026-03-05
 
 Language best practices directives — prevention-over-detection guides for common agent failure modes.
