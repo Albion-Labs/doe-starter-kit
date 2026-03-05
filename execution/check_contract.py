@@ -2,12 +2,13 @@
 """Pre-commit contract verification for solo mode.
 
 Reads tasks/todo.md, finds the current step (first unchecked under ## Current),
-and checks whether all contract criteria are marked [x]. Blocks the commit if
-any criteria are still [ ].
+and checks whether contract criteria indicate partially-verified work. Only
+blocks when a step has a MIX of [x] and [ ] criteria (work started but
+verification incomplete). All [ ] = next step (don't block). All [x] = done.
 
 Exit codes:
-  0 — allow commit (no contract, all criteria pass, or no current step)
-  1 — block commit (unchecked criteria found)
+  0 — allow commit (no contract, all criteria pass, next step, or no current step)
+  1 — block commit (partially verified — some [x] and some [ ])
 """
 
 import re
@@ -82,18 +83,23 @@ def check_contract():
     if not found_contract or not criteria:
         return 0  # No contract block — allow
 
+    checked_count = sum(1 for c, _ in criteria if c)
     unchecked = [(text) for checked, text in criteria if not checked]
 
     if not unchecked:
         return 0  # All criteria pass
 
-    # Block the commit
+    if checked_count == 0:
+        return 0  # All criteria unchecked — this is the next step, not current work
+
+    # Mix of [x] and [ ] — work started but verification incomplete
     step_desc = re.sub(r"^\d+\.\s+\[ \]\s*", "", current_step_line)
     print("")
     print("═══ Contract verification failed ═══")
     print("")
     print(f"  Step: {step_desc}")
     print(f"  BLOCKED: {len(unchecked)} contract criteria not yet verified")
+    print(f"  ({checked_count} checked, {len(unchecked)} remaining)")
     print("")
     for item in unchecked:
         print(f"  [ ] {item}")
