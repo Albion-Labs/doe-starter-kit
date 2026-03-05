@@ -50,7 +50,6 @@ Show a single bordered card:
 │  POSITION AT EOD                                            │
 │  Active: [current feature] — N/M steps done                 │
 │  Queue:  [next features in order]                           │
-│  Blockers: [from STATE.md or None]                          │
 │                                                             │
 │  DAY VIBE: [mood + one-liner summary]                       │
 └────────────────────────────────────────────────────────────┘
@@ -63,7 +62,7 @@ Show a single bordered card:
 - **DAY STATS:** Aggregate from git commands. Count commits, files touched, insertions/deletions. Count features completed and steps completed from todo.md. Count plan files from git log. Count learnings from git log.
 - **SESSIONS list:** Show each wrapped session from stats.json: title, sessionDuration. If `.tmp/.session-start` exists, show one active session as "(active)" with duration computed from that file's timestamp to now. Newest first.
 - **WHAT GOT DONE:** This is the key section. Read all commit messages from today. Group them by feature/task using the headings in todo.md (both ## Current and ## Done). Classify each group as [APP] or [INFRA] using the type tags from todo.md headings. Summarise each group in plain English — describe what actually happened, not raw commit messages. Order: shipped features first, then in-progress features, then housekeeping/planning. If only one type exists, skip the other.
-- **POSITION AT EOD:** From STATE.md active feature + todo.md progress (count [x] vs [ ] steps). Queue from todo.md ## Queue (show feature names + type tags). Blockers from STATE.md ## Blockers & Edge Cases ("None" if empty).
+- **POSITION AT EOD:** From STATE.md active feature + todo.md progress (count [x] vs [ ] steps). Queue from todo.md ## Queue (show feature names + type tags).
 - **DAY VIBE:** Pick the best match:
   - All planning, no code → "Architect mode"
   - Lots of code shipped (500+ lines) → "Factory floor"

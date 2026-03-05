@@ -12,23 +12,22 @@ Start the session clock: run `mkdir -p .tmp && date -u +%Y-%m-%dT%H:%M:%S+00:00 
 
 Read CLAUDE.md, tasks/todo.md, STATE.md, and learnings.md.
 
-**DOE Kit check:** If `~/doe-starter-kit` exists, run `cd ~/doe-starter-kit && git describe --tags --abbrev=0 2>/dev/null` to get the current kit version, and `git log -1 --format="%ai" $(git describe --tags --abbrev=0)` to get the last release date. Then check two things: (1) Is the kit tag newer than STATE.md's "DOE Starter Kit" version? (inbound). (2) Do any key syncable files differ? (outbound). Diff key files (CLAUDE.md, ~/.claude/commands/*.md, .githooks/*, .claude/hooks/*.py) and count how many have changes. If either condition is true, show `*` (meaning `/sync-doe` or `/pull-doe` needed). If the directory doesn't exist, skip the DOE Kit line entirely.
+**DOE Kit check:** If `~/doe-starter-kit` exists, run `cd ~/doe-starter-kit && git describe --tags --abbrev=0 2>/dev/null` to get the current kit version, and `git log -1 --format="%ai" $(git describe --tags --abbrev=0)` to get the last release date. Then check two things: (1) Is the kit tag newer than STATE.md's "DOE Starter Kit" version? (inbound). (2) Do any key syncable files differ? (outbound). Diff key files (~/.claude/commands/*.md, .githooks/*, .claude/hooks/*.py) and count how many have changes. **For CLAUDE.md**, do a smart diff: only flag if universal sections (Who We Are, Operating Rules, Guardrails, Code Hygiene, Self-Annealing) differ between kit and project. Ignore project-specific sections (Directory Structure, Progressive Disclosure triggers, project-specific additions). If only project-specific sections differ, do not count as a change. If either condition is true, show `*` (meaning `/sync-doe` or `/pull-doe` needed). If the directory doesn't exist, skip the DOE Kit line entirely.
 
 Show a bordered kick-off card, then present a plan and wait for sign-off:
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  STAND-UP · HH:MM - DD/MM/YY                     │
+│  STAND-UP · HH:MM - DD/MM/YY    [dir] vX.Y.Z     │
 ├──────────────────────────────────────────────────┤
-│  PROJECT    [dir name] vX.Y.Z                     │
 │  FEATURE    [active feature] [APP/INFRA] vX.Y.x   │
 │  PROGRESS   ██████░░░░ N/M steps                  │
 │  DOE KIT    vX.Y.Z [synced / * if pending]        │
-│  BLOCKERS   [from STATE.md or "None"]             │
 │  WARNINGS   [audit WARN/FAIL items]               │
 │    ⚠️ [detail line for each WARN/FAIL item]        │
-│  LEARNINGS  N entries · last updated DD/MM        │
 ├──────────────────────────────────────────────────┤
+│  [1-2 line summary of last session from STATE.md]  │
+│                                                   │
 │  PLAN                                             │
 │  → [proposed next steps as bullets]               │
 │                                                   │
@@ -42,13 +41,12 @@ Show a bordered kick-off card, then present a plan and wait for sign-off:
 
 Card rules:
 - MODEL ROW: Final row of the card, separated by `├──┤`. Shows `Model: [name] · Thinking: [level]`. IMPORTANT: This line is always shorter than other content lines. You MUST pad it with trailing spaces so the right `│` is at the exact same character position as every other `│` in the card. Count the inner width of the longest line, then pad the model row to match. No emojis (they break alignment). You know your model ID from your system prompt (look for "The exact model ID is..."). Display names: `claude-opus-4-6` → "Opus 4.6", `claude-sonnet-4-6` → "Sonnet 4.6", `claude-haiku-4-5` → "Haiku 4.5". For thinking level, report your reasoning effort: ≤33 → "low", 34-66 → "medium", ≥67 → "high". If uncertain, show "default". This helps the user decide if they need to switch models before starting work.
-- PROJECT: current directory name + version from STATE.md "Current app version". If no version in STATE.md, omit the version.
+- PROJECT: Right-aligned on the header row, same line as the date. Show `[dir name] vX.Y.Z` (directory name + version from STATE.md "Current app version"). If no version in STATE.md, omit the version. Build the header as: left = `STAND-UP -- HH:MM - DD/MM/YY`, right = `[dir] vX.Y.Z`, then right-align within the line width.
 - FEATURE: from STATE.md "Active feature" line. If no active feature, show "No active feature".
 - PROGRESS: count [x] and [ ] steps for the current feature in todo.md ## Current. Bar uses █ for done, ░ for remaining, scaled to 10 characters. If no current feature, omit this line.
 - DOE KIT: `vX.Y.Z` if synced, `vX.Y.Z *` if either the kit tag is newer than STATE.md's version or any syncable files differ (the `*` means `/sync-doe` or `/pull-doe` needed). Omit entirely if `~/doe-starter-kit` doesn't exist.
-- BLOCKERS: from STATE.md ## Blockers & Edge Cases. "None" if empty.
 - WARNINGS: Run `python3 execution/audit_claims.py --hook --json` and parse the JSON output. If any findings have severity "WARN" or "FAIL", show a WARNINGS row with a summary count (e.g. "2 audit WARNs") followed by indented detail lines for each non-PASS item — use `⚠️` prefix for WARN and `❌` for FAIL. Each detail line shows the file name and message from the finding. If the first WARN/FAIL item is actionable in this session (e.g. a stale doc or missing version tag), add an indented `→ Fix now?` suggestion. **If all findings are PASS, omit the WARNINGS section entirely** — it only appears when there are problems. If the audit script doesn't exist or fails, also omit.
-- LEARNINGS: count bullet-point lines in learnings.md (lines starting with `- `). Show last-modified date from the front-matter `Last updated` field if present, otherwise use `stat` or `git log -1` on the file.
+- SUMMARY: After the `├──┤` separator, show 1-2 lines summarising the last session from STATE.md ## Last Session. Keep it brief — what happened, where we left off. Then a blank line before PLAN.
 - PLAN: the proposed next steps — what you recommend doing this session. This is the "present a plan" part.
 - FOCUS: After PLAN, analyse `.claude/stats.json` (if it exists) to surface 2-3 coaching bullets based on `recentSessions` (last 5-10 entries). Look for these patterns and show whichever are most relevant:
   - **Infrastructure vs product ratio:** Count sessions where the commit messages or todo.md steps were [INFRA] vs [APP]. If heavily skewed, note it (e.g. "4/5 recent sessions were [INFRA] — consider shipping product").
@@ -85,8 +83,6 @@ Show a bordered status card:
 │  · [commit/shipped item]                          │
 │                                                   │
 │  MOMENTUM     [On track / Ahead / Behind] — why   │
-│  BLOCKERS     [from STATE.md or "None"]           │
-│  DECISIONS    [pending decisions or "None"]        │
 │  QUEUE        [next feature or "Empty"]           │
 ├──────────────────────────────────────────────────┤
 │  Model: [model] · Thinking: [level]              │
@@ -101,8 +97,6 @@ Card rules:
 - NEXT STEP: find the first uncompleted step (line starting with `[ ]`) for the current feature in todo.md. Show the step number and description (e.g. "Step 4 — /hq command"). If all steps are complete, show "All steps complete — ready for retro".
 - SINCE LAST MILESTONE: run `git tag --sort=-v:refname | head -1` to get the latest version tag. Then `git log --oneline <tag>..HEAD` to list commits since that tag. Show as bullet points (max 8 — if more, show the 8 most recent and note "and N more"). If no tags exist, show commits from the last 7 days instead.
 - MOMENTUM: assess based on completed vs remaining steps and time context. More than half done → "On track". All done except housekeeping → "Ahead". Zero steps done and the feature has been in ## Current for 2+ sessions (check STATE.md ## Last Session for evidence of prior sessions working on this feature) → "Behind". Add a brief reason after the dash explaining the assessment.
-- BLOCKERS: from STATE.md ## Blockers & Edge Cases. Show content or "None".
-- DECISIONS: scan STATE.md for any pending decisions, open questions, or items needing user input. "None" if nothing found.
 - QUEUE: first feature heading from ## Queue in todo.md. Show name + type tag, or "Empty" if nothing queued.
 - BORDER: Fixed width — always 60 `─` characters between `│` borders (62 total per line). All content lines: `│` + 2 spaces + content + trailing spaces + `│` = 62 chars. If content would exceed 56 characters, truncate with `…`. Never dynamically size — the box is always the same width. **Generate boxes programmatically** — define a `line(content)` helper: `f"│  {content}".ljust(W + 1) + "│"` where W is the inner width. ALL rows including headers MUST use this helper — never construct `f"│{...}│"` manually. For headers with right-aligned text: build the inner content string first (e.g. `f"{left}{right:>{W - 2 - len(left)}}"`) then pass through `line()`. Never hand-pad bordered output. Use Unicode box-drawing characters for borders (`┌─┐`, `├─┤`, `└─┘`, `│`). Content inside borders must be ASCII-only (no emojis, no `·`, `✓`, `⚠️`, `—`, `…`) — use `--` for separators, commas for lists. Exception: progress bar uses `█` (done) and `░` (remaining) — these render at fixed width in terminals.
 - This is READ-ONLY. Do not start the session clock. Do not modify any files. Do not execute anything (except the box-generation snippet).

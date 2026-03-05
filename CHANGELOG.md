@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.15.0] — 2026-03-05
+
+Card format cleanup and smart CLAUDE.md diffing across all DOE Kit-aware commands.
+
+### Changed
+- **`/stand-up` kick-off card** — removed BLOCKERS and LEARNINGS rows, PROJECT right-aligned on header row, added last-session SUMMARY above PLAN
+- **`/stand-up` status card** — removed BLOCKERS and DECISIONS rows
+- **`/eod` card** — removed Blockers from POSITION AT EOD section
+- **DOE Kit sync check** (`/stand-up`, `/crack-on`, `/sitrep`, `/wrap`) — smart CLAUDE.md diff: only flags universal section changes (Operating Rules, Guardrails, Code Hygiene, Self-Annealing), ignores project-specific sections (Directory Structure, triggers)
+- **`/crack-on`** — genericized project-specific example in header rule
+- **README.md** — updated `/stand-up` description and DOE Kit awareness paragraph
+
+---
+
 ## [v1.14.6] — 2026-03-05
 
 New `/agent-start` command and simplified `/agent-launch` instructions.
