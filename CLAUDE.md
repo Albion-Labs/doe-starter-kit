@@ -14,7 +14,7 @@ IMPORTANT: Never do execution inline when a script exists. Check `execution/` fi
 
 ## Operating Rules
 
-1. **Plan before building.** Check `tasks/todo.md` and `STATE.md` at session start. Complex features (3+ steps): write design to `.claude/plans/`, add steps to `tasks/todo.md`. Simple tasks: add directly to `tasks/todo.md`. Track progress only in todo.md — plans are reference docs. Each step in a plan must include a recommended model + thinking level (e.g. `Opus + high` for design judgment, `Sonnet + medium` for spec-driven implementation, `Sonnet + low` for mechanical work).
+1. **Plan before building.** Check `tasks/todo.md` and `STATE.md` at session start. Complex features (3+ steps): write design to `.claude/plans/`, add steps to `tasks/todo.md`. Simple tasks: add directly to `tasks/todo.md`. Track progress only in todo.md — plans are reference docs. Each step in a plan must include a recommended model + thinking level (e.g. `Opus + high` for design judgment, `Sonnet + medium` for spec-driven implementation, `Sonnet + low` for mechanical work). Every task added to todo.md must include a Contract block with testable criteria tagged `[auto]` or `[manual]`. `[auto]` criteria must use an executable Verify: pattern (`run:`, `file: ... exists`, `file: ... contains`, `html: ... has`). Tasks without testable contracts cannot be started.
 2. **Ask, don't assume.** If a requirement is ambiguous, ask. Wrong assumptions waste more time than questions. For tasks requiring significant research (3+ approaches to evaluate, extensive doc reading), separate research and implementation into different sessions — research pollutes implementation context and vice versa.
 3. **Check before spending.** If a script uses paid API calls or credits, confirm with me before running.
 4. **Verify before delivering.** Never hand off output without checking it works. Run the script, test the output, confirm it matches the directive's verification criteria. After creating or editing files, run `ls` or `cat` to confirm they exist with expected changes — do not just report success. If there's no way to verify, say so explicitly. Use neutral verification prompts — "Does this output match the spec?" not "This looks great, right?" Sycophantic self-evaluation hides bugs.
@@ -66,6 +66,7 @@ When something fails: read the full error → diagnose WHY (not just what) → f
 
 **Routine failures:** one-line learning with source tag. E.g. `- macOS sed -i requires '' backup arg. [retro: feature-name]`
 **Significant failures** (cost >30 min, broke production, or recurred): use structured format in learnings.md — What happened, Root cause, Fix applied, Prevention added. If the failure pattern recurs, create a directive or hook to prevent it.
+**Test failures** (auto-test fails, regression during merge, contract passed but result was wrong): use the structured format. Bad contracts get root cause "contract criteria didn't capture actual requirement" — update contract writing guidance in learnings.md to prevent recurrence.
 
 Every failure makes the system stronger.
 
@@ -87,6 +88,7 @@ When a task matches a trigger below, load the linked doc before starting:
 - Reviewing changes before commit → suggest `/diff-review` for a visual before/after comparison
 - Returning to a project after absence or context loss → suggest `/project-recap` for a visual state rebuild
 - Checking whether implementation matches the plan → suggest `/plan-review` for visual alignment check
+- Setting up testing for a new project or configuring test tools → read `directives/testing-strategy.md`
 - Something went seriously wrong (bad commit, corrupted file, data damage) → read `directives/break-glass.md` and follow it
 
 <!-- Add project-specific triggers as the system grows -->

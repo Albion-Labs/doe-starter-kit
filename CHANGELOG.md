@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.17.0] — 2026-03-05
+
+Mandatory task contracts with executable verification patterns.
+
+### Changed
+- **todo.md format rules** — contracts now mandatory for every step with `[auto]`/`[manual]` tags and 4 executable `Verify:` patterns (`run:`, `file: exists`, `file: contains`, `html: has`)
+- **CLAUDE.md Rule 1** — appended contract requirement (tasks without testable contracts cannot be started)
+- **CLAUDE.md Self-Annealing** — added test failure logging guidance (auto-test fails, regressions, bad contracts)
+
+### Added
+- **CLAUDE.md trigger** — testing setup maps to `directives/testing-strategy.md`
+
+---
+
 ## [v1.16.0] — 2026-03-05
 
 Restructured ROADMAP.md with new sections for better project planning visibility.

@@ -14,14 +14,22 @@ FORMAT RULES (Claude: follow these when updating this file)
 - Keep ## Done trimmed to last 3 completed features. Move older ones to tasks/archive.md with all steps and timestamps preserved. Newest at top of archive.
 - Don't duplicate the product roadmap here. Reference it: "See ROADMAP.md"
 - Progress tracking happens HERE, not in .claude/plans/. Plans are reference docs.
-- **Task contracts** for non-trivial steps: add a `Contract:` block with testable completion criteria. Simple tasks (quick fixes, mechanical edits) keep one-line descriptions. Use contracts when the step has multiple outputs, affects existing behaviour, or could be marked "done" prematurely.
+- **Task contracts** are mandatory for every step. Every task added to todo.md gets a `Contract:` block with at least one `[auto]` criterion. No exceptions.
   Format:
-  N. [ ] Step name → vX.Y.Z
+  N. [ ] Step name -> vX.Y.Z
     Contract:
-    - [ ] When [action], then [expected result]
-    - [ ] Must not break [existing functionality]
-    - [ ] Verify: [specific check that must pass]
-    Agent cannot mark the step done until all contract items are verified.
+    - [ ] [auto] Description. Verify: [executable pattern]
+    - [ ] [manual] Description of what the human should check
+    Agent cannot mark the step done until all contract items pass /agent-verify.
+  **`[auto]` criteria** must use one of these executable Verify: patterns:
+    - `Verify: run: <shell command>` -- execute, check exit code 0
+    - `Verify: file: <path> exists` -- check file existence
+    - `Verify: file: <path> contains <string>` -- check file content for substring
+    - `Verify: html: <path> has <selector>` -- parse HTML, check CSS selector (requires BeautifulSoup)
+    Anything not matching a pattern is flagged invalid during /agent-launch pre-flight.
+  **`[manual]` criteria** describe what the human should check visually/behaviourally. No Verify: method.
+  **Rules:** Every task must have at least one `[auto]` criterion. `[APP]` tasks must also have at least one `[manual]` criterion. `[INFRA]` tasks can be fully `[auto]`.
+  System-generated side effects (stats.json, learnings, wave infrastructure) are NOT tasks and don't get contracts.
 - This format can be changed — just update these rules and Claude will follow the new convention.
 -->
 
