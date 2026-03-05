@@ -7,6 +7,18 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.13.5] — 2026-03-05
+
+Language best practices directives — prevention-over-detection guides for common agent failure modes.
+
+### Added
+- `directives/best-practices/javascript.md` — strict equality, async error handling, XSS prevention, cleanup patterns
+- `directives/best-practices/python.md` — specific exceptions, mutable defaults, pathlib, injection prevention
+- `directives/best-practices/html-css.md` — accessibility, semantic HTML, CSS custom properties, no inline styles
+- `directives/best-practices/react.md` — dependency arrays, state immutability, derived state, cleanup effects
+
+---
+
 ## [v1.13.4] — 2026-03-05
 
 Architectural invariants directive — non-negotiable truths that survive any refactor.
