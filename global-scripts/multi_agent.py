@@ -25,6 +25,7 @@ import argparse
 import fcntl
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -169,14 +170,21 @@ def append_log(wave_id, event):
 RESERVED_FILES = {"claims.json", "sessions.json"}
 
 
+def _wave_sort_key(path):
+    """Extract numeric index from wave filename for correct sort order."""
+    m = re.search(r"wave-(\d+)", path.name)
+    return int(m.group(1)) if m else path.stat().st_mtime
+
+
 def find_active_wave():
     """Find the active wave file. Returns (path, data) or (None, None)."""
     if not WAVES_DIR.exists():
         return None, None
-    waves = sorted(WAVES_DIR.glob("*.json"))
+    waves = list(WAVES_DIR.glob("*.json"))
     # Exclude log files, claims, sessions
     waves = [w for w in waves
              if not w.name.endswith("-log.json") and w.name not in RESERVED_FILES]
+    waves.sort(key=_wave_sort_key)
     for wave_path in reversed(waves):  # newest first
         data = atomic_read(wave_path)
         if data.get("status") == "active":
@@ -188,9 +196,10 @@ def find_latest_wave():
     """Find the latest wave file (any status). Returns (path, data) or (None, None)."""
     if not WAVES_DIR.exists():
         return None, None
-    waves = sorted(WAVES_DIR.glob("*.json"))
+    waves = list(WAVES_DIR.glob("*.json"))
     waves = [w for w in waves
              if not w.name.endswith("-log.json") and w.name not in RESERVED_FILES]
+    waves.sort(key=_wave_sort_key)
     for wave_path in reversed(waves):  # newest first
         data = atomic_read(wave_path)
         if "waveId" in data and "tasks" in data:
@@ -617,6 +626,70 @@ def cmd_abandon(task_id):
 
 
 # ══════════════════════════════════════════════════════════════
+# --fail
+# ══════════════════════════════════════════════════════════════
+
+def cmd_fail(task_id, reason=""):
+    """Mark a claimed task as failed. Keeps worktree and branch for debugging."""
+    wave_path, wave_data = find_active_wave()
+    if not wave_data:
+        print("ERROR: No active wave found")
+        sys.exit(1)
+
+    wave_id = wave_data["waveId"]
+    sid = get_session_id()
+
+    # Verify task exists
+    task_ids = [t["taskId"] for t in wave_data.get("tasks", [])]
+    if task_id not in task_ids:
+        print(f"ERROR: Task '{task_id}' not found in wave '{wave_id}'")
+        sys.exit(1)
+
+    # Mark failed (atomic)
+    def _fail(claims_data):
+        claim = claims_data.get("claims", {}).get(task_id)
+        if not claim:
+            print(f"ERROR: Task '{task_id}' has no claim record")
+            sys.exit(1)
+        if claim.get("sessionId") != sid:
+            print(f"ERROR: Task '{task_id}' is claimed by {claim['sessionId']}, not {sid}")
+            sys.exit(1)
+        claim["status"] = "failed"
+        claim["failedAt"] = now_iso()
+        if reason:
+            claim["failReason"] = reason
+        return claims_data
+
+    atomic_modify(CLAIMS_FILE, _fail)
+
+    # Update session
+    def _update(sessions):
+        for s in sessions.get("sessions", []):
+            if s["sessionId"] == sid:
+                s["claimedTask"] = None
+                break
+        return sessions
+
+    atomic_modify(SESSIONS_FILE, _update)
+
+    # Keep worktree and branch for debugging — don't remove
+
+    # Log event
+    append_log(wave_id, {
+        "timestamp": now_iso(),
+        "type": "fail",
+        "taskId": task_id,
+        "sessionId": sid,
+        "reason": reason,
+    })
+
+    print(f"Task '{task_id}' marked as failed")
+    if reason:
+        print(f"  Reason: {reason}")
+    print(f"  Worktree and branch preserved for debugging.")
+
+
+# ══════════════════════════════════════════════════════════════
 # --heartbeat
 # ══════════════════════════════════════════════════════════════
 
@@ -732,9 +805,9 @@ def cmd_reclaim(as_json=False):
 
     atomic_modify(SESSIONS_FILE, _mark_dead)
 
-    # Remove worktrees for reclaimed tasks
+    # Remove worktrees for reclaimed tasks (keep branch — new session continues from it)
     for tid in reclaimed:
-        remove_worktree(tid, delete_branch=True)
+        remove_worktree(tid, delete_branch=False)
 
     # Log events
     for tid in reclaimed:
@@ -1366,7 +1439,7 @@ COST_PER_M_TOKENS = {
 
 
 def cmd_validate(wave_file_arg, as_json=False):
-    """Validate a wave file before launching. Checks for conflicts and issues."""
+    """Validate a wave file before launching. Delegates to _analyze_wave for checks."""
     wave_file = Path(wave_file_arg)
     if not wave_file.exists():
         print(f"ERROR: Wave file not found: {wave_file}")
@@ -1379,101 +1452,16 @@ def cmd_validate(wave_file_arg, as_json=False):
         print("ERROR: Wave file has no tasks")
         sys.exit(1)
 
-    findings = []  # (severity, message)
-    task_ids = {t["taskId"] for t in tasks}
-
-    # ── 1. File ownership conflicts ──
-    ownership = {}  # file_pattern → [taskId, ...]
-    for task in tasks:
-        for f in task.get("owns", []):
-            ownership.setdefault(f, []).append(task["taskId"])
-
-    for file_pat, owners in ownership.items():
-        if len(owners) > 1:
-            findings.append(("BLOCK", f"File ownership conflict: '{file_pat}' owned by {', '.join(owners)}"))
-
-    # ── 2. Dependency errors ──
-    for task in tasks:
-        for dep in task.get("dependsOn", []):
-            if dep not in task_ids:
-                findings.append(("BLOCK", f"Task '{task['taskId']}' depends on unknown task '{dep}'"))
-
-    # Circular dependency detection (DFS)
-    dep_graph = {t["taskId"]: t.get("dependsOn", []) for t in tasks}
-    visited = set()
-    in_stack = set()
-
-    def _has_cycle(node):
-        if node in in_stack:
-            return True
-        if node in visited:
-            return False
-        visited.add(node)
-        in_stack.add(node)
-        for dep in dep_graph.get(node, []):
-            if _has_cycle(dep):
-                return True
-        in_stack.discard(node)
-        return False
-
-    for tid in task_ids:
-        visited.clear()
-        in_stack.clear()
-        if _has_cycle(tid):
-            findings.append(("BLOCK", f"Circular dependency detected involving '{tid}'"))
-            break  # one cycle report is enough
-
-    # ── 3. Model appropriateness ──
-    for task in tasks:
-        model = (task.get("model") or "").lower()
-        size = (task.get("size") or "").upper()
-        tid = task["taskId"]
-
-        if not model:
-            findings.append(("WARN", f"Task '{tid}' has no model specified — will use session default"))
-        if not size:
-            findings.append(("WARN", f"Task '{tid}' has no size specified"))
-
-        if model == "haiku" and size == "L":
-            findings.append(("WARN", f"Task '{tid}': haiku on L task — may exceed context or produce low quality"))
-        if model == "opus" and size == "S":
-            findings.append(("WARN", f"Task '{tid}': opus on S task — expensive for a small task, consider sonnet"))
-
-    # ── 4. Missing fields ──
-    for task in tasks:
-        tid = task["taskId"]
-        if not task.get("description"):
-            findings.append(("WARN", f"Task '{tid}' has no description"))
-        if not task.get("owns"):
-            findings.append(("WARN", f"Task '{tid}' has no file ownership declared"))
-        if not task.get("acceptanceCriteria"):
-            findings.append(("WARN", f"Task '{tid}' has no acceptance criteria"))
-
-    # ── 5. Cost estimate ──
-    total_cost = 0.0
-    task_costs = []
-    for task in tasks:
-        model = (task.get("model") or "sonnet").lower()
-        size = (task.get("size") or "M").upper()
-        est_tokens = TOKEN_ESTIMATES.get((model, size), 50_000)
-        cost_per_m = COST_PER_M_TOKENS.get(model, 2.40)
-        cost = est_tokens / 1_000_000 * cost_per_m
-        total_cost += cost
-        task_costs.append({
-            "taskId": task["taskId"],
-            "model": model,
-            "size": size,
-            "estTokens": est_tokens,
-            "estCost": round(cost, 2),
-        })
-
-    # ── Results ──
-    blocks = [f for f in findings if f[0] == "BLOCK"]
-    warns = [f for f in findings if f[0] == "WARN"]
+    # Use shared analysis
+    analysis = _analyze_wave(wave_data)
+    blocks = analysis["blocks"]
+    warns = analysis["warnings"]
+    task_costs = analysis["taskCosts"]
+    total_cost = analysis["totalCost"]
 
     if as_json:
         print(json.dumps({
-            "valid": len(blocks) == 0,
+            "valid": analysis["ready"],
             "blocks": [f[1] for f in blocks],
             "warnings": [f[1] for f in warns],
             "taskCount": len(tasks),
@@ -1984,6 +1972,8 @@ def main():
                        help="Dashboard output for /hq (superset of --status)")
     group.add_argument("--abandon", dest="abandon_id", metavar="TASK_ID",
                        help="Abandon a claimed task (releases claim, removes worktree+branch)")
+    group.add_argument("--fail", dest="fail_id", metavar="TASK_ID",
+                       help="Mark a task as failed (keeps worktree+branch for debugging)")
     group.add_argument("--heartbeat", action="store_true",
                        help="Update this session's heartbeat timestamp")
     group.add_argument("--reclaim", action="store_true",
@@ -2000,6 +1990,8 @@ def main():
     group.add_argument("--log", action="store_true",
                        help="Show event trail for the latest wave")
 
+    parser.add_argument("--reason", dest="fail_reason", metavar="TEXT",
+                        help="Reason for failure (used with --fail)")
     parser.add_argument("--session", dest="session_id", metavar="ID",
                         help="Override session ID (default: terminal-{PID})")
     parser.add_argument("--json", action="store_true",
@@ -2038,6 +2030,8 @@ def main():
         cmd_dashboard(as_json=args.json)
     elif args.abandon_id:
         cmd_abandon(args.abandon_id)
+    elif args.fail_id:
+        cmd_fail(args.fail_id, reason=getattr(args, "fail_reason", "") or "")
     elif args.heartbeat:
         cmd_heartbeat()
     elif args.reclaim:

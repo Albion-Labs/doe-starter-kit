@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.14.1] — 2026-03-05
+
+Should-fix multi-agent bugs from adversarial review.
+
+### Fixed
+- **Reclaim** — preserves worktree branch (`delete_branch=False`) so new session can continue partial work
+- **Wave sort** — `find_active_wave`/`find_latest_wave` use numeric index extraction instead of string sort (fixes wave-10 sorting before wave-2)
+- **Validation dedup** — `cmd_validate` now delegates to `_analyze_wave` internally, eliminating ~100 lines of duplicated logic
+
+### Added
+- **`--fail` subcommand** — marks a task as failed with optional `--reason`, keeps worktree+branch for debugging, logs failure event
+
+---
+
 ## [v1.14.0] — 2026-03-05
 
 Critical multi-agent bug fixes from adversarial review.
