@@ -484,6 +484,23 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
     --cyan: #67e8f9;
   }
 
+  body.light {
+    --bg: #f0efe9;
+    --surface: #f8f7f3;
+    --surface2: #eae9e3;
+    --border: #d5d4cc;
+    --text: #1a1a2e;
+    --text-dim: #6b6b80;
+    --accent: #5046e5;
+    --accent-glow: rgba(80, 70, 229, 0.08);
+    --green: #16a34a;
+    --green-dim: rgba(22, 163, 74, 0.08);
+    --amber: #d97706;
+    --amber-dim: rgba(217, 119, 6, 0.08);
+    --red: #dc2626;
+    --cyan: #0891b2;
+  }
+
   body {
     background: var(--bg);
     color: var(--text);
@@ -658,6 +675,8 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
 
 def build_html(data):
     """Build the complete HTML string from the data dict."""
+    theme = data.get("theme", "dark")
+    body_class = ' class="light"' if theme == "light" else ""
     episode = esc(data.get("episode", ""))
     title = esc(data.get("title", ""))
 
@@ -686,7 +705,7 @@ def build_html(data):
 {CSS}
 </style>
 </head>
-<body>
+<body{body_class}>
 <div class="container">
 {body}
 </div>
@@ -698,6 +717,7 @@ def build_html(data):
 def main():
     parser = argparse.ArgumentParser(description="Generate session wrap-up HTML")
     parser.add_argument("--json", dest="json_str", help="JSON data as a string argument")
+    parser.add_argument("--theme", choices=["light", "dark"], default="dark", help="Color theme")
     parser.add_argument("--output", default=".tmp/wrap.html", help="Output HTML file path (default: .tmp/wrap.html)")
     args = parser.parse_args()
 
@@ -705,6 +725,8 @@ def main():
         data = json.loads(args.json_str)
     else:
         data = json.load(sys.stdin)
+
+    data["theme"] = args.theme
 
     html_out = build_html(data)
 

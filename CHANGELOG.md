@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.24.5] — 2026-03-09
+
+### Added
+- `wrap_html.py`: `--theme light|dark` CLI flag for light/dark mode toggle
+- `wrap_html.py`: `body.light` CSS variables with warm off-white palette (`#f0efe9` bg, `#f8f7f3` surface) for daytime readability
+- `wrap_html.py`: body class toggle wiring for theme selection
+
 ## [v1.24.4] — 2026-03-09
 
 ### Changed
