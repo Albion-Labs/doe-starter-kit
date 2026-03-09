@@ -153,9 +153,11 @@ For each commit in commitLog, set the type:
 
 ### 3e: Generate and open
 
+Determine the theme based on the current time: run `date +%H` to get the current hour (0-23). If the hour is >= 6 AND < 18, use `--theme light`. Otherwise use `--theme dark` (the default).
+
 Run:
 ```bash
-python3 execution/wrap_html.py --json '<the JSON string>' --output .tmp/wrap.html
+python3 execution/wrap_html.py --json '<the JSON string>' --theme <light|dark> --output .tmp/wrap.html
 ```
 
 Then open in the browser:

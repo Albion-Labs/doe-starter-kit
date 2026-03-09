@@ -7,6 +7,12 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.24.4] — 2026-03-09
+
+### Changed
+- `/stand-up` SINCE LAST MILESTONE: groups related commits by feature/theme with summaries instead of listing individually (max 6 groups)
+- `/wrap` section 3e: auto-detects light/dark theme based on time of day (6am-6pm = light, otherwise dark)
+
 ## [v1.24.3] — 2026-03-07
 
 ### Added
