@@ -92,6 +92,8 @@ When a task matches a trigger below, load the linked doc before starting:
 - Returning to a project after absence or context loss → suggest `/project-recap` for a visual state rebuild
 - Checking whether implementation matches the plan → suggest `/plan-review` for visual alignment check
 - Setting up testing for a new project or configuring test tools → read `directives/testing-strategy.md`
+- Running parallel sessions, setting up a wave, or using `/agent-status` → read `.claude/plans/multi-agent-coordination.md` for the full coordination protocol
+- Scoping a new feature or exploring a product idea → run `/scope` for a conversational scoping session that produces a brief
 - Something went seriously wrong (bad commit, corrupted file, data damage) → read `directives/break-glass.md` and follow it
 
 <!-- Add project-specific triggers as the system grows -->

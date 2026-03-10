@@ -7,6 +7,15 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.26.0] — 2026-03-10
+
+### Added
+- `/archive-global` command: global portfolio dashboard aggregating all registered projects. Shows time allocation, project health cards (Active/Idle/Dormant), cross-project timeline. Reads `~/.claude/project-registry.json`.
+- Two universal triggers in CLAUDE.md Progressive Disclosure: multi-agent coordination and `/scope` feature scoping.
+
+### Changed
+- `/wrap` now auto-registers the project in `~/.claude/project-registry.json` after committing stats, enabling the global archive to discover projects automatically.
+
 ## [v1.25.0] — 2026-03-10
 
 ### Added

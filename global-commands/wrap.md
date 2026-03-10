@@ -53,6 +53,21 @@ Do this BEFORE committing stats.json.
 
 Commit stats.json with message: "Update session stats".
 
+Register this project in the global project registry (for `/archive-global`):
+```bash
+python3 -c "
+import json
+from pathlib import Path
+from datetime import datetime
+reg = Path.home() / '.claude' / 'project-registry.json'
+data = json.loads(reg.read_text()) if reg.exists() else {'projects': []}
+root = str(Path.cwd().resolve())
+data['projects'] = [p for p in data['projects'] if p['path'] != root]
+data['projects'].append({'path': root, 'name': Path(root).name, 'lastUpdated': datetime.now().strftime('%Y-%m-%d')})
+reg.write_text(json.dumps(data, indent=2))
+"
+```
+
 ## Step 3: Generate HTML Wrap-Up
 
 Build the wrap-up as an HTML page using `execution/wrap_html.py`. This renders beautifully in the browser instead of fighting terminal formatting.

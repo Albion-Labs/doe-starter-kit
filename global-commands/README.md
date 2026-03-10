@@ -25,8 +25,8 @@ Mid-session situation report. Shows current feature progress, completed/active/p
 *Added 28/02/26 · Updated 28/02/26*
 
 ### `/wrap`
-End-of-session routine. Updates STATE.md, todo.md, learnings.md. Computes session stats via `wrap_stats.py`, generates a visual HTML wrap-up via `wrap_html.py` with summary + breakdowns, commit groups with timeline percentages, decision/learning pills, system checks, and session vibe. Opens in browser.
-*Added 27/02/26 · Updated 06/03/26*
+End-of-session routine. Updates STATE.md, todo.md, learnings.md. Computes session stats via `wrap_stats.py`, generates a visual HTML wrap-up via `wrap_html.py` with summary + breakdowns, commit groups with timeline percentages, decision/learning pills, system checks, and session vibe. Registers the project in `~/.claude/project-registry.json` for `/archive-global`. Opens in browser.
+*Added 27/02/26 · Updated 10/03/26*
 
 ### `/eod`
 End-of-day report aggregating all sessions into a visual HTML page via `eod_html.py`. Daily timeline, commit breakdown bars, 9-metric grid, features completed, and position summary. Answers "what did I do today?" Read-only — no files modified. Opens in browser.
@@ -111,6 +111,10 @@ Reads the codebase and roasts it. Specific, brutal, funny. References real files
 *Added 28/02/26*
 
 ## Infrastructure
+
+### `/archive-global`
+Global portfolio archive across all registered projects. Reads `~/.claude/project-registry.json`, loads each project's `.claude/stats.json`, generates a portfolio dashboard HTML at `~/.claude/docs/global-archive.html`. Shows time allocation, project health cards (Active/Idle/Dormant), cross-project timeline, and drill-down links to per-project archives. Opens in browser.
+*Added 10/03/26*
 
 ### `/sync-doe`
 Syncs universal DOE improvements from the current project back to the starter kit repo (`~/doe-starter-kit`). Reads the sync directive, strips project-specific content, shows diffs for approval, commits and pushes to GitHub.
