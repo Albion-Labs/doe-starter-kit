@@ -10,6 +10,7 @@ import html
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -32,12 +33,12 @@ def get_project_color(idx):
     return PALETTE[idx] if idx < len(PALETTE) else PALETTE[4]
 
 def format_number(n):
-    if n >= 1000:
+    if abs(n) >= 1000:
         return f"{n / 1000:.1f}k"
     return str(n)
 
 def format_lines(n):
-    if n >= 1000:
+    if abs(n) >= 1000:
         return f"{n / 1000:.1f}k"
     return str(n)
 
@@ -52,6 +53,49 @@ def format_dow(d):
 
 def get_week_start(d):
     return d - timedelta(days=d.weekday())
+
+def compute_total_code_lines(project_path):
+    """Count lines of all git-tracked files in a project. Returns 0 on error."""
+    try:
+        result = subprocess.run(
+            ["bash", "-c", "git ls-files | xargs wc -l"],
+            cwd=project_path, capture_output=True, text=True, timeout=30
+        )
+        if result.returncode != 0:
+            return 0
+        lines = result.stdout.strip().split("\n")
+        if not lines:
+            return 0
+        # Last line is the total: "  12345 total"
+        last = lines[-1].strip()
+        match = re.match(r"(\d+)\s+total", last)
+        if match:
+            return int(match.group(1))
+        # Single file — no "total" line, just the count
+        match = re.match(r"(\d+)\s+", last)
+        if match:
+            return int(match.group(1))
+        return 0
+    except Exception:
+        return 0
+
+def compute_net_this_week(recent_sessions):
+    """Sum linesAdded - linesRemoved for sessions in the current Mon-Sun week."""
+    today = datetime.now().date()
+    monday = today - timedelta(days=today.weekday())
+    sunday = monday + timedelta(days=6)
+    net = 0
+    for sess in (recent_sessions or []):
+        d = sess.get("date", "")
+        if not d:
+            continue
+        try:
+            sd = parse_date(d)
+        except ValueError:
+            continue
+        if monday <= sd <= sunday:
+            net += sess.get("linesAdded", 0) - sess.get("linesRemoved", 0)
+    return net
 
 def parse_duration_mins(dur_str):
     if not dur_str:
@@ -185,6 +229,8 @@ def load_projects(registry_path):
 
 def compute_global_stats(projects):
     total_sessions = total_commits = total_added = total_removed = active_projects = 0
+    total_code_lines = 0
+    net_this_week = 0
     today = datetime.now().date()
     week_ago = today - timedelta(days=7)
     for p in projects:
@@ -195,6 +241,13 @@ def compute_global_stats(projects):
         total_commits += lt.get("totalCommits", 0)
         total_added += lt.get("totalLinesAdded", 0)
         total_removed += lt.get("totalLinesRemoved", 0)
+        # Total code lines: use stats.json value or compute live
+        tcl = lt.get("totalCodeLines", 0)
+        if not tcl and p.get("path"):
+            tcl = compute_total_code_lines(p["path"])
+        total_code_lines += tcl
+        # Net this week
+        net_this_week += compute_net_this_week(s.get("recentSessions", []))
         for sess in s.get("recentSessions", []):
             d = sess.get("date", "")
             if d:
@@ -206,6 +259,7 @@ def compute_global_stats(projects):
                     pass
     return {"totalSessions": total_sessions, "totalCommits": total_commits,
             "totalLinesAdded": total_added, "netCode": total_added - total_removed,
+            "totalCodeLines": total_code_lines, "netThisWeek": net_this_week,
             "activeProjects": active_projects}
 
 def compute_all_day_sessions(projects):
@@ -721,11 +775,14 @@ def render_portfolio_header(global_stats, num_projects, total_days):
   </div>"""
 
 def render_portfolio_lifetime(gs):
+    ntw = gs.get('netThisWeek', 0)
+    ntw_sign = "+" if ntw >= 0 else ""
+    ntw_color = "var(--green)" if ntw >= 0 else "var(--red)"
     return f"""  <div class="lifetime-bar">
     <div class="lifetime-stat"><div class="lifetime-value">{format_number(gs['totalSessions'])}</div><div class="lifetime-label">Total Sessions</div></div>
     <div class="lifetime-stat"><div class="lifetime-value">{format_number(gs['totalCommits'])}</div><div class="lifetime-label">Total Commits</div></div>
-    <div class="lifetime-stat"><div class="lifetime-value" style="color: var(--green)">{format_number(gs['totalLinesAdded'])}</div><div class="lifetime-label">Lines Added</div></div>
-    <div class="lifetime-stat"><div class="lifetime-value">{format_number(gs['netCode'])}</div><div class="lifetime-label">Net Code</div></div>
+    <div class="lifetime-stat"><div class="lifetime-value">{format_number(gs.get('totalCodeLines', 0))}</div><div class="lifetime-label">Total Code</div></div>
+    <div class="lifetime-stat"><div class="lifetime-value" style="color: {ntw_color}">{ntw_sign}{format_number(ntw)}</div><div class="lifetime-label">Net This Week</div></div>
     <div class="lifetime-stat"><div class="lifetime-value">{gs['activeProjects']}</div><div class="lifetime-label">Active Projects</div></div>
   </div>"""
 
@@ -876,8 +933,9 @@ def render_project_card(project, idx, today):
     s = project.get("stats"); status, last_text = compute_project_status(project, today)
     sessions = (s.get("lifetime", {}).get("totalSessions", 0)) if s else 0
     commits = (s.get("lifetime", {}).get("totalCommits", 0)) if s else 0
-    lines_added = (s.get("lifetime", {}).get("totalLinesAdded", 0)) if s else 0
-    lines_removed = (s.get("lifetime", {}).get("totalLinesRemoved", 0)) if s else 0
+    total_code = (s.get("lifetime", {}).get("totalCodeLines", 0)) if s else 0
+    if not total_code and project.get("path"):
+        total_code = compute_total_code_lines(project["path"])
     streak = (s.get("streak", {}).get("current", 0)) if s else 0
     recent = (s.get("recentSessions", [])) if s else []
     active_days = count_active_days(recent)
@@ -909,7 +967,7 @@ def render_project_card(project, idx, today):
       <div class="project-metrics">
         <span><span class="pm-val">{sessions}</span> sessions</span>
         <span><span class="pm-val">{commits}</span> commits</span>
-        <span class="pm-green">+{format_number(lines_added)}</span> / <span class="pm-red">-{format_number(lines_removed)}</span> lines
+        <span><span class="pm-val">{format_number(total_code)}</span> lines</span>
         <span><span class="pm-val">{active_days}</span> days active</span>
         <span>Streak: <span class="pm-val">{streak}</span></span>
       </div>
@@ -942,15 +1000,16 @@ def render_project_header(project):
     <div class="page-subtitle">{total} sessions across {day_span} days</div>
   </div>"""
 
-def render_project_lifetime(lt, streak):
+def render_project_lifetime(lt, streak, total_code_lines=0, net_this_week=0):
     ts = lt.get("totalSessions", 0); tc = lt.get("totalCommits", 0)
-    added = lt.get("totalLinesAdded", 0); removed = lt.get("totalLinesRemoved", 0)
-    net = added - removed; sv = streak.get("current", 0)
+    sv = streak.get("current", 0)
+    ntw_sign = "+" if net_this_week >= 0 else ""
+    ntw_color = "var(--green)" if net_this_week >= 0 else "var(--red)"
     return f"""  <div class="lifetime-bar">
     <div class="lifetime-stat"><div class="lifetime-value">{ts}</div><div class="lifetime-label">Sessions</div></div>
     <div class="lifetime-stat"><div class="lifetime-value">{tc}</div><div class="lifetime-label">Commits</div></div>
-    <div class="lifetime-stat"><div class="lifetime-value" style="color: var(--green)">{format_lines(added)}</div><div class="lifetime-label">Lines Added</div></div>
-    <div class="lifetime-stat"><div class="lifetime-value">{format_lines(net)}</div><div class="lifetime-label">Net Code</div></div>
+    <div class="lifetime-stat"><div class="lifetime-value">{format_lines(total_code_lines)}</div><div class="lifetime-label">Total Code</div></div>
+    <div class="lifetime-stat"><div class="lifetime-value" style="color: {ntw_color}">{ntw_sign}{format_lines(net_this_week)}</div><div class="lifetime-label">Net This Week</div></div>
     <div class="lifetime-stat"><div class="lifetime-value">{sv}</div><div class="lifetime-label">Day Streak</div></div>
   </div>"""
 
@@ -1377,8 +1436,14 @@ def build_project_view(project):
                               "vpLeft": round(vpl, 1), "vpWidth": round(vpr - vpl, 1),
                               "label": wl, "weekNum": wn, "totalWeeks": len(weeks)})
 
+    # Compute total code lines and net this week for project
+    proj_total_code = lt.get("totalCodeLines", 0)
+    if not proj_total_code and project_path:
+        proj_total_code = compute_total_code_lines(project_path)
+    proj_net_week = compute_net_this_week(recent)
+
     header = render_project_header(project)
-    lifetime_bar = render_project_lifetime(lt, streak)
+    lifetime_bar = render_project_lifetime(lt, streak, proj_total_code, proj_net_week)
     milestones_html = render_project_milestones(milestones)
     scrubber = render_project_scrubber(scrubber_bars, total_days, first_date, today_str, weeks[0][0], weeks[0][1], slug) if weeks else ""
     controls = render_project_controls()
