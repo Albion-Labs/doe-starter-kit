@@ -62,8 +62,10 @@ from datetime import datetime
 reg = Path.home() / '.claude' / 'project-registry.json'
 data = json.loads(reg.read_text()) if reg.exists() else {'projects': []}
 root = str(Path.cwd().resolve())
-data['projects'] = [p for p in data['projects'] if p['path'] != root]
-data['projects'].append({'path': root, 'name': Path(root).name, 'lastUpdated': datetime.now().strftime('%Y-%m-%d')})
+existing = next((p for p in data['projects'] if p.get('path') == root), {})
+data['projects'] = [p for p in data['projects'] if p.get('path') != root]
+existing.update({'path': root, 'name': Path(root).name, 'lastUpdated': datetime.now().strftime('%Y-%m-%d')})
+data['projects'].append(existing)
 reg.write_text(json.dumps(data, indent=2))
 "
 ```

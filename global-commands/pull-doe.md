@@ -3,8 +3,8 @@ First, check if ~/doe-starter-kit is accessible. If not, run: /add-dir ~/doe-sta
 Then read directives/starter-kit-pull.md and follow it precisely. The directive covers:
 
 1. Pull latest kit from GitHub — ensure you have the newest version before comparing
-2. Read the project's last-synced version from `.doe-kit-version` in the project root
-3. Read the kit's current version from `git describe --tags` in ~/doe-starter-kit
+2. Read the kit's current version from `git describe --tags` in ~/doe-starter-kit
+3. Read the project's last-synced version from STATE.md's "DOE Starter Kit" line
 4. If versions match, say "Already up to date" and stop
 5. Show kit CHANGELOG entries between the two versions — this is what changed
 6. Global installs: run `~/doe-starter-kit/setup.sh` to update commands, hooks, scripts
@@ -15,8 +15,7 @@ Then read directives/starter-kit-pull.md and follow it precisely. The directive 
 11. Execution scripts: compare universal checks in audit_claims.py — add new universal checks, preserve @register("project-specific") checks
 12. Show full summary — get approval before applying
 13. Apply approved changes
-14. Update `.doe-kit-version` in the project root
-15. Update STATE.md's "DOE Starter Kit" line to the new version (e.g. `v1.24.1 · ~/doe-starter-kit · synced`)
+14. Update STATE.md's "DOE Starter Kit" line to the new version (e.g. `v1.24.1 · ~/doe-starter-kit · synced`)
 16. Commit: "Pull DOE kit v[X.Y.Z] — [summary]"
 
 To push DOE improvements FROM this project to the starter kit (reverse direction), use `/sync-doe`.
@@ -27,7 +26,7 @@ Rules:
 - If unsure whether a kit change conflicts with a project customization, ask me.
 - Show diffs before writing. Don't apply without my sign-off.
 - If directives/starter-kit-pull.md doesn't exist, tell me — the starter kit may not be set up yet.
-- If `.doe-kit-version` doesn't exist, treat this as a first pull — be extra cautious and show everything.
+- If STATE.md has no "DOE Starter Kit" line, treat this as a first pull — be extra cautious and show everything.
 
 ## Analysis Box (REQUIRED)
 

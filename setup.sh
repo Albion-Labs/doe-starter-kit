@@ -13,7 +13,6 @@ HOOKS_DST="$HOME/.claude/hooks"
 SCRIPTS_SRC="$SCRIPT_DIR/global-scripts"
 SCRIPTS_DST="$HOME/.claude/scripts"
 SETTINGS_FILE="$HOME/.claude/settings.json"
-VERSION_FILE="$HOME/.claude/.doe-kit-version"
 
 # Get kit version from latest git tag (fall back to "unknown")
 KIT_VERSION=$(cd "$SCRIPT_DIR" && git describe --tags --abbrev=0 2>/dev/null || echo "unknown")
@@ -122,14 +121,7 @@ if [ -d "$SCRIPT_DIR/.git" ] || git -C "$SCRIPT_DIR" rev-parse --git-dir > /dev/
     echo "✓ Git hooks activated"
 fi
 
-# 7. Write version receipt
-mkdir -p "$(dirname "$VERSION_FILE")"
-cat > "$VERSION_FILE" << EOF
-version=$KIT_VERSION
-installed=$TODAY
-EOF
-
-# 8. Summary
+# 7. Summary
 echo ""
 echo "✓ $COMMAND_COUNT commands installed to ~/.claude/commands/"
 echo "✓ $HOOK_COUNT hooks installed to ~/.claude/hooks/"

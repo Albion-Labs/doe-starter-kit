@@ -32,7 +32,7 @@ Rules:
 After diffing all syncable files, present the analysis in a bordered box BEFORE proposing any changes. This is the decision-support summary the user reads to approve or reject. **Generate programmatically** — compute W from content, define a `line(content)` helper: `f"│  {content}".ljust(W + 1) + "│"`. ALL rows including headers MUST use this helper — never construct `f"│{...}│"` manually. For headers with right-aligned text: build the inner content string first (e.g. `f"{left}{right:>{W - 2 - len(left)}}"`) then pass through `line()`. Unicode box-drawing borders. Content inside borders must be ASCII-only.
 
 Structure:
-- **Header row:** "UPDATES TO DOE" left-aligned, current kit version (from `~/.claude/.doe-kit-version`) right-aligned, with `├─┤` separator below
+- **Header row:** "UPDATES TO DOE" left-aligned, current kit version (from `git describe --tags` in `~/doe-starter-kit`) right-aligned, with `├─┤` separator below
 - **Summary:** 2-3 lines of context about what was compared and the state of the diffs
 - **Numbered list:** One entry per file that differs, with a short explanation of whether the diff is universal or project-specific
 - **VERDICT:** 1-2 lines — are there universal changes worth syncing?

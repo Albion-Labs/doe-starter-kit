@@ -25,7 +25,7 @@ Mid-session situation report. Shows current feature progress, completed/active/p
 *Added 28/02/26 · Updated 28/02/26*
 
 ### `/wrap`
-End-of-session routine. Updates STATE.md, todo.md, learnings.md. Computes session stats via `wrap_stats.py`, generates a visual HTML wrap-up via `wrap_html.py` with summary + breakdowns, commit groups with timeline percentages, decision/learning pills, system checks, and session vibe. Registers the project in `~/.claude/project-registry.json` for `/archive-global`. Opens in browser.
+End-of-session routine. Updates STATE.md, todo.md, learnings.md. Computes session stats via `wrap_stats.py`, generates a visual HTML wrap-up via `wrap_html.py` with summary + breakdowns, commit groups with timeline percentages, decision/learning pills, system checks, and session vibe. Registers the project in `~/.claude/project-registry.json` for `/hq`. Opens in browser.
 *Added 27/02/26 · Updated 10/03/26*
 
 ### `/eod`
@@ -112,9 +112,9 @@ Reads the codebase and roasts it. Specific, brutal, funny. References real files
 
 ## Infrastructure
 
-### `/archive-global`
-Global portfolio archive across all registered projects. Reads `~/.claude/project-registry.json`, loads each project's `.claude/stats.json`, generates a portfolio dashboard HTML at `~/.claude/docs/global-archive.html`. Shows time allocation, project health cards (Active/Idle/Dormant), cross-project timeline, and drill-down links to per-project archives. Opens in browser.
-*Added 10/03/26*
+### `/hq`
+Unified project dashboard. Reads `~/.claude/project-registry.json`, loads each project's `.claude/stats.json`, generates a single-page app with portfolio view and per-project drill-down (SPA hash routing). Shows project cards with recent activity, week-by-week session history, feature swimlanes, timeline scrubber, and search. Light/dark theme based on time of day. Opens in browser.
+*Added 10/03/26 (replaces /archive-global)*
 
 ### `/sync-doe`
 Syncs universal DOE improvements from the current project back to the starter kit repo (`~/doe-starter-kit`). Reads the sync directive, strips project-specific content, shows diffs for approval, commits and pushes to GitHub.

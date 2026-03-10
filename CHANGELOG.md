@@ -7,6 +7,24 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.27.0] — 2026-03-10
+
+### Added
+- `/hq` command: unified project dashboard with portfolio view and per-project drill-down (SPA hash routing). Replaces `/archive-global`.
+- `build_hq.py` global script: generates the HQ dashboard HTML with light/dark theme, search, feature swimlanes, timeline scrubber.
+
+### Changed
+- `/wrap` registry snippet now preserves existing fields (e.g. `displayName`) when re-registering a project.
+- Version detection across `/commands`, `/sync-doe`, `/pull-doe` now reads from `git describe --tags` in `~/doe-starter-kit` instead of the stale `~/.claude/.doe-kit-version` file.
+- `setup.sh` no longer writes `~/.claude/.doe-kit-version` — the git tag is the single source of truth.
+
+### Fixed
+- `.githooks/commit-msg`: case-insensitive regex now catches `Co-Authored-By` (previously only matched `Co-authored-by`).
+
+### Removed
+- `/archive-global` command (superseded by `/hq`).
+- `~/.claude/.doe-kit-version` file dependency (replaced by git tags).
+
 ## [v1.26.0] — 2026-03-10
 
 ### Added

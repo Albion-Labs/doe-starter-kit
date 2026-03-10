@@ -1,15 +1,15 @@
 Before showing the reference below, run a quick health check:
 
-1. **Version:** Read `~/.claude/.doe-kit-version`. If it exists, show the version and install date. If not, show "DOE Kit: not installed — run `./setup.sh` from the starter kit".
+1. **Version:** Run `cd ~/doe-starter-kit && git describe --tags --abbrev=0 2>/dev/null` to get the current kit version. If `~/doe-starter-kit` doesn't exist, show "DOE Kit: not installed — clone the repo and run `./setup.sh`".
 
 2. **Installation check:** List all `.md` files in `~/.claude/commands/` and compare against the 24 expected commands below. Report installed count (e.g. "24/24 commands installed" or "22/24 — missing: /audit, /review").
 
-3. **Update check:** Run `gh release view --repo iPolyphian/doe-starter-kit --json tagName -q .tagName` to get the latest release version. Compare with the installed version from step 1. If newer, show: "Update available: vX.Y.Z → run `cd ~/doe-starter-kit && git pull && ./setup.sh`". If current, show "up to date". If the command fails (offline, no gh CLI), skip silently and just show "update check: skipped (offline or gh CLI not available)".
+3. **Update check:** Run `gh release view --repo iPolyphian/doe-starter-kit --json tagName -q .tagName` to get the latest remote release version. Compare with the local version from step 1. If newer, show: "Update available: vX.Y.Z → run `cd ~/doe-starter-kit && git pull && ./setup.sh`". If current, show "up to date". If the command fails (offline, no gh CLI), skip silently and just show "update check: skipped (offline or gh CLI not available)".
 
 Format the health check as a compact status block:
 
 ```
-DOE Kit v1.20.4 (installed 06/03/26) · up to date
+DOE Kit v1.20.4 · up to date
 24/24 commands installed
 ```
 
