@@ -7,6 +7,11 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.27.1] — 2026-03-11
+
+### Added
+- `wrap_stats.py`: automatic git version tagging at wrap time. Reads `**Current app version:**` from STATE.md and creates the git tag if it doesn't exist. Ensures HQ dashboard always shows the project version.
+
 ## [v1.27.0] — 2026-03-10
 
 ### Added

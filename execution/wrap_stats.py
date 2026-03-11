@@ -261,6 +261,26 @@ def update_stats(stats: dict, metrics: dict, streak: int, steps: int, duration: 
     return stats
 
 
+# ── Version tagging ──────────────────────────────────────────
+
+def ensure_version_tag() -> Optional[str]:
+    """Read version from STATE.md and create a git tag if it doesn't exist."""
+    state_path = PROJECT_ROOT / "STATE.md"
+    if not state_path.exists():
+        return None
+    for line in state_path.read_text(encoding="utf-8").split("\n"):
+        m = re.search(r"\*\*Current app version:\*\*\s*(v[\d.]+)", line)
+        if m:
+            version = m.group(1)
+            # Check if tag already exists
+            existing = run_git("tag", "-l", version)
+            if existing:
+                return None  # already tagged
+            run_git("tag", version)
+            return version
+    return None
+
+
 # ── Main ─────────────────────────────────────────────────────
 
 def main():
@@ -287,6 +307,7 @@ def main():
         stats_path.parent.mkdir(parents=True, exist_ok=True)
         stats_path.write_text(
             json.dumps(updated, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        ensure_version_tag()
 
     output = {
         "metrics": {**metrics, "stepsCompleted": steps, "sessionDuration": duration},
