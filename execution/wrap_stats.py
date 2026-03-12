@@ -11,6 +11,9 @@ Usage:
       --session-start <ISO-timestamp> \
       --todo tasks/todo.md \
       --stats .claude/stats.json \
+      [--platform win32|darwin|linux] \
+      [--model opus|sonnet|haiku] \
+      [--tag BUILD|PLAN|DEBUG|HOUSEKEEPING|RESEARCH] \
       [--dry-run]
 """
 
@@ -18,6 +21,7 @@ import argparse
 import json
 import re
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
@@ -102,6 +106,32 @@ def count_steps_completed_since(todo_path: Path, session_start: str) -> int:
                 except ValueError:
                     pass
     return count
+
+
+# ── Auto-classification ───────────────────────────────────────
+
+def auto_classify_tag(metrics: dict, steps: int) -> str:
+    """Classify session type based on metrics and commit messages."""
+    if steps > 0:
+        return "BUILD"
+    commit_msgs = " ".join(c.get("message", "") for c in metrics.get("commitLog", []))
+    if metrics["commits"] == 0:
+        return "RESEARCH"
+    if re.search(r'\bfix\b|\bdebug\b', commit_msgs, re.IGNORECASE):
+        return "DEBUG"
+    if re.search(r'\bplan\b|\btodo\b|\bscope\b', commit_msgs, re.IGNORECASE):
+        return "PLAN"
+    return "HOUSEKEEPING"
+
+
+def detect_platform() -> str:
+    """Auto-detect platform from sys.platform."""
+    p = sys.platform
+    if p == "win32":
+        return "win32"
+    elif p == "darwin":
+        return "darwin"
+    return "linux"
 
 
 # ── Streak & duration ────────────────────────────────────────
@@ -233,7 +263,8 @@ def build_leaderboard(stats: dict, current_metrics: dict) -> list:
     return board
 
 
-def update_stats(stats: dict, metrics: dict, streak: int, steps: int, duration: str) -> dict:
+def update_stats(stats: dict, metrics: dict, streak: int, steps: int, duration: str,
+                 platform: str, model: Optional[str], tag: str) -> dict:
     today_str = datetime.now().strftime("%Y-%m-%d")
 
     lt = stats.setdefault("lifetime", {})
@@ -254,6 +285,9 @@ def update_stats(stats: dict, metrics: dict, streak: int, steps: int, duration: 
         "commits": metrics["commits"], "linesAdded": metrics["linesAdded"],
         "linesRemoved": metrics["linesRemoved"], "filesTouched": metrics["filesTouched"],
         "stepsCompleted": steps, "sessionDuration": duration, "streak": streak,
+        "platform": platform,
+        "model": model,
+        "tag": tag,
     }
     recent = stats.setdefault("recentSessions", [])
     recent.insert(0, record)
@@ -289,6 +323,9 @@ def main():
     parser.add_argument("--session-start", required=True, help="Session start ISO timestamp")
     parser.add_argument("--todo", default="tasks/todo.md", help="Path to todo.md")
     parser.add_argument("--stats", default=".claude/stats.json", help="Path to stats.json")
+    parser.add_argument("--platform", default=None, help="Platform override (win32/darwin/linux); auto-detected if omitted")
+    parser.add_argument("--model", default=None, help="Model used (opus/sonnet/haiku)")
+    parser.add_argument("--tag", default=None, help="Session tag override (BUILD/PLAN/DEBUG/HOUSEKEEPING/RESEARCH); auto-classified if omitted")
     parser.add_argument("--dry-run", action="store_true", help="Don't write stats.json")
     args = parser.parse_args()
 
@@ -301,7 +338,13 @@ def main():
     streak = compute_streak(stats)
     duration = compute_session_duration(args.session_start)
     leaderboard = build_leaderboard(stats, metrics)
-    updated = update_stats(stats, metrics, streak, steps, duration)
+
+    # Resolve platform, model, tag
+    platform = args.platform if args.platform else detect_platform()
+    model = args.model  # None is valid (unknown)
+    tag = args.tag if args.tag else auto_classify_tag(metrics, steps)
+
+    updated = update_stats(stats, metrics, streak, steps, duration, platform, model, tag)
 
     if not args.dry_run:
         stats_path.parent.mkdir(parents=True, exist_ok=True)
@@ -314,6 +357,9 @@ def main():
         "streak": streak,
         "leaderboard": leaderboard,
         "stats": updated,
+        "platform": platform,
+        "model": model,
+        "tag": tag,
     }
     print(json.dumps(output, indent=2, ensure_ascii=False))
 

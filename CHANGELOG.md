@@ -7,6 +7,24 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.29.0] — 2026-03-12
+
+### Added
+- Platform/model/tag tracking in `wrap_stats.py` (`--platform`, `--model`, `--tag` CLI args, `auto_classify_tag()`)
+- Badge helpers and CSS in `wrap_html.py` and `eod_html.py` (platform/model/tag pills)
+- Dark/light toggle with auto mode (6am-6pm) and manual override via localStorage in all three renderers
+- GitHub-style streak heatmap in `build_hq.py` (52-week SVG grid, responsive full-width)
+- Side-by-side platform + model stats layout in `build_hq.py`
+
+### Changed
+- `build_hq.py`: search/filters moved below Features This Week swimlane
+- `build_hq.py`: model stats shown even with single model (removed 2+ threshold)
+
+### Fixed
+- `eod_html.py`: breakdown bar CSS overflow (flex-shrink + max-width + overflow:hidden)
+- `.githooks/commit-msg`: cross-platform temp file approach replaces macOS-only `sed -i ''`
+- `.githooks/pre-commit`: added `PYTHONIOENCODING=utf-8` for Windows cp1252 compatibility
+
 ## [v1.28.0] — 2026-03-12
 
 ### Changed

@@ -3,6 +3,7 @@
 # Runs only checks marked fast=True — typically <1 second.
 # To skip (emergency only): git commit --no-verify
 
+export PYTHONIOENCODING=utf-8
 python3 execution/audit_claims.py --hook > /dev/null 2>&1
 EXIT_CODE=$?
 

@@ -12,6 +12,7 @@ import os
 import re
 import subprocess
 import sys
+from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -45,8 +46,14 @@ def format_lines(n):
 def parse_date(s):
     return datetime.strptime(s, "%Y-%m-%d").date()
 
+def _day_fmt(fmt_str):
+    """Replace %-d with %#d on Windows (strftime platform difference)."""
+    if sys.platform == "win32":
+        return fmt_str.replace("%-d", "%#d")
+    return fmt_str
+
 def format_date_short(d):
-    return d.strftime("%-d %b")
+    return d.strftime(_day_fmt("%-d %b"))
 
 def format_dow(d):
     return d.strftime("%a")
@@ -118,6 +125,45 @@ def delta_badge(current, previous):
     sign = "+" if diff > 0 else ""
     val = format_lines(diff) if abs(diff) >= 1000 else str(diff)
     return f'<span class="wsm-delta {cls}">{sign}{val}</span>'
+
+
+def format_duration_mins(mins):
+    """Format minutes as e.g. '2h 15m' or '45m'."""
+    if mins <= 0:
+        return "0m"
+    h = mins // 60
+    m = mins % 60
+    if h > 0 and m > 0:
+        return f"{h}h {m}m"
+    elif h > 0:
+        return f"{h}h"
+    return f"{m}m"
+
+
+# ── Badge Helpers ─────────────────────────────────────────────────────────────
+
+def _platform_badge(platform):
+    if not platform: return ""
+    p = platform.lower()
+    if p == "win32": return '<span class="badge badge-platform-win">PC</span>'
+    elif p == "darwin": return '<span class="badge badge-platform-mac">Mac</span>'
+    elif p == "linux": return '<span class="badge badge-platform-linux">Linux</span>'
+    return f'<span class="badge badge-platform-linux">{esc(platform)}</span>'
+
+def _model_badge(model):
+    if not model: return ""
+    m = model.lower()
+    if "opus" in m: return '<span class="badge badge-model-opus">Opus</span>'
+    elif "sonnet" in m: return '<span class="badge badge-model-sonnet">Sonnet</span>'
+    elif "haiku" in m: return '<span class="badge badge-model-haiku">Haiku</span>'
+    return f'<span class="badge badge-model-sonnet">{esc(model)}</span>'
+
+def _tag_badge(tag):
+    if not tag: return ""
+    t = tag.upper()
+    css_map = {"BUILD": "badge-tag-build", "PLAN": "badge-tag-plan", "DEBUG": "badge-tag-debug", "HOUSEKEEPING": "badge-tag-housekeeping", "RESEARCH": "badge-tag-research"}
+    css = css_map.get(t, "badge-tag-housekeeping")
+    return f'<span class="badge {css}">{esc(t)}</span>'
 
 
 # ── Session Type Detection ────────────────────────────────────────────────────
@@ -433,7 +479,7 @@ def compute_best_of(week_sessions, days_dict):
         biggest_date = max(days_dict, key=lambda d: len(days_dict[d]))
         bd = parse_date(biggest_date)
         day_added = sum(s.get("linesAdded", 0) for s in days_dict[biggest_date])
-        best["biggest_day"] = f"{bd.strftime('%a %-d %b')} -- {len(days_dict[biggest_date])} sessions, +{format_lines(day_added)} lines"
+        best["biggest_day"] = f"{bd.strftime(_day_fmt('%a %-d %b'))} -- {len(days_dict[biggest_date])} sessions, +{format_lines(day_added)} lines"
     if week_sessions:
         longest = max(week_sessions, key=lambda s: s.get("_duration_mins", 0))
         if longest.get("_duration_mins", 0) > 0:
@@ -752,8 +798,13 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   .week-panel-lower.active { display: block; }
 
   /* ── Theme Toggle ── */
-  .theme-toggle { position: fixed; top: 1rem; right: 1rem; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; z-index: 200; transition: all 0.2s; }
-  .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+  .theme-toggle { position: fixed; top: 1rem; right: 1rem; display: flex; align-items: center; gap: 0.3rem; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 0.3rem 0.5rem; cursor: pointer; z-index: 200; user-select: none; }
+  .theme-toggle:hover { border-color: var(--accent); }
+  .toggle-option { font-size: 0.9rem; }
+  .toggle-switch { width: 28px; height: 16px; background: var(--border); border-radius: 8px; position: relative; transition: background 0.2s; }
+  .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--text); transition: transform 0.2s; }
+  body.light .toggle-switch::after { transform: translateX(0); }
+  body:not(.light) .toggle-switch::after { transform: translateX(12px); }
 
   /* ── Keyboard Help ── */
   .kb-help { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; }
@@ -767,6 +818,46 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   /* ── Footer ── */
   .archive-footer { border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 2rem; text-align: center; font-size: 0.8rem; color: var(--text-dim); }
   .archive-footer strong { color: var(--accent); font-weight: 600; }
+
+  /* ── Badges ── */
+  .badge { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .badge-group { display: inline-flex; gap: 0.4rem; align-items: center; }
+  .badge-platform-win { color: #0078D4; background: rgba(0, 120, 212, 0.12); }
+  .badge-platform-mac { color: #555; background: rgba(85, 85, 85, 0.12); }
+  .badge-platform-linux { color: #E95420; background: rgba(233, 84, 32, 0.12); }
+  .badge-model-opus { color: #7C3AED; background: rgba(124, 58, 237, 0.12); }
+  .badge-model-sonnet { color: #D97706; background: rgba(217, 119, 6, 0.12); }
+  .badge-model-haiku { color: #0D9488; background: rgba(13, 148, 136, 0.12); }
+  .badge-tag-build { color: #16a34a; background: rgba(22, 163, 74, 0.12); }
+  .badge-tag-plan { color: #2563eb; background: rgba(37, 99, 235, 0.12); }
+  .badge-tag-debug { color: #dc2626; background: rgba(220, 38, 38, 0.12); }
+  .badge-tag-housekeeping { color: #6b7280; background: rgba(107, 114, 128, 0.12); }
+  .badge-tag-research { color: #7c3aed; background: rgba(124, 58, 237, 0.12); }
+
+  /* ── Platform & Model Stats ── */
+  .platform-stats, .model-stats { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+  .stats-split { display: flex; gap: 1rem; margin-bottom: 1rem; }
+  .stats-split > * { flex: 1; margin-bottom: 0; }
+  .platform-row, .model-row { display: flex; align-items: center; gap: 1rem; padding: 0.3rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+  .platform-row span, .model-row span { white-space: nowrap; }
+
+  /* ── Streak Heatmap ── */
+  .streak-heatmap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1rem; overflow-x: auto; }
+  .streak-heatmap svg { display: block; }
+  .streak-heatmap .section-label { margin-bottom: 0.8rem; }
+
+  /* ── Feature Velocity ── */
+
+  /* ── Tag Filter ── */
+  .tag-filter-bar { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .tag-pill { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
+  .tag-pill:hover { border-color: var(--accent); color: var(--text); }
+  .tag-pill.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+  .tag-pill .tag-count { font-size: 0.55rem; opacity: 0.7; margin-left: 0.2rem; }
+
+  /* ── Enhanced Theme Toggle ── */
+  .theme-auto-label { position: fixed; top: 3rem; right: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text-dim); text-align: center; z-index: 200; cursor: pointer; }
+  .theme-auto-label:hover { color: var(--accent); }
 
   @media (max-width: 700px) {
     .lifetime-bar { grid-template-columns: repeat(3, 1fr); }
@@ -818,6 +909,148 @@ def render_allocation_bar(projects):
       <div class="allocation-labels">\n{chr(10).join(labs)}\n      </div>
     </div>
   </div>"""
+
+def render_platform_stats(all_sessions):
+    by_platform = {}
+    for s in all_sessions:
+        p = s.get("platform", "unknown")
+        if p not in by_platform:
+            by_platform[p] = {"sessions": 0, "commits": 0, "mins": 0}
+        by_platform[p]["sessions"] += 1
+        by_platform[p]["commits"] += s.get("commits", 0)
+        by_platform[p]["mins"] += parse_duration_mins(s.get("sessionDuration", "0m"))
+    if len(by_platform) <= 1:
+        return ""  # Don't show if only one platform
+    rows = []
+    for p, stats in sorted(by_platform.items(), key=lambda x: -x[1]["sessions"]):
+        badge = _platform_badge(p)
+        dur = format_duration_mins(stats["mins"])
+        rows.append(f'<div class="platform-row">{badge} <span>{stats["sessions"]} sessions</span> <span>{stats["commits"]} commits</span> <span>{dur}</span></div>')
+    inner = "\n".join(rows)
+    return f'<div class="platform-stats"><div class="section-label">Platform Split</div>{inner}</div>'
+
+
+def render_model_stats(all_sessions):
+    by_model = {}
+    for s in all_sessions:
+        m = s.get("model", "")
+        if not m:
+            continue
+        if m not in by_model:
+            by_model[m] = {"sessions": 0, "commits": 0, "steps": 0}
+        by_model[m]["sessions"] += 1
+        by_model[m]["commits"] += s.get("commits", 0)
+        by_model[m]["steps"] += s.get("stepsCompleted", 0)
+    if not by_model:
+        return ""
+    rows = []
+    for m, stats in sorted(by_model.items(), key=lambda x: -x[1]["sessions"]):
+        badge = _model_badge(m)
+        avg_commits = round(stats["commits"] / max(stats["sessions"], 1), 1)
+        avg_steps = round(stats["steps"] / max(stats["sessions"], 1), 1)
+        rows.append(f'<div class="model-row">{badge} <span>{stats["sessions"]} sessions</span> <span>avg {avg_commits} commits</span> <span>avg {avg_steps} steps</span></div>')
+    inner = "\n".join(rows)
+    return f'<div class="model-stats"><div class="section-label">Model Split</div>{inner}</div>'
+
+
+def render_streak_heatmap(all_sessions):
+    """GitHub-style 52-week contribution heatmap using inline SVG."""
+    if not all_sessions:
+        return ""
+
+    # Count sessions per date
+    counts = defaultdict(int)
+    for s in all_sessions:
+        d = s.get("date", "")
+        if d:
+            counts[d] += 1
+
+    today = datetime.now().date()
+    # Find the Saturday that ends the current week (weeks end on Saturday for GitHub-style)
+    # Grid: columns = weeks, rows = Mon(0)..Sun(6)
+    # Most recent week on the right; each column is Mon-Sun
+    # We want 52 columns ending with the column containing today
+
+    # Find the Monday of today's week (Mon=0)
+    days_since_monday = today.weekday()  # Mon=0, Sun=6
+    this_monday = today - timedelta(days=days_since_monday)
+    # Start date is 51 weeks before this Monday
+    start_monday = this_monday - timedelta(weeks=51)
+
+    cell_size = 10
+    gap = 2
+    step = cell_size + gap
+    left_margin = 30  # space for day labels
+    top_margin = 18   # space for month labels
+
+    svg_width = left_margin + 52 * step
+    svg_height = top_margin + 7 * step
+
+    rects = []
+    month_labels = []
+    last_month_label = None
+
+    for week_col in range(52):
+        week_monday = start_monday + timedelta(weeks=week_col)
+        for row in range(7):  # 0=Mon, 6=Sun
+            day = week_monday + timedelta(days=row)
+            if day > today:
+                continue
+            day_str = day.strftime("%Y-%m-%d")
+            count = counts.get(day_str, 0)
+
+            x = left_margin + week_col * step
+            y = top_margin + row * step
+
+            if count == 0:
+                fill = "var(--heatmap-empty, rgba(255,255,255,0.05))"
+            elif count == 1:
+                fill = "rgba(99, 102, 241, 0.4)"
+            else:
+                fill = "var(--accent)"
+
+            tooltip = f"{day_str}: {count} session{'s' if count != 1 else ''}"
+            rects.append(
+                f'<rect x="{x}" y="{y}" width="{cell_size}" height="{cell_size}" '
+                f'rx="2" ry="2" fill="{fill}"><title>{esc(tooltip)}</title></rect>'
+            )
+
+        # Month label: show at first week that starts in a new month
+        first_day_of_week = week_monday
+        month_key = first_day_of_week.strftime("%Y-%m")
+        if month_key != last_month_label and first_day_of_week.day <= 7:
+            mx = left_margin + week_col * step
+            month_name = first_day_of_week.strftime("%b")
+            month_labels.append(
+                f'<text x="{mx}" y="{top_margin - 5}" '
+                f'font-family="\'JetBrains Mono\', monospace" font-size="9" '
+                f'fill="var(--text-dim)">{month_name}</text>'
+            )
+            last_month_label = month_key
+
+    # Day-of-week labels (Mon, Wed, Fri only)
+    day_labels = []
+    for row, label in [(0, "Mon"), (2, "Wed"), (4, "Fri")]:
+        y = top_margin + row * step + cell_size - 1
+        day_labels.append(
+            f'<text x="{left_margin - 4}" y="{y}" text-anchor="end" '
+            f'font-family="\'JetBrains Mono\', monospace" font-size="9" '
+            f'fill="var(--text-dim)">{label}</text>'
+        )
+
+    svg_parts = month_labels + day_labels + rects
+    svg_inner = "\n    ".join(svg_parts)
+
+    return (
+        f'<div class="streak-heatmap">\n'
+        f'  <div class="section-label">Session Activity</div>\n'
+        f'  <svg viewBox="0 0 {svg_width} {svg_height}" width="100%" xmlns="http://www.w3.org/2000/svg">\n'
+        f'    {svg_inner}\n'
+        f'  </svg>\n'
+        f'</div>'
+    )
+
+
 
 def render_portfolio_week_strip(week, projects, today):
     parts = []
@@ -1137,6 +1370,17 @@ def render_session_card(session, project_path):
         if feature: parts.append(f'<span class="feature-name">{esc(feature)}</span>')
         if step_info: parts.append(f'<span class="feature-step">{esc(step_info)}</span>')
         feat_html = f'        <span class="session-feature">{" ".join(parts)}</span>'
+    # Badge pills for platform, model, tag
+    badge_parts = []
+    pb = _platform_badge(session.get("platform"))
+    mb = _model_badge(session.get("model"))
+    tb = _tag_badge(session.get("tag"))
+    if pb: badge_parts.append(pb)
+    if mb: badge_parts.append(mb)
+    if tb: badge_parts.append(tb)
+    badge_html = f'        <span class="badge-group">{" ".join(badge_parts)}</span>' if badge_parts else ""
+    # data-tag for filtering
+    tag_attr = f' data-tag="{esc(session.get("tag", "").upper())}"' if session.get("tag") else ' data-tag=""'
     mi = [f'<span class="metric-item"><span class="metric-val">{commits}</span> commits</span>',
           f'<span class="metric-item"><span class="metric-added">+{added:,}</span></span>',
           f'<span class="metric-item"><span class="metric-removed">-{removed:,}</span></span>',
@@ -1149,13 +1393,14 @@ def render_session_card(session, project_path):
     else:
         wrap_html = '      <div class="no-wrap-note">No wrap page saved for this session</div>'
     full_summary = esc(session.get("summary", ""))
-    return f"""    <div class="session-card" onclick="toggleCard(this)">
+    return f"""    <div class="session-card"{tag_attr} onclick="toggleCard(this)">
       <span class="card-chevron">&#9654;</span>
       <div class="session-top">
         <span class="session-num">#{num}</span>
         <span class="session-duration">{dur}</span>
         <span class="session-type {stype.lower()}">{esc(stype)}</span>
         {wrap_dot}
+{badge_html}
 {feat_html}
       </div>
       <div class="session-summary">{summary}</div>
@@ -1168,7 +1413,7 @@ def render_session_card(session, project_path):
     </div>"""
 
 def render_day_group(date_str, sessions, collapsed, project_path):
-    d = parse_date(date_str); day_label = d.strftime("%A, %-d %B %Y")
+    d = parse_date(date_str); day_label = d.strftime(_day_fmt("%A, %-d %B %Y"))
     n = len(sessions); tc = sum(s.get("commits", 0) for s in sessions); tl = sum(s.get("linesAdded", 0) for s in sessions)
     tr = sum(s.get("linesRemoved", 0) for s in sessions)
     streak_val = sessions[0].get("streak", 0) if sessions else 0
@@ -1218,6 +1463,21 @@ def render_project_controls():
   </div>"""
 
 
+def render_tag_filter_bar(sessions):
+    """Build a clickable tag filter bar from all sessions' tags."""
+    tag_counts = {}
+    for s in sessions:
+        tag = (s.get("tag") or "").upper()
+        if tag:
+            tag_counts[tag] = tag_counts.get(tag, 0) + 1
+    if not tag_counts:
+        return ""  # No tags present in data
+    pills = ['<span class="tag-pill active" data-tag-filter="all">All<span class="tag-count">' + str(len(sessions)) + '</span></span>']
+    for tag, count in sorted(tag_counts.items(), key=lambda x: -x[1]):
+        pills.append(f'<span class="tag-pill" data-tag-filter="{esc(tag)}">{esc(tag)}<span class="tag-count">{count}</span></span>')
+    return f'  <div class="tag-filter-bar">\n    {chr(10).join("    " + p for p in pills)}\n  </div>'
+
+
 # ── JavaScript ────────────────────────────────────────────────────────────────
 
 JS_TEMPLATE = r"""
@@ -1245,12 +1505,17 @@ handleRoute();
 
 // ── Theme ──
 (function() {
-  THEME_INIT
-  var btn = document.getElementById('theme-toggle');
-  btn.addEventListener('click', function() {
-    document.body.classList.toggle('light');
-    btn.textContent = document.body.classList.contains('light') ? '\u2600' : '\u263E';
-  });
+  var KEY = 'doe-theme';
+  var toggle = document.getElementById('themeToggle');
+  var label = document.getElementById('themeAutoLabel');
+  var mode = localStorage.getItem(KEY) || 'auto';
+  function getAutoTheme() { var h = new Date().getHours(); return (h >= 6 && h < 18) ? 'light' : 'dark'; }
+  function applyTheme(theme) { document.body.classList.toggle('light', theme === 'light'); }
+  function update() { if (mode === 'auto') { applyTheme(getAutoTheme()); label.textContent = 'Auto'; } else { applyTheme(mode); label.textContent = 'Reset to auto'; } }
+  if (toggle) toggle.addEventListener('click', function() { if (mode === 'auto') { mode = getAutoTheme() === 'light' ? 'dark' : 'light'; } else { mode = mode === 'light' ? 'dark' : 'light'; } localStorage.setItem(KEY, mode); update(); });
+  if (label) label.addEventListener('click', function(e) { e.stopPropagation(); mode = 'auto'; localStorage.removeItem(KEY); update(); });
+  if (mode === 'auto') { applyTheme(getAutoTheme()); } else { applyTheme(mode); }
+  if (label) label.textContent = mode === 'auto' ? 'Auto' : 'Reset to auto';
 })();
 
 // ── Shared ──
@@ -1321,13 +1586,31 @@ function applyFilters(searchBox) {
   });
 }
 
+// ── Tag Filter ──
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('tag-pill')) {
+    var bar = e.target.closest('.tag-filter-bar');
+    bar.querySelectorAll('.tag-pill').forEach(function(p) { p.classList.remove('active'); });
+    e.target.classList.add('active');
+    var tagFilter = e.target.getAttribute('data-tag-filter');
+    var view = e.target.closest('.view-container');
+    view.querySelectorAll('.session-card').forEach(function(card) {
+      var cardTag = card.getAttribute('data-tag') || '';
+      card.style.display = (tagFilter === 'all' || cardTag === tagFilter) ? '' : 'none';
+    });
+    view.querySelectorAll('.day-group').forEach(function(g) {
+      g.style.display = g.querySelectorAll('.session-card:not([style*="display: none"])').length > 0 ? '' : 'none';
+    });
+  }
+});
+
 // ── Keyboard ──
 document.addEventListener('keydown', function(e) {
   if (e.target.tagName === 'INPUT') return;
   var help = document.getElementById('kb-help');
   if (e.key === '?') { e.preventDefault(); help.classList.toggle('visible'); return; }
   if (e.key === 'Escape') { help.classList.remove('visible'); return; }
-  if (e.key === 't' || e.key === 'T') { if (!help.classList.contains('visible')) document.getElementById('theme-toggle').click(); return; }
+  if (e.key === 't' || e.key === 'T') { if (!help.classList.contains('visible')) { var tt = document.getElementById('themeToggle'); if (tt) tt.click(); } return; }
   if (e.key === 'ArrowLeft') { e.preventDefault(); var pv = document.getElementById('view-portfolio'); if (pv.classList.contains('active')) renderPortfolioWeek(pWeekIdx - 1); return; }
   if (e.key === 'ArrowRight') { e.preventDefault(); var pv2 = document.getElementById('view-portfolio'); if (pv2.classList.contains('active')) renderPortfolioWeek(pWeekIdx + 1); return; }
   if (e.key === 'b' || e.key === 'B') { navigateTo('portfolio'); return; }
@@ -1372,10 +1655,21 @@ def build_portfolio_view(projects, day_map, earliest, latest, weeks, current_wee
     cards = "\n".join(render_project_card(p, i, today) for i, p in enumerate(projects))
     scrubber = render_portfolio_scrubber(day_map, earliest, latest, projects, weeks, current_week_idx)
 
+    # Collect all sessions for platform/model stats
+    all_sessions = []
+    for p in projects:
+        ps = p.get("stats")
+        if ps:
+            all_sessions.extend(ps.get("recentSessions", []))
+    platform_stats_html = render_platform_stats(all_sessions)
+    model_stats_html = render_model_stats(all_sessions)
+
     html_parts = [
         render_portfolio_header(global_stats, len(projects), total_days),
         render_portfolio_lifetime(global_stats),
         render_allocation_bar(projects),
+        f'<div class="stats-split">{platform_stats_html}{model_stats_html}</div>' if platform_stats_html or model_stats_html else "",
+        render_streak_heatmap(all_sessions),
         f"""  <div class="week-section">
     <div class="week-nav">
       <div class="week-arrows"><div class="week-arrow{pd}" id="p-prev-week">&larr;</div></div>
@@ -1428,9 +1722,9 @@ def build_project_view(project):
             prev_stat = compute_week_stats_project(sessions_in_week(grouped, pm, ps_))
 
         if monday.month == sunday.month:
-            wl = f"{monday.strftime('%-d')} - {sunday.strftime('%-d %B %Y')}"
+            wl = f"{monday.strftime(_day_fmt('%-d'))} - {sunday.strftime(_day_fmt('%-d %B %Y'))}"
         else:
-            wl = f"{monday.strftime('%-d %B')} - {sunday.strftime('%-d %B %Y')}"
+            wl = f"{monday.strftime(_day_fmt('%-d %B'))} - {sunday.strftime(_day_fmt('%-d %B %Y'))}"
         wn = len(weeks) - wi
 
         summary_card = render_project_week_summary(wstat, prev_stat, ws, wd, wi, len(weeks))
@@ -1468,6 +1762,7 @@ def build_project_view(project):
     milestones_html = render_project_milestones(milestones)
     scrubber = render_project_scrubber(scrubber_bars, total_days, first_date, today_str, weeks[0][0], weeks[0][1], slug) if weeks else ""
     controls = render_project_controls()
+    tag_filter = render_tag_filter_bar(recent)
     wl_init = f"{esc(weeks_js_data[0]['label'])} <span class='week-label-sub' id='wk-sub-{slug}'>Week {weeks_js_data[0]['weekNum']} of {weeks_js_data[0]['totalWeeks']}</span>" if weeks_js_data else ""
 
     content = f"""{header}
@@ -1475,8 +1770,6 @@ def build_project_view(project):
 {lifetime_bar}
 
 {milestones_html}
-
-{controls}
 
   <div class="week-section">
     <div class="week-nav">
@@ -1487,6 +1780,9 @@ def build_project_view(project):
 {chr(10).join(week_panels)}
 {scrubber}
 {chr(10).join(week_panels_lower)}
+{controls}
+
+{tag_filter}
   </div>
 
   <div class="archive-footer">
@@ -1606,7 +1902,12 @@ window['scrollToDay_{slug}'] = function(date) {{
 </style>
 </head>
 <body{body_cls}>
-<button class="theme-toggle" id="theme-toggle" title="Toggle theme">&#9790;</button>
+<div class="theme-toggle" id="themeToggle">
+  <span class="toggle-option">&#9728;&#65039;</span>
+  <span class="toggle-switch"></span>
+  <span class="toggle-option">&#127769;</span>
+</div>
+<div class="theme-auto-label" id="themeAutoLabel">Auto</div>
 
 {kb}
 

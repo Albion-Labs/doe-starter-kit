@@ -1,7 +1,9 @@
 #!/bin/sh
 # Strip AI co-author trailers from commit messages.
 # This runs automatically on every commit via git hooks.
-sed -i '' '/^[Cc]o-[Aa]uthored-[Bb]y:.*[Cc]laude/d' "$1"
-sed -i '' '/^[Cc]o-[Aa]uthored-[Bb]y:.*[Aa]nthropic/d' "$1"
-# Clean up any trailing blank lines left behind
-sed -i '' -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$1"
+# Cross-platform: uses temp file instead of sed -i (which differs between macOS and GNU/Windows).
+TMPFILE=$(mktemp)
+sed '/^[Cc]o-[Aa]uthored-[Bb]y:.*[Cc]laude/d' "$1" | sed '/^[Cc]o-[Aa]uthored-[Bb]y:.*[Aa]nthropic/d' > "$TMPFILE"
+# Clean up trailing blank lines
+sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$TMPFILE" > "$1"
+rm -f "$TMPFILE"
