@@ -41,6 +41,11 @@ A template repository containing everything you need to run Claude Code with gua
 - **Guardrail hooks** — Block secrets, protect directives, prevent dangerous commands
 - **Context monitoring** — Warns at 60% context usage, stops at 80% for graceful handoff
 
+**Documentation (43 files)**
+
+- **10 HTML tutorial pages** (`docs/tutorial/`) — Mintlify-style visual guides covering installation, first session, key concepts, commands, daily workflow, feature lifecycle, example apps, tips, and glossary
+- **33 markdown reference docs** (`docs/reference/`) — searchable reference for every command, concept, workflow, file format, and example app
+
 **Guides**
 
 - **CUSTOMIZATION.md** — What to keep, what to customize, what to clear for your project
@@ -90,4 +95,4 @@ The starter kit uses semantic versioning with GitHub releases. Every `/sync-doe`
 
 ## File Count
 
-49 files across 10 directories. See SYSTEM-MAP.md for the complete map.
+92 files across 18 directories. See SYSTEM-MAP.md for the complete map.

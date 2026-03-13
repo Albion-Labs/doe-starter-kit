@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commands — DOE Starter Kit</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-body: #FFFFFF;
+      --bg-sidebar: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-code: #0F172A;
+      --bg-callout-info: #EFF6FF;
+      --bg-callout-tip: #F0FDF4;
+      --bg-callout-warn: #FFFBEB;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --text-sidebar: #334155;
+      --text-sidebar-active: #0F172A;
+      --accent: #6366F1;
+      --accent-light: #EEF2FF;
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-blue: #3B82F6;
+      --accent-rose: #F43F5E;
+      --sidebar-w: 260px;
+      --content-max: 720px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #243347;
+      --bg-code: #020617;
+      --bg-callout-info: #1E293B;
+      --bg-callout-tip: #1E293B;
+      --bg-callout-warn: #1E293B;
+      --border: #1E293B;
+      --border-light: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-sidebar: #94A3B8;
+      --text-sidebar-active: #F1F5F9;
+      --accent-light: #1E1B4B;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-brand {
+      display: block;
+      padding: 20px 16px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .sidebar-brand:hover { color: var(--accent); }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-sidebar);
+      text-decoration: none;
+      line-height: 1.4;
+      transition: background 0.1s, color 0.1s;
+    }
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-sidebar-active);
+    }
+    .sidebar-link.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .sidebar-link.nested {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* ── Dark mode button ── */
+    .theme-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg-card-hover); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Content area ── */
+    .content-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 48px;
+      min-width: 0;
+    }
+
+    .content {
+      max-width: var(--content-max);
+      width: 100%;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .content p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content ul, .content ol {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 20px;
+    }
+    .content li { margin-bottom: 6px; }
+
+    .content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .content a:hover { text-decoration: underline; }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-sidebar);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .m-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--bg-card);
+      transition: all 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .m-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .card-icon.indigo { background: var(--accent-light); color: var(--accent); }
+    .card-icon.green  { background: #ECFDF5; color: var(--accent-green); }
+    .card-icon.amber  { background: #FEF3C7; color: var(--accent-amber); }
+    .card-icon.blue   { background: #DBEAFE; color: var(--accent-blue); }
+    .card-icon.rose   { background: #FFE4E6; color: var(--accent-rose); }
+
+    [data-theme="dark"] .card-icon.indigo { background: #312E81; }
+    [data-theme="dark"] .card-icon.green  { background: #064E3B; }
+    [data-theme="dark"] .card-icon.amber  { background: #78350F; }
+    [data-theme="dark"] .card-icon.blue   { background: #1E3A5F; }
+    [data-theme="dark"] .card-icon.rose   { background: #4C0519; }
+
+    .m-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .m-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Terminal ── */
+    .terminal {
+      background: #0F172A;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #1E293B;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.red    { background: #EF4444; }
+    .terminal-dot.yellow { background: #F59E0B; }
+    .terminal-dot.green  { background: #22C55E; }
+    .terminal-title {
+      margin-left: 8px;
+      font-size: 12px;
+      color: #64748B;
+      font-family: var(--font-mono);
+    }
+    .terminal pre {
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+    }
+    .t-comment { color: #64748B; }
+    .t-prompt  { color: #F59E0B; }
+    .t-cmd     { color: #6EE7B7; }
+    .t-output  { color: #CBD5E1; }
+    .t-section { color: #94A3B8; }
+    .t-label   { color: #818CF8; font-weight: 600; }
+    .t-value   { color: #CBD5E1; }
+    .t-dim     { color: #475569; }
+    .t-border  { color: #334155; }
+    .t-progress-fill { color: #22C55E; }
+    .t-progress-empty { color: #334155; }
+    .t-warn    { color: #F59E0B; }
+    .t-bar     { color: #6366F1; }
+
+    /* ── Callout ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout.tip {
+      background: var(--bg-callout-tip);
+      border: 1px solid #BBF7D0;
+      color: #166534;
+    }
+    [data-theme="dark"] .callout.tip { border-color: #064E3B; color: #6EE7B7; }
+    .callout.info {
+      background: var(--bg-callout-info);
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+    [data-theme="dark"] .callout.info { border-color: #1E3A5F; color: #93C5FD; }
+    .callout strong { font-weight: 600; }
+    .callout a { color: inherit; font-weight: 500; }
+    .callout .callout-body { color: inherit; }
+
+    /* ── Steps ── */
+    .steps {
+      margin: 24px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .step {
+      position: relative;
+      padding-left: 48px;
+      padding-bottom: 24px;
+      border-left: 2px solid var(--border);
+      margin-left: 14px;
+    }
+    .step:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
+    .step-number {
+      position: absolute;
+      left: -15px;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 8px;
+    }
+    .step code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-sidebar);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .step a { color: var(--accent); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg-code);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 12px 0 16px;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #CBD5E1;
+    }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination a {
+      flex: 1;
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+    .pagination a:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card);
+      text-decoration: none;
+    }
+    .pg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .pg-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .pagination .next { text-align: right; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Command entry cards ── */
+    .cmd-entry {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      background: var(--bg-card);
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .cmd-entry:hover {
+      border-color: var(--accent);
+    }
+    .cmd-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 0;
+    }
+    .cmd-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 3px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--accent);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cmd-summary {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      padding-top: 3px;
+    }
+    .cmd-detail {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .cmd-detail p {
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .cmd-detail ul, .cmd-detail ol {
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .cmd-detail h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 16px 0 8px;
+    }
+    .cmd-detail table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .cmd-detail th {
+      text-align: left;
+      padding: 8px 12px;
+      font-weight: 600;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .cmd-detail td {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .cmd-detail details summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      list-style: none;
+      user-select: none;
+      margin-top: 4px;
+    }
+    .cmd-detail details summary::-webkit-details-marker { display: none; }
+    .cmd-detail details summary::before { content: '+ '; font-weight: 700; }
+    .cmd-detail details[open] summary::before { content: '- '; }
+
+    /* ── Lifecycle flow diagram ── */
+    .lifecycle-flow {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      margin: 24px 0 40px;
+      background: var(--bg-card);
+      overflow-x: auto;
+    }
+    .lifecycle-flow h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      margin-top: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .flow-svg {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* ── Annotation list ── */
+    .annotation-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0 0 12px;
+    }
+    .annotation-list li {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      padding-left: 0;
+    }
+    .annotation-list li strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .sidebar.open { transform: translateX(0); }
+      .content-area { margin-left: 0; padding: 24px 20px; padding-top: 60px; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .card-grid.cols-3 { grid-template-columns: 1fr; }
+      .cmd-header { flex-direction: column; gap: 8px; }
+    }
+
+    @media (min-width: 601px) and (max-width: 900px) {
+      .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Dark mode toggle -->
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit</a>
+      <div class="sidebar-nav">
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Getting Started</div>
+          <a class="sidebar-link" href="index.html">Welcome</a>
+          <a class="sidebar-link" href="getting-started.html">Installation</a>
+          <a class="sidebar-link" href="first-session.html">Your First Session</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Core Concepts</div>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
+          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
+          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
+          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Commands</div>
+          <a class="sidebar-link active" href="commands.html">Session Lifecycle</a>
+          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
+          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Workflows</div>
+          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
+          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
+          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Examples</div>
+          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
+          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
+          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
+          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Reference</div>
+          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link" href="glossary.html">Glossary</a>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ── Main Content ── -->
+    <div class="content-area">
+      <div class="content">
+
+        <h1>Commands</h1>
+        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every slash command in DOE &mdash; what it does, when to use it, and what the output looks like.</p>
+
+        <!-- Session Lifecycle Flow Diagram -->
+        <div class="lifecycle-flow">
+          <h3>Session Lifecycle</h3>
+          <svg class="flow-svg" viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg" aria-label="Command flowchart showing session lifecycle">
+            <defs>
+              <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L8,3 L0,6 Z" fill="#6366F1"/>
+              </marker>
+              <marker id="arrow-muted" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L8,3 L0,6 Z" fill="#94A3B8"/>
+              </marker>
+              <marker id="arrow-rose" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L8,3 L0,6 Z" fill="#F43F5E"/>
+              </marker>
+            </defs>
+
+            <!-- Main flow: stand-up → [work] → sitrep → wrap → eod -->
+            <!-- stand-up box -->
+            <rect x="10" y="50" width="104" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
+            <text x="62" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/stand-up</text>
+
+            <!-- work box -->
+            <rect x="150" y="50" width="80" height="40" rx="8" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5"/>
+            <text x="190" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="500" fill="#475569">work</text>
+
+            <!-- sitrep box -->
+            <rect x="266" y="50" width="90" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
+            <text x="311" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/sitrep</text>
+
+            <!-- wrap box -->
+            <rect x="392" y="50" width="80" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
+            <text x="432" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/wrap</text>
+
+            <!-- eod box -->
+            <rect x="508" y="50" width="72" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
+            <text x="544" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/eod</text>
+
+            <!-- hq box (below eod, weekly) -->
+            <rect x="508" y="128" width="72" height="40" rx="8" fill="#FFF1F2" stroke="#F43F5E" stroke-width="1.5"/>
+            <text x="544" y="153" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#F43F5E">/hq</text>
+
+            <!-- crack-on box (below stand-up, resume path) -->
+            <rect x="10" y="128" width="104" height="40" rx="8" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+            <text x="62" y="153" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#10B981">/crack-on</text>
+
+            <!-- Main flow arrows -->
+            <line x1="114" y1="70" x2="146" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <line x1="230" y1="70" x2="262" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <line x1="356" y1="70" x2="388" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <line x1="472" y1="70" x2="504" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+            <!-- sitrep loop back to work -->
+            <path d="M311,50 L311,22 L190,22 L190,46" fill="none" stroke="#6366F1" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+            <text x="250" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#94A3B8">repeat</text>
+
+            <!-- eod to hq (weekly, dashed) -->
+            <line x1="544" y1="90" x2="544" y2="124" stroke="#F43F5E" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-rose)"/>
+            <text x="562" y="113" font-family="-apple-system, sans-serif" font-size="10" fill="#94A3B8">weekly</text>
+
+            <!-- stand-up to crack-on (resume path) -->
+            <line x1="62" y1="90" x2="62" y2="124" stroke="#10B981" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-muted)"/>
+            <text x="80" y="113" font-family="-apple-system, sans-serif" font-size="10" fill="#94A3B8">resume</text>
+
+            <!-- Legend -->
+            <rect x="10" y="200" width="570" height="44" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+            <line x1="32" y1="222" x2="66" y2="222" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <text x="76" y="226" font-family="-apple-system, sans-serif" font-size="12" fill="#475569">Session flow</text>
+            <line x1="190" y1="222" x2="224" y2="222" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-muted)"/>
+            <text x="234" y="226" font-family="-apple-system, sans-serif" font-size="12" fill="#475569">Optional / branching</text>
+            <rect x="393" y="213" width="46" height="18" rx="4" fill="#F0FDF4" stroke="#10B981" stroke-width="1"/>
+            <text x="416" y="226" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#10B981">green</text>
+            <text x="447" y="226" font-family="-apple-system, sans-serif" font-size="12" fill="#475569">= resume path</text>
+          </svg>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 1. Session Lifecycle                                           -->
+        <!-- ============================================================= -->
+        <h2 id="lifecycle">Session Lifecycle</h2>
+        <p>These commands form the daily rhythm. Every session starts with <code>/stand-up</code> and ends with <code>/wrap</code>. Everything in between is yours to direct.</p>
+
+        <!-- /stand-up -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/stand-up</span>
+            <span class="cmd-summary">Starts your session and shows you where things stand.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> At the beginning of every session. It's always your first command.</p>
+            <p><code>/stand-up</code> has two modes and picks the right one automatically:</p>
+            <ul>
+              <li><strong>Kick-off mode</strong> (no session running): Starts the session clock, reads <code>STATE.md</code> and <code>todo.md</code>, and shows a status card with current progress, blockers, a plan, and coaching tips.</li>
+              <li><strong>Status mode</strong> (session already running): Shows the same status card but doesn't reset anything. Read-only and safe to run any time.</li>
+            </ul>
+            <p>You don't need to remember what you were doing last time &mdash; the stand-up reads <code>STATE.md</code> and reconstructs your context automatically.</p>
+
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Terminal — /stand-up output</span>
+              </div>
+              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">STAND-UP</span> <span class="t-dim">-- 09:15 - 13/03/26</span>          <span class="t-dim">my-project v1.2.3</span>  <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">FEATURE</span>    User Dashboard [APP] v1.2.x                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PROGRESS</span>   <span class="t-progress-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span><span class="t-progress-empty">&#9617;&#9617;</span> 5/7 steps                          <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">CONTRACT</span>   Valid (4 auto, 1 manual)                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">BLOCKERS</span>   1 active                                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>    <span class="t-warn">!!</span> Weather API rate limit (free tier)                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">DOE KIT</span>    v1.30.1 synced                                <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">SIGN-OFF</span>   1 feature, 2 manual items pending             <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PIPELINE</span>   3 in Up Next, 2 in Queue -- scope to promote  <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Last: Overhauled Targeting page UI -- search bar,        <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  region grouping, tier bar, vulnerability chart.          <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PLAN</span>                                                     <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -&gt; Step 6: Housekeeping -- changelog, version bump       <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -&gt; Step 7: Retro                                         <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">FOCUS</span>                                                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  . 4/5 recent sessions were [APP] -- good product focus   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  . Avg 3.2 commits/session -- steady pace                 <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+            </div>
+
+            <h4>What each section means</h4>
+            <ul class="annotation-list">
+              <li><strong>FEATURE</strong> &mdash; The active feature from todo.md, with its type tag ([APP] or [INFRA]) and version range.</li>
+              <li><strong>PROGRESS</strong> &mdash; Visual progress bar. Filled blocks are completed steps, empty blocks are remaining.</li>
+              <li><strong>CONTRACT</strong> &mdash; Whether the next step's contract is valid and how many auto vs manual checks it has.</li>
+              <li><strong>BLOCKERS</strong> &mdash; Active issues from STATE.md that might affect work. Only appears if there are blockers.</li>
+              <li><strong>DOE KIT</strong> &mdash; Framework version. "synced" means up to date. "* push" or "* pull" means updates are pending.</li>
+              <li><strong>SIGN-OFF</strong> &mdash; How many features are in Awaiting Sign-off and how many manual items still need your testing. Only appears when items are pending.</li>
+              <li><strong>PIPELINE</strong> &mdash; How many features are queued in ROADMAP.md vs todo.md. Nudges you to promote or scope new work.</li>
+              <li><strong>Last session summary</strong> &mdash; What happened last time, pulled from STATE.md so you don't have to remember.</li>
+              <li><strong>PLAN</strong> &mdash; What Claude recommends doing this session. You approve, adjust, or redirect before work starts.</li>
+              <li><strong>FOCUS</strong> &mdash; Coaching insights from your session stats. Patterns, trends, and suggestions to keep you on track.</li>
+              <li><strong>Model row</strong> &mdash; Which AI model and thinking level you're using. Helps you decide if you need to switch for the task at hand.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- /crack-on -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/crack-on</span>
+            <span class="cmd-summary">Resume after a break &mdash; refamiliarises and starts building immediately.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When context was lost (you had to <code>/clear</code>, came back after a break, started a new conversation) and you want Claude to resume building without a full briefing. Not for fresh sessions &mdash; use <code>/stand-up</code> for those.</p>
+            <p><strong>How it works:</strong></p>
+            <ol>
+              <li>Starts the session clock, reads <code>CLAUDE.md</code>, <code>STATE.md</code>, <code>todo.md</code>, and <code>learnings.md</code>.</li>
+              <li>Finds the next incomplete step and validates its contract.</li>
+              <li>Shows a compact bordered card summarising the current state.</li>
+              <li>Immediately starts building &mdash; no sign-off needed.</li>
+              <li>Builds one step, runs <code>[auto]</code> verification, commits, then stops and shows what was done.</li>
+            </ol>
+            <p>If an auto-check fails, Claude attempts to fix the issue (up to 3 tries) before asking for help. For tasks with <code>[manual]</code> criteria, Claude notes what you need to check but doesn't stop and wait.</p>
+
+            <div class="callout tip">
+              <span class="callout-icon">&#9432;</span>
+              <div class="callout-body">
+                <strong>/stand-up vs /crack-on:</strong> <code>/stand-up</code> shows a full briefing and waits for your approval before building. <code>/crack-on</code> shows a compact card and starts building immediately. Use <code>/stand-up</code> for fresh sessions; <code>/crack-on</code> to resume after interruptions.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- /sitrep -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/sitrep</span>
+            <span class="cmd-summary">Quick mid-session progress snapshot. Read-only, completely safe.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> Whenever you want to see where things stand without changing anything. Run it as often as you like &mdash; no side effects.</p>
+            <p><strong>How it works:</strong> Reads the current feature's <code>todo.md</code> steps and shows which are done, which is current, and what's coming next. Think of it as a progress bar for your feature.</p>
+
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Terminal — /sitrep output</span>
+              </div>
+              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">SITREP</span> <span class="t-dim">-- 13/03/26</span>                                     <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">WORKING ON</span>   User Dashboard [APP] v1.2.x                 <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PHASE GOAL</span>   Role-based nav, targeting, playbook, area   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PROGRESS</span>     <span class="t-progress-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span><span class="t-progress-empty">&#9617;&#9617;</span> 5/7 steps (71%)                  <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">NEXT STEP</span>    Step 6 -- Housekeeping                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">SINCE LAST MILESTONE</span> (v1.2.3)                            <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -- Targeting UI overhaul: search, regions, charts        <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -- Playbook: issue derivation, pitch gen, avoid-these    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">SIGN-OFF</span>     1 feature, 2 manual items pending            <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">MOMENTUM</span>     On track -- 5 of 7 steps done               <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">QUEUE</span>        DOE Documentation [INFRA]                   <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+            </div>
+
+            <h4>What each section means</h4>
+            <ul class="annotation-list">
+              <li><strong>WORKING ON</strong> &mdash; Current feature, same as FEATURE in the stand-up card.</li>
+              <li><strong>PHASE GOAL</strong> &mdash; What "done" looks like for this feature, in plain English.</li>
+              <li><strong>PROGRESS</strong> &mdash; Same visual bar as stand-up, now with a percentage.</li>
+              <li><strong>NEXT STEP</strong> &mdash; The specific step Claude will work on next.</li>
+              <li><strong>SINCE LAST MILESTONE</strong> &mdash; What has been built since the last version tag, grouped by theme.</li>
+              <li><strong>SIGN-OFF</strong> &mdash; Features in Awaiting Sign-off with pending manual items. Only appears when items are pending.</li>
+              <li><strong>MOMENTUM</strong> &mdash; On track, Ahead, or Behind, with a reason explaining the assessment.</li>
+              <li><strong>QUEUE</strong> &mdash; What feature is next after this one finishes.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- /wrap -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/wrap</span>
+            <span class="cmd-summary">Closes your session. Records what happened so the project remembers it next time.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> Before ending any session. Always. This is how continuity works &mdash; if you skip the wrap, the next session's <code>/stand-up</code> won't know what you did.</p>
+            <p><strong>How it works:</strong></p>
+            <ol>
+              <li>Updates <code>STATE.md</code> with the current position (what was done, what's next, any blockers).</li>
+              <li>Records any new learnings to <code>learnings.md</code>.</li>
+              <li>Calculates session stats: commits, lines changed, duration, and your streak.</li>
+              <li>Generates a formatted summary of the session.</li>
+            </ol>
+            <p>Think of <code>/wrap</code> as saving your game. The state is written to files that persist between sessions.</p>
+
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Terminal — /wrap output</span>
+              </div>
+              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">WRAP</span> <span class="t-dim">-- 11:48 - 13/03/26</span>              <span class="t-dim">my-project v1.2.4</span>  <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  Session duration    1h 33m                               <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Commits             3                                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Lines               +2,635 / -278 (net +2,357)          <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Files touched       12                                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Steps completed     1 (Step 6 of 7)                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Streak              13 days                              <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">SUMMARY</span>                                                  <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Completed housekeeping for User Dashboard --             <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  changelog entry, version bump to v1.2.4, roadmap         <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  status update. One step remaining (retro).               <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">STATE UPDATED</span>                                            <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -- STATE.md: position, last session                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -- stats.json: session recorded                          <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+            </div>
+
+            <h4>What each section means</h4>
+            <ul class="annotation-list">
+              <li><strong>Session duration</strong> &mdash; How long this session lasted, from the session-start clock to the wrap.</li>
+              <li><strong>Commits</strong> &mdash; Number of git commits made during the session.</li>
+              <li><strong>Lines</strong> &mdash; Code added, removed, and net change across all commits.</li>
+              <li><strong>Files touched</strong> &mdash; How many files were modified during the session.</li>
+              <li><strong>Steps completed</strong> &mdash; How many todo.md steps were finished this session.</li>
+              <li><strong>Streak</strong> &mdash; Consecutive days with at least one session.</li>
+              <li><strong>SUMMARY</strong> &mdash; Plain English description of what was accomplished.</li>
+              <li><strong>STATE UPDATED</strong> &mdash; Which files were updated to preserve continuity for the next session.</li>
+              <li><strong>AWAITING SIGN-OFF</strong> &mdash; If any features moved to Awaiting Sign-off during the session, a section lists the manual test items that need your attention.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- /eod -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/eod</span>
+            <span class="cmd-summary">End-of-day report aggregating all sessions from today.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> At the end of your working day, after your final <code>/wrap</code>.</p>
+            <p><strong>How it works:</strong> Reads the git log and session records for the current day, then assembles a visual summary. If you ran three sessions today, it combines all three into one report.</p>
+
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Terminal — /eod output</span>
+              </div>
+              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">END OF DAY</span> <span class="t-dim">-- 13/03/26</span>                                   <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  Sessions today      3                                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Total commits       8                                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Total lines         +3,891 / -412 (net +3,479)          <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Total duration      3h 45m                               <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Steps completed     3                                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">SESSION 1</span> (09:15 - 10:48)                                <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  User Dashboard Step 6 -- housekeeping, version bump      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  3 commits, +2,635 / -278                                 <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">SESSION 2</span> (14:00 - 14:38)                                <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  User Dashboard Step 7 -- retro, learnings recorded       <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  2 commits, +156 / -12                                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">SESSION 3</span> (16:30 - 17:12)                                <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  DOE Documentation -- started reference docs              <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  3 commits, +1,100 / -122                                 <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">SHIPPED TODAY</span>                                            <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -- User Dashboard complete (v1.2.4)                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -- DOE Documentation started                             <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  Streak: 13 days                                          <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+            </div>
+
+            <h4>What each section means</h4>
+            <ul class="annotation-list">
+              <li><strong>Aggregate stats</strong> &mdash; Totals across all sessions today: session count, commits, lines changed, total time, and steps completed.</li>
+              <li><strong>Session breakdown</strong> &mdash; Each session listed with its time range, what was worked on, commit count, and line counts.</li>
+              <li><strong>SHIPPED TODAY</strong> &mdash; Features completed or milestones reached during the day.</li>
+              <li><strong>Streak</strong> &mdash; Your running streak of consecutive days with at least one session.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- /hq -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/hq</span>
+            <span class="cmd-summary">Project dashboard &mdash; session history, feature timelines, and metrics at a glance.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you want the big picture. How many sessions have you run? What features have you shipped? What's your commit velocity? Run it weekly.</p>
+            <p>This is a read-only command &mdash; it doesn't change anything. Useful for motivation, reporting, or spotting trends.</p>
+
+            <div class="terminal">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Terminal — /hq output</span>
+              </div>
+              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">HQ DASHBOARD</span>                                             <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  Project: my-project                                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Sessions: 117 total, 13-day streak                       <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Features shipped: 14                                     <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Current: DOE Documentation [INFRA] (25%)                 <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">THIS WEEK</span>                                                <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Mon <span class="t-bar">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span> 4 sessions, 12 commits                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Tue <span class="t-bar">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span>   3 sessions, 8 commits                       <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Wed <span class="t-bar">&#9608;&#9608;&#9608;&#9608;</span>     2 sessions, 5 commits                       <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Thu <span class="t-bar">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span>   3 sessions, 7 commits                       <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">RECENT FEATURES</span>                                          <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  User Dashboard        <span class="t-progress-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span> Done                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  DOE Documentation     <span class="t-progress-fill">&#9608;&#9608;</span><span class="t-progress-empty">&#9617;&#9617;&#9617;&#9617;&#9617;&#9617;&#9617;&#9617;&#9617;</span> 25%                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Pulse 2.0 Redesign    Queued                             <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">ALL TIME</span>                                                 <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  117 sessions, 510 commits                                <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  +77,609 / -63,849 lines (net +13,760)                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  First session: 28 Feb 2026 (14 days ago)                 <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+            </div>
+
+            <h4>What each section means</h4>
+            <ul class="annotation-list">
+              <li><strong>Project overview</strong> &mdash; Project name, total sessions, current streak, and number of features shipped.</li>
+              <li><strong>Current</strong> &mdash; What is actively being built, with its type tag and progress percentage.</li>
+              <li><strong>THIS WEEK</strong> &mdash; Daily activity chart showing sessions and commits per day as a visual bar.</li>
+              <li><strong>RECENT FEATURES</strong> &mdash; Progress bars for recent and active features, showing completion status.</li>
+              <li><strong>ALL TIME</strong> &mdash; Lifetime stats including total sessions, commits, lines changed, and project age.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 2. Quality & Review                                            -->
+        <!-- ============================================================= -->
+        <h2 id="quality">Quality &amp; Review</h2>
+        <p>Your testing and inspection toolkit. These commands help you verify that things are correct &mdash; from individual task contracts to project-wide health.</p>
+
+        <!-- /audit -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/audit</span>
+            <span class="cmd-summary">Runs automated checks across the entire project and reports what needs attention.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> Before commits, before releases, or as a periodic confidence check.</p>
+            <p><strong>What it checks:</strong></p>
+            <ul>
+              <li><strong>Governed doc freshness</strong> &mdash; Are documents like <code>data-governance.md</code> up to date?</li>
+              <li><strong>Task format</strong> &mdash; Do all tasks in <code>todo.md</code> have proper contracts?</li>
+              <li><strong>Roadmap consistency</strong> &mdash; Do status tags match reality?</li>
+              <li><strong>Git status</strong> &mdash; Any uncommitted changes or loose ends?</li>
+              <li><strong>Framework integrity</strong> &mdash; Are all DOE components present and correctly configured?</li>
+            </ul>
+            <p><strong>What to expect:</strong> A checklist with PASS, WARN, or FAIL for each category. Warnings are things to look at when convenient. Failures should be fixed before proceeding.</p>
+          </div>
+        </div>
+
+        <!-- /agent-verify -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/agent-verify</span>
+            <span class="cmd-summary">Runs all Verify: patterns from the current task's contract.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> During and after building a task, to confirm work meets its contract.</p>
+            <p><strong>How it works:</strong> Every task in <code>todo.md</code> has criteria marked <code>[auto]</code> (machine-checkable) and <code>[manual]</code> (needs human eyes). Each <code>[auto]</code> criterion has a <code>Verify:</code> pattern. This command runs all of them.</p>
+            <p><strong>Verify pattern types:</strong></p>
+            <table>
+              <tr><th>Pattern</th><th>What it does</th></tr>
+              <tr><td><code>run:</code></td><td>Executes a command, checks exit code</td></tr>
+              <tr><td><code>file: ... exists</code></td><td>Checks a file exists</td></tr>
+              <tr><td><code>file: ... contains</code></td><td>Checks a file contains specific text</td></tr>
+              <tr><td><code>html: ... has</code></td><td>Checks an HTML file for an element</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- /fact-check -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/fact-check</span>
+            <span class="cmd-summary">Reads a document and checks whether its claims match the actual codebase.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> After major refactors that might have made documentation stale, or before sharing docs externally.</p>
+            <p><strong>How it works:</strong> Claude reads the target document, identifies factual claims (function names, file paths, behaviour descriptions, data formats), then checks each one against the codebase. Claims that don't match reality get flagged and corrected directly in the file. Review the changes before committing if you want to verify them.</p>
+          </div>
+        </div>
+
+        <!-- /review -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/review</span>
+            <span class="cmd-summary">Adversarial code review &mdash; looking for problems, not compliments.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> Before shipping a feature, before merging a branch, or when you want a critical second opinion. Especially valuable for code written quickly.</p>
+            <p><strong>What it checks:</strong></p>
+            <ul>
+              <li><strong>Bugs</strong> &mdash; Logic errors, off-by-one mistakes, unhandled edge cases</li>
+              <li><strong>Security issues</strong> &mdash; Exposed credentials, injection vulnerabilities</li>
+              <li><strong>Performance problems</strong> &mdash; Unnecessary loops, redundant API calls</li>
+              <li><strong>Style issues</strong> &mdash; Inconsistent naming, unclear variables</li>
+            </ul>
+            <p>Think of it as a code review from a colleague who cares about quality but doesn't care about your feelings.</p>
+          </div>
+        </div>
+
+        <!-- /test-suite -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/test-suite</span>
+            <span class="cmd-summary">Runs the project's accumulated test suite and reports results.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> Before committing, after refactoring, or whenever you want to check that existing functionality still works.</p>
+            <p><strong>How it works:</strong> Executes all test scripts accumulated over time. Each passing task's <code>Verify:</code> patterns often get promoted into permanent tests, so the suite grows as the project grows. A failing test tells you exactly what broke, so you can fix it before the problem reaches users.</p>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 3. Visual Reports                                              -->
+        <!-- ============================================================= -->
+        <h2 id="reports">Visual Reports</h2>
+        <p>These commands generate standalone HTML pages that open in your browser. Rich visual documents &mdash; diagrams, comparisons, dashboards &mdash; saved to <code>docs/</code> and version-controlled.</p>
+
+        <div class="card-grid">
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon blue">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            </div>
+            <h4>/project-recap</h4>
+            <p>Rebuilds your mental model of the project. Use after time away &mdash; five minutes reading and you're caught up.</p>
+          </div>
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon indigo">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+            </div>
+            <h4>/diff-review</h4>
+            <p>Visual before/after comparison of recent changes with syntax highlighting and review annotations.</p>
+          </div>
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon green">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <h4>/plan-review</h4>
+            <p>Visual comparison of where the codebase is vs where the plan says it should be. Catches drift mid-feature.</p>
+          </div>
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon amber">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>
+            </div>
+            <h4>/generate-visual-plan</h4>
+            <p>Rich implementation plan with state machines, code snippets, and edge case analysis before writing a line of code.</p>
+          </div>
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon rose">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+            </div>
+            <h4>/generate-web-diagram</h4>
+            <p>Architecture, data flow, or any concept clearer as a picture. Self-contained HTML, works offline.</p>
+          </div>
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon blue">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <h4>/generate-slides</h4>
+            <p>Magazine-quality slide deck as self-contained HTML. Real project data, keyboard navigation, no internet required.</p>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 4. Planning & Ideas                                            -->
+        <!-- ============================================================= -->
+        <h2 id="planning">Planning &amp; Ideas</h2>
+        <p>These commands help you think about <em>what</em> to build, not just <em>how</em> to build it.</p>
+
+        <!-- /scope -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/scope</span>
+            <span class="cmd-summary">Takes a fuzzy idea and turns it into a clear, buildable brief through guided conversation.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you have an idea but haven't figured out the details.</p>
+            <p><strong>How it works:</strong> The scoping session has three phases:</p>
+            <ol>
+              <li><strong>Explore</strong> &mdash; What problem are we solving? Who has this problem?</li>
+              <li><strong>Define</strong> &mdash; What does the solution look like? What data does it need?</li>
+              <li><strong>Bound</strong> &mdash; What's in scope and what's not? What's the minimum viable version?</li>
+            </ol>
+            <p>The output is a scoping document that can become a <code>ROADMAP.md</code> entry or a set of <code>todo.md</code> tasks. The session doesn't build anything &mdash; it clarifies what to build.</p>
+          </div>
+        </div>
+
+        <!-- /pitch -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/pitch</span>
+            <span class="cmd-summary">Reads the project state and generates strategic suggestions for what to build next.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you've finished a feature and are wondering what's next, or when you want Claude to spot opportunities you might have missed.</p>
+            <p><strong>How it works:</strong> Claude reads across the project &mdash; <code>ROADMAP.md</code>, <code>STATE.md</code>, <code>learnings.md</code>, the codebase &mdash; and identifies gaps, natural extensions, or improvements that would add genuine value.</p>
+            <p>Pitches are suggestions, not commitments. Say "add it" to put it on the roadmap, "this is important" to flag it, or just ignore it.</p>
+          </div>
+        </div>
+
+        <!-- /roast -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/roast</span>
+            <span class="cmd-summary">Honest, humorous critique of your codebase &mdash; looking for the embarrassing bits.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you want brutal honesty about code quality, as a sanity check before a demo, or just for entertainment.</p>
+            <p><strong>What it looks for:</strong> messy code that works but shouldn't, forgotten TODOs and FIXMEs, architectural smells, inconsistencies (doing the same thing three different ways), dead code, and overly clever solutions.</p>
+            <p>Constructive underneath the humour &mdash; each observation points to something you could actually improve. Nothing mean-spirited, but nothing sugarcoated either.</p>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 5. Advanced: Parallel Work                                     -->
+        <!-- ============================================================= -->
+        <h2 id="multiagent">Advanced: Parallel Work</h2>
+        <p>Run multiple Claude Code sessions in parallel, each working on a different task. Most users won't need this initially, but it shines when you have a batch of independent work.</p>
+
+        <!-- /agent-launch -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/agent-launch</span>
+            <span class="cmd-summary">Sets up a wave &mdash; scans tasks, finds parallel candidates, assigns each to a terminal.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you have 2+ independent tasks ready to build. Three 20-minute tasks take 20 minutes in a wave instead of 60 sequentially.</p>
+            <p><strong>How it works:</strong></p>
+            <ol>
+              <li>Reads <code>todo.md</code> and identifies incomplete tasks.</li>
+              <li>Checks which tasks are independent (no shared files, no output dependencies).</li>
+              <li>Validates contracts for each task.</li>
+              <li>Creates a git worktree for each task (an isolated code copy).</li>
+              <li>Tells you which terminals to open and what to run in each.</li>
+            </ol>
+
+            <div class="callout info">
+              <span class="callout-icon">&#9432;</span>
+              <div class="callout-body">
+                <strong>Key constraint:</strong> Tasks that edit the same file can't run in parallel. Wave agents must not edit shared files (<code>todo.md</code>, <code>CLAUDE.md</code>, <code>learnings.md</code>, <code>STATE.md</code>). Merging happens from the coordinator terminal after all agents finish.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- /agent-status -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/agent-status</span>
+            <span class="cmd-summary">Dashboard of the current wave &mdash; which terminals are active and how far along.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> During an active wave, from the coordinator terminal. Check in periodically to see how things are going.</p>
+            <p><strong>What to expect:</strong> A status card showing each terminal's assigned task, current status (building, verifying, complete), last commit, and the merge order. The merge order is determined automatically to minimise conflicts &mdash; tasks touching fewer files merge first.</p>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 6. Maintenance                                                 -->
+        <!-- ============================================================= -->
+        <h2 id="maintenance">Maintenance</h2>
+        <p>The plumbing &mdash; keeping the framework updated, checking what's installed, and managing the connection between your project and the DOE Starter Kit.</p>
+
+        <!-- /sync-doe -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/sync-doe</span>
+            <span class="cmd-summary">Pushes universal improvements back to the DOE Starter Kit repository.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you've improved a command, hook, or script that isn't project-specific &mdash; something any project would benefit from.</p>
+            <p><strong>How it works:</strong> Compares your framework files against the starter kit, separates universal changes from project-specific content, shows what it wants to sync, and handles versioning, tagging, and GitHub releases automatically. Only universal changes get synced. Your project-specific code stays in your project.</p>
+          </div>
+        </div>
+
+        <!-- /pull-doe -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/pull-doe</span>
+            <span class="cmd-summary">Pulls the latest DOE Starter Kit updates into your project.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When the starter kit has been updated with new commands, bug fixes, or improved hooks.</p>
+            <p><strong>How it works:</strong> Checks your current version against the latest, shows a changelog of what changed, and applies updates safely without overwriting your project-specific customisations. If there's a conflict, you'll be shown it and asked how to resolve it.</p>
+          </div>
+        </div>
+
+        <!-- /commands -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/commands</span>
+            <span class="cmd-summary">Shows all available slash commands, their status, and version information.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> To see what commands are available, check if something is installed, or troubleshoot a missing command.</p>
+            <p><strong>How it works:</strong> Scans the <code>.claude/commands/</code> directory and checks each command file. If a command is missing or broken, the output tells you what's wrong and how to fix it &mdash; usually <code>/pull-doe</code> resolves it.</p>
+          </div>
+        </div>
+
+        <!-- /codemap -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/codemap</span>
+            <span class="cmd-summary">Generates a structured index of the project &mdash; files, functions, and relationships.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When joining a new project for the first time, or after significant structural changes. The codemap helps Claude understand the codebase faster in future sessions.</p>
+            <p><strong>How it works:</strong> Scans the project's files, reads their contents, and builds a map of what each file does, key functions and signatures, dependencies between files, and entry points and data flow. Written to <code>.claude/codemap.md</code>.</p>
+            <p>The file is for Claude's reference, but it's human-readable too &mdash; useful for onboarding or understanding unfamiliar parts of the project.</p>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <a href="key-concepts.html">
+            <div class="pg-label">Previous</div>
+            <div class="pg-title">&larr; Key Concepts</div>
+          </a>
+          <a href="daily-flow.html" class="next">
+            <div class="pg-label">Next</div>
+            <div class="pg-title">A Day with DOE &rarr;</div>
+          </a>
+        </div>
+
+        <footer class="site-footer">DOE Starter Kit v1.30.1</footer>
+
+      </div><!-- /content -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script>
+    // ── Dark mode ──
+    (function () {
+      var btn  = document.getElementById('themeBtn');
+      var html = document.documentElement;
+
+      function applyTheme(dark) {
+        if (dark) {
+          html.setAttribute('data-theme', 'dark');
+          btn.innerHTML = '&#9788;';
+        } else {
+          html.removeAttribute('data-theme');
+          btn.innerHTML = '&#9789;';
+        }
+      }
+
+      var stored = localStorage.getItem('doe-docs-theme');
+      applyTheme(stored === 'dark');
+
+      btn.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        localStorage.setItem('doe-docs-theme', isDark ? 'light' : 'dark');
+        applyTheme(!isDark);
+      });
+    })();
+
+    // ── Mobile sidebar ──
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar   = document.getElementById('sidebar');
+      var overlay   = document.getElementById('sidebarOverlay');
+
+      function open()  { sidebar.classList.add('open');    overlay.classList.add('visible'); }
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+      hamburger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? close() : open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+  </script>
+
+</body>
+</html>

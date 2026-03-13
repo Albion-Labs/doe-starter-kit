@@ -7,6 +7,14 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.31.0] — 2026-03-13
+
+### Added
+- `docs/tutorial/` — 10 self-contained HTML tutorial pages in Mintlify-style design system: landing page, getting started, first session, key concepts, commands, daily flow, workflows, example apps, tips & mistakes, glossary
+- `docs/reference/` — 33 markdown reference docs covering commands, concepts, workflows, examples, file formats, and glossary
+- Tutorial features: fixed sidebar navigation, dark mode toggle, terminal mockups with macOS dots, card grids, step components, callout boxes, expandable accordions, pagination, responsive layout (375px/768px/1440px)
+- README: documentation section with tutorial and reference doc descriptions
+
 ## [v1.30.1] — 2026-03-12
 
 ### Fixed

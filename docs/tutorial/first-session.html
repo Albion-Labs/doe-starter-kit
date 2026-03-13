@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your First Session — DOE Starter Kit</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-body: #FFFFFF;
+      --bg-sidebar: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-code: #0F172A;
+      --bg-callout-info: #EFF6FF;
+      --bg-callout-tip: #F0FDF4;
+      --bg-callout-warn: #FFFBEB;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --text-sidebar: #334155;
+      --text-sidebar-active: #0F172A;
+      --accent: #6366F1;
+      --accent-light: #EEF2FF;
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-blue: #3B82F6;
+      --accent-rose: #F43F5E;
+      --sidebar-w: 260px;
+      --content-max: 720px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #243347;
+      --bg-code: #020617;
+      --bg-callout-info: #1E293B;
+      --bg-callout-tip: #1E293B;
+      --bg-callout-warn: #1E293B;
+      --border: #1E293B;
+      --border-light: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-sidebar: #94A3B8;
+      --text-sidebar-active: #F1F5F9;
+      --accent-light: #1E1B4B;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-brand {
+      display: block;
+      padding: 20px 16px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .sidebar-brand:hover { color: var(--accent); }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-sidebar);
+      text-decoration: none;
+      line-height: 1.4;
+      transition: background 0.1s, color 0.1s;
+    }
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-sidebar-active);
+    }
+    .sidebar-link.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .sidebar-link.nested {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* ── Dark mode button ── */
+    .theme-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg-card-hover); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Content area ── */
+    .content-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 48px;
+      min-width: 0;
+    }
+
+    .content {
+      max-width: var(--content-max);
+      width: 100%;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .content p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content ul, .content ol {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 20px;
+    }
+    .content li { margin-bottom: 6px; }
+
+    .content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .content a:hover { text-decoration: underline; }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-sidebar);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .m-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--bg-card);
+      transition: all 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .m-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .card-icon.indigo { background: var(--accent-light); color: var(--accent); }
+    .card-icon.green  { background: #ECFDF5; color: var(--accent-green); }
+    .card-icon.amber  { background: #FEF3C7; color: var(--accent-amber); }
+    .card-icon.blue   { background: #DBEAFE; color: var(--accent-blue); }
+    .card-icon.rose   { background: #FFE4E6; color: var(--accent-rose); }
+
+    [data-theme="dark"] .card-icon.indigo { background: #312E81; }
+    [data-theme="dark"] .card-icon.green  { background: #064E3B; }
+    [data-theme="dark"] .card-icon.amber  { background: #78350F; }
+    [data-theme="dark"] .card-icon.blue   { background: #1E3A5F; }
+    [data-theme="dark"] .card-icon.rose   { background: #4C0519; }
+
+    .m-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .m-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Terminal ── */
+    .terminal {
+      background: #0F172A;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #1E293B;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.red    { background: #EF4444; }
+    .terminal-dot.yellow { background: #F59E0B; }
+    .terminal-dot.green  { background: #22C55E; }
+    .terminal-title {
+      margin-left: 8px;
+      font-size: 12px;
+      color: #64748B;
+      font-family: var(--font-mono);
+    }
+    .terminal pre {
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+    }
+    .t-comment { color: #64748B; }
+    .t-prompt  { color: #F59E0B; }
+    .t-cmd     { color: #6EE7B7; }
+
+    /* ── Callout ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout.tip {
+      background: var(--bg-callout-tip);
+      border: 1px solid #BBF7D0;
+      color: #166534;
+    }
+    [data-theme="dark"] .callout.tip { border-color: #064E3B; color: #6EE7B7; }
+    .callout strong { font-weight: 600; }
+    .callout a { color: inherit; font-weight: 500; }
+    .callout .callout-body { color: inherit; }
+
+    /* ── Steps ── */
+    .steps {
+      margin: 24px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .step {
+      position: relative;
+      padding-left: 48px;
+      padding-bottom: 24px;
+      border-left: 2px solid var(--border);
+      margin-left: 14px;
+    }
+    .step:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
+    .step-number {
+      position: absolute;
+      left: -15px;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 8px;
+    }
+    .step code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-sidebar);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .step a { color: var(--accent); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg-code);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 12px 0 16px;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #CBD5E1;
+    }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination a {
+      flex: 1;
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+    .pagination a:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card);
+      text-decoration: none;
+    }
+    .pg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .pg-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .pagination .next { text-align: right; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .sidebar.open { transform: translateX(0); }
+      .content-area { margin-left: 0; padding: 24px 20px; padding-top: 60px; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .card-grid.cols-3 { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 601px) and (max-width: 900px) {
+      .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Dark mode toggle -->
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit</a>
+      <div class="sidebar-nav">
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Getting Started</div>
+          <a class="sidebar-link" href="index.html">Welcome</a>
+          <a class="sidebar-link" href="getting-started.html">Installation</a>
+          <a class="sidebar-link active" href="first-session.html">Your First Session</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Core Concepts</div>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
+          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
+          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
+          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Commands</div>
+          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
+          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
+          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Workflows</div>
+          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
+          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
+          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Examples</div>
+          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
+          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
+          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
+          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Reference</div>
+          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link" href="glossary.html">Glossary</a>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ── Main Content ── -->
+    <div class="content-area">
+      <div class="content">
+
+        <h1>Your First Session</h1>
+        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Walk through building something with DOE from start to finish &mdash; from opening the terminal to wrapping up with all your progress saved.</p>
+
+        <!-- The Session Rhythm -->
+        <h2>The Session Rhythm</h2>
+        <p>Every DOE session follows the same three-beat rhythm. Once you've done it a few times, it becomes second nature.</p>
+
+        <div class="card-grid cols-3">
+          <div class="m-card" style="cursor: default; text-align: center;">
+            <div class="card-icon indigo" style="margin: 0 auto 12px;">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+            <h4>Stand-up</h4>
+            <p>Get oriented. See where the project stands and what's next.</p>
+          </div>
+          <div class="m-card" style="cursor: default; text-align: center;">
+            <div class="card-icon amber" style="margin: 0 auto 12px;">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <h4>Describe &amp; Build</h4>
+            <p>Tell Claude what you want in plain English. Review the plan, then build.</p>
+          </div>
+          <div class="m-card" style="cursor: default; text-align: center;">
+            <div class="card-icon green" style="margin: 0 auto 12px;">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            </div>
+            <h4>Wrap</h4>
+            <p>Save your position and session memory so next time picks up seamlessly.</p>
+          </div>
+        </div>
+
+        <p>Let's walk through each beat using a real example: <strong>building a recipe book app</strong>.</p>
+
+        <!-- Starting Up -->
+        <h2>Starting Up</h2>
+        <p>Open your terminal, navigate to your project folder, and start Claude Code:</p>
+
+        <div class="code-block"><pre>cd ~/my-project
+claude</pre></div>
+
+        <p>Once Claude Code's prompt appears, run the stand-up command:</p>
+
+        <div class="code-block"><pre>/stand-up</pre></div>
+
+        <p>The stand-up card is a snapshot of where your project stands &mdash; like a morning briefing. Here's what it looks like on your very first session:</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">Terminal</span>
+          </div>
+          <pre><span style="color:#CBD5E1">&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;</span>
+<span style="color:#CBD5E1">&#x2502;  STAND-UP                          Session 1  &#x2502;</span>
+<span style="color:#CBD5E1">&#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;</span>
+<span style="color:#CBD5E1">&#x2502;                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Feature:  </span><span style="color:#F59E0B">No active feature</span><span style="color:#CBD5E1">                  &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Progress: </span><span style="color:#64748B">0 / 0 steps</span><span style="color:#CBD5E1">                         &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Plan:     </span><span style="color:#64748B">(none yet)</span><span style="color:#CBD5E1">                          &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Blockers: </span><span style="color:#6EE7B7">None</span><span style="color:#CBD5E1">                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Last:     </span><span style="color:#64748B">First session</span><span style="color:#CBD5E1">                       &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;</span></pre>
+        </div>
+
+        <p>On your first session, most of this is empty &mdash; and that's fine. The card becomes more useful as sessions accumulate. The stand-up shows:</p>
+        <ul>
+          <li><strong>Feature</strong> &mdash; what you're currently building</li>
+          <li><strong>Progress</strong> &mdash; how far through the current work you are</li>
+          <li><strong>Plan</strong> &mdash; the steps, with checkmarks for completed ones</li>
+          <li><strong>Blockers</strong> &mdash; anything preventing progress</li>
+          <li><strong>Last session</strong> &mdash; a brief summary of what happened last time</li>
+        </ul>
+
+        <!-- Building -->
+        <h2>Building</h2>
+        <p>Now describe what you want to build. Just type in plain English &mdash; be specific about the end result, not the technical details:</p>
+
+        <div class="code-block"><pre>I want to build a recipe book app where I can add recipes with a title,
+ingredients list, and method. I want to search recipes by name or
+ingredient, and mark my favourites so I can find them quickly.</pre></div>
+
+        <p>Claude follows a structured process:</p>
+        <ol>
+          <li><strong>Reads CLAUDE.md</strong> &mdash; your project's instruction manual that tells Claude the rules</li>
+          <li><strong>Creates a plan</strong> &mdash; breaks your request into steps with clear success criteria (contracts), written to <code>tasks/todo.md</code></li>
+          <li><strong>Asks for approval</strong> &mdash; shows you the plan before building anything</li>
+        </ol>
+
+        <p>This is your chance to adjust scope, reorder priorities, or ask questions. Nothing gets built until you say go.</p>
+
+        <p>Once you approve, Claude works through the plan step by step. After each step, it verifies the work against the contracts and commits the result as a Git save point. Each commit is like a save point in a game &mdash; clearly labelled so you know exactly what it contains. If step 5 breaks something, you can go back to the state after step 4 without losing anything.</p>
+
+        <p>You can talk to Claude throughout this process. Ask questions, change direction, or tell it to skip something. It's a conversation, not a one-way instruction.</p>
+
+        <!-- Wrapping Up -->
+        <h2>Wrapping Up</h2>
+        <p>When you're done for the day (or just need a break), run:</p>
+
+        <div class="code-block"><pre>/wrap</pre></div>
+
+        <p>Here's what the wrap output looks like after a productive first session:</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">Terminal</span>
+          </div>
+          <pre><span style="color:#CBD5E1">&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;</span>
+<span style="color:#CBD5E1">&#x2502;  SESSION WRAP                       Session 1  &#x2502;</span>
+<span style="color:#CBD5E1">&#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;</span>
+<span style="color:#CBD5E1">&#x2502;                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Feature:  Recipe Book App                     &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Progress: </span><span style="color:#6EE7B7">3 / 5 steps</span><span style="color:#CBD5E1">                         &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Commits:  4                                   &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Duration: 45 min                              &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Done:                                          &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;    </span><span style="color:#6EE7B7">[x]</span><span style="color:#CBD5E1"> Project scaffold + data model           &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;    </span><span style="color:#6EE7B7">[x]</span><span style="color:#CBD5E1"> Add recipe form with validation          &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;    </span><span style="color:#6EE7B7">[x]</span><span style="color:#CBD5E1"> Recipe list with search                  &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Next:                                          &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;    </span><span style="color:#64748B">[ ]</span><span style="color:#CBD5E1"> Favourites system                        &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;    </span><span style="color:#64748B">[ ]</span><span style="color:#CBD5E1"> Polish + responsive design               &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  </span><span style="color:#F59E0B">State saved. Next /stand-up will resume.</span><span style="color:#CBD5E1">     &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;</span></pre>
+        </div>
+
+        <p>The wrap command:</p>
+        <ul>
+          <li><strong>Saves your current position</strong> &mdash; updates STATE.md so the next session knows exactly where you left off</li>
+          <li><strong>Records session stats</strong> &mdash; how long you worked, how many commits were made</li>
+          <li><strong>Summarises the session</strong> &mdash; creates a brief record of what happened</li>
+        </ul>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Why this matters:</strong> Claude Code doesn't automatically remember previous sessions. Without the wrap-up, your next session would start cold. When you come back &mdash; whether in an hour, a day, or a month &mdash; your next <code>/stand-up</code> will show everything the wrap saved.
+          </div>
+        </div>
+
+        <!-- What Just Happened? -->
+        <h2>What Just Happened?</h2>
+        <p>In this first session, here's what DOE did behind the scenes:</p>
+        <ul>
+          <li><strong>Checked STATE.md</strong> &mdash; read the project's current position (empty on first session)</li>
+          <li><strong>Followed the plan</strong> &mdash; worked through steps in order, never jumping ahead</li>
+          <li><strong>Verified contracts</strong> &mdash; ran automated checks after each step to prove the work actually functions</li>
+          <li><strong>Committed after each step</strong> &mdash; created atomic save points so any step can be reverted independently</li>
+          <li><strong>Updated session stats</strong> &mdash; tracked duration, commits, and progress</li>
+          <li><strong>Saved state</strong> &mdash; wrote everything to STATE.md so the next session picks up seamlessly</li>
+        </ul>
+
+        <p>This is the rhythm every session follows: <strong>stand-up, build, wrap</strong>. The more sessions you run, the richer your project's memory becomes &mdash; and the more effectively Claude can build on previous work.</p>
+
+        <!-- Sessions and State -->
+        <h2 id="state">Sessions and State</h2>
+        <p>Claude Code doesn't have built-in memory between sessions. When you close it, the conversation is gone. DOE solves this with <code>STATE.md</code> &mdash; a file that captures your project's current position so the next session can pick up exactly where you left off.</p>
+
+        <p><code>STATE.md</code> tracks:</p>
+        <ul>
+          <li><strong>Current feature</strong> &mdash; what you're building right now</li>
+          <li><strong>Progress</strong> &mdash; which steps are done and which are next</li>
+          <li><strong>Blockers</strong> &mdash; anything preventing progress</li>
+          <li><strong>Last session summary</strong> &mdash; a brief record of what happened</li>
+          <li><strong>Decisions made</strong> &mdash; choices that affect future work</li>
+        </ul>
+
+        <p>Here's what STATE.md looks like after a few sessions:</p>
+
+        <div class="code-block"><pre>## Current Position
+Feature: Recipe Book App [APP] v0.1.x
+Step: 4 of 5 (Favourites system)
+Blocker: None
+
+## Last Session (Session 2)
+Duration: 35 min | Commits: 3
+Completed search functionality and fixed edge case
+where empty searches returned no results instead of
+showing all recipes. Next: implement favourites.</pre></div>
+
+        <p>When you run <code>/stand-up</code> next time, Claude reads this file first. Within seconds it knows what you're building, where you left off, and what to do next &mdash; even if weeks have passed.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Next:</strong> Understand the architecture behind what you just saw &mdash; <a href="key-concepts.html">DOE Architecture</a> explains the three-layer system that keeps AI-assisted development organised.
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <a href="getting-started.html">
+            <div class="pg-label">Previous</div>
+            <div class="pg-title">&larr; Getting Started</div>
+          </a>
+          <a href="key-concepts.html" class="next">
+            <div class="pg-label">Next</div>
+            <div class="pg-title">DOE Architecture &rarr;</div>
+          </a>
+        </div>
+
+        <footer class="site-footer">DOE Starter Kit v1.30.1</footer>
+
+      </div><!-- /content -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script>
+    // ── Dark mode ──
+    (function () {
+      var btn  = document.getElementById('themeBtn');
+      var html = document.documentElement;
+
+      function applyTheme(dark) {
+        if (dark) {
+          html.setAttribute('data-theme', 'dark');
+          btn.innerHTML = '&#9788;';
+        } else {
+          html.removeAttribute('data-theme');
+          btn.innerHTML = '&#9789;';
+        }
+      }
+
+      var stored = localStorage.getItem('doe-docs-theme');
+      applyTheme(stored === 'dark');
+
+      btn.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        localStorage.setItem('doe-docs-theme', isDark ? 'light' : 'dark');
+        applyTheme(!isDark);
+      });
+    })();
+
+    // ── Mobile sidebar ──
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar   = document.getElementById('sidebar');
+      var overlay   = document.getElementById('sidebarOverlay');
+
+      function open()  { sidebar.classList.add('open');    overlay.classList.add('visible'); }
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+      hamburger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? close() : open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+  </script>
+
+</body>
+</html>

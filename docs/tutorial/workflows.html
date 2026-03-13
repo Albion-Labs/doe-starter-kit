@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflows — DOE Starter Kit</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-body: #FFFFFF;
+      --bg-sidebar: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-code: #0F172A;
+      --bg-callout-info: #EFF6FF;
+      --bg-callout-tip: #F0FDF4;
+      --bg-callout-warn: #FFFBEB;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --text-sidebar: #334155;
+      --text-sidebar-active: #0F172A;
+      --accent: #6366F1;
+      --accent-light: #EEF2FF;
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-blue: #3B82F6;
+      --accent-rose: #F43F5E;
+      --sidebar-w: 260px;
+      --content-max: 720px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #243347;
+      --bg-code: #020617;
+      --bg-callout-info: #1E293B;
+      --bg-callout-tip: #1E293B;
+      --bg-callout-warn: #1E293B;
+      --border: #1E293B;
+      --border-light: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-sidebar: #94A3B8;
+      --text-sidebar-active: #F1F5F9;
+      --accent-light: #1E1B4B;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-brand {
+      display: block;
+      padding: 20px 16px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .sidebar-brand:hover { color: var(--accent); }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-sidebar);
+      text-decoration: none;
+      line-height: 1.4;
+      transition: background 0.1s, color 0.1s;
+    }
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-sidebar-active);
+    }
+    .sidebar-link.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .sidebar-link.nested {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* ── Dark mode button ── */
+    .theme-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg-card-hover); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Content area ── */
+    .content-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 48px;
+      min-width: 0;
+    }
+
+    .content {
+      max-width: var(--content-max);
+      width: 100%;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .content p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content ul, .content ol {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 20px;
+    }
+    .content li { margin-bottom: 6px; }
+
+    .content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .content a:hover { text-decoration: underline; }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-sidebar);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .m-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--bg-card);
+      transition: all 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .m-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .card-icon.indigo { background: var(--accent-light); color: var(--accent); }
+    .card-icon.green  { background: #ECFDF5; color: var(--accent-green); }
+    .card-icon.amber  { background: #FEF3C7; color: var(--accent-amber); }
+    .card-icon.blue   { background: #DBEAFE; color: var(--accent-blue); }
+    .card-icon.rose   { background: #FFE4E6; color: var(--accent-rose); }
+
+    [data-theme="dark"] .card-icon.indigo { background: #312E81; }
+    [data-theme="dark"] .card-icon.green  { background: #064E3B; }
+    [data-theme="dark"] .card-icon.amber  { background: #78350F; }
+    [data-theme="dark"] .card-icon.blue   { background: #1E3A5F; }
+    [data-theme="dark"] .card-icon.rose   { background: #4C0519; }
+
+    .m-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .m-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Terminal ── */
+    .terminal {
+      background: #0F172A;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #1E293B;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.red    { background: #EF4444; }
+    .terminal-dot.yellow { background: #F59E0B; }
+    .terminal-dot.green  { background: #22C55E; }
+    .terminal-title {
+      margin-left: 8px;
+      font-size: 12px;
+      color: #64748B;
+      font-family: var(--font-mono);
+    }
+    .terminal pre {
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+    }
+    .t-comment { color: #64748B; }
+    .t-prompt  { color: #F59E0B; }
+    .t-cmd     { color: #6EE7B7; }
+
+    /* ── Callout ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout.tip {
+      background: var(--bg-callout-tip);
+      border: 1px solid #BBF7D0;
+      color: #166534;
+    }
+    [data-theme="dark"] .callout.tip { border-color: #064E3B; color: #6EE7B7; }
+    .callout.info {
+      background: var(--bg-callout-info);
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+    [data-theme="dark"] .callout.info { border-color: #1E3A5F; color: #93C5FD; }
+    .callout.warn {
+      background: var(--bg-callout-warn);
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+    [data-theme="dark"] .callout.warn { border-color: #78350F; color: #FCD34D; }
+    .callout strong { font-weight: 600; }
+    .callout a { color: inherit; font-weight: 500; }
+    .callout .callout-body { color: inherit; }
+
+    /* ── Steps ── */
+    .steps {
+      margin: 24px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .step {
+      position: relative;
+      padding-left: 48px;
+      padding-bottom: 24px;
+      border-left: 2px solid var(--border);
+      margin-left: 14px;
+    }
+    .step:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
+    .step-number {
+      position: absolute;
+      left: -15px;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 8px;
+    }
+    .step code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-sidebar);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .step a { color: var(--accent); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg-code);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 12px 0 16px;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #CBD5E1;
+    }
+
+    /* ── Prompt comparison cards ── */
+    .prompt-compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0 20px;
+    }
+    .prompt-box {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+    .prompt-box.bad {
+      background: #FFF1F2;
+      border: 1px solid #FECDD3;
+    }
+    .prompt-box.good {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+    }
+    [data-theme="dark"] .prompt-box.bad  { background: #2D1219; border-color: #7F1D1D; }
+    [data-theme="dark"] .prompt-box.good { background: #052E16; border-color: #064E3B; }
+    .prompt-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .prompt-box.bad  .prompt-label { color: #BE123C; }
+    .prompt-box.good .prompt-label { color: #15803D; }
+    [data-theme="dark"] .prompt-box.bad  .prompt-label { color: #FCA5A5; }
+    [data-theme="dark"] .prompt-box.good .prompt-label { color: #86EFAC; }
+    .prompt-box p {
+      margin: 0;
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+    .prompt-box .prompt-note {
+      font-style: normal;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* ── Pipeline / lifecycle flow ── */
+    .lifecycle-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      margin: 28px 0 32px;
+      align-items: center;
+    }
+    .lf-stage {
+      display: flex;
+      align-items: center;
+    }
+    .lf-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+    .lf-box.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .lf-box.amber {
+      background: #FEF3C7;
+      border-color: #FDE68A;
+      color: #92400E;
+    }
+    [data-theme="dark"] .lf-box.amber { background: #78350F; border-color: #92400E; color: #FCD34D; }
+    .lf-arrow {
+      color: var(--text-muted);
+      font-size: 14px;
+      padding: 0 6px;
+      flex-shrink: 0;
+    }
+    @media (max-width: 600px) {
+      .lifecycle-flow { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .lf-stage { flex-direction: column; align-items: flex-start; }
+      .lf-arrow { transform: rotate(90deg); padding: 2px 0 2px 12px; }
+    }
+
+    /* ── Rules list ── */
+    .rules-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 24px;
+    }
+    .rules-list li {
+      display: flex;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-light);
+      align-items: flex-start;
+    }
+    .rules-list li:last-child { border-bottom: none; }
+    .rule-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .rule-body { flex: 1; color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+    .rule-body strong { color: var(--text-primary); }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination a {
+      flex: 1;
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+    .pagination a:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card);
+      text-decoration: none;
+    }
+    .pg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .pg-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .pagination .next { text-align: right; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .sidebar.open { transform: translateX(0); }
+      .content-area { margin-left: 0; padding: 24px 20px; padding-top: 60px; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .card-grid.cols-3 { grid-template-columns: 1fr; }
+      .prompt-compare { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 601px) and (max-width: 900px) {
+      .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Dark mode toggle -->
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit</a>
+      <div class="sidebar-nav">
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Getting Started</div>
+          <a class="sidebar-link" href="index.html">Welcome</a>
+          <a class="sidebar-link" href="getting-started.html">Installation</a>
+          <a class="sidebar-link" href="first-session.html">Your First Session</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Core Concepts</div>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
+          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
+          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
+          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Commands</div>
+          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
+          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
+          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Workflows</div>
+          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
+          <a class="sidebar-link active" href="workflows.html">Feature Lifecycle</a>
+          <a class="sidebar-link nested" href="workflows.html#planning">Planning &amp; Prompts</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Examples</div>
+          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
+          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
+          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
+          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Reference</div>
+          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link" href="glossary.html">Glossary</a>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ── Main Content ── -->
+    <div class="content-area">
+      <div class="content">
+
+        <h1>Workflows</h1>
+        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">From idea to shipped feature &mdash; three starting points, one consistent pipeline.</p>
+
+        <p>Not every project starts the same way. Sometimes you have no idea what you&rsquo;re building. Sometimes you have bullet points. Sometimes you have a full spec. DOE handles all three &mdash; the workflow adjusts to match your starting point, then converges on the same build pipeline once the plan is ready.</p>
+
+        <!-- ── Choose Your Starting Point ── -->
+        <h2>Choose Your Starting Point</h2>
+        <p>Pick the path that matches where you are right now. All three paths lead to the same place: a plan in <code>.claude/plans/</code> with contracted steps in <code>todo.md</code>, ready to build.</p>
+
+        <div class="card-grid cols-3">
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon indigo">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <h4>Path A &mdash; &ldquo;No idea&rdquo;</h4>
+            <p>You have a domain or problem but no shape to the solution. Start with <code>/scope</code> &mdash; Claude asks the right questions.</p>
+          </div>
+          <div class="m-card" style="cursor: default; border-color: var(--accent);">
+            <div class="card-icon amber">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            </div>
+            <h4>Path B &mdash; &ldquo;Rough idea&rdquo;</h4>
+            <p>You have bullet points &mdash; key features, maybe a tech stack. Give Claude your notes and it writes the plan.</p>
+          </div>
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon green">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <h4>Path C &mdash; &ldquo;Full spec&rdquo;</h4>
+            <p>You have a detailed specification. Import it as a directive and Claude executes it faithfully, step by step.</p>
+          </div>
+        </div>
+
+        <!-- Path A -->
+        <h3>Path A: &ldquo;I have no idea what I&rsquo;m building&rdquo;</h3>
+        <p>You know you want to build <em>something</em>, but you haven&rsquo;t pinned down what. Maybe you have a domain (&ldquo;something with recipes&rdquo;) or a problem (&ldquo;I keep losing track of things&rdquo;) but no shape to it yet.</p>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-number">1</div>
+            <h4>Run <code>/scope</code></h4>
+            <p>Claude asks you questions to pin down what you actually want &mdash; who it&rsquo;s for, what the output looks like, what counts as &ldquo;done.&rdquo;</p>
+          </li>
+          <li class="step">
+            <div class="step-number">2</div>
+            <h4>Scoping session produces a brief</h4>
+            <p>The conversation outputs a short document capturing what you&rsquo;re building, the constraints, and the definition of done.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">3</div>
+            <h4>Brief becomes a ROADMAP.md entry</h4>
+            <p>The scoped feature gets added to your roadmap so it&rsquo;s visible in the big picture alongside everything else.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">4</div>
+            <h4>Claude writes the plan</h4>
+            <p>A plan file in <code>.claude/plans/</code> with sequenced steps, each with contracts defining what &ldquo;done&rdquo; means.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">5</div>
+            <h4>Build</h4>
+            <p>Tell Claude what to build in plain English, or say &ldquo;go&rdquo; to start the next planned step. Claude builds, verifies each contract, and commits. Use <code>/crack-on</code> if you get interrupted and need to resume later.</p>
+          </li>
+        </ol>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>When to use Path A:</strong> When you have a domain or a problem but no shape to the solution. The scoping conversation costs five minutes and saves hours of rework by clarifying requirements before any code is written.
+          </div>
+        </div>
+
+        <!-- Path B -->
+        <h3>Path B: &ldquo;I have a rough idea&rdquo;</h3>
+        <p>You&rsquo;ve thought about it enough to have bullet points. You know the key features, maybe the tech stack, and roughly what the end result looks like. You just haven&rsquo;t structured it into a buildable plan.</p>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-number">1</div>
+            <h4>Give Claude your bullet points</h4>
+            <p>Describe what you want in plain English. List the features, the data sources, who it&rsquo;s for. No special format needed.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">2</div>
+            <h4>Claude creates the plan</h4>
+            <p>A plan file with sequenced steps, technical approach, and the right model/effort level for each step.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">3</div>
+            <h4>Steps added to todo.md with contracts</h4>
+            <p>Each step gets testable criteria &mdash; <code>[auto]</code> for things Claude verifies itself, <code>[manual]</code> for things that need your eyes.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">4</div>
+            <h4>Start building</h4>
+            <p>Tell Claude to build the next step, or just say &ldquo;go.&rdquo; Each step is built, verified, and committed independently. If you get interrupted later, <code>/crack-on</code> resumes where you left off.</p>
+          </li>
+        </ol>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>When to use Path B:</strong> When you already know the key features and the general shape. You don&rsquo;t need a scoping session &mdash; Claude has enough to create a plan directly from your description.
+          </div>
+        </div>
+
+        <!-- Path C -->
+        <h3>Path C: &ldquo;I have a full spec&rdquo;</h3>
+        <p>You&rsquo;ve written a detailed specification. Named technologies, specific features, clear requirements, maybe even a phased roadmap. You want Claude to execute it faithfully, not reinterpret it.</p>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-number">1</div>
+            <h4>Import spec as a directive</h4>
+            <p>Save your spec to <code>directives/</code>. Claude treats this as the authority &mdash; it follows the spec, not its own preferences.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">2</div>
+            <h4>Claude breaks it into contracted steps</h4>
+            <p>The spec becomes a detailed plan with 8&ndash;15+ steps, each with full contracts and verification criteria.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">3</div>
+            <h4>Identify parallel work</h4>
+            <p>Steps that don&rsquo;t share files or dependencies can run simultaneously in separate terminals.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">4</div>
+            <h4>Launch with <code>/agent-launch</code></h4>
+            <p>Start a wave &mdash; multiple terminals building independent features in parallel. Merge when they&rsquo;re done. Can cut build time in half for large specs.</p>
+          </li>
+        </ol>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>When to use Path C:</strong> When you have a complete specification and want Claude to execute it precisely. The directive ensures the spec is the authority, not Claude&rsquo;s preferences.
+          </div>
+        </div>
+
+        <!-- ── From Idea to Build-Ready Plan ── -->
+        <h2 id="planning">From Idea to Build-Ready Plan</h2>
+        <p>The three paths show <em>how to start</em>. This section covers the bridge between &ldquo;I have an idea&rdquo; and &ldquo;Claude is building it.&rdquo; Every feature &mdash; whether it began with <code>/scope</code>, a rough description, or a full spec &mdash; passes through the same planning process before any code is written.</p>
+
+        <div class="lifecycle-flow">
+          <div class="lf-stage"><div class="lf-box">Idea</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">/scope or describe</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">Plan (.claude/plans/)</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">Steps + Contracts</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box active">Build</div></div>
+        </div>
+
+        <h3>1. Tell Claude what you want</h3>
+        <p>You don&rsquo;t need a formal spec. A few sentences describing what you want is enough. If it&rsquo;s vague, run <code>/scope</code> &mdash; Claude asks you questions to pin down what you actually want. If it&rsquo;s clearer, just describe it: &ldquo;I want a page that shows X with Y, and the user can do Z.&rdquo;</p>
+
+        <div class="prompt-compare">
+          <div class="prompt-box bad">
+            <div class="prompt-label">Too vague</div>
+            <p>&ldquo;Build me a dashboard.&rdquo;</p>
+            <p class="prompt-note">Claude has to guess who it&rsquo;s for, what data it shows, and what counts as done.</p>
+          </div>
+          <div class="prompt-box good">
+            <div class="prompt-label">Better</div>
+            <p>&ldquo;I want a dashboard that shows my 5 most recent sessions, with date, duration, and commit count. Include a chart of commits per day over the last 2 weeks.&rdquo;</p>
+            <p class="prompt-note">Claude knows the data, the visual elements, and the time window.</p>
+          </div>
+        </div>
+
+        <h3>2. Claude writes a plan</h3>
+        <p>Claude creates a plan file at <code>.claude/plans/feature-name.md</code>. The plan includes: what to build, how to build it, what order, and what model/effort level for each step. Plans are reference docs, not tracking docs &mdash; they live in <code>.claude/plans/</code> and are read-only once building starts.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">.claude/plans/recipe-search.md</span>
+          </div>
+          <pre><span class="t-comment"># Recipe Search — Plan</span>
+
+<span class="t-comment">## Goal</span>
+<span class="t-cmd">Add search to the recipe list so users can find by name or category.</span>
+
+<span class="t-comment">## Steps</span>
+<span class="t-cmd">1. Data layer — add search index to recipe data
+   Model: Sonnet + low (mechanical)
+
+2. Search UI — search bar, filter pills, results table
+   Model: Sonnet + medium (spec-driven)
+
+3. Integration — wire search input to filtered results
+   Model: Sonnet + medium
+
+4. Polish — loading states, empty states, mobile layout
+   Model: Opus + high (design judgment)
+
+5. Housekeeping — changelog, version bump
+   Model: Sonnet + low (mechanical)</span></pre>
+        </div>
+
+        <h3>3. How to review a plan</h3>
+        <p>You don&rsquo;t need to understand the technical details. Focus on these questions:</p>
+        <ul>
+          <li><strong>Does the end result match what I asked for?</strong> If the plan describes something different from what you imagined, say so now.</li>
+          <li><strong>Does the step order make sense?</strong> Data before UI, basics before advanced features. If step 3 depends on step 5, that&rsquo;s a problem.</li>
+          <li><strong>Are there steps I don&rsquo;t understand?</strong> Ask Claude to explain &mdash; &ldquo;What does step 2 actually produce?&rdquo;</li>
+          <li><strong>Is anything missing?</strong> &ldquo;What about mobile?&rdquo; &ldquo;What about error states?&rdquo; &ldquo;What happens when there are no results?&rdquo;</li>
+        </ul>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>This is the cheapest time to change direction.</strong> Before any code exists, a change costs one sentence. After three steps are built, a change might cost an hour of rework. Say something now if something looks wrong.
+          </div>
+        </div>
+
+        <h3>4. Plans become steps with contracts</h3>
+        <p>From the plan, Claude creates numbered steps in <code>tasks/todo.md</code>. Each step gets a <strong>contract</strong> &mdash; testable criteria that define &ldquo;done.&rdquo; There are two types:</p>
+
+        <div class="card-grid">
+          <div class="m-card" style="cursor: default;">
+            <h4><code>[auto]</code> criteria</h4>
+            <p>Claude verifies these by running a command. If the command passes, the criterion is met. No human needed.</p>
+          </div>
+          <div class="m-card" style="cursor: default;">
+            <h4><code>[manual]</code> criteria</h4>
+            <p>You verify these with your eyes. Claude presents them as a checklist when it&rsquo;s time for you to test.</p>
+          </div>
+        </div>
+
+        <div class="code-block"><pre>2. [ ] Search UI — search bar, filter pills, results table → v0.5.1
+   Contract:
+   - [ ] [auto] Search input rendered. Verify: file: src/js/recipes.js contains recipe-search
+   - [ ] [auto] Filter pills for categories. Verify: file: src/js/recipes.js contains filter-pill
+   - [ ] [auto] Build succeeds. Verify: run: python3 execution/build.py
+   - [ ] [manual] Search feels responsive. Results update as you type. Works on mobile.</pre></div>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>In Plain English:</strong> A contract is a checklist stapled to every task. Before Claude can say &ldquo;done,&rdquo; it has to tick every box &mdash; and the boxes are specific enough that you&rsquo;d know if it was lying.
+          </div>
+        </div>
+
+        <h3>5. Good contracts vs. bad contracts</h3>
+        <p>The quality of your contracts determines how reliably Claude builds. A good contract tells you (or Claude) exactly what to check and what the right answer looks like. A bad contract could pass even if the feature is broken.</p>
+
+        <div class="prompt-compare">
+          <div class="prompt-box bad">
+            <div class="prompt-label">Bad contracts</div>
+            <p><code>[auto] It works. Verify: run: test</code></p>
+            <p class="prompt-note">Too vague &mdash; what does &ldquo;it works&rdquo; mean?</p>
+            <br>
+            <p><code>[manual] Looks good.</code></p>
+            <p class="prompt-note">No criteria to judge against.</p>
+            <br>
+            <p>No <code>Verify:</code> pattern at all.</p>
+            <p class="prompt-note">Can&rsquo;t be checked automatically.</p>
+          </div>
+          <div class="prompt-box good">
+            <div class="prompt-label">Good contracts</div>
+            <p><code>[auto] Search input exists. Verify: file: src/recipes.js contains search-input</code></p>
+            <p class="prompt-note">Specific, checkable, concrete.</p>
+            <br>
+            <p><code>[auto] Build succeeds. Verify: run: python3 execution/build.py</code></p>
+            <p class="prompt-note">Clear pass/fail &mdash; it builds or it doesn&rsquo;t.</p>
+            <br>
+            <p><code>[manual] Results update within 1 second. Filter pills narrow to matching category only. Clearing search restores full list.</code></p>
+            <p class="prompt-note">Specific enough you know exactly what to test.</p>
+          </div>
+        </div>
+
+        <h3>6. Promoting a feature from roadmap to current</h3>
+        <p>Features start as ideas in <code>ROADMAP.md</code>. When you&rsquo;re ready to build one, it moves through a simple promotion flow:</p>
+
+        <div class="lifecycle-flow">
+          <div class="lf-stage"><div class="lf-box">ROADMAP.md</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">todo.md Queue</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box active">todo.md Current</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">Building starts</div></div>
+        </div>
+
+        <p>Only one feature sits in Current at a time. Finish what you started before starting something new. This keeps context focused and prevents half-built features from piling up.</p>
+
+        <h3>7. The moment you say &ldquo;go&rdquo;</h3>
+        <p>Once the plan is reviewed, contracts look right, and the feature is in Current &mdash; you&rsquo;re ready. Run <code>/stand-up</code> to start the session. Claude reads <code>todo.md</code>, sees the feature in Current, and picks up the first unchecked step.</p>
+        <p>From here, Claude builds step by step, verifying contracts as it goes. You don&rsquo;t need to manage the process &mdash; Claude follows the plan and contracts automatically. You&rsquo;ll be called in for <code>[manual]</code> checks at the right moments, and everything else runs on autopilot.</p>
+
+        <!-- ── Prompting Guide ── -->
+        <h2>Getting Better Results</h2>
+        <p>The way you describe what you want directly affects what Claude builds. A vague prompt gets a vague result. A specific prompt gets something closer to what you actually need. But &ldquo;specific&rdquo; doesn&rsquo;t mean &ldquo;write a technical spec&rdquo; &mdash; it means giving Claude enough context to either build the right thing or ask the right questions.</p>
+
+        <h3>Before and After: Three Examples</h3>
+        <p>Good prompts aren&rsquo;t longer &mdash; they&rsquo;re more specific about the things that matter.</p>
+
+        <h3 style="margin-top: 24px; font-size: 15px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em;">Example 1: Authentication</h3>
+
+        <div class="prompt-compare">
+          <div class="prompt-box bad">
+            <div class="prompt-label">Vague</div>
+            <p>&ldquo;Build me a login.&rdquo;</p>
+            <p class="prompt-note">Claude guesses: basic form, no session persistence, unknown tech stack.</p>
+          </div>
+          <div class="prompt-box good">
+            <div class="prompt-label">Specific</div>
+            <p>&ldquo;I need user authentication for my recipe app. Users need to create accounts, sign in, and stay signed in between visits. I don&rsquo;t know whether to use a third-party auth service or build it from scratch &mdash; what would you recommend?&rdquo;</p>
+            <p class="prompt-note">Claude now knows: what, where, what users need, and where you&rsquo;re open to advice.</p>
+          </div>
+        </div>
+
+        <p><strong>Why the specific one works:</strong> It tells Claude WHAT (authentication), WHERE (recipe app), WHAT THEY NEED (create account, sign in, persist sessions), and WHERE THEY&rsquo;RE UNSURE (build vs. buy). Claude will now ask about password reset flows, OAuth providers, session storage &mdash; things you didn&rsquo;t know to ask about.</p>
+
+        <h3 style="margin-top: 24px; font-size: 15px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em;">Example 2: Dashboard</h3>
+
+        <div class="prompt-compare">
+          <div class="prompt-box bad">
+            <div class="prompt-label">Vague</div>
+            <p>&ldquo;Make a dashboard.&rdquo;</p>
+            <p class="prompt-note">Claude guesses what data to show, what time periods to use, where to find the data.</p>
+          </div>
+          <div class="prompt-box good">
+            <div class="prompt-label">Specific</div>
+            <p>&ldquo;I want a dashboard as the first thing I see when I open the app. It should show my 5 most recent sessions with dates and duration, a chart of commits per day over the last 2 weeks, and my current streak. The data is already in <code>.claude/stats.json</code>.&rdquo;</p>
+            <p class="prompt-note">Claude knows: layout, data source, what &ldquo;recent&rdquo; means, and which visual elements to build.</p>
+          </div>
+        </div>
+
+        <p><strong>Why the specific one works:</strong> It points to the data source, specifies what &ldquo;recent&rdquo; means (5 sessions), and describes the visual elements. Claude doesn&rsquo;t have to guess at any of these.</p>
+
+        <h3 style="margin-top: 24px; font-size: 15px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em;">Example 3: Bug Report</h3>
+
+        <div class="prompt-compare">
+          <div class="prompt-box bad">
+            <div class="prompt-label">Vague</div>
+            <p>&ldquo;It&rsquo;s broken.&rdquo; or &ldquo;The search isn&rsquo;t working.&rdquo;</p>
+            <p class="prompt-note">Claude has to search the whole codebase for the problem.</p>
+          </div>
+          <div class="prompt-box good">
+            <div class="prompt-label">Specific</div>
+            <p>&ldquo;When I type in the search box on the recipes page, nothing happens. Results don&rsquo;t filter. It was working yesterday before we added the category filters. The search input is in <code>src/js/recipes.js</code>.&rdquo;</p>
+            <p class="prompt-note">Claude can jump straight to the problem: symptom, when it broke, what changed, where to look.</p>
+          </div>
+        </div>
+
+        <p><strong>Why the specific one works:</strong> It describes the symptom, when it broke, what changed, and where to look. Claude can jump straight to the problem instead of searching the whole codebase.</p>
+
+        <h3>Six Rules for Better Prompts</h3>
+
+        <ul class="rules-list">
+          <li>
+            <div class="rule-num">1</div>
+            <div class="rule-body"><strong>Say what it&rsquo;s FOR, not just what it IS.</strong> &ldquo;A chart showing voter turnout&rdquo; is okay. &ldquo;A chart showing voter turnout so canvassers can see which areas have low engagement&rdquo; is better &mdash; now Claude knows the purpose and can make design decisions that serve it.</div>
+          </li>
+          <li>
+            <div class="rule-num">2</div>
+            <div class="rule-body"><strong>Tell Claude what you DON&rsquo;T know.</strong> &ldquo;I&rsquo;m not sure if this should be a separate page or a tab on the existing page&rdquo; gives Claude permission to recommend rather than guess. Claude is good at trade-offs when you tell it you&rsquo;re open to options.</div>
+          </li>
+          <li>
+            <div class="rule-num">3</div>
+            <div class="rule-body"><strong>Point to existing things.</strong> &ldquo;Make it look like the Pulse page&rdquo; or &ldquo;Use the same card layout as the targeting table&rdquo; gives Claude a reference. It can read those files and match the pattern.</div>
+          </li>
+          <li>
+            <div class="rule-num">4</div>
+            <div class="rule-body"><strong>Give Claude the constraints.</strong> &ldquo;This needs to work offline&rdquo; or &ldquo;We can&rsquo;t use any paid APIs&rdquo; or &ldquo;This has to load in under 2 seconds&rdquo; shapes the solution before Claude starts building.</div>
+          </li>
+          <li>
+            <div class="rule-num">5</div>
+            <div class="rule-body"><strong>Don&rsquo;t over-specify HOW.</strong> Describe the outcome, not the implementation. &ldquo;I want users to be able to save recipes for later&rdquo; is better than &ldquo;Add a button that writes to localStorage with a JSON array of recipe IDs.&rdquo; You hired Claude for the technical decisions &mdash; let it make them.</div>
+          </li>
+          <li>
+            <div class="rule-num">6</div>
+            <div class="rule-body"><strong>If Claude builds the wrong thing, be specific about what&rsquo;s wrong.</strong> &ldquo;The chart should be horizontal, not vertical&rdquo; or &ldquo;I meant filter by category, not search by name.&rdquo; Vague corrections (&ldquo;that&rsquo;s not right&rdquo;) waste a round-trip.</div>
+          </li>
+        </ul>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Think of it like briefing a contractor.</strong> &ldquo;Build me a shed&rdquo; gets you something, but &ldquo;I need a garden shed that fits my lawnmower and bike, with a door wide enough for the mower, and I&rsquo;d like it to match the house colour&rdquo; gets you what you actually want. You don&rsquo;t need to know how to build the shed &mdash; you just need to describe the result clearly.
+          </div>
+        </div>
+
+        <!-- ── Feature Lifecycle ── -->
+        <h2>Feature Lifecycle</h2>
+        <p>Regardless of which path you start from, every feature follows the same lifecycle. The path determines how you enter the pipeline &mdash; the pipeline itself is always the same.</p>
+
+        <div class="lifecycle-flow">
+          <div class="lf-stage"><div class="lf-box">Idea</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">Plan</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">Queue</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">Current</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box active">Build</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">Verify</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">Ship</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box amber">Sign-off</div><span class="lf-arrow">&rarr;</span></div>
+          <div class="lf-stage"><div class="lf-box">Done</div></div>
+        </div>
+
+        <h3>Stage 1 &mdash; Idea</h3>
+        <p>Every feature starts as an idea. It might be yours, or Claude might pitch it while working on something else. If it&rsquo;s vague, run <code>/scope</code> to clarify it through conversation. If it&rsquo;s clear, describe it directly and ask Claude to plan.</p>
+
+        <h3>Stage 2 &mdash; Plan</h3>
+        <p>Claude writes a plan to <code>.claude/plans/</code> with sequenced steps, technical approach, and the right model/effort level for each step. From this plan, Claude creates steps in <code>todo.md</code> (each with a contract) and a <code>ROADMAP.md</code> entry.</p>
+
+        <h3>Stage 3 &mdash; Queue</h3>
+        <p>Steps sit in the Queue section of <code>todo.md</code> until it&rsquo;s time to build. The roadmap entry shows the feature under &ldquo;Up Next.&rdquo; Nothing is built yet.</p>
+
+        <h3>Stage 4 &mdash; Current</h3>
+        <p>When work begins, the feature moves from Queue to Current in <code>todo.md</code>. Claude is now actively building it. Only one feature lives in Current at a time.</p>
+
+        <h3>Stage 5 &mdash; Build</h3>
+        <p>Each step follows the cycle: <strong>build &rarr; verify &rarr; fix &rarr; commit</strong>. Claude writes code, runs the <code>[auto]</code> contract checks, fixes any failures (up to 3 attempts), and commits each passing step to git. Version numbers bump with each step.</p>
+
+        <h3>Stage 6 &mdash; Verify</h3>
+        <p>For large features (5+ steps), Claude pauses after the core UI step for a mid-feature checkpoint &mdash; presenting accumulated <code>[manual]</code> checks for you to test. For smaller features, all manual checks are presented at the end. This is your chance to catch visual bugs before dependent steps build on top of them.</p>
+
+        <h3>Stage 7 &mdash; Ship</h3>
+        <p>A housekeeping step handles the changelog entry, final version bump, and roadmap update. This keeps your project&rsquo;s records clean and accurate.</p>
+
+        <h3>Stage 8 &mdash; Awaiting Sign-off</h3>
+        <p>The feature is now code-complete &mdash; all steps are built and all <code>[auto]</code> criteria pass. The feature moves to the <strong>Awaiting Sign-off</strong> section in <code>todo.md</code> immediately. Claude presents the full manual test checklist for you to work through.</p>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>The feature stays in Awaiting Sign-off until you test it.</strong> Claude cannot verify things that need human eyes &mdash; layout, interaction feel, print rendering. Once you confirm all <code>[manual]</code> items pass, the feature moves to Done in <code>todo.md</code> and Complete in <code>ROADMAP.md</code>.
+          </div>
+        </div>
+
+        <h3>Stage 9 &mdash; Retro</h3>
+        <p>After sign-off, Claude runs a retrospective: what worked, what was slow, what to do differently. Learnings get recorded to <code>learnings.md</code>, becoming part of the project&rsquo;s institutional memory. The next feature starts in better shape because of this one.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Every feature follows this path.</strong> Small features move through the pipeline in a single session. Large features span multiple sessions, with <code>/stand-up</code> and <code>/wrap</code> keeping state intact between them.
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <a href="daily-flow.html">
+            <div class="pg-label">Previous</div>
+            <div class="pg-title">&larr; A Day with DOE</div>
+          </a>
+          <a href="example-apps.html" class="next">
+            <div class="pg-label">Next</div>
+            <div class="pg-title">Example Apps &rarr;</div>
+          </a>
+        </div>
+
+        <footer class="site-footer">DOE Starter Kit v1.30.1</footer>
+
+      </div><!-- /content -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script>
+    // ── Dark mode ──
+    (function () {
+      var btn  = document.getElementById('themeBtn');
+      var html = document.documentElement;
+
+      function applyTheme(dark) {
+        if (dark) {
+          html.setAttribute('data-theme', 'dark');
+          btn.innerHTML = '&#9788;';
+        } else {
+          html.removeAttribute('data-theme');
+          btn.innerHTML = '&#9789;';
+        }
+      }
+
+      var stored = localStorage.getItem('doe-docs-theme');
+      applyTheme(stored === 'dark');
+
+      btn.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        localStorage.setItem('doe-docs-theme', isDark ? 'light' : 'dark');
+        applyTheme(!isDark);
+      });
+    })();
+
+    // ── Mobile sidebar ──
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar   = document.getElementById('sidebar');
+      var overlay   = document.getElementById('sidebarOverlay');
+
+      function open()  { sidebar.classList.add('open');    overlay.classList.add('visible'); }
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+      hamburger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? close() : open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+  </script>
+
+</body>
+</html>

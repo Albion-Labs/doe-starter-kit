@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Example Apps — DOE Starter Kit</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-body: #FFFFFF;
+      --bg-sidebar: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-code: #0F172A;
+      --bg-callout-info: #EFF6FF;
+      --bg-callout-tip: #F0FDF4;
+      --bg-callout-warn: #FFFBEB;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --text-sidebar: #334155;
+      --text-sidebar-active: #0F172A;
+      --accent: #6366F1;
+      --accent-light: #EEF2FF;
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-blue: #3B82F6;
+      --accent-rose: #F43F5E;
+      --sidebar-w: 260px;
+      --content-max: 720px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #243347;
+      --bg-code: #020617;
+      --bg-callout-info: #1E293B;
+      --bg-callout-tip: #1E293B;
+      --bg-callout-warn: #1E293B;
+      --border: #1E293B;
+      --border-light: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-sidebar: #94A3B8;
+      --text-sidebar-active: #F1F5F9;
+      --accent-light: #1E1B4B;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-brand {
+      display: block;
+      padding: 20px 16px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .sidebar-brand:hover { color: var(--accent); }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-sidebar);
+      text-decoration: none;
+      line-height: 1.4;
+      transition: background 0.1s, color 0.1s;
+    }
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-sidebar-active);
+    }
+    .sidebar-link.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .sidebar-link.nested {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* ── Dark mode button ── */
+    .theme-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg-card-hover); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Content area ── */
+    .content-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 48px;
+      min-width: 0;
+    }
+
+    .content {
+      max-width: var(--content-max);
+      width: 100%;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .content p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content ul, .content ol {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 20px;
+    }
+    .content li { margin-bottom: 6px; }
+
+    .content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .content a:hover { text-decoration: underline; }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-sidebar);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .m-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--bg-card);
+      transition: all 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .m-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .card-icon.indigo { background: var(--accent-light); color: var(--accent); }
+    .card-icon.green  { background: #ECFDF5; color: var(--accent-green); }
+    .card-icon.amber  { background: #FEF3C7; color: var(--accent-amber); }
+    .card-icon.blue   { background: #DBEAFE; color: var(--accent-blue); }
+    .card-icon.rose   { background: #FFE4E6; color: var(--accent-rose); }
+
+    [data-theme="dark"] .card-icon.indigo { background: #312E81; }
+    [data-theme="dark"] .card-icon.green  { background: #064E3B; }
+    [data-theme="dark"] .card-icon.amber  { background: #78350F; }
+    [data-theme="dark"] .card-icon.blue   { background: #1E3A5F; }
+    [data-theme="dark"] .card-icon.rose   { background: #4C0519; }
+
+    .m-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .m-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Terminal ── */
+    .terminal {
+      background: #0F172A;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #1E293B;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.red    { background: #EF4444; }
+    .terminal-dot.yellow { background: #F59E0B; }
+    .terminal-dot.green  { background: #22C55E; }
+    .terminal-title {
+      margin-left: 8px;
+      font-size: 12px;
+      color: #64748B;
+      font-family: var(--font-mono);
+    }
+    .terminal pre {
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+    }
+    .t-comment { color: #64748B; }
+    .t-prompt  { color: #F59E0B; }
+    .t-cmd     { color: #6EE7B7; }
+    .t-out     { color: #94A3B8; }
+    .t-label   { color: #818CF8; }
+
+    /* ── Callout ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout.tip {
+      background: var(--bg-callout-tip);
+      border: 1px solid #BBF7D0;
+      color: #166534;
+    }
+    [data-theme="dark"] .callout.tip { border-color: #064E3B; color: #6EE7B7; }
+    .callout.info {
+      background: var(--bg-callout-info);
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+    [data-theme="dark"] .callout.info { border-color: #1E3A5F; color: #93C5FD; }
+    .callout strong { font-weight: 600; }
+    .callout a { color: inherit; font-weight: 500; }
+    .callout .callout-body { color: inherit; }
+
+    /* ── Steps ── */
+    .steps {
+      margin: 24px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .step {
+      position: relative;
+      padding-left: 48px;
+      padding-bottom: 24px;
+      border-left: 2px solid var(--border);
+      margin-left: 14px;
+    }
+    .step:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
+    .step-number {
+      position: absolute;
+      left: -15px;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 8px;
+    }
+    .step code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-sidebar);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .step a { color: var(--accent); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg-code);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 12px 0 16px;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #CBD5E1;
+    }
+
+    /* ── App header card ── */
+    .app-meta-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      background: var(--bg-card);
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-card);
+    }
+    .app-meta-card .app-tagline {
+      font-size: 15px;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-bottom: 16px;
+    }
+    .app-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .app-meta-item {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .app-meta-item strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* ── Concept callout (DOE in Action) ── */
+    .doe-callout {
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 24px 0 32px;
+      background: var(--bg-card);
+    }
+    .doe-callout-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .doe-callout ul {
+      padding-left: 0;
+      list-style: none;
+      margin: 0;
+    }
+    .doe-callout li {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      padding-left: 16px;
+      position: relative;
+    }
+    .doe-callout li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.5;
+    }
+    .doe-callout li:last-child { margin-bottom: 0; }
+    .doe-callout strong { color: var(--text-primary); }
+
+    /* ── App section divider ── */
+    .app-section {
+      margin-top: 56px;
+      padding-top: 4px;
+    }
+
+    /* ── Blockquote / idea quote ── */
+    .idea-quote {
+      border-left: 3px solid var(--border);
+      padding: 12px 16px;
+      margin: 16px 0 20px;
+      background: var(--bg-sidebar);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-style: italic;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* ── Session timeline ── */
+    .session-block {
+      margin-bottom: 16px;
+    }
+    .session-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination a {
+      flex: 1;
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+    .pagination a:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card);
+      text-decoration: none;
+    }
+    .pg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .pg-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .pagination .next { text-align: right; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .sidebar.open { transform: translateX(0); }
+      .content-area { margin-left: 0; padding: 24px 20px; padding-top: 60px; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .card-grid.cols-3 { grid-template-columns: 1fr; }
+      .app-meta-row { flex-direction: column; gap: 8px; }
+    }
+
+    @media (min-width: 601px) and (max-width: 900px) {
+      .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Dark mode toggle -->
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit</a>
+      <div class="sidebar-nav">
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Getting Started</div>
+          <a class="sidebar-link" href="index.html">Welcome</a>
+          <a class="sidebar-link" href="getting-started.html">Installation</a>
+          <a class="sidebar-link" href="first-session.html">Your First Session</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Core Concepts</div>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
+          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
+          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
+          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Commands</div>
+          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
+          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
+          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Workflows</div>
+          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
+          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
+          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Examples</div>
+          <a class="sidebar-link active" href="example-apps.html#recipe">Recipe Book</a>
+          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
+          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
+          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Reference</div>
+          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link" href="glossary.html">Glossary</a>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ── Main Content ── -->
+    <div class="content-area">
+      <div class="content">
+
+        <h1>Example Apps</h1>
+        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">See DOE in action with four different projects &mdash; each starting from a different level of preparation.</p>
+
+        <p>Each example starts from a different place &mdash; from having no plan at all to having a full spec with a phased roadmap. Together, they show how the same DOE framework adapts to any level of preparation.</p>
+
+        <!-- Overview cards -->
+        <div class="card-grid" style="margin-top: 28px;">
+          <a class="m-card" href="#recipe">
+            <div class="card-icon green">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>
+            </div>
+            <h4>Recipe Book</h4>
+            <p>Simplest &mdash; "Making it up as I go." The starting-from-nothing case: just a sentence.</p>
+          </a>
+          <a class="m-card" href="#fitness">
+            <div class="card-icon blue">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <h4>Fitness Tracker</h4>
+            <p>Intermediate &mdash; "I have a rough idea." Bullet points, data + charts, multi-session builds.</p>
+          </a>
+          <a class="m-card" href="#events">
+            <div class="card-icon amber">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <h4>Local Events Board</h4>
+            <p>Detailed &mdash; "I have a detailed spec." Named APIs, directives, execution scripts.</p>
+          </a>
+          <a class="m-card" href="#dashboard">
+            <div class="card-icon rose">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </div>
+            <h4>Team Dashboard</h4>
+            <p>Full scale &mdash; "Full spec with roadmap." Multi-user auth, parallel waves, governed docs.</p>
+          </a>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 1. Recipe Book                                                 -->
+        <!-- ============================================================= -->
+        <div class="app-section" id="recipe">
+          <h2>Recipe Book</h2>
+
+          <div class="app-meta-card">
+            <div class="app-tagline">"Making it up as I go"</div>
+            <div class="app-meta-row">
+              <div class="app-meta-item"><strong>Type:</strong> Personal web app</div>
+              <div class="app-meta-item"><strong>Starting point:</strong> A single sentence</div>
+              <div class="app-meta-item"><strong>Sessions:</strong> 2</div>
+              <div class="app-meta-item"><strong>Key concepts:</strong> /scope, contracts, STATE.md</div>
+            </div>
+          </div>
+
+          <h3>The idea</h3>
+          <div class="idea-quote">
+            "I want an app where I can add recipes, search them, and mark favourites. Maybe categories too."
+          </div>
+          <p>No spec, no wireframes, no bullet points. Just a loose vision of what the end result should feel like. This is the most common starting point.</p>
+
+          <h3>How you'd start</h3>
+          <p>With an idea this vague, the first move is <code>/scope</code>. Claude asks questions to turn the fuzzy idea into a concrete brief before a single line of code is written.</p>
+
+          <ol class="steps">
+            <li class="step">
+              <div class="step-number">1</div>
+              <h4>Run /scope</h4>
+              <p>Claude asks clarifying questions: Who's using this? Web app or local? Fixed categories or custom tags? What does a recipe look like?</p>
+            </li>
+            <li class="step">
+              <div class="step-number">2</div>
+              <h4>Review the brief</h4>
+              <p>Claude writes a one-page brief to <code>ROADMAP.md</code>. A clear target instead of a vague idea. Five minutes of scoping saves hours of rework.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">3</div>
+              <h4>Claude creates a plan</h4>
+              <p>Five steps: data model, add recipe form, search, favourites and tags, polish. Each step gets a contract with <code>[auto]</code> and <code>[manual]</code> criteria.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">4</div>
+              <h4>Build and wrap</h4>
+              <p>Work through the steps. Run <code>/wrap</code> at the end of each session to save your position and decisions to <code>STATE.md</code>.</p>
+            </li>
+          </ol>
+
+          <h3>What a session looks like</h3>
+
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Session 1 &mdash; Recipe Book</span>
+            </div>
+            <pre><span class="t-prompt">$</span> <span class="t-cmd">claude</span>
+<span class="t-prompt">&gt;</span> <span class="t-cmd">/scope</span>
+<span class="t-out">Claude: Who's the user? Web app or local file? Custom tags or fixed categories?</span>
+<span class="t-out">        ...brief written to ROADMAP.md</span>
+
+<span class="t-label"># Claude creates 5-step plan in tasks/todo.md</span>
+<span class="t-label"># Step 1: data model + storage</span>
+
+<span class="t-out">Contract check: data/recipes.json exists</span>
+<span class="t-out">  FAIL: path was data/recipe.json (typo)</span>
+<span class="t-comment"># Self-annealing: Claude reads error, fixes path, re-runs</span>
+<span class="t-out">  PASS: data/recipes.json exists [auto]</span>
+
+<span class="t-label"># Step 2: add recipe form — PASS</span>
+<span class="t-label"># Both steps committed. Running /wrap...</span>
+
+<span class="t-prompt">&gt;</span> <span class="t-cmd">/wrap</span>
+<span class="t-out">STATE.md updated: stopped at step 2/5, data model + form done</span></pre>
+          </div>
+
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Session 2 &mdash; Recipe Book</span>
+            </div>
+            <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">/stand-up</span>
+<span class="t-out">Position: step 2/5 complete. Next: search.</span>
+<span class="t-comment"># No re-explaining. Claude picks up exactly where you left off.</span>
+
+<span class="t-label"># Build search, favourites, polish</span>
+<span class="t-comment"># Mid-build: user wants "Favourites only" filter — not in original plan</span>
+<span class="t-out">Claude: Adjusting step 4 contract, adding filter to criteria...</span>
+<span class="t-out">  PASS: favourites filter works [auto]</span>
+
+<span class="t-label"># All 5 steps done. Feature complete.</span></pre>
+          </div>
+
+          <div class="doe-callout">
+            <div class="doe-callout-title">DOE Concepts in Action</div>
+            <ul>
+              <li><strong><code>/scope</code></strong> &mdash; turned a vague idea into a clear brief before any code was written</li>
+              <li><strong>Contracts</strong> &mdash; ensured the search actually works, not just that the code looks right</li>
+              <li><strong>Atomic commits</strong> &mdash; each step is its own save point; undo one without affecting others</li>
+              <li><strong>STATE.md</strong> &mdash; Session 2 picked up exactly where Session 1 left off, automatically</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 2. Fitness Tracker                                             -->
+        <!-- ============================================================= -->
+        <div class="app-section" id="fitness">
+          <h2>Fitness Tracker</h2>
+
+          <div class="app-meta-card">
+            <div class="app-tagline">"I have a rough idea"</div>
+            <div class="app-meta-row">
+              <div class="app-meta-item"><strong>Type:</strong> Personal web app with charts</div>
+              <div class="app-meta-item"><strong>Starting point:</strong> Bullet points</div>
+              <div class="app-meta-item"><strong>Sessions:</strong> 3</div>
+              <div class="app-meta-item"><strong>Key concepts:</strong> Multi-session memory, learnings.md, data/UI separation</div>
+            </div>
+          </div>
+
+          <h3>The idea</h3>
+          <div class="idea-quote">
+            "Track daily workouts &mdash; type, duration, notes. Show weekly and monthly charts so I can see trends. Set goals and track streaks."
+          </div>
+          <p>More concrete than a vague wish. Clear nouns (workouts, charts, goals, streaks) and clear actions (track, show, set). But still a list of wishes, not a buildable plan.</p>
+
+          <h3>How you'd start</h3>
+          <p>Give Claude the bullet points directly. Since the idea is reasonably clear, <code>/scope</code> isn't needed. Claude creates a six-step plan separating data from UI &mdash; a core DOE principle.</p>
+
+          <div class="callout info">
+            <span class="callout-icon">&#9432;</span>
+            <div class="callout-body">
+              <strong>Why separate data from UI?</strong> If you later change how workouts are stored, only the storage layer changes. The charts stay untouched. If you change the chart library, the data layer is unaffected. Each layer has one reason to change.
+            </div>
+          </div>
+
+          <ol class="steps">
+            <li class="step">
+              <div class="step-number">1</div>
+              <h4>Claude plans: data first, UI second</h4>
+              <p>Steps 1&ndash;2 are the storage layer. Steps 3&ndash;6 are the interface. This ordering is deliberate &mdash; verified data before building views on top of it.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">2</div>
+              <h4>Session 1: data model and storage</h4>
+              <p>A date range query test fails &mdash; off-by-one error (<code>&lt;</code> instead of <code>&lt;=</code>). Claude diagnoses and fixes it. Two commits, then <code>/wrap</code>.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">3</div>
+              <h4>Session 2: input form and history</h4>
+              <p>Claude discovers workout dates stored in UTC display wrong in local time &mdash; a workout logged at 11pm Monday shows up under Tuesday. Fixes the date handling and logs the bug to <code>learnings.md</code>.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">4</div>
+              <h4>Session 3: charts and goals</h4>
+              <p>The stand-up card shows the timezone learning from Session 2. Claude uses timezone-aware dates correctly from the start &mdash; no repeat of the same mistake. The project got smarter.</p>
+            </li>
+          </ol>
+
+          <h3>What a session looks like</h3>
+
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Session 3 &mdash; Fitness Tracker</span>
+            </div>
+            <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">/stand-up</span>
+<span class="t-out">Position: 4/6 complete. Next: weekly charts.</span>
+<span class="t-out">Learnings: "Store workout dates as local ISO strings, not UTC.</span>
+<span class="t-out">            UTC causes day-boundary drift in display." [session 2]</span>
+
+<span class="t-comment"># Claude applies the learning immediately — no repeat bug</span>
+<span class="t-label"># Building chart component...</span>
+<span class="t-out">  PASS: chart renders with real workout data [auto]</span>
+<span class="t-out">  PASS: weekly aggregation correct across day boundaries [auto]</span>
+
+<span class="t-label"># Step 5: goals and streaks — PASS</span>
+<span class="t-label"># Step 6: polish — PASS</span>
+<span class="t-prompt">&gt;</span> <span class="t-cmd">/wrap</span>
+<span class="t-out">STATE.md: all 6 steps complete. Feature done.</span></pre>
+          </div>
+
+          <div class="doe-callout">
+            <div class="doe-callout-title">DOE Concepts in Action</div>
+            <ul>
+              <li><strong>Data/UI separation</strong> &mdash; storage layer and chart display are independent; fixing one doesn't break the other</li>
+              <li><strong>Contract verification</strong> &mdash; chart tests verified the chart renders with real data, not just that code exists</li>
+              <li><strong>learnings.md</strong> &mdash; Session 2's date bug was logged; Session 3 automatically avoided repeating it</li>
+              <li><strong>Session continuity</strong> &mdash; each session started exactly where the last left off via STATE.md and todo.md</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 3. Local Events Board                                          -->
+        <!-- ============================================================= -->
+        <div class="app-section" id="events">
+          <h2>Local Events Board</h2>
+
+          <div class="app-meta-card">
+            <div class="app-tagline">"I have a detailed spec"</div>
+            <div class="app-meta-row">
+              <div class="app-meta-item"><strong>Type:</strong> Web app with external API and maps</div>
+              <div class="app-meta-item"><strong>Starting point:</strong> Written specification</div>
+              <div class="app-meta-item"><strong>Sessions:</strong> 3</div>
+              <div class="app-meta-item"><strong>Key concepts:</strong> Directives, execution scripts, progressive disclosure, self-annealing</div>
+            </div>
+          </div>
+
+          <h3>The idea</h3>
+          <div class="idea-quote">
+            "Pull events from the Eventbrite API. Show them on a Leaflet map. Filter by category and date range. Click an event marker to see details."
+          </div>
+          <p>A proper specification. Named data source, named technology, specific features, clear end result. When you start with this much clarity, DOE can move fast.</p>
+
+          <h3>How you'd start</h3>
+          <p>The spec becomes a directive in <code>directives/</code> &mdash; the authority Claude follows throughout the build. The spec says "Leaflet map" &mdash; that means Leaflet, not a substitute Claude prefers.</p>
+
+          <ol class="steps">
+            <li class="step">
+              <div class="step-number">1</div>
+              <h4>Write the directive</h4>
+              <p>Copy the spec into <code>directives/events-board.md</code>. Add a Progressive Disclosure trigger in <code>CLAUDE.md</code>: "before touching the events import, read the directive."</p>
+            </li>
+            <li class="step">
+              <div class="step-number">2</div>
+              <h4>Claude creates an 8-step plan</h4>
+              <p>Starting with the critical DOE moment: a dedicated execution script for the API import. No inline API calls in conversation.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">3</div>
+              <h4>Session 1: build the import script</h4>
+              <p>Claude builds <code>execution/import_events.py</code>. Before writing code, it checks <code>learnings.md</code> for existing API patterns &mdash; progressive disclosure in action. Script handles auth, pagination, caching, validation, dry-run flag.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">4</div>
+              <h4>Session 2: Leaflet map</h4>
+              <p>The directive says "Leaflet" &mdash; Claude follows the spec, not its own preference. Event markers positioned from the JSON output of the import script.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">5</div>
+              <h4>Session 3: filters and detail panel</h4>
+              <p>A null category crashes the filter. Self-annealing: Claude reads the error, fixes the filter, adds a validation rule to the import script, logs the finding to <code>learnings.md</code>. One bug made the system stronger.</p>
+            </li>
+          </ol>
+
+          <h3>What a session looks like</h3>
+
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Session 1 &mdash; Events Board</span>
+            </div>
+            <pre><span class="t-label"># Progressive disclosure: Claude reads learnings.md</span>
+<span class="t-out">Learnings loaded: "cache to .tmp/, use --dry-run flag,</span>
+<span class="t-out">                   store API key in .env as EVENTBRITE_KEY"</span>
+
+<span class="t-comment"># Building execution/import_events.py</span>
+<span class="t-out">  - Auth: reads EVENTBRITE_KEY from .env</span>
+<span class="t-out">  - Pagination: loops until no next_page</span>
+<span class="t-out">  - Cache: writes to .tmp/events.json</span>
+<span class="t-out">  - Dry-run: --dry-run flag skips live API</span>
+
+<span class="t-prompt">$</span> <span class="t-cmd">python3 execution/import_events.py --dry-run</span>
+<span class="t-out">Loaded 0 events (dry run). Cache: .tmp/events.json</span>
+<span class="t-out">  PASS: import script runs, output schema valid [auto]</span></pre>
+          </div>
+
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Session 3 &mdash; Self-annealing in action</span>
+            </div>
+            <pre><span class="t-label"># Category filter crashes on null category</span>
+<span class="t-out">TypeError: Cannot read property 'toLowerCase' of null</span>
+<span class="t-comment"># Self-annealing sequence:</span>
+<span class="t-out">1. Read full error stack</span>
+<span class="t-out">2. Diagnose: events with "category": null not guarded</span>
+<span class="t-out">3. Fix filter: event.category?.toLowerCase() ?? 'uncategorised'</span>
+<span class="t-out">4. Add validation to import_events.py: null -> "uncategorised"</span>
+<span class="t-out">5. Log to learnings.md: "Eventbrite events can have null category"</span>
+<span class="t-out">  PASS: filter handles null category [auto]</span></pre>
+          </div>
+
+          <div class="doe-callout">
+            <div class="doe-callout-title">DOE Concepts in Action</div>
+            <ul>
+              <li><strong>Directives</strong> &mdash; the spec is the authority, not Claude's preferences; "Leaflet map" means Leaflet, not a substitute</li>
+              <li><strong>Execution scripts</strong> &mdash; deterministic Python script does the same thing every time; no AI reasoning in the data path</li>
+              <li><strong>Progressive disclosure</strong> &mdash; API patterns from learnings.md loaded automatically when the import script was started</li>
+              <li><strong>Self-annealing</strong> &mdash; a bug became permanent knowledge; the import script gets more robust with every failure</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- 4. Team Dashboard                                              -->
+        <!-- ============================================================= -->
+        <div class="app-section" id="dashboard">
+          <h2>Team Dashboard</h2>
+
+          <div class="app-meta-card">
+            <div class="app-tagline">"Full spec with roadmap"</div>
+            <div class="app-meta-row">
+              <div class="app-meta-item"><strong>Type:</strong> Multi-user app with auth and roles</div>
+              <div class="app-meta-item"><strong>Starting point:</strong> Full spec + phased roadmap</div>
+              <div class="app-meta-item"><strong>Sessions:</strong> 10+</div>
+              <div class="app-meta-item"><strong>Key concepts:</strong> Multi-phase builds, parallel waves, governed docs, compounding learnings</div>
+            </div>
+          </div>
+
+          <h3>The idea</h3>
+          <div class="idea-quote">
+            "Team dashboard with three roles: admins see everything, managers see their team's data, members see their own. Authentication via email invite. Real-time updates when data changes."
+          </div>
+          <p>A serious project with users, roles, authentication, and real-time data. Building this without structure would be chaos.</p>
+
+          <h3>How you'd start</h3>
+          <p>The roadmap is written in three phases before building starts. Claude translates it into 12+ contracted steps. A governed security policy directive constrains how auth is built.</p>
+
+          <div class="card-grid" style="margin-top: 20px; margin-bottom: 24px;">
+            <div class="m-card" style="cursor: default;">
+              <div class="card-icon indigo">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="4" rx="1"/><rect x="2" y="10" width="20" height="4" rx="1"/><rect x="2" y="17" width="20" height="4" rx="1"/></svg>
+              </div>
+              <h4>Phase 1: Foundation</h4>
+              <p>Auth, user management, roles. Sessions 1&ndash;4. A governed security directive constrains every decision.</p>
+            </div>
+            <div class="m-card" style="cursor: default;">
+              <div class="card-icon blue">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+              </div>
+              <h4>Phase 2: Views</h4>
+              <p>Admin, manager, member dashboards. Sessions 5&ndash;6. Independent views run in parallel with /agent-launch.</p>
+            </div>
+            <div class="m-card" style="cursor: default;">
+              <div class="card-icon green">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <h4>Phase 3: Polish</h4>
+              <p>Real-time updates, notifications, onboarding. Sessions 7&ndash;10. Compounding learnings from Phases 1&ndash;2 make this dramatically faster.</p>
+            </div>
+          </div>
+
+          <h3>What a session looks like</h3>
+
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Sessions 5&ndash;6 &mdash; Parallel wave with /agent-launch</span>
+            </div>
+            <pre><span class="t-comment"># Phase 2: three independent views. No shared code.</span>
+<span class="t-prompt">&gt;</span> <span class="t-cmd">/agent-launch</span>
+<span class="t-out">Wave started. Two terminals building simultaneously:</span>
+<span class="t-out">  Terminal A: admin-dashboard (owns src/views/admin/)</span>
+<span class="t-out">  Terminal B: manager-team-view (owns src/views/manager/)</span>
+<span class="t-comment"># Both build in parallel — 4 sessions of work in 2</span>
+<span class="t-comment"># Member view follows in the next solo session</span>
+
+<span class="t-label"># Contract checks pass in both terminals</span>
+<span class="t-out">  PASS: admin can view all teams [auto]</span>
+<span class="t-out">  PASS: manager cannot see other teams' data [auto]</span></pre>
+          </div>
+
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Session 10 &mdash; Compounding speed</span>
+            </div>
+            <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">/stand-up</span>
+<span class="t-out">Position: Phase 3, step 2/4. Next: notification system.</span>
+<span class="t-out">Learnings: 47 entries logged across 9 sessions:</span>
+<span class="t-out">  - token refresh timing (session 2)</span>
+<span class="t-out">  - role-checking pattern: always check at API boundary (session 3)</span>
+<span class="t-out">  - test helper for fake users: use createTestUser() (session 4)</span>
+<span class="t-out">  - WebSocket reconnect on token expiry (session 8)</span>
+<span class="t-comment"># Session 10 noticeably faster than Session 1</span>
+<span class="t-comment"># The project accumulated knowledge that prevents repeated mistakes</span></pre>
+          </div>
+
+          <div class="callout tip">
+            <span class="callout-icon">&#9432;</span>
+            <div class="callout-body">
+              <strong>Phase retros compound value:</strong> Phase 1's retro noted that test helpers for fake users would speed things up. Phase 2 created those helpers. Phase 3 used them from day one. Each retro makes the next phase faster.
+            </div>
+          </div>
+
+          <div class="doe-callout">
+            <div class="doe-callout-title">DOE Concepts in Action</div>
+            <ul>
+              <li><strong>ROADMAP.md</strong> &mdash; multi-phase plan visible from day one; anyone can see what's done, in progress, and coming</li>
+              <li><strong>Multi-agent waves</strong> &mdash; independent features built simultaneously via <code>/agent-launch</code>, cutting build time in half</li>
+              <li><strong>Governed docs</strong> &mdash; security policy directive is a constraint, not a suggestion; Claude checks it every time it touches auth code</li>
+              <li><strong>Compounding learnings</strong> &mdash; 47+ logged patterns across 9 sessions make Phase 3 dramatically faster than Phase 1</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <a href="workflows.html">
+            <div class="pg-label">Previous</div>
+            <div class="pg-title">&larr; Feature Lifecycle</div>
+          </a>
+          <a href="tips-and-mistakes.html" class="next">
+            <div class="pg-label">Next</div>
+            <div class="pg-title">Tips &amp; Mistakes &rarr;</div>
+          </a>
+        </div>
+
+        <footer class="site-footer">DOE Starter Kit v1.30.1</footer>
+
+      </div><!-- /content -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script>
+    // ── Dark mode ──
+    (function () {
+      var btn  = document.getElementById('themeBtn');
+      var html = document.documentElement;
+
+      function applyTheme(dark) {
+        if (dark) {
+          html.setAttribute('data-theme', 'dark');
+          btn.innerHTML = '&#9788;';
+        } else {
+          html.removeAttribute('data-theme');
+          btn.innerHTML = '&#9789;';
+        }
+      }
+
+      var stored = localStorage.getItem('doe-docs-theme');
+      applyTheme(stored === 'dark');
+
+      btn.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        localStorage.setItem('doe-docs-theme', isDark ? 'light' : 'dark');
+        applyTheme(!isDark);
+      });
+    })();
+
+    // ── Mobile sidebar ──
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar   = document.getElementById('sidebar');
+      var overlay   = document.getElementById('sidebarOverlay');
+
+      function open()  { sidebar.classList.add('open');    overlay.classList.add('visible'); }
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+      hamburger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? close() : open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+  </script>
+
+</body>
+</html>

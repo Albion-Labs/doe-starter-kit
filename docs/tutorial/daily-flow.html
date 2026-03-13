@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Day with DOE — DOE Starter Kit</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-body: #FFFFFF;
+      --bg-sidebar: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-code: #0F172A;
+      --bg-callout-info: #EFF6FF;
+      --bg-callout-tip: #F0FDF4;
+      --bg-callout-warn: #FFFBEB;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --text-sidebar: #334155;
+      --text-sidebar-active: #0F172A;
+      --accent: #6366F1;
+      --accent-light: #EEF2FF;
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-blue: #3B82F6;
+      --accent-rose: #F43F5E;
+      --sidebar-w: 260px;
+      --content-max: 720px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #243347;
+      --bg-code: #020617;
+      --bg-callout-info: #1E293B;
+      --bg-callout-tip: #1E293B;
+      --bg-callout-warn: #1E293B;
+      --border: #1E293B;
+      --border-light: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-sidebar: #94A3B8;
+      --text-sidebar-active: #F1F5F9;
+      --accent-light: #1E1B4B;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-brand {
+      display: block;
+      padding: 20px 16px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .sidebar-brand:hover { color: var(--accent); }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-sidebar);
+      text-decoration: none;
+      line-height: 1.4;
+      transition: background 0.1s, color 0.1s;
+    }
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-sidebar-active);
+    }
+    .sidebar-link.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .sidebar-link.nested {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* ── Dark mode button ── */
+    .theme-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg-card-hover); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Content area ── */
+    .content-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 48px;
+      min-width: 0;
+    }
+
+    .content {
+      max-width: var(--content-max);
+      width: 100%;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .content p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content ul, .content ol {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 20px;
+    }
+    .content li { margin-bottom: 6px; }
+
+    .content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .content a:hover { text-decoration: underline; }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-sidebar);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .m-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--bg-card);
+      transition: all 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .m-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .card-icon.indigo { background: var(--accent-light); color: var(--accent); }
+    .card-icon.green  { background: #ECFDF5; color: var(--accent-green); }
+    .card-icon.amber  { background: #FEF3C7; color: var(--accent-amber); }
+    .card-icon.blue   { background: #DBEAFE; color: var(--accent-blue); }
+    .card-icon.rose   { background: #FFE4E6; color: var(--accent-rose); }
+
+    [data-theme="dark"] .card-icon.indigo { background: #312E81; }
+    [data-theme="dark"] .card-icon.green  { background: #064E3B; }
+    [data-theme="dark"] .card-icon.amber  { background: #78350F; }
+    [data-theme="dark"] .card-icon.blue   { background: #1E3A5F; }
+    [data-theme="dark"] .card-icon.rose   { background: #4C0519; }
+
+    .m-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .m-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Terminal ── */
+    .terminal {
+      background: #0F172A;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #1E293B;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.red    { background: #EF4444; }
+    .terminal-dot.yellow { background: #F59E0B; }
+    .terminal-dot.green  { background: #22C55E; }
+    .terminal-title {
+      margin-left: 8px;
+      font-size: 12px;
+      color: #64748B;
+      font-family: var(--font-mono);
+    }
+    .terminal pre {
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+    }
+    .t-comment { color: #64748B; }
+    .t-prompt  { color: #F59E0B; }
+    .t-cmd     { color: #6EE7B7; }
+    .t-out     { color: #94A3B8; }
+    .t-label   { color: #818CF8; }
+    .t-value   { color: #F1F5F9; }
+    .t-green   { color: #6EE7B7; }
+    .t-amber   { color: #FCD34D; }
+    .t-dim     { color: #475569; }
+
+    /* ── Callout ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout.tip {
+      background: var(--bg-callout-tip);
+      border: 1px solid #BBF7D0;
+      color: #166534;
+    }
+    [data-theme="dark"] .callout.tip { border-color: #064E3B; color: #6EE7B7; }
+    .callout.info {
+      background: var(--bg-callout-info);
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+    [data-theme="dark"] .callout.info { border-color: #1E3A5F; color: #93C5FD; }
+    .callout.warn {
+      background: var(--bg-callout-warn);
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+    [data-theme="dark"] .callout.warn { border-color: #78350F; color: #FCD34D; }
+    .callout strong { font-weight: 600; }
+    .callout a { color: inherit; font-weight: 500; }
+    .callout .callout-body { color: inherit; }
+
+    /* ── Steps ── */
+    .steps {
+      margin: 24px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .step {
+      position: relative;
+      padding-left: 48px;
+      padding-bottom: 24px;
+      border-left: 2px solid var(--border);
+      margin-left: 14px;
+    }
+    .step:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
+    .step-number {
+      position: absolute;
+      left: -15px;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 8px;
+    }
+    .step code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-sidebar);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .step a { color: var(--accent); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg-code);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 12px 0 16px;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #CBD5E1;
+    }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination a {
+      flex: 1;
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+    .pagination a:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card);
+      text-decoration: none;
+    }
+    .pg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .pg-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .pagination .next { text-align: right; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Day Flow Diagram ── */
+    .day-flow {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--bg-card);
+      padding: 28px 24px;
+      margin: 28px 0 36px;
+      box-shadow: var(--shadow-card);
+    }
+    .day-flow-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .day-flow-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .day-flow-row:last-child { margin-bottom: 0; }
+    .df-block {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+    .df-block.muted {
+      background: var(--border);
+      color: var(--text-secondary);
+      font-family: var(--font);
+      font-weight: 500;
+    }
+    .df-block.green {
+      background: #059669;
+    }
+    .df-block.amber {
+      background: #D97706;
+    }
+    .df-block.rose {
+      background: #E11D48;
+    }
+    [data-theme="dark"] .df-block { background: #4F46E5; }
+    [data-theme="dark"] .df-block.green { background: #047857; }
+    [data-theme="dark"] .df-block.amber { background: #B45309; }
+    [data-theme="dark"] .df-block.rose  { background: #BE123C; }
+    [data-theme="dark"] .df-block.muted { background: #1E293B; color: var(--text-secondary); }
+    .df-arrow {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .df-break {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .df-break-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      border-style: dashed;
+      border-width: 0 0 1px 0;
+    }
+    .df-break-label {
+      font-size: 11px;
+      font-style: italic;
+      white-space: nowrap;
+    }
+    .df-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      justify-content: center;
+    }
+    .df-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .df-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .df-legend-dot.start { background: var(--accent); }
+    .df-legend-dot.check { background: #D97706; }
+    .df-legend-dot.save  { background: #059669; }
+    .df-legend-dot.review { background: #E11D48; }
+
+    /* ── Command Summary Cards ── */
+    .cmd-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--bg-card);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-card);
+    }
+    .cmd-card-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .cmd-badge {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 3px 10px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    [data-theme="dark"] .cmd-badge { background: #312E81; }
+    .cmd-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .cmd-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Habit Cards ── */
+    .habit-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--bg-card);
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-card);
+    }
+    .habit-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .habit-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .sidebar.open { transform: translateX(0); }
+      .content-area { margin-left: 0; padding: 24px 20px; padding-top: 60px; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .card-grid.cols-3 { grid-template-columns: 1fr; }
+      .day-flow-row { gap: 4px; }
+      .df-block { font-size: 11px; padding: 4px 9px; }
+    }
+
+    @media (min-width: 601px) and (max-width: 900px) {
+      .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Dark mode toggle -->
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit</a>
+      <div class="sidebar-nav">
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Getting Started</div>
+          <a class="sidebar-link" href="index.html">Welcome</a>
+          <a class="sidebar-link" href="getting-started.html">Installation</a>
+          <a class="sidebar-link" href="first-session.html">Your First Session</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Core Concepts</div>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
+          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
+          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
+          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Commands</div>
+          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
+          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
+          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Workflows</div>
+          <a class="sidebar-link active" href="daily-flow.html">A Day with DOE</a>
+          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
+          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Examples</div>
+          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
+          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
+          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
+          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Reference</div>
+          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link" href="glossary.html">Glossary</a>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ── Main Content ── -->
+    <div class="content-area">
+      <div class="content">
+
+        <h1>A Day with DOE</h1>
+        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">What using DOE actually looks like, from first coffee to end of day &mdash; hour by hour.</p>
+
+        <!-- Day Flow Diagram -->
+        <div class="day-flow">
+          <div class="day-flow-title">The rhythm of a DOE day</div>
+          <div class="day-flow-row">
+            <span class="df-block">/stand-up</span>
+            <span class="df-arrow">&rarr;</span>
+            <span class="df-block muted">build &amp; chat</span>
+            <span class="df-arrow">&rarr;</span>
+            <span class="df-block amber">/sitrep</span>
+            <span class="df-arrow">&rarr;</span>
+            <span class="df-block muted">build &amp; chat</span>
+            <span class="df-arrow">&rarr;</span>
+            <span class="df-block green">/wrap</span>
+          </div>
+          <div class="df-break">
+            <div class="df-break-line"></div>
+            <span class="df-break-label">break &mdash; context window cleared</span>
+            <div class="df-break-line"></div>
+          </div>
+          <div class="day-flow-row">
+            <span class="df-block">/crack-on</span>
+            <span class="df-arrow">&rarr;</span>
+            <span class="df-block muted">build &amp; chat</span>
+            <span class="df-arrow">&rarr;</span>
+            <span class="df-block green">/wrap</span>
+            <span class="df-arrow">&rarr;</span>
+            <span class="df-block rose">/eod</span>
+          </div>
+          <div class="df-legend">
+            <span class="df-legend-item"><span class="df-legend-dot start"></span>session start / resume</span>
+            <span class="df-legend-item"><span class="df-legend-dot check"></span>status check</span>
+            <span class="df-legend-item"><span class="df-legend-dot save"></span>save progress</span>
+            <span class="df-legend-item"><span class="df-legend-dot review"></span>day review</span>
+          </div>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Key distinction:</strong> <code>/stand-up</code> starts your first session of the day. <code>/crack-on</code> is a <strong>resume</strong> command &mdash; use it when you return after a break or open a new conversation mid-session. They serve different purposes.
+          </div>
+        </div>
+
+        <!-- Morning -->
+        <h2>Morning &mdash; Starting Your Day</h2>
+
+        <p>Open your project, launch Claude Code, and run <code>/stand-up</code>. This is your daily kick-off &mdash; Claude reads <code>STATE.md</code> and <code>todo.md</code>, then presents a briefing card.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">claude &mdash; my-project</span>
+          </div>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">claude</span>
+<span class="t-prompt">&gt;</span> <span class="t-cmd">/stand-up</span>
+
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  STAND-UP  </span><span class="t-dim">Thu 13 Mar  09:14</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  Last session:</span> <span class="t-value">Wed 12 Mar  17:31  (15h ago)</span>
+<span class="t-label">  Completed:   </span> <span class="t-green">CSV import script + unit tests</span>
+<span class="t-label">  Streak:      </span> <span class="t-value">12 days</span>
+
+<span class="t-label">  IN PROGRESS</span>
+<span class="t-value">  Step 3/5 &mdash; Build the dashboard UI</span>
+<span class="t-dim">  Execution scripts ready. Awaiting layout pass.</span>
+
+<span class="t-label">  BLOCKERS</span>
+<span class="t-dim">  None</span>
+
+<span class="t-label">  TODAY'S PLAN</span>
+<span class="t-value">  1. Dashboard card components</span>
+<span class="t-value">  2. Wire up data from import script</span>
+<span class="t-value">  3. Responsive layout pass</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-out">  Approve plan and start? (yes / change priorities)</span></pre>
+        </div>
+
+        <p>Read the briefing carefully &mdash; it often surfaces things you'd forget, like a stale blocker or a decision from last week. If the plan looks right, approve it and start building. If you want to change priorities, say so now.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Don't skip the stand-up card.</strong> Two minutes reading it now saves twenty minutes of confusion later. It often catches things &mdash; a stale blocker, a forgotten decision, a task that's been sitting too long.
+          </div>
+        </div>
+
+        <!-- Working -->
+        <h2>Working &mdash; Building in Plain English</h2>
+
+        <p>Once you've approved the stand-up plan, just start talking to Claude. Describe what you want in plain English. No special syntax, no commands &mdash; conversation is the interface.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">claude &mdash; my-project</span>
+          </div>
+          <pre><span class="t-prompt">&gt;</span> <span class="t-value">Build the stats card component. It should show total items,
+  items this week, and a sparkline. Use the existing CSS variables.</span>
+
+<span class="t-comment"># Claude builds, verifies, commits. You steer &mdash; Claude builds.</span>
+
+<span class="t-prompt">&gt;</span> <span class="t-value">The sparkline colours are off &mdash; match the accent colour from the design</span>
+
+<span class="t-comment"># Freeform and planned work mix freely in the same session.</span></pre>
+        </div>
+
+        <p>Each piece of work gets verified against its contract and committed. You can follow the plan step by step or do freeform work &mdash; mix them freely in the same session.</p>
+
+        <!-- Sitrep -->
+        <h2>Midday &mdash; Quick Status Check</h2>
+
+        <p>At any point during a session, run <code>/sitrep</code> to see a compact progress snapshot. Completely read-only &mdash; safe to run as many times as you like.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">claude &mdash; my-project</span>
+          </div>
+          <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">/sitrep</span>
+
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  SITREP</span>  <span class="t-dim">11:47</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-green">  [x]</span> <span class="t-value">Stats card component</span>
+<span class="t-green">  [x]</span> <span class="t-value">Wire up data from import script</span>
+<span class="t-amber">  [ ]</span> <span class="t-value">Responsive layout pass</span>  <span class="t-dim">&larr; current</span>
+<span class="t-dim">  [ ]</span> <span class="t-dim">Final review</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  2/4 steps done</span>  <span class="t-dim">3 commits this session</span></pre>
+        </div>
+
+        <p>Use <code>/sitrep</code> when you've lost track of where you are, before a meeting, or whenever you want a quick sense of progress. It doesn't update anything &mdash; just shows the current state.</p>
+
+        <!-- Wrap -->
+        <h2>Session End &mdash; Saving Your Progress</h2>
+
+        <p>Before stepping away from a session &mdash; lunch, a meeting, end of the day &mdash; run <code>/wrap</code>. Think of it as saving your game.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">claude &mdash; my-project</span>
+          </div>
+          <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">/wrap</span>
+
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  SESSION WRAP</span>  <span class="t-dim">13:02</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  Shipped:</span>  <span class="t-green">Stats card, data wiring</span>
+<span class="t-label">  Duration:</span> <span class="t-value">3h 48m</span>
+<span class="t-label">  Commits:</span>  <span class="t-value">5</span>
+<span class="t-label">  Lines:</span>    <span class="t-value">+312  -47</span>
+<span class="t-label">  Streak:</span>   <span class="t-value">12 days</span>
+
+<span class="t-label">  NEXT UP</span>
+<span class="t-value">  Responsive layout pass</span>
+
+<span class="t-green">  STATE.md updated. Learnings recorded.</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span></pre>
+        </div>
+
+        <p><code>/wrap</code> updates <code>STATE.md</code> with your current position, records any learnings, calculates session stats, and generates a summary. Without it, the next session's <code>/stand-up</code> won't know what you accomplished. Your code is safe in git either way &mdash; but session context is lost without a wrap.</p>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>Most important habit:</strong> Always <code>/wrap</code> before ending a session. If you forget, <code>STATE.md</code> won't reflect where you actually are, and the next stand-up works from stale information.
+          </div>
+        </div>
+
+        <!-- Crack-on -->
+        <h2>After a Break &mdash; Resume with /crack-on</h2>
+
+        <p>When you return after a break and the context window has been cleared &mdash; whether from starting a new conversation, using <code>/clear</code>, or coming back from lunch &mdash; use <code>/crack-on</code> to <strong>resume</strong>.</p>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>/crack-on is a resume command.</strong> It picks up where you left off, skips the full briefing, and immediately starts building the next step. Use it when you know the plan and just want to get back into it. If you want the full context review first, use <code>/stand-up</code> instead.
+          </div>
+        </div>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">claude &mdash; my-project</span>
+          </div>
+          <pre><span class="t-comment"># New conversation, back from lunch. Context window is clear.</span>
+<span class="t-prompt">&gt;</span> <span class="t-cmd">/crack-on</span>
+
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  CRACK-ON</span>  <span class="t-dim">14:15  resuming</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-value">  Last wrapped: 13:02  (1h 13m ago)</span>
+<span class="t-value">  Next step: Responsive layout pass</span>
+
+<span class="t-green">  Picking up from where you left off...</span></pre>
+        </div>
+
+        <p>The key difference: <code>/crack-on</code> reads all your state files, shows a compact card, and immediately starts building &mdash; no plan review, no approval. It's designed for when you know where you are and just want to resume.</p>
+
+        <div class="card-grid">
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon indigo">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <h4>/stand-up</h4>
+            <p>Starting fresh. Full briefing, plan review, explicit approval. Use at the start of a new day or when you want the full picture first.</p>
+          </div>
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon green">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+            <h4>/crack-on</h4>
+            <p>Resuming after a break. Compact card, no review, immediate start. Use when you've been away and want to get back into it quickly.</p>
+          </div>
+        </div>
+
+        <!-- End of Day -->
+        <h2>End of Day &mdash; Review Everything</h2>
+
+        <p>After your final <code>/wrap</code>, run <code>/eod</code> to get a summary of everything you did across all sessions today.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">claude &mdash; my-project</span>
+          </div>
+          <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">/eod</span>
+
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  END OF DAY</span>  <span class="t-dim">Thu 13 Mar</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  SHIPPED TODAY</span>
+<span class="t-green">  [x]</span> <span class="t-value">Stats card component</span>
+<span class="t-green">  [x]</span> <span class="t-value">Wire up data from import script</span>
+<span class="t-green">  [x]</span> <span class="t-value">Responsive layout pass</span>
+
+<span class="t-label">  SESSIONS</span>
+<span class="t-value">  09:14 &ndash; 13:02   Morning session   3h 48m   5 commits</span>
+<span class="t-value">  14:15 &ndash; 17:31   Afternoon session  3h 16m   4 commits</span>
+
+<span class="t-label">  TODAY'S TOTAL</span>
+<span class="t-value">  7h 4m  &middot;  9 commits  &middot;  +487 / -91 lines</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span></pre>
+        </div>
+
+        <p><code>/eod</code> shows what shipped, what's in progress, a timeline of sessions, and aggregate metrics for the day. Useful for personal records, sharing with collaborators, or just the satisfaction of seeing a productive day laid out clearly.</p>
+
+        <!-- Weekly -->
+        <h2>Weekly &mdash; Portfolio View</h2>
+
+        <p>Once a week (or whenever you want perspective across projects), run <code>/hq</code> for a full project dashboard.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">claude &mdash; my-project</span>
+          </div>
+          <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">/hq</span>
+
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  HQ</span>  <span class="t-dim">Week of Mon 10 Mar</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span>
+<span class="t-label">  All-time</span>
+<span class="t-value">  Sessions: 47   Streak: 12d   Features: 8 shipped</span>
+
+<span class="t-label">  This week  Mon&ndash;Thu</span>
+<span class="t-value">  4 sessions  &middot;  22h 14m  &middot;  31 commits</span>
+
+<span class="t-label">  In progress</span>
+<span class="t-amber">  Dashboard UI  &mdash;  Step 3/5</span>
+
+<span class="t-label">  Up next</span>
+<span class="t-dim">  Export to CSV  &middot;  User auth</span>
+<span class="t-dim">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span></pre>
+        </div>
+
+        <p>Use the weekly check-in to review <code>ROADMAP.md</code> &mdash; are features moving from "Up Next" to "Complete"? Check <code>learnings.md</code> for patterns. Reassess priorities: does the plan still make sense?</p>
+
+        <!-- Command Reference -->
+        <h2>Command Reference</h2>
+
+        <p>The six commands that cover the full daily cycle.</p>
+
+        <div class="cmd-card">
+          <div class="cmd-card-header">
+            <span class="cmd-badge">/stand-up</span>
+            <span class="cmd-card-title">Start a new session</span>
+          </div>
+          <p>Reads <code>STATE.md</code> and <code>todo.md</code>, presents a briefing card, and waits for your approval before starting. Use at the beginning of the day or any time you want the full context briefing first.</p>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-card-header">
+            <span class="cmd-badge">/sitrep</span>
+            <span class="cmd-card-title">Quick status snapshot</span>
+          </div>
+          <p>Shows completed steps, current step, and what's next. Read-only &mdash; safe to run any time, as many times as you like. No changes to state.</p>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-card-header">
+            <span class="cmd-badge">/wrap</span>
+            <span class="cmd-card-title">Save session progress</span>
+          </div>
+          <p>Updates <code>STATE.md</code>, records learnings, calculates session stats, and generates a summary. Run before every break. The most important habit in DOE.</p>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-card-header">
+            <span class="cmd-badge">/crack-on</span>
+            <span class="cmd-card-title">Resume after a break</span>
+          </div>
+          <p>Reads state files, shows a compact card, and immediately continues building. Use when you've been away and want to <strong>resume</strong> &mdash; no review, no approval needed. For a full briefing, use <code>/stand-up</code> instead.</p>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-card-header">
+            <span class="cmd-badge">/eod</span>
+            <span class="cmd-card-title">End-of-day summary</span>
+          </div>
+          <p>Shows everything you shipped today, across all sessions. Timeline of sessions, aggregate metrics, and current project status. Run after your final <code>/wrap</code>.</p>
+        </div>
+
+        <div class="cmd-card">
+          <div class="cmd-card-header">
+            <span class="cmd-badge">/hq</span>
+            <span class="cmd-card-title">Portfolio view</span>
+          </div>
+          <p>Project dashboard: all-time session count, streak, features shipped, this week's activity, and roadmap status. Run weekly or whenever you want the big picture.</p>
+        </div>
+
+        <!-- Key Habits -->
+        <h2>Key Habits</h2>
+
+        <p>The habits that make the biggest difference, distilled from the daily routine above.</p>
+
+        <div class="habit-card">
+          <h4>Always /wrap before ending a session</h4>
+          <p>Without it, <code>STATE.md</code> won't reflect where you actually are, and the next stand-up works from stale information. Your code is safe in git either way &mdash; but session context is lost without a wrap.</p>
+        </div>
+
+        <div class="habit-card">
+          <h4>One task per session</h4>
+          <p>Context pollution is real. When a conversation accumulates unrelated topics, Claude's responses get less focused. Keep each session about one thing. If you need to switch topics, <code>/wrap</code> then <code>/clear</code> first.</p>
+        </div>
+
+        <div class="habit-card">
+          <h4>Read the stand-up card</h4>
+          <p>Don't skip past it. It often surfaces things you'd miss &mdash; a stale blocker, a forgotten decision, a task that's been sitting in the queue too long. Two minutes of reading saves twenty minutes of confusion.</p>
+        </div>
+
+        <div class="habit-card">
+          <h4>Failures make the system smarter</h4>
+          <p>DOE has a self-annealing system: when something fails, Claude diagnoses the root cause, fixes it, and logs the learning so it doesn't happen again. You don't need to manage this &mdash; just know it's happening, making every future session better.</p>
+        </div>
+
+        <div class="habit-card">
+          <h4>Trust the rhythm</h4>
+          <p>Stand-up, build, wrap. It feels like overhead the first few times, but it pays for itself quickly. The system gets smarter about your project with every session &mdash; and that only works if it has clean state to work from.</p>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>These are tools, not rules.</strong> You don't have to follow this schedule exactly. But <code>/stand-up</code> at the start and <code>/wrap</code> at the end are the two that matter most for keeping the project's memory intact.
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <a href="commands.html">
+            <div class="pg-label">Previous</div>
+            <div class="pg-title">&larr; Commands</div>
+          </a>
+          <a href="workflows.html" class="next">
+            <div class="pg-label">Next</div>
+            <div class="pg-title">Feature Lifecycle &rarr;</div>
+          </a>
+        </div>
+
+        <footer class="site-footer">DOE Starter Kit v1.30.1</footer>
+
+      </div><!-- /content -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script>
+    // ── Dark mode ──
+    (function () {
+      var btn  = document.getElementById('themeBtn');
+      var html = document.documentElement;
+
+      function applyTheme(dark) {
+        if (dark) {
+          html.setAttribute('data-theme', 'dark');
+          btn.innerHTML = '&#9788;';
+        } else {
+          html.removeAttribute('data-theme');
+          btn.innerHTML = '&#9789;';
+        }
+      }
+
+      var stored = localStorage.getItem('doe-docs-theme');
+      applyTheme(stored === 'dark');
+
+      btn.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        localStorage.setItem('doe-docs-theme', isDark ? 'light' : 'dark');
+        applyTheme(!isDark);
+      });
+    })();
+
+    // ── Mobile sidebar ──
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar   = document.getElementById('sidebar');
+      var overlay   = document.getElementById('sidebarOverlay');
+
+      function open()  { sidebar.classList.add('open');    overlay.classList.add('visible'); }
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+      hamburger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? close() : open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+  </script>
+
+</body>
+</html>

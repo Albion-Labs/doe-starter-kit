@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tips &amp; Common Mistakes — DOE Starter Kit</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-body: #FFFFFF;
+      --bg-sidebar: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-code: #0F172A;
+      --bg-callout-info: #EFF6FF;
+      --bg-callout-tip: #F0FDF4;
+      --bg-callout-warn: #FFFBEB;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --text-sidebar: #334155;
+      --text-sidebar-active: #0F172A;
+      --accent: #6366F1;
+      --accent-light: #EEF2FF;
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-blue: #3B82F6;
+      --accent-rose: #F43F5E;
+      --sidebar-w: 260px;
+      --content-max: 720px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #243347;
+      --bg-code: #020617;
+      --bg-callout-info: #1E293B;
+      --bg-callout-tip: #1E293B;
+      --bg-callout-warn: #1E293B;
+      --border: #1E293B;
+      --border-light: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-sidebar: #94A3B8;
+      --text-sidebar-active: #F1F5F9;
+      --accent-light: #1E1B4B;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-brand {
+      display: block;
+      padding: 20px 16px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .sidebar-brand:hover { color: var(--accent); }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-sidebar);
+      text-decoration: none;
+      line-height: 1.4;
+      transition: background 0.1s, color 0.1s;
+    }
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-sidebar-active);
+    }
+    .sidebar-link.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .sidebar-link.nested {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* ── Dark mode button ── */
+    .theme-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg-card-hover); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Content area ── */
+    .content-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 48px;
+      min-width: 0;
+    }
+
+    .content {
+      max-width: var(--content-max);
+      width: 100%;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .content p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content ul, .content ol {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 20px;
+    }
+    .content li { margin-bottom: 6px; }
+
+    .content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .content a:hover { text-decoration: underline; }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-sidebar);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .m-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      background: var(--bg-card);
+      transition: all 0.15s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .m-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    /* Do/Don't bordered cards */
+    .m-card.do-card {
+      border-color: #BBF7D0;
+      border-width: 1.5px;
+    }
+    .m-card.do-card:hover { border-color: var(--accent-green); }
+
+    .m-card.dont-card {
+      border-color: #FECDD3;
+      border-width: 1.5px;
+    }
+    .m-card.dont-card:hover { border-color: var(--accent-rose); }
+
+    [data-theme="dark"] .m-card.do-card { border-color: #065F46; }
+    [data-theme="dark"] .m-card.dont-card { border-color: #881337; }
+
+    .card-marker {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .do-card .card-marker { color: var(--accent-green); }
+    .dont-card .card-marker { color: var(--accent-rose); }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .card-icon.indigo { background: var(--accent-light); color: var(--accent); }
+    .card-icon.green  { background: #ECFDF5; color: var(--accent-green); }
+    .card-icon.amber  { background: #FEF3C7; color: var(--accent-amber); }
+    .card-icon.blue   { background: #DBEAFE; color: var(--accent-blue); }
+    .card-icon.rose   { background: #FFE4E6; color: var(--accent-rose); }
+
+    [data-theme="dark"] .card-icon.indigo { background: #312E81; }
+    [data-theme="dark"] .card-icon.green  { background: #064E3B; }
+    [data-theme="dark"] .card-icon.amber  { background: #78350F; }
+    [data-theme="dark"] .card-icon.blue   { background: #1E3A5F; }
+    [data-theme="dark"] .card-icon.rose   { background: #4C0519; }
+
+    .m-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .m-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Terminal ── */
+    .terminal {
+      background: #0F172A;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #1E293B;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.red    { background: #EF4444; }
+    .terminal-dot.yellow { background: #F59E0B; }
+    .terminal-dot.green  { background: #22C55E; }
+    .terminal-title {
+      margin-left: 8px;
+      font-size: 12px;
+      color: #64748B;
+      font-family: var(--font-mono);
+    }
+    .terminal pre {
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+    }
+    .t-comment { color: #64748B; }
+    .t-prompt  { color: #F59E0B; }
+    .t-cmd     { color: #6EE7B7; }
+    .t-out     { color: #94A3B8; }
+
+    /* ── Callout ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout.tip {
+      background: var(--bg-callout-tip);
+      border: 1px solid #BBF7D0;
+      color: #166534;
+    }
+    [data-theme="dark"] .callout.tip { border-color: #064E3B; color: #6EE7B7; }
+    .callout.info {
+      background: var(--bg-callout-info);
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+    [data-theme="dark"] .callout.info { border-color: #1E3A5F; color: #93C5FD; }
+    .callout.warn {
+      background: var(--bg-callout-warn);
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+    [data-theme="dark"] .callout.warn { border-color: #78350F; color: #FCD34D; }
+    .callout strong { font-weight: 600; }
+    .callout a { color: inherit; font-weight: 500; }
+    .callout .callout-body { color: inherit; }
+
+    /* ── Steps ── */
+    .steps {
+      margin: 24px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .step {
+      position: relative;
+      padding-left: 48px;
+      padding-bottom: 24px;
+      border-left: 2px solid var(--border);
+      margin-left: 14px;
+    }
+    .step:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
+    .step-number {
+      position: absolute;
+      left: -15px;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 8px;
+    }
+    .step code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-sidebar);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .step a { color: var(--accent); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg-code);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 12px 0 16px;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #CBD5E1;
+    }
+
+    /* ── Accordion / Troubleshoot ── */
+    .accordion {
+      margin: 24px 0;
+    }
+    .accordion details {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      background: var(--bg-card);
+      transition: border-color 0.15s;
+    }
+    .accordion details[open] {
+      border-color: var(--accent);
+    }
+    .accordion summary {
+      padding: 14px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+    .accordion summary::-webkit-details-marker { display: none; }
+    .accordion summary::before {
+      content: '\25B6';
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .accordion details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .accordion summary:hover { color: var(--accent); }
+    .accordion .acc-body {
+      padding: 0 16px 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .accordion .acc-body p { margin-bottom: 10px; color: var(--text-secondary); }
+    .accordion .acc-body ul, .accordion .acc-body ol {
+      padding-left: 18px;
+      margin-bottom: 10px;
+      color: var(--text-secondary);
+    }
+    .accordion .acc-body li { margin-bottom: 5px; }
+    .accordion .acc-body strong { color: var(--text-primary); font-weight: 600; }
+    .accordion .acc-body code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-sidebar);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .acc-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      margin-bottom: 6px;
+      margin-top: 12px;
+      display: block;
+    }
+
+    /* ── Info table (What Claude reads) ── */
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0 24px;
+      font-size: 13.5px;
+    }
+    .info-table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: var(--bg-sidebar);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+    .info-table td:first-child {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .info-table tr:last-child td { border-bottom: none; }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination a {
+      flex: 1;
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+    .pagination a:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card);
+      text-decoration: none;
+    }
+    .pg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .pg-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .pagination .next { text-align: right; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .sidebar.open { transform: translateX(0); }
+      .content-area { margin-left: 0; padding: 24px 20px; padding-top: 60px; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .card-grid.cols-3 { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 601px) and (max-width: 900px) {
+      .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Dark mode toggle -->
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit</a>
+      <div class="sidebar-nav">
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Getting Started</div>
+          <a class="sidebar-link" href="index.html">Welcome</a>
+          <a class="sidebar-link" href="getting-started.html">Installation</a>
+          <a class="sidebar-link" href="first-session.html">Your First Session</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Core Concepts</div>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
+          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
+          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
+          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Commands</div>
+          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
+          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
+          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Workflows</div>
+          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
+          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
+          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Examples</div>
+          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
+          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
+          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
+          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Reference</div>
+          <a class="sidebar-link active" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link" href="glossary.html">Glossary</a>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ── Main Content ── -->
+    <div class="content-area">
+      <div class="content">
+
+        <h1>Tips &amp; Common Mistakes</h1>
+        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">What to do, what to avoid, and how to fix it when things go wrong.</p>
+
+        <p>Working with Claude Code through the DOE framework is smooth once you know the patterns. This page collects the habits that lead to productive sessions, the mistakes that cause friction, and troubleshooting steps for when something goes wrong.</p>
+
+        <!-- ── Do This ── -->
+        <h2 id="do">Do This</h2>
+        <p>These habits keep sessions productive and your project healthy.</p>
+
+        <div class="card-grid">
+          <div class="m-card do-card" style="cursor: default;">
+            <div class="card-marker">Do</div>
+            <h4>Be specific about what you want</h4>
+            <p>Say "Build a search bar that filters recipes by name" instead of "add search." Specific prompts produce specific results. Vague prompts produce guesswork.</p>
+          </div>
+          <div class="m-card do-card" style="cursor: default;">
+            <div class="card-marker">Do</div>
+            <h4>Always <code>/wrap</code> before ending a session</h4>
+            <p>Wrapping saves your session state to <code>STATE.md</code> so the next session picks up exactly where you left off. Skipping it means lost context.</p>
+          </div>
+          <div class="m-card do-card" style="cursor: default;">
+            <div class="card-marker">Do</div>
+            <h4>Read the stand-up card</h4>
+            <p>When you run <code>/stand-up</code>, Claude reads your project state and tells you what needs attention &mdash; stale TODOs, uncommitted changes, audit warnings.</p>
+          </div>
+          <div class="m-card do-card" style="cursor: default;">
+            <div class="card-marker">Do</div>
+            <h4>Keep sessions focused &mdash; one task per session</h4>
+            <p>A session that tries to do three things at once leads to confused context and tangled commits. One task, one session, one clean commit trail.</p>
+          </div>
+          <div class="m-card do-card" style="cursor: default;">
+            <div class="card-marker">Do</div>
+            <h4>Let contracts do the verification</h4>
+            <p>Every task in <code>todo.md</code> has testable criteria. Run <code>/agent-verify</code> to confirm the work actually passes. Contracts don't lie.</p>
+          </div>
+          <div class="m-card do-card" style="cursor: default;">
+            <div class="card-marker">Do</div>
+            <h4>Use <code>/scope</code> when your idea is vague</h4>
+            <p>If you're not sure exactly what you want to build, <code>/scope</code> runs a conversational session that turns a rough idea into a concrete brief with clear steps.</p>
+          </div>
+          <div class="m-card do-card" style="cursor: default;">
+            <div class="card-marker">Do</div>
+            <h4>Commit after every completed piece of work</h4>
+            <p>Each completed task gets its own git commit. This makes rollback surgical &mdash; if something breaks, you revert one commit, not an entire session.</p>
+          </div>
+          <div class="m-card do-card" style="cursor: default;">
+            <div class="card-marker">Do</div>
+            <h4>Check <code>STATE.md</code> at the start of each session</h4>
+            <p>Even before running <code>/stand-up</code>, a quick look at <code>STATE.md</code> reminds you where you left off and any blockers from last time.</p>
+          </div>
+        </div>
+
+        <!-- ── Don't Do This ── -->
+        <h2 id="dont">Don't Do This</h2>
+        <p>These are the most common mistakes. Each one has bitten someone before.</p>
+
+        <div class="card-grid">
+          <div class="m-card dont-card" style="cursor: default;">
+            <div class="card-marker">Don't</div>
+            <h4>Paste API keys in the chat</h4>
+            <p>Never share credentials in the conversation. Put them in your <code>.env</code> file, which is excluded from git. Execution scripts read from <code>.env</code> automatically.</p>
+          </div>
+          <div class="m-card dont-card" style="cursor: default;">
+            <div class="card-marker">Don't</div>
+            <h4>Say "build me an app" with no context</h4>
+            <p>Claude needs specifics. What does the app do? Who is it for? What data does it use? A single sentence of context produces dramatically better results.</p>
+          </div>
+          <div class="m-card dont-card" style="cursor: default;">
+            <div class="card-marker">Don't</div>
+            <h4>Ignore audit warnings</h4>
+            <p>When <code>/audit</code> flags something, it's catching a real problem &mdash; a stale claim, a misplaced file, a documentation gap. Ignoring it lets small issues compound.</p>
+          </div>
+          <div class="m-card dont-card" style="cursor: default;">
+            <div class="card-marker">Don't</div>
+            <h4>Skip <code>/wrap</code></h4>
+            <p>Closing the terminal without wrapping means <code>STATE.md</code> won't reflect what happened. Your next stand-up will be working with stale information. It takes five seconds.</p>
+          </div>
+          <div class="m-card dont-card" style="cursor: default;">
+            <div class="card-marker">Don't</div>
+            <h4>Try to do everything in one session</h4>
+            <p>Long sessions accumulate context that makes Claude less precise. Break large features into steps, tackle one per session, and use <code>/wrap</code> + <code>/stand-up</code> between them.</p>
+          </div>
+          <div class="m-card dont-card" style="cursor: default;">
+            <div class="card-marker">Don't</div>
+            <h4>Manually delete files to "fix" things</h4>
+            <p>Tell Claude what to undo instead. Manual deletions leave orphaned references, break imports, and create state Claude doesn't know about. Let Claude handle file operations.</p>
+          </div>
+          <div class="m-card dont-card" style="cursor: default;">
+            <div class="card-marker">Don't</div>
+            <h4>Bypass hooks with <code>--no-verify</code></h4>
+            <p>Git hooks exist to catch real problems &mdash; committed secrets, missing trailers, formatting issues. Disabling the safety net is almost never the right fix.</p>
+          </div>
+          <div class="m-card dont-card" style="cursor: default;">
+            <div class="card-marker">Don't</div>
+            <h4>Run 4+ hours without wrapping</h4>
+            <p>Long conversations accumulate context Claude struggles to track. Two focused 2-hour sessions with <code>/wrap</code> between them produce better results than one marathon session.</p>
+          </div>
+        </div>
+
+        <!-- ── Managing Context ── -->
+        <h2 id="context">Managing Context</h2>
+        <p>Understanding how Claude's working memory works &mdash; and how to manage it &mdash; is the single biggest factor in getting consistently good results across sessions.</p>
+
+        <h3>Why context matters</h3>
+        <p>Claude has a limited working memory called the <strong>context window</strong>. Everything in your conversation &mdash; your messages, Claude's responses, files it read, code it wrote &mdash; fills this up. When it gets full, Claude starts losing track of earlier details. This is normal, not a bug. Think of it like a desk that can only hold so many papers &mdash; eventually the oldest ones fall off the edge.</p>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>The goal isn't to avoid filling the context window.</strong> The goal is to fill it with the right things &mdash; current task, relevant files, recent decisions &mdash; not stale history from three hours ago.
+          </div>
+        </div>
+
+        <h3>When to <code>/wrap</code></h3>
+        <ul>
+          <li>At the end of every work session (even a short one)</li>
+          <li>Before stepping away for more than a few minutes</li>
+          <li>When switching from one type of work to another</li>
+        </ul>
+        <p><code>/wrap</code> saves your progress to <code>STATE.md</code> and records session stats. Without it, the next stand-up won't know what happened. Think of it as pressing "save game" before turning off the console.</p>
+
+        <h3>When to <code>/clear</code></h3>
+        <ul>
+          <li>When the conversation feels "muddy" &mdash; Claude keeps referencing old context that's no longer relevant</li>
+          <li>When switching to a completely different task in the same project</li>
+          <li>After <code>/wrap</code>, if you want a clean slate for the next piece of work</li>
+        </ul>
+        <p><code>/clear</code> wipes the conversation but <strong>not</strong> your files. Your code, <code>todo.md</code>, <code>STATE.md</code> &mdash; all still there. You're resetting Claude's conversation memory, not emptying the filing cabinet.</p>
+
+        <h3>The golden pattern</h3>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">Session cycle</span>
+          </div>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">/stand-up</span>    <span class="t-comment"># Read state, see what needs doing</span>
+<span class="t-prompt">$</span> <span class="t-out">... work ...</span>  <span class="t-comment"># Focused on one task</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/wrap</span>        <span class="t-comment"># Save progress to STATE.md</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/clear</span>       <span class="t-comment"># Reset conversation memory</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/stand-up</span>    <span class="t-comment"># Pick up the next task fresh</span></pre>
+        </div>
+
+        <p>Each cycle is one focused unit. You don't <em>have</em> to clear between every session, but keeping sessions focused prevents the "Claude forgot what we were doing" problem.</p>
+
+        <!-- ── What Claude Reads ── -->
+        <h2 id="reads">What Claude Reads</h2>
+        <p>People often assume Claude remembers everything or knows nothing. The truth is in between &mdash; and understanding what Claude actually has access to will change how you work with it.</p>
+
+        <h3>At the start of every conversation</h3>
+        <p>Claude automatically reads these files before you say anything:</p>
+
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>What it contains</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CLAUDE.md</td>
+              <td>Project rules, operating instructions, directory structure. The "constitution" that shapes how Claude behaves in your project.</td>
+            </tr>
+            <tr>
+              <td>~/.claude/CLAUDE.md</td>
+              <td>Your personal universal instructions. These apply to every project you work in.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            Every time you open a new conversation, Claude reads the rule book. It knows <em>how</em> to work in your project before you say anything.
+          </div>
+        </div>
+
+        <h3>When you run <code>/stand-up</code></h3>
+        <p>Claude additionally reads:</p>
+
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>What it contains</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>STATE.md</td>
+              <td>Where you left off, what's in progress, any blockers from last session.</td>
+            </tr>
+            <tr>
+              <td>tasks/todo.md</td>
+              <td>The full task list with contracts and verification criteria.</td>
+            </tr>
+            <tr>
+              <td>learnings.md</td>
+              <td>Project-specific lessons from past sessions.</td>
+            </tr>
+            <tr>
+              <td>ROADMAP.md</td>
+              <td>The big picture of features planned, in progress, and done.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>During work</h3>
+        <ul>
+          <li>Claude reads files <strong>on demand</strong> &mdash; when it needs to edit something, it reads it first</li>
+          <li>Claude does <strong>not</strong> have your whole codebase loaded at all times</li>
+          <li>If you want Claude to know about a specific file, mention it: "Check <code>src/js/scoring.js</code>"</li>
+        </ul>
+
+        <h3>What Claude does not automatically know</h3>
+        <ul>
+          <li>The contents of your code files (until it reads them)</li>
+          <li>What happened in previous conversations (unless saved to <code>STATE.md</code> or <code>learnings.md</code>)</li>
+          <li>What other people on your team are doing</li>
+          <li>Anything outside your project directory</li>
+        </ul>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>STATE.md is a sticky note on the monitor</strong> &mdash; replaced every session. <strong>learnings.md is a notebook in the drawer</strong> &mdash; always growing, always available. Both matter, but for different reasons.
+          </div>
+        </div>
+
+        <!-- ── Keeping DOE Updated ── -->
+        <h2 id="updates">Keeping Your Kit Updated</h2>
+        <p>DOE is a living framework. It gets better over time &mdash; new commands, bug fixes, smarter hooks. Two commands handle updates, and they work in opposite directions.</p>
+
+        <div class="card-grid">
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon blue">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v9"/><path d="m8 8 4-4 4 4"/><path d="M20 16a8 8 0 1 1-16 0"/></svg>
+            </div>
+            <h4>/pull-doe</h4>
+            <p>Pulls updates <em>from</em> the starter kit <em>into</em> your project. Like downloading an app update. Safe &mdash; won't overwrite your customisations.</p>
+          </div>
+          <div class="m-card" style="cursor: default;">
+            <div class="card-icon indigo">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 21v-9"/><path d="m8 16 4 4 4-4"/><path d="M4 8a8 8 0 1 1 16 0"/></svg>
+            </div>
+            <h4>/sync-doe</h4>
+            <p>Pushes improvements <em>from</em> your project <em>back</em> to the starter kit. Shares your improvements with all your other projects.</p>
+          </div>
+        </div>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">Update flow</span>
+          </div>
+          <pre><span class="t-comment"># Getting updates FROM the starter kit:</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/pull-doe</span>
+<span class="t-out">  Checking version... your project: v1.28.0, latest: v1.30.1</span>
+<span class="t-out">  Changelog: new /scope command, improved /wrap output, hook fix</span>
+<span class="t-out">  Apply update? [y/n]</span>
+
+<span class="t-comment"># Sending improvements TO the starter kit:</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/sync-doe</span>
+<span class="t-out">  Comparing framework files...</span>
+<span class="t-out">  Universal changes found: improved /wrap summary format</span>
+<span class="t-out">  Sync to starter kit? [y/n]</span></pre>
+        </div>
+
+        <h3>When to use <code>/pull-doe</code></h3>
+        <ul>
+          <li>The <code>/stand-up</code> card shows <code>DOE KIT vX.Y.Z * pull</code> &mdash; newer updates are available</li>
+          <li>You want new commands or bug fixes that have been released</li>
+          <li>Every week or two is a reasonable cadence</li>
+        </ul>
+        <p>It's safe &mdash; it won't overwrite your project-specific customisations. If there's a conflict, it shows you the diff and asks how to resolve it.</p>
+
+        <h3>When to use <code>/sync-doe</code></h3>
+        <ul>
+          <li>You improved a command, hook, or script in a way that isn't specific to your project</li>
+          <li>For example: you fixed a bug in <code>/wrap</code>, improved a hook, or added a useful pattern to an execution script</li>
+          <li>The <code>/stand-up</code> card shows <code>DOE KIT vX.Y.Z * push</code></li>
+        </ul>
+        <p>This is optional. But if you've made the framework better, syncing means your other projects &mdash; and future projects &mdash; get the improvement too.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            Think of the DOE Starter Kit as a template. If you find a better way to do something in one project, <code>/sync-doe</code> updates the template so your next project starts from that better version. And <code>/pull-doe</code> brings those improvements into projects you've already started.
+          </div>
+        </div>
+
+        <h3>When not to sync</h3>
+        <ul>
+          <li>Project-specific changes (your data, your directives, your custom scripts) &mdash; these stay in your project</li>
+          <li>Changes you're not sure about &mdash; only sync when you're confident the improvement is universal</li>
+          <li><code>/sync-doe</code> always asks for confirmation before syncing, so you can review what's being sent</li>
+        </ul>
+
+        <!-- ── Troubleshooting ── -->
+        <h2 id="troubleshoot">Troubleshooting</h2>
+        <p>Things go wrong. That's normal &mdash; and DOE is designed to make recovery straightforward. Click any problem below for step-by-step fixes.</p>
+
+        <div class="accordion">
+
+          <details>
+            <summary>Claude seems confused or is going in circles</summary>
+            <div class="acc-body">
+              <p>This usually means the conversation has accumulated too much context, or the task description is ambiguous.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Run <code>/clear</code> to reset the conversation. This wipes the chat history but keeps all your files, git history, and project state intact. Nothing is lost.</li>
+                <li>Start fresh with <code>/stand-up</code>.</li>
+                <li>Describe what you want more specifically. Instead of "fix the layout," try "the header on the results page overlaps the chart on mobile &mdash; make the header stack above the chart on screens narrower than 768px."</li>
+              </ol>
+              <p>If it keeps happening, the task might be too large. Break it into smaller, concrete steps.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Something broke and I don't know what changed</summary>
+            <div class="acc-body">
+              <p>Every commit in git is a snapshot of your entire project. You can always see what changed and go back.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Run <code>git log --oneline</code> to see your recent commits. Each line is a save point with a short description.</li>
+                <li>Run <code>git diff</code> to see what's changed since the last commit &mdash; these are unsaved changes.</li>
+                <li>If you need to undo the last change, ask Claude: "Revert the last commit." This undoes the most recent save point cleanly.</li>
+                <li>If you need to go back further, tell Claude which commit you want to return to.</li>
+              </ol>
+              <p>Don't panic. Every commit is a save point. Nothing in git is permanently lost unless you deliberately delete it.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Claude made a file in the wrong place</summary>
+            <div class="acc-body">
+              <p>Claude follows the directory structure defined in <code>CLAUDE.md</code>, but occasionally drifts.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Tell Claude to move it: "Move <code>src/utils.js</code> to <code>execution/utils.py</code>."</li>
+                <li>Check the directory structure section in your <code>CLAUDE.md</code> &mdash; this is the reference for where files belong.</li>
+                <li>Run <code>/audit</code> to check for structural issues across the project. The audit catches misplaced files, missing documentation, and other drift.</li>
+              </ol>
+            </div>
+          </details>
+
+          <details>
+            <summary>A contract check is failing</summary>
+            <div class="acc-body">
+              <p>Contracts are the testable criteria that define "done" for each step. When one fails, something about the implementation doesn't match the specification.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Run <code>/agent-verify</code> to see exactly which criteria are failing and why.</li>
+                <li>Read the <code>Verify:</code> pattern carefully &mdash; it tells you precisely what's being checked. For example, <code>file: src/chart.js contains renderChart</code> means the file must contain the text <code>renderChart</code>.</li>
+                <li>Common causes: a typo in a function or file name, a file wasn't saved before the check ran, or the build step wasn't run after editing source files.</li>
+                <li>Claude will attempt up to 3 fixes automatically before asking for your help.</li>
+              </ol>
+            </div>
+          </details>
+
+          <details>
+            <summary>I closed the terminal without wrapping</summary>
+            <div class="acc-body">
+              <p>This happens to everyone. Here's what it means:</p>
+              <ul>
+                <li><strong>Your code is safe.</strong> Everything that was committed to git is still there.</li>
+                <li><strong>STATE.md won't reflect the last session.</strong> It still shows the state from your previous wrap, so the next stand-up will be slightly out of date.</li>
+              </ul>
+              <span class="acc-label">Fix</span>
+              <ul>
+                <li>Start a new session normally with <code>/stand-up</code>. Claude will read the git history and figure out where things are. It won't be as clean as a proper wrap, but it works.</li>
+                <li>If you want to be thorough, update <code>STATE.md</code> manually to note where you left off.</li>
+              </ul>
+              <p>This isn't catastrophic, but building the <code>/wrap</code> habit avoids it entirely.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>I don't understand what Claude is doing</summary>
+            <div class="acc-body">
+              <p>It's important to understand what's happening in your project. Never let Claude keep building if you're lost.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Run <code>/sitrep</code> for a plain-language status update &mdash; what's being worked on, what's been done recently, and what's coming next.</li>
+                <li>Ask Claude directly: "Explain what you just did in simple terms." Claude will break down the last action without jargon.</li>
+                <li>Check <code>tasks/todo.md</code> to see the current step and its contract. The contract tells you exactly what this step is supposed to achieve.</li>
+              </ol>
+            </div>
+          </details>
+
+          <details>
+            <summary>The audit is showing warnings</summary>
+            <div class="acc-body">
+              <p>The <code>/audit</code> command checks your project's health &mdash; file structure, documentation freshness, claim accuracy, and more.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Run <code>/audit</code> to see the full report.</li>
+                <li>Understand the severity levels:
+                  <ul>
+                    <li><strong>WARN</strong> means something needs attention but isn't broken &mdash; a document that hasn't been updated in a while, or a mild style inconsistency.</li>
+                    <li><strong>FAIL</strong> means something is actually wrong &mdash; a claim not backed by data, or a missing required file.</li>
+                  </ul>
+                </li>
+                <li>Tell Claude to fix the issues: "Fix the audit warnings" or "Fix the audit failures." Claude can usually resolve them automatically.</li>
+              </ol>
+            </div>
+          </details>
+
+          <details>
+            <summary>I want to start over on a feature</summary>
+            <div class="acc-body">
+              <p>Sometimes a feature isn't working out and you want a fresh start.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Don't delete files manually &mdash; tell Claude what you want to undo.</li>
+                <li>Git keeps every version of every file, so nothing is permanently lost. Claude can revert your project to the commit just before the feature started.</li>
+                <li>Tell Claude: "Revert to before we started the [feature name] feature." Claude will find the right commit and take you back to that point.</li>
+              </ol>
+              <p>Your previous work on the feature is still in git history if you ever want to reference it.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Emergency: something is really broken</summary>
+            <div class="acc-body">
+              <p>If something has gone seriously wrong &mdash; corrupted files, a bad commit that broke everything, data that looks wrong &mdash; don't improvise.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li><strong>Read <code>directives/break-glass.md</code></strong> &mdash; this file contains step-by-step recovery procedures for serious problems. It's written for exactly this situation.</li>
+                <li><strong>Don't run destructive commands</strong> like <code>rm -rf</code> or <code>git reset --hard</code> unless you understand exactly what they do. These commands can make things worse if used incorrectly.</li>
+                <li><strong>Ask Claude for help.</strong> Describe the error message or symptoms. Claude can diagnose most issues and will walk you through recovery.</li>
+              </ol>
+              <p>The most important thing in an emergency is to stop and read before acting. Your git history is almost certainly intact, which means recovery is almost always possible.</p>
+            </div>
+          </details>
+
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <a href="example-apps.html">
+            <div class="pg-label">Previous</div>
+            <div class="pg-title">&larr; Example Apps</div>
+          </a>
+          <a href="glossary.html" class="next">
+            <div class="pg-label">Next</div>
+            <div class="pg-title">Glossary &rarr;</div>
+          </a>
+        </div>
+
+        <footer class="site-footer">DOE Starter Kit v1.30.1</footer>
+
+      </div><!-- /content -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script>
+    // ── Dark mode ──
+    (function () {
+      var btn  = document.getElementById('themeBtn');
+      var html = document.documentElement;
+
+      function applyTheme(dark) {
+        if (dark) {
+          html.setAttribute('data-theme', 'dark');
+          btn.innerHTML = '&#9788;';
+        } else {
+          html.removeAttribute('data-theme');
+          btn.innerHTML = '&#9789;';
+        }
+      }
+
+      var stored = localStorage.getItem('doe-docs-theme');
+      applyTheme(stored === 'dark');
+
+      btn.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        localStorage.setItem('doe-docs-theme', isDark ? 'light' : 'dark');
+        applyTheme(!isDark);
+      });
+    })();
+
+    // ── Mobile sidebar ──
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar   = document.getElementById('sidebar');
+      var overlay   = document.getElementById('sidebarOverlay');
+
+      function open()  { sidebar.classList.add('open');    overlay.classList.add('visible'); }
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+      hamburger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? close() : open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+  </script>
+
+</body>
+</html>
