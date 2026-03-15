@@ -533,6 +533,321 @@
     @media (min-width: 601px) and (max-width: 900px) {
       .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ── Content Tabs ── */
+    .content-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      width: fit-content;
+    }
+    .content-tab-btn {
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .content-tab-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-card);
+    }
+    .content-tab-btn.active {
+      color: var(--accent);
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-weight: 600;
+    }
+    .content-tab-panel {
+      display: none;
+    }
+    .content-tab-panel.active {
+      display: block;
+    }
+
+    /* ── Environment Tabs ── */
+    .env-tab-container {
+      position: relative;
+    }
+    .env-tabs {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: fit-content;
+      position: absolute;
+      top: -14px;
+      right: 12px;
+      z-index: 2;
+    }
+    .env-tab-btn {
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .env-tab-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-card);
+    }
+    .env-tab-btn.active {
+      color: var(--accent);
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-weight: 600;
+    }
+    .env-tab-btn svg {
+      flex-shrink: 0;
+    }
+    .env-tab-panel {
+      display: none;
+    }
+    .env-tab-panel.active {
+      display: block;
+    }
+
+    /* ── VSCode Mockup ── */
+    .vscode-mockup {
+      background: #1E1E1E;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      min-height: 420px;
+    }
+    .vscode-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #323233;
+      font-size: 12px;
+      color: #CCCCCC;
+      font-family: var(--font);
+    }
+    .vscode-titlebar-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .vscode-titlebar-dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .vscode-titlebar-dots .red { background: #EF4444; }
+    .vscode-titlebar-dots .yellow { background: #F59E0B; }
+    .vscode-titlebar-dots .green { background: #22C55E; }
+    .vscode-titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      color: #999;
+    }
+    .vscode-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+    .vscode-activity-bar {
+      width: 42px;
+      background: #333333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 8px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .vscode-activity-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      color: #858585;
+      transition: color 0.15s;
+    }
+    .vscode-activity-icon.active {
+      color: #FFFFFF;
+    }
+    .vscode-sidebar-panel {
+      width: 180px;
+      background: #252526;
+      border-right: 1px solid #3C3C3C;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .vscode-sidebar-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #BBBBBB;
+      padding: 10px 16px 6px;
+      font-family: var(--font);
+    }
+    .vscode-file-tree {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .vscode-file-tree li {
+      font-size: 12px;
+      font-family: var(--font);
+      color: #CCCCCC;
+      padding: 3px 16px 3px 24px;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+    }
+    .vscode-file-tree li:hover {
+      background: #2A2D2E;
+    }
+    .vscode-file-tree li.active {
+      background: #37373D;
+    }
+    .vscode-file-icon {
+      font-size: 11px;
+      width: 14px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .vscode-file-icon.folder { color: #DCBA7A; }
+    .vscode-file-icon.py { color: #519ABA; }
+    .vscode-file-icon.md { color: #519ABA; }
+    .vscode-file-icon.json { color: #CBCB41; }
+    .vscode-file-icon.env { color: #6D8086; }
+    .vscode-editor-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: #1E1E1E;
+    }
+    .vscode-tab-bar {
+      display: flex;
+      background: #252526;
+      border-bottom: 1px solid #3C3C3C;
+      height: 34px;
+      overflow: hidden;
+    }
+    .vscode-tab {
+      padding: 0 16px;
+      font-size: 12px;
+      font-family: var(--font);
+      color: #969696;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-right: 1px solid #3C3C3C;
+      white-space: nowrap;
+    }
+    .vscode-tab.active {
+      background: #1E1E1E;
+      color: #FFFFFF;
+      border-bottom: 1px solid #1E1E1E;
+      margin-bottom: -1px;
+    }
+    .vscode-editor-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+    }
+    .vscode-editor-placeholder {
+      color: #5A5A5A;
+      font-size: 12px;
+      font-family: var(--font);
+    }
+    .vscode-terminal-area {
+      border-top: 1px solid #3C3C3C;
+      background: #1E1E1E;
+      flex-shrink: 0;
+    }
+    .vscode-terminal-tabs {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      background: #252526;
+      height: 30px;
+      gap: 2px;
+      border-bottom: 1px solid #3C3C3C;
+    }
+    .vscode-terminal-tab-label {
+      font-size: 11px;
+      font-family: var(--font);
+      color: #CCCCCC;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .vscode-terminal-tab-icon {
+      font-size: 12px;
+      color: #89D185;
+    }
+    .vscode-terminal-body pre {
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    /* ── Responsive: Tab components ── */
+    @media (max-width: 600px) {
+      .content-tabs {
+        flex-direction: column;
+        width: 100%;
+      }
+      .env-tabs {
+        position: static;
+        margin-bottom: 8px;
+      }
+      .env-tab-container {
+        margin-top: 0;
+      }
+      .vscode-sidebar-panel {
+        display: none;
+      }
+      .vscode-activity-bar {
+        width: 32px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -568,6 +883,7 @@
           <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
           <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
           <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="context.html">Context &amp; Sessions</a>
           <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
           <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
         </div>
@@ -577,6 +893,9 @@
           <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
           <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
           <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+          <a class="sidebar-link nested" href="commands.html#planning">Planning &amp; Ideas</a>
+          <a class="sidebar-link nested" href="commands.html#multiagent">Advanced</a>
+          <a class="sidebar-link nested" href="commands.html#maintenance">Maintenance</a>
         </div>
 
         <div class="sidebar-section">
@@ -608,7 +927,7 @@
       <div class="content">
 
         <h1>Getting Started</h1>
-        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Everything you need to install DOE and Claude Code &mdash; even if you've never used a terminal before.</p>
+        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Everything you need to install DOE and Claude Code &mdash; even if you've never used a <a href="glossary.html#terminal-dev">terminal</a> before.</p>
 
         <!-- Prerequisites -->
         <h2>Prerequisites</h2>
@@ -634,14 +953,14 @@
               <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <h4>Claude Code</h4>
-            <p>The AI coding assistant that powers DOE. You need a Claude Pro or Max subscription. Install via the VSCode marketplace or the Claude Code docs. No API key needed &mdash; authentication is automatic.</p>
+            <p>The AI coding assistant that powers DOE. You need a Claude Pro or Max subscription. Install via the VSCode marketplace or the Claude Code docs. No <a href="glossary.html#api-key">API key</a> needed &mdash; authentication is automatic.</p>
           </div>
         </div>
 
         <div class="callout info">
           <span class="callout-icon">&#9432;</span>
           <div class="callout-body">
-            <strong>Opening your terminal:</strong> The easiest option is VSCode's built-in terminal &mdash; open VSCode and go to <strong>Terminal &gt; New Terminal</strong>. On Mac, press Cmd+Space, type "Terminal", hit Enter. On Windows, search for "Windows Terminal" in the Start menu.
+            <strong>Opening your project:</strong> Open VSCode, then either drag your project folder into the window or use <strong>File &gt; Open Folder</strong>. The integrated terminal (<strong>Ctrl+`</strong> or <strong>Cmd+`</strong> on Mac) is where you'll run Claude Code. Alternatively, on Mac press Cmd+Space, type "Terminal", hit Enter. On Windows, search for "Windows Terminal" in the Start menu.
           </div>
         </div>
 
@@ -649,57 +968,123 @@
         <h2>Choose Your Setup</h2>
         <p>There are two paths to get DOE running. Both give you the same result &mdash; a project folder with all the configuration, commands, and scripts that make DOE work.</p>
 
-        <div class="card-grid">
-          <div class="m-card" style="cursor: default; border-color: var(--accent);">
-            <div class="card-icon indigo">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <div class="content-tabs" data-tab-group="setup-choice">
+          <button class="content-tab-btn active" data-tab="option-a">Option A: Clone the Starter Kit (Recommended)</button>
+          <button class="content-tab-btn" data-tab="option-b">Option B: Add DOE to an Existing Project</button>
+        </div>
+
+        <!-- Option A Panel -->
+        <div class="content-tab-panel active" data-tab-group="setup-choice" data-tab="option-a">
+          <ol class="steps">
+            <li class="step">
+              <div class="step-number">1</div>
+              <h4>Clone the repository</h4>
+              <p>Open your terminal and run:</p>
+              <div class="code-block"><pre>git clone https://github.com/iPolyphian/doe-starter-kit.git my-project
+cd my-project</pre></div>
+              <p>Replace <code>my-project</code> with whatever you want your folder to be called. You can also <a href="https://github.com/iPolyphian/doe-starter-kit">download the ZIP from GitHub</a> if you prefer not to use <a href="glossary.html#git-version-control">Git</a> for this step.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">2</div>
+              <h4>Run the setup script</h4>
+              <div class="code-block"><pre>bash setup.sh</pre></div>
+              <p>This installs slash commands (<code>/stand-up</code>, <code>/wrap</code>, etc.), sets up Git hooks, creates the directory structure DOE expects, and initialises Git if needed.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">3</div>
+              <h4>Verify it works</h4>
+              <div class="code-block"><pre>claude</pre></div>
+              <p>Claude Code's interface should appear. Type <code>/commands</code> to confirm the DOE commands are available. You should see <code>/stand-up</code>, <code>/wrap</code>, and <code>/sitrep</code> in the list.</p>
+            </li>
+          </ol>
+
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Terminal &mdash; Clone &amp; Setup</span>
             </div>
-            <h4>Start from DOE Starter Kit (Recommended)</h4>
-            <p>Clone the starter kit repository and run the setup script. This gives you everything pre-configured &mdash; commands, hooks, directory structure, and a solid default CLAUDE.md.</p>
-          </div>
-          <div class="m-card" style="cursor: default;">
-            <div class="card-icon amber">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            </div>
-            <h4>Add DOE to an Existing Project</h4>
-            <p>If you already have a project, create the DOE files manually: CLAUDE.md, directives/, execution/, tasks/todo.md, STATE.md, and learnings.md.</p>
+            <pre><span class="t-prompt">$</span> <span class="t-cmd">git clone https://github.com/iPolyphian/doe-starter-kit.git my-project</span>
+<span class="t-comment">Cloning into 'my-project'...</span>
+<span class="t-comment">done.</span>
+<span class="t-prompt">$</span> <span class="t-cmd">cd my-project</span>
+<span class="t-prompt">$</span> <span class="t-cmd">bash setup.sh</span>
+<span class="t-comment">Setting up DOE Starter Kit...</span>
+<span style="color:#6EE7B7;">&#10003;</span> Git hooks configured
+<span style="color:#6EE7B7;">&#10003;</span> Directory structure verified
+<span style="color:#6EE7B7;">&#10003;</span> Slash commands installed
+<span style="color:#6EE7B7;">&#10003;</span> Setup complete! Run 'claude' to get started.</pre>
           </div>
         </div>
 
-        <h3>Option A: Clone the Starter Kit</h3>
-        <ol class="steps">
-          <li class="step">
-            <div class="step-number">1</div>
-            <h4>Clone the repository</h4>
-            <p>Open your terminal and run:</p>
-            <div class="code-block"><pre>git clone https://github.com/iPolyphian/doe-starter-kit.git my-project
-cd my-project</pre></div>
-            <p>Replace <code>my-project</code> with whatever you want your folder to be called.</p>
-          </li>
-          <li class="step">
-            <div class="step-number">2</div>
-            <h4>Run the setup script</h4>
-            <div class="code-block"><pre>bash setup.sh</pre></div>
-            <p>This installs slash commands (<code>/stand-up</code>, <code>/wrap</code>, etc.), sets up Git hooks, creates the directory structure DOE expects, and initialises Git if needed.</p>
-          </li>
-          <li class="step">
-            <div class="step-number">3</div>
-            <h4>Verify it works</h4>
-            <div class="code-block"><pre>claude</pre></div>
-            <p>Claude Code's interface should appear. Type <code>/commands</code> to confirm the DOE commands are available. You should see <code>/stand-up</code>, <code>/wrap</code>, and <code>/sitrep</code> in the list.</p>
-          </li>
-        </ol>
+        <!-- Option B Panel -->
+        <div class="content-tab-panel" data-tab-group="setup-choice" data-tab="option-b">
+          <p>If you already have a project with code in it, the easiest approach is to clone the starter kit and copy the DOE files into your project.</p>
 
-        <h3>Option B: Add DOE to an Existing Project</h3>
-        <p>If you already have a project folder with code in it, create these files and directories:</p>
-        <ul>
-          <li><code>CLAUDE.md</code> &mdash; the project instruction file (copy from the starter kit or write your own)</li>
-          <li><code>directives/</code> &mdash; folder for SOP documents</li>
-          <li><code>execution/</code> &mdash; folder for deterministic Python scripts</li>
-          <li><code>tasks/todo.md</code> &mdash; task tracker</li>
-          <li><code>STATE.md</code> &mdash; session memory</li>
-          <li><code>learnings.md</code> &mdash; project learnings log</li>
-        </ul>
+          <ol class="steps">
+            <li class="step">
+              <div class="step-number">1</div>
+              <h4>Clone or download the starter kit</h4>
+              <div class="code-block"><pre>git clone https://github.com/iPolyphian/doe-starter-kit.git doe-kit</pre></div>
+              <p>This gives you a temporary copy of the kit. You can also <a href="https://github.com/iPolyphian/doe-starter-kit">download the ZIP from GitHub</a>.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">2</div>
+              <h4>Copy the DOE files into your project</h4>
+              <p>The kit includes everything you need. Copy these files and folders from <code>doe-kit/</code> into your project root:</p>
+              <ul>
+                <li><code>CLAUDE.md</code> &mdash; the project instruction file</li>
+                <li><code>directives/</code> &mdash; SOP documents for specific tasks</li>
+                <li><code>execution/</code> &mdash; deterministic Python scripts</li>
+                <li><code>tasks/todo.md</code> &mdash; task tracker with contracts</li>
+                <li><code>STATE.md</code> &mdash; session memory</li>
+                <li><code>learnings.md</code> &mdash; project learnings log</li>
+                <li><code>.claude/commands/</code> &mdash; slash commands</li>
+                <li><code>.githooks/</code> &mdash; Git hooks for quality checks</li>
+              </ul>
+            </li>
+            <li class="step">
+              <div class="step-number">3</div>
+              <h4>Run the setup script</h4>
+              <div class="code-block"><pre>cd ~/your-existing-project
+bash setup.sh</pre></div>
+              <p>This configures Git hooks and verifies the directory structure is correct.</p>
+            </li>
+            <li class="step">
+              <div class="step-number">4</div>
+              <h4>Verify it works</h4>
+              <div class="code-block"><pre>claude</pre></div>
+              <p>Open your project in the terminal and run <code>claude</code>, then type <code>/commands</code> to verify the DOE commands are available.</p>
+            </li>
+          </ol>
+
+          <div class="terminal">
+            <div class="terminal-header">
+              <span class="terminal-dot red"></span>
+              <span class="terminal-dot yellow"></span>
+              <span class="terminal-dot green"></span>
+              <span class="terminal-title">Terminal &mdash; Add to Existing Project</span>
+            </div>
+            <pre><span class="t-prompt">$</span> <span class="t-cmd">git clone https://github.com/iPolyphian/doe-starter-kit.git doe-kit</span>
+<span class="t-comment">Cloning into 'doe-kit'...</span>
+<span class="t-comment">done.</span>
+<span class="t-prompt">$</span> <span class="t-cmd">cp -r doe-kit/CLAUDE.md doe-kit/directives doe-kit/execution doe-kit/tasks doe-kit/STATE.md doe-kit/learnings.md doe-kit/.claude doe-kit/.githooks doe-kit/setup.sh ~/your-existing-project/</span>
+<span class="t-prompt">$</span> <span class="t-cmd">cd ~/your-existing-project</span>
+<span class="t-prompt">$</span> <span class="t-cmd">bash setup.sh</span>
+<span style="color:#6EE7B7;">&#10003;</span> Git hooks configured
+<span style="color:#6EE7B7;">&#10003;</span> Directory structure verified
+<span style="color:#6EE7B7;">&#10003;</span> Slash commands installed
+<span style="color:#6EE7B7;">&#10003;</span> Setup complete! Run 'claude' to get started.</pre>
+          </div>
+
+          <div class="callout tip">
+            <span class="callout-icon">&#9432;</span>
+            <div class="callout-body">
+              <strong>Clean up:</strong> Once you've copied the files, you can delete the temporary <code>doe-kit/</code> folder &mdash; you won't need it again.
+            </div>
+          </div>
+        </div>
 
         <!-- Configure Your Project -->
         <h2>Configure Your Project</h2>
@@ -712,6 +1097,43 @@ cd my-project</pre></div>
           <li><strong>Progressive Disclosure triggers</strong> &mdash; tell Claude "when you're about to do X, read file Y first." Add 2&ndash;3 for your project's key areas.</li>
           <li><strong>Project-specific guardrails</strong> &mdash; rules that protect your project (e.g., "never delete user data without confirmation").</li>
         </ul>
+
+        <!-- CLAUDE.md example -->
+        <h4>CLAUDE.md example</h4>
+        <p>Here's a condensed version of what a real CLAUDE.md looks like. The starter kit includes the full version &mdash; this shows the key sections:</p>
+
+        <div class="code-block"><pre><span style="color:#6EE7B7;"># Project Configuration</span>
+
+<span style="color:#6EE7B7;">## Who We Are</span>
+The human defines intent, constraints, and verification criteria.
+Claude recommends technical approach, explains trade-offs simply,
+then implements. The human steers &mdash; Claude builds.
+
+<span style="color:#6EE7B7;">## Operating Rules</span>
+1. Plan before building. Check tasks/todo.md at session start.
+2. Ask, don't assume. If a requirement is ambiguous, ask.
+3. Verify before delivering. Run the script, test the output.
+4. Commit after every completed task. Never batch multiple tasks.
+
+<span style="color:#6EE7B7;">## Directory Structure</span>
+directives/         # SOPs for specific tasks
+execution/          # Deterministic Python scripts
+tasks/todo.md       # Task tracker with contracts
+STATE.md            # Session memory
+learnings.md        # Project learnings log
+.env                # API keys (NEVER commit)
+
+<span style="color:#6EE7B7;">## Progressive Disclosure</span>
+- Importing external data &rarr; check learnings.md
+- Building a UI component &rarr; check directives/ui-patterns.md
+- Version bump or release &rarr; check tasks/todo.md</pre></div>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Start simple.</strong> You can always add more rules as you learn what works for your project. The starter kit's CLAUDE.md has the full set of rules &mdash; read through it and remove anything that doesn't apply to you.
+          </div>
+        </div>
 
         <div class="callout tip">
           <span class="callout-icon">&#9432;</span>
@@ -743,18 +1165,97 @@ cd my-project</pre></div>
 
         <p>With everything installed and configured, start Claude Code and run your first DOE command:</p>
 
-        <div class="terminal">
-          <div class="terminal-header">
-            <span class="terminal-dot red"></span>
-            <span class="terminal-dot yellow"></span>
-            <span class="terminal-dot green"></span>
-            <span class="terminal-title">Terminal</span>
+        <div class="env-tab-container" style="margin-top: 24px;">
+          <div class="env-tabs" data-tab-group="gs-first-cmd-env">
+            <button class="env-tab-btn active" data-tab="terminal">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              Terminal
+            </button>
+            <button class="env-tab-btn" data-tab="vscode">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+              VSCode
+            </button>
           </div>
-          <pre><span class="t-prompt">$</span> <span class="t-cmd">claude</span>
+
+          <!-- Terminal view -->
+          <div class="env-tab-panel active" data-tab-group="gs-first-cmd-env" data-tab="terminal">
+            <div class="terminal" style="margin-top: 0;">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Terminal</span>
+              </div>
+              <pre><span class="t-prompt">$</span> <span class="t-cmd">claude</span>
 <span class="t-comment"># Claude Code opens. You type:</span>
 <span class="t-cmd">/stand-up</span>
 <span class="t-comment"># Claude reads your project state and shows a status card.</span>
 <span class="t-comment"># On your first session, most fields will be empty &mdash; that's normal.</span></pre>
+            </div>
+          </div>
+
+          <!-- VSCode view -->
+          <div class="env-tab-panel" data-tab-group="gs-first-cmd-env" data-tab="vscode">
+            <div class="vscode-mockup" style="margin-top: 0;">
+              <div class="vscode-titlebar">
+                <div class="vscode-titlebar-dots">
+                  <span class="red"></span>
+                  <span class="yellow"></span>
+                  <span class="green"></span>
+                </div>
+                <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+              </div>
+              <div class="vscode-body">
+                <div class="vscode-activity-bar">
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon active">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  </div>
+                </div>
+                <div class="vscode-sidebar-panel">
+                  <div class="vscode-sidebar-title">Explorer</div>
+                  <ul class="vscode-file-tree">
+                    <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                    <li class="active"><span class="vscode-file-icon md">M</span> CLAUDE.md</li>
+                    <li><span class="vscode-file-icon md">M</span> STATE.md</li>
+                    <li><span class="vscode-file-icon env">E</span> .env</li>
+                  </ul>
+                </div>
+                <div class="vscode-editor-area">
+                  <div class="vscode-tab-bar">
+                    <div class="vscode-tab active">
+                      <span style="color:#89D185;">&#9679;</span> CLAUDE.md
+                    </div>
+                    <div class="vscode-tab">STATE.md</div>
+                  </div>
+                  <div class="vscode-editor-content">
+                    <span class="vscode-editor-placeholder">Project configuration loaded</span>
+                  </div>
+                  <div class="vscode-terminal-area">
+                    <div class="vscode-terminal-tabs">
+                      <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; /stand-up</span>
+                    </div>
+                    <div class="vscode-terminal-body">
+                      <pre><span class="t-comment"># Claude reads your project state and</span>
+<span class="t-comment"># shows a status card.</span>
+<span class="t-comment"># On your first session, most fields</span>
+<span class="t-comment"># will be empty -- that's normal.</span></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="callout tip">
@@ -822,6 +1323,38 @@ cd my-project</pre></div>
         sidebar.classList.contains('open') ? close() : open();
       });
       overlay.addEventListener('click', close);
+    })();
+
+    // ── Tab switching (env-tabs) ──
+    (function () {
+      function initTabGroup(containerSelector, btnClass, panelClass) {
+        document.querySelectorAll(containerSelector).forEach(function (tabBar) {
+          var group = tabBar.getAttribute('data-tab-group');
+          var buttons = tabBar.querySelectorAll('.' + btnClass);
+
+          buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var tabId = btn.getAttribute('data-tab');
+
+              // Deactivate all buttons in this tab bar
+              buttons.forEach(function (b) { b.classList.remove('active'); });
+              btn.classList.add('active');
+
+              // Toggle panels matching this group
+              document.querySelectorAll('.' + panelClass + '[data-tab-group="' + group + '"]').forEach(function (panel) {
+                if (panel.getAttribute('data-tab') === tabId) {
+                  panel.classList.add('active');
+                } else {
+                  panel.classList.remove('active');
+                }
+              });
+            });
+          });
+        });
+      }
+
+      initTabGroup('.env-tabs', 'env-tab-btn', 'env-tab-panel');
+      initTabGroup('.content-tabs', 'content-tab-btn', 'content-tab-panel');
     })();
   </script>
 

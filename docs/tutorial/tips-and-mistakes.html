@@ -668,6 +668,275 @@
     @media (min-width: 601px) and (max-width: 900px) {
       .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ── Environment Tabs ── */
+    .env-tab-container {
+      position: relative;
+    }
+    .env-tabs {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: fit-content;
+      position: absolute;
+      top: -14px;
+      right: 12px;
+      z-index: 2;
+    }
+    .env-tab-btn {
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .env-tab-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-card);
+    }
+    .env-tab-btn.active {
+      color: var(--accent);
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-weight: 600;
+    }
+    .env-tab-btn svg {
+      flex-shrink: 0;
+    }
+    .env-tab-panel {
+      display: none;
+    }
+    .env-tab-panel.active {
+      display: block;
+    }
+
+    /* ── VSCode Mockup ── */
+    .vscode-mockup {
+      background: #1E1E1E;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      min-height: 420px;
+    }
+    .vscode-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #323233;
+      font-size: 12px;
+      color: #CCCCCC;
+      font-family: var(--font);
+    }
+    .vscode-titlebar-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .vscode-titlebar-dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .vscode-titlebar-dots .red { background: #EF4444; }
+    .vscode-titlebar-dots .yellow { background: #F59E0B; }
+    .vscode-titlebar-dots .green { background: #22C55E; }
+    .vscode-titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      color: #999;
+    }
+    .vscode-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+    .vscode-activity-bar {
+      width: 42px;
+      background: #333333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 8px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .vscode-activity-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      color: #858585;
+      transition: color 0.15s;
+    }
+    .vscode-activity-icon.active {
+      color: #FFFFFF;
+    }
+    .vscode-sidebar-panel {
+      width: 180px;
+      background: #252526;
+      border-right: 1px solid #3C3C3C;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .vscode-sidebar-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #BBBBBB;
+      padding: 10px 16px 6px;
+      font-family: var(--font);
+    }
+    .vscode-file-tree {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .vscode-file-tree li {
+      font-size: 12px;
+      font-family: var(--font);
+      color: #CCCCCC;
+      padding: 3px 16px 3px 24px;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+    }
+    .vscode-file-tree li:hover {
+      background: #2A2D2E;
+    }
+    .vscode-file-tree li.active {
+      background: #37373D;
+    }
+    .vscode-file-icon {
+      font-size: 11px;
+      width: 14px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .vscode-file-icon.folder { color: #DCBA7A; }
+    .vscode-file-icon.py { color: #519ABA; }
+    .vscode-file-icon.md { color: #519ABA; }
+    .vscode-file-icon.json { color: #CBCB41; }
+    .vscode-file-icon.env { color: #6D8086; }
+    .vscode-editor-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: #1E1E1E;
+    }
+    .vscode-tab-bar {
+      display: flex;
+      background: #252526;
+      border-bottom: 1px solid #3C3C3C;
+      height: 34px;
+      overflow: hidden;
+    }
+    .vscode-tab {
+      padding: 0 16px;
+      font-size: 12px;
+      font-family: var(--font);
+      color: #969696;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-right: 1px solid #3C3C3C;
+      white-space: nowrap;
+    }
+    .vscode-tab.active {
+      background: #1E1E1E;
+      color: #FFFFFF;
+      border-bottom: 1px solid #1E1E1E;
+      margin-bottom: -1px;
+    }
+    .vscode-editor-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+    }
+    .vscode-editor-placeholder {
+      color: #5A5A5A;
+      font-size: 12px;
+      font-family: var(--font);
+    }
+    .vscode-terminal-area {
+      border-top: 1px solid #3C3C3C;
+      background: #1E1E1E;
+      flex-shrink: 0;
+    }
+    .vscode-terminal-tabs {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      background: #252526;
+      height: 30px;
+      gap: 2px;
+      border-bottom: 1px solid #3C3C3C;
+    }
+    .vscode-terminal-tab-label {
+      font-size: 11px;
+      font-family: var(--font);
+      color: #CCCCCC;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .vscode-terminal-tab-icon {
+      font-size: 12px;
+      color: #89D185;
+    }
+    .vscode-terminal-body pre {
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    /* ── Responsive: env-tabs ── */
+    @media (max-width: 600px) {
+      .env-tabs {
+        position: static;
+        margin-bottom: 8px;
+      }
+      .env-tab-container {
+        margin-top: 0;
+      }
+      .vscode-sidebar-panel {
+        display: none;
+      }
+      .vscode-activity-bar {
+        width: 32px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -703,6 +972,7 @@
           <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
           <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
           <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="context.html">Context &amp; Sessions</a>
           <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
           <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
         </div>
@@ -712,6 +982,9 @@
           <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
           <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
           <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+          <a class="sidebar-link nested" href="commands.html#planning">Planning &amp; Ideas</a>
+          <a class="sidebar-link nested" href="commands.html#multiagent">Advanced</a>
+          <a class="sidebar-link nested" href="commands.html#maintenance">Maintenance</a>
         </div>
 
         <div class="sidebar-section">
@@ -732,6 +1005,8 @@
         <div class="sidebar-section">
           <div class="sidebar-section-title">Reference</div>
           <a class="sidebar-link active" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link nested" href="tips-and-mistakes.html#hooks">Understanding Hooks</a>
+          <a class="sidebar-link nested" href="tips-and-mistakes.html#recovery">When Things Go Wrong</a>
           <a class="sidebar-link" href="glossary.html">Glossary</a>
         </div>
 
@@ -873,18 +1148,100 @@
 
         <h3>The golden pattern</h3>
 
-        <div class="terminal">
-          <div class="terminal-header">
-            <span class="terminal-dot red"></span>
-            <span class="terminal-dot yellow"></span>
-            <span class="terminal-dot green"></span>
-            <span class="terminal-title">Session cycle</span>
+        <!-- Environment Tabs: Terminal vs VSCode -->
+        <div class="env-tab-container" style="margin-top: 24px;">
+          <div class="env-tabs" data-tab-group="tips-golden-env">
+            <button class="env-tab-btn active" data-tab="terminal">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              Terminal
+            </button>
+            <button class="env-tab-btn" data-tab="vscode">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+              VSCode
+            </button>
           </div>
-          <pre><span class="t-prompt">$</span> <span class="t-cmd">/stand-up</span>    <span class="t-comment"># Read state, see what needs doing</span>
+
+          <!-- Terminal view -->
+          <div class="env-tab-panel active" data-tab-group="tips-golden-env" data-tab="terminal">
+            <div class="terminal" style="margin-top: 0;">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Session cycle</span>
+              </div>
+              <pre><span class="t-prompt">$</span> <span class="t-cmd">/stand-up</span>    <span class="t-comment"># Read state, see what needs doing</span>
 <span class="t-prompt">$</span> <span class="t-out">... work ...</span>  <span class="t-comment"># Focused on one task</span>
 <span class="t-prompt">$</span> <span class="t-cmd">/wrap</span>        <span class="t-comment"># Save progress to STATE.md</span>
 <span class="t-prompt">$</span> <span class="t-cmd">/clear</span>       <span class="t-comment"># Reset conversation memory</span>
 <span class="t-prompt">$</span> <span class="t-cmd">/stand-up</span>    <span class="t-comment"># Pick up the next task fresh</span></pre>
+            </div>
+          </div>
+
+          <!-- VSCode view -->
+          <div class="env-tab-panel" data-tab-group="tips-golden-env" data-tab="vscode">
+            <div class="vscode-mockup" style="margin-top: 0;">
+              <div class="vscode-titlebar">
+                <div class="vscode-titlebar-dots">
+                  <span class="red"></span>
+                  <span class="yellow"></span>
+                  <span class="green"></span>
+                </div>
+                <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+              </div>
+              <div class="vscode-body">
+                <div class="vscode-activity-bar">
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon active">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  </div>
+                </div>
+                <div class="vscode-sidebar-panel">
+                  <div class="vscode-sidebar-title">Explorer</div>
+                  <ul class="vscode-file-tree">
+                    <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                    <li class="active"><span class="vscode-file-icon md">M</span> STATE.md</li>
+                    <li><span class="vscode-file-icon md">M</span> learnings.md</li>
+                    <li><span class="vscode-file-icon json">J</span> stats.json</li>
+                    <li><span class="vscode-file-icon env">E</span> .env</li>
+                  </ul>
+                </div>
+                <div class="vscode-editor-area">
+                  <div class="vscode-tab-bar">
+                    <div class="vscode-tab active">
+                      <span style="color:#89D185;">&#9679;</span> STATE.md
+                    </div>
+                    <div class="vscode-tab">todo.md</div>
+                  </div>
+                  <div class="vscode-editor-content">
+                    <span class="vscode-editor-placeholder">Session cycle view</span>
+                  </div>
+                  <div class="vscode-terminal-area">
+                    <div class="vscode-terminal-tabs">
+                      <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; session cycle</span>
+                    </div>
+                    <div class="vscode-terminal-body">
+                      <pre><span class="t-prompt">$</span> <span class="t-cmd">/stand-up</span>    <span class="t-comment"># Read state, see what needs doing</span>
+<span class="t-prompt">$</span> <span class="t-out">... work ...</span>  <span class="t-comment"># Focused on one task</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/wrap</span>        <span class="t-comment"># Save progress to STATE.md</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/clear</span>       <span class="t-comment"># Reset conversation memory</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/stand-up</span>    <span class="t-comment"># Pick up the next task fresh</span></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <p>Each cycle is one focused unit. You don't <em>have</em> to clear between every session, but keeping sessions focused prevents the "Claude forgot what we were doing" problem.</p>
@@ -995,14 +1352,29 @@
           </div>
         </div>
 
-        <div class="terminal">
-          <div class="terminal-header">
-            <span class="terminal-dot red"></span>
-            <span class="terminal-dot yellow"></span>
-            <span class="terminal-dot green"></span>
-            <span class="terminal-title">Update flow</span>
+        <!-- Environment Tabs: Terminal vs VSCode -->
+        <div class="env-tab-container" style="margin-top: 24px;">
+          <div class="env-tabs" data-tab-group="tips-update-env">
+            <button class="env-tab-btn active" data-tab="terminal">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              Terminal
+            </button>
+            <button class="env-tab-btn" data-tab="vscode">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+              VSCode
+            </button>
           </div>
-          <pre><span class="t-comment"># Getting updates FROM the starter kit:</span>
+
+          <!-- Terminal view -->
+          <div class="env-tab-panel active" data-tab-group="tips-update-env" data-tab="terminal">
+            <div class="terminal" style="margin-top: 0;">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Update flow</span>
+              </div>
+              <pre><span class="t-comment"># Getting updates FROM the starter kit:</span>
 <span class="t-prompt">$</span> <span class="t-cmd">/pull-doe</span>
 <span class="t-out">  Checking version... your project: v1.28.0, latest: v1.30.1</span>
 <span class="t-out">  Changelog: new /scope command, improved /wrap output, hook fix</span>
@@ -1013,6 +1385,79 @@
 <span class="t-out">  Comparing framework files...</span>
 <span class="t-out">  Universal changes found: improved /wrap summary format</span>
 <span class="t-out">  Sync to starter kit? [y/n]</span></pre>
+            </div>
+          </div>
+
+          <!-- VSCode view -->
+          <div class="env-tab-panel" data-tab-group="tips-update-env" data-tab="vscode">
+            <div class="vscode-mockup" style="margin-top: 0;">
+              <div class="vscode-titlebar">
+                <div class="vscode-titlebar-dots">
+                  <span class="red"></span>
+                  <span class="yellow"></span>
+                  <span class="green"></span>
+                </div>
+                <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+              </div>
+              <div class="vscode-body">
+                <div class="vscode-activity-bar">
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon active">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  </div>
+                </div>
+                <div class="vscode-sidebar-panel">
+                  <div class="vscode-sidebar-title">Explorer</div>
+                  <ul class="vscode-file-tree">
+                    <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                    <li class="active"><span class="vscode-file-icon md">M</span> CLAUDE.md</li>
+                    <li><span class="vscode-file-icon md">M</span> STATE.md</li>
+                    <li><span class="vscode-file-icon json">J</span> stats.json</li>
+                    <li><span class="vscode-file-icon env">E</span> .env</li>
+                  </ul>
+                </div>
+                <div class="vscode-editor-area">
+                  <div class="vscode-tab-bar">
+                    <div class="vscode-tab active">
+                      <span style="color:#89D185;">&#9679;</span> CLAUDE.md
+                    </div>
+                    <div class="vscode-tab">STATE.md</div>
+                  </div>
+                  <div class="vscode-editor-content">
+                    <span class="vscode-editor-placeholder">Framework update in progress</span>
+                  </div>
+                  <div class="vscode-terminal-area">
+                    <div class="vscode-terminal-tabs">
+                      <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; update flow</span>
+                    </div>
+                    <div class="vscode-terminal-body">
+                      <pre><span class="t-comment"># Getting updates FROM the starter kit:</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/pull-doe</span>
+<span class="t-out">  Checking version... your project: v1.28.0, latest: v1.30.1</span>
+<span class="t-out">  Changelog: new /scope command, improved /wrap output, hook fix</span>
+<span class="t-out">  Apply update? [y/n]</span>
+
+<span class="t-comment"># Sending improvements TO the starter kit:</span>
+<span class="t-prompt">$</span> <span class="t-cmd">/sync-doe</span>
+<span class="t-out">  Comparing framework files...</span>
+<span class="t-out">  Universal changes found: improved /wrap summary format</span>
+<span class="t-out">  Sync to starter kit? [y/n]</span></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <h3>When to use <code>/pull-doe</code></h3>
@@ -1185,6 +1630,157 @@
 
         </div>
 
+        <!-- ── Understanding Hooks ── -->
+        <h2 id="hooks">Understanding Hooks</h2>
+        <p>DOE uses two kinds of hooks: git hooks that run around git operations, and Claude Code hooks that run around Claude's tool use. Both are guardrails &mdash; they catch problems automatically so you don't have to remember to check.</p>
+
+        <h3 style="font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: var(--text-primary);">What hooks are</h3>
+
+        <table class="info-table" style="margin-top: 0;">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Lives in</th>
+              <th>What it does</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Git hooks</strong></td>
+              <td><code>.githooks/</code></td>
+              <td>Scripts that run automatically before or after git operations. DOE ships a pre-commit hook (strips AI attribution from commits) and a commit-msg hook (validates message formatting).</td>
+            </tr>
+            <tr>
+              <td><strong>PreToolUse hooks</strong></td>
+              <td><code>.claude/settings.json</code></td>
+              <td>Rules that run before Claude uses a tool. Used to validate or block actions &mdash; for example, preventing destructive operations on protected files.</td>
+            </tr>
+            <tr>
+              <td><strong>PostToolUse hooks</strong></td>
+              <td><code>.claude/settings.json</code></td>
+              <td>Rules that run after Claude uses a tool. DOE uses these for tracking &mdash; updating session stats, logging tool use, recording progress to STATE.md.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 style="font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: var(--text-primary);">How they're configured</h3>
+        <ul style="font-size: 15px; color: var(--text-secondary); padding-left: 20px; margin-bottom: 20px; line-height: 1.7;">
+          <li>Git hooks live in <code>.githooks/</code> and are activated once with <code>git config core.hooksPath .githooks</code></li>
+          <li>Claude Code hooks are defined in <code>.claude/settings.json</code> under the <code>hooks</code> key</li>
+          <li>The starter kit's <code>setup.sh</code> configures both automatically &mdash; no manual setup needed</li>
+        </ul>
+
+        <h3 style="font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: var(--text-primary);">What happens when a hook blocks you</h3>
+        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 16px;">When a hook fires, you'll see a message explaining what was checked and why it failed. Common examples:</p>
+        <ul style="font-size: 15px; color: var(--text-secondary); padding-left: 20px; margin-bottom: 20px; line-height: 1.7;">
+          <li>A pre-commit hook might reject your commit if it detects an AI co-author trailer that shouldn't be there, or a file that shouldn't be committed (like <code>.env</code>)</li>
+          <li>A PreToolUse hook might block Claude from performing an action that conflicts with a guardrail</li>
+          <li>In both cases, the error message tells you exactly what was checked and what to fix</li>
+        </ul>
+
+        <p style="font-size: 15px; color: var(--text-secondary); margin-bottom: 8px;">Here's what a typical pre-commit hook interaction looks like:</p>
+
+        <div class="terminal" style="margin-bottom: 20px;">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">git commit</span>
+          </div>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">git commit -m "Add feature"</span>
+<span class="t-out">[hook] Co-author trailer detected &mdash; stripping...</span>
+<span class="t-out">[hook] Commit message reformatted.</span>
+<span class="t-out">[master abc1234] Add feature</span>
+<span class="t-out"> 2 files changed, 45 insertions(+)</span></pre>
+        </div>
+
+        <h3 style="font-size: 16px; font-weight: 600; margin: 24px 0 8px; color: var(--text-primary);">How to debug a hook that blocks you</h3>
+        <ol style="font-size: 15px; color: var(--text-secondary); padding-left: 20px; margin-bottom: 20px; line-height: 1.7;">
+          <li>Read the error message carefully &mdash; it tells you what the hook checked and why it failed</li>
+          <li>Fix the underlying issue (don't bypass the hook)</li>
+          <li>For git hooks: check <code>.githooks/</code> to see the script source</li>
+          <li>For Claude hooks: check <code>.claude/settings.json</code> to see the rule</li>
+          <li>Retry the action after fixing</li>
+        </ol>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body"><strong>Never use <code>--no-verify</code> to bypass git hooks</strong> unless you understand exactly why the hook is blocking you. Hooks are guardrails &mdash; they catch real problems. Bypassing them silently introduces the issues they were designed to prevent.</div>
+        </div>
+
+        <!-- ── When Things Go Wrong ── -->
+        <h2 id="recovery">When Things Go Wrong</h2>
+        <p>Most problems in DOE have fast, well-worn recovery paths. Here are the four scenarios you're most likely to encounter.</p>
+
+        <div class="accordion">
+
+          <details>
+            <summary>A hook blocks your commit</summary>
+            <div class="acc-body">
+              <p>The hook detected something it was designed to catch. This is the system working correctly.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Read the error &mdash; it tells you exactly what's wrong.</li>
+                <li>Fix the issue in your code or commit message.</li>
+                <li>Try the commit again.</li>
+                <li>If the hook itself appears buggy, check <code>.githooks/</code> for git hooks or <code>.claude/settings.json</code> for Claude Code hooks.</li>
+              </ol>
+              <p>Do not use <code>--no-verify</code> unless you fully understand the reason for the block.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Context runs out mid-task</summary>
+            <div class="acc-body">
+              <p>Signs: Claude starts repeating itself, forgets earlier decisions, or quality drops noticeably. This means the conversation window is running low.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Run <code>/wrap</code> immediately if you can &mdash; this saves your progress to <code>STATE.md</code> and <code>learnings.md</code>.</li>
+                <li>If Claude is too confused to wrap properly, your git commits still have all the code. Nothing built is lost.</li>
+                <li>Run <code>/clear</code> then <code>/stand-up</code> or <code>/crack-on</code> to start fresh with full context.</li>
+              </ol>
+              <span class="acc-label">Prevention</span>
+              <ul>
+                <li>Run <code>/context</code> periodically to check how full the window is.</li>
+                <li>Wrap proactively before reaching 50% &mdash; don't wait until quality degrades.</li>
+              </ul>
+            </div>
+          </details>
+
+          <details>
+            <summary>Claude seems confused or loops</summary>
+            <div class="acc-body">
+              <p>Claude might start doing the same thing repeatedly, contradict earlier decisions, or seem stuck. This is usually a context window problem, not a code problem.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Run <code>/clear</code> to reset the conversation completely. Your files and commits are untouched.</li>
+                <li>Then run <code>/crack-on</code> to resume &mdash; it reads <code>STATE.md</code> and picks up where you left off.</li>
+              </ol>
+              <p>Nothing in your project is affected by <code>/clear</code>. It only clears the conversation window.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Accidental bad commit</summary>
+            <div class="acc-body">
+              <p>A commit went in that shouldn't have &mdash; wrong files, wrong message, or work that broke something.</p>
+              <span class="acc-label">Fix</span>
+              <ol>
+                <li>Don't panic &mdash; git tracks everything. Nothing is truly lost.</li>
+                <li>The safest fix is <code>git revert &lt;commit-hash&gt;</code> &mdash; this creates a new commit that undoes the bad one without rewriting history.</li>
+                <li>For serious problems (corrupted files, data damage), read <code>directives/break-glass.md</code> first. It has step-by-step procedures for exactly this situation.</li>
+                <li>Never use <code>git reset --hard</code> or force-push without understanding the consequences.</li>
+              </ol>
+            </div>
+          </details>
+
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#10003;</span>
+          <div class="callout-body"><strong>The most common recovery is the simplest:</strong> <code>/wrap</code>, <code>/clear</code>, <code>/crack-on</code>. This fixes 90% of quality issues by giving Claude a fresh context window with your full project state preserved in files.</div>
+        </div>
+
         <!-- Pagination -->
         <div class="pagination">
           <a href="example-apps.html">
@@ -1243,6 +1839,37 @@
         sidebar.classList.contains('open') ? close() : open();
       });
       overlay.addEventListener('click', close);
+    })();
+
+    // ── Tab switching (env-tabs) ──
+    (function () {
+      function initTabGroup(containerSelector, btnClass, panelClass) {
+        document.querySelectorAll(containerSelector).forEach(function (tabBar) {
+          var group = tabBar.getAttribute('data-tab-group');
+          var buttons = tabBar.querySelectorAll('.' + btnClass);
+
+          buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var tabId = btn.getAttribute('data-tab');
+
+              // Deactivate all buttons in this tab bar
+              buttons.forEach(function (b) { b.classList.remove('active'); });
+              btn.classList.add('active');
+
+              // Toggle panels matching this group
+              document.querySelectorAll('.' + panelClass + '[data-tab-group="' + group + '"]').forEach(function (panel) {
+                if (panel.getAttribute('data-tab') === tabId) {
+                  panel.classList.add('active');
+                } else {
+                  panel.classList.remove('active');
+                }
+              });
+            });
+          });
+        });
+      }
+
+      initTabGroup('.env-tabs', 'env-tab-btn', 'env-tab-panel');
     })();
   </script>
 

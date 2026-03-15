@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Context Management — DOE Starter Kit</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-body: #FFFFFF;
+      --bg-sidebar: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-code: #0F172A;
+      --bg-callout-info: #EFF6FF;
+      --bg-callout-tip: #F0FDF4;
+      --bg-callout-warn: #FFFBEB;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --text-sidebar: #334155;
+      --text-sidebar-active: #0F172A;
+      --accent: #6366F1;
+      --accent-light: #EEF2FF;
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-blue: #3B82F6;
+      --accent-rose: #F43F5E;
+      --sidebar-w: 260px;
+      --content-max: 720px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #243347;
+      --bg-code: #020617;
+      --bg-callout-info: #1E293B;
+      --bg-callout-tip: #1E293B;
+      --bg-callout-warn: #1E293B;
+      --border: #1E293B;
+      --border-light: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-sidebar: #94A3B8;
+      --text-sidebar-active: #F1F5F9;
+      --accent-light: #1E1B4B;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-brand {
+      display: block;
+      padding: 20px 16px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .sidebar-brand:hover { color: var(--accent); }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-sidebar);
+      text-decoration: none;
+      line-height: 1.4;
+      transition: background 0.1s, color 0.1s;
+    }
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-sidebar-active);
+    }
+    .sidebar-link.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .sidebar-link.nested {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* ── Dark mode button ── */
+    .theme-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg-card-hover); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Content area ── */
+    .content-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 48px;
+      min-width: 0;
+    }
+
+    .content {
+      max-width: var(--content-max);
+      width: 100%;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .content p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content ul, .content ol {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 20px;
+    }
+    .content li { margin-bottom: 6px; }
+
+    .content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .content a:hover { text-decoration: underline; }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-sidebar);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Terminal ── */
+    .terminal {
+      background: #0F172A;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #1E293B;
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.red    { background: #EF4444; }
+    .terminal-dot.yellow { background: #F59E0B; }
+    .terminal-dot.green  { background: #22C55E; }
+    .terminal-title {
+      margin-left: 8px;
+      font-size: 12px;
+      color: #64748B;
+      font-family: var(--font-mono);
+    }
+    .terminal pre {
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.7;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+    }
+    .t-comment { color: #64748B; }
+    .t-prompt  { color: #F59E0B; }
+    .t-cmd     { color: #6EE7B7; }
+
+    /* ── Callout ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      line-height: 1.5;
+    }
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout.tip {
+      background: var(--bg-callout-tip);
+      border: 1px solid #BBF7D0;
+      color: #166534;
+    }
+    [data-theme="dark"] .callout.tip { border-color: #064E3B; color: #6EE7B7; }
+    .callout.info {
+      background: var(--bg-callout-info);
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+    [data-theme="dark"] .callout.info { border-color: #1E3A5F; color: #93C5FD; }
+    .callout.warn {
+      background: var(--bg-callout-warn);
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+    [data-theme="dark"] .callout.warn { border-color: #78350F; color: #FCD34D; }
+    .callout strong { font-weight: 600; }
+    .callout a { color: inherit; font-weight: 500; }
+    .callout .callout-body { color: inherit; }
+
+    /* ── Plain English box ── */
+    .plain-english {
+      background: linear-gradient(135deg, var(--accent-light), var(--bg-card));
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin: 24px 0;
+    }
+    .plain-english h4 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .plain-english p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--bg-code);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin: 12px 0 16px;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      margin: 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      color: #CBD5E1;
+    }
+
+    /* ── Danger zone bar ── */
+    .danger-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin: 24px 0;
+      box-shadow: var(--shadow-card);
+    }
+    .danger-bar-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .danger-bar-track {
+      position: relative;
+      height: 32px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+    }
+    .danger-bar-segment {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .danger-bar-segment.safe {
+      left: 0;
+      width: 50%;
+      background: #D1FAE5;
+      color: #065F46;
+    }
+    [data-theme="dark"] .danger-bar-segment.safe { background: #064E3B; color: #6EE7B7; }
+    .danger-bar-segment.caution {
+      left: 50%;
+      width: 20%;
+      background: #FEF3C7;
+      color: #92400E;
+    }
+    [data-theme="dark"] .danger-bar-segment.caution { background: #78350F; color: #FCD34D; }
+    .danger-bar-segment.danger {
+      left: 70%;
+      width: 15%;
+      background: #FED7AA;
+      color: #9A3412;
+    }
+    [data-theme="dark"] .danger-bar-segment.danger { background: #7C2D12; color: #FDBA74; }
+    .danger-bar-segment.critical {
+      left: 85%;
+      width: 15%;
+      background: #FECACA;
+      color: #991B1B;
+    }
+    [data-theme="dark"] .danger-bar-segment.critical { background: #7F1D1D; color: #FCA5A5; }
+    .danger-bar-markers {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .danger-bar-markers span {
+      position: relative;
+    }
+
+    /* ── Diagram container ── */
+    .diagram {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      margin: 24px 0;
+      text-align: center;
+      box-shadow: var(--shadow-card);
+      overflow-x: auto;
+    }
+    .diagram svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination a {
+      flex: 1;
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+    .pagination a:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card);
+      text-decoration: none;
+    }
+    .pg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .pg-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .pagination .next { text-align: right; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .sidebar.open { transform: translateX(0); }
+      .content-area { margin-left: 0; padding: 24px 20px; padding-top: 60px; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .danger-bar-segment { font-size: 9px; }
+    }
+
+    /* ── Environment Tabs ── */
+    .env-tab-container {
+      position: relative;
+    }
+    .env-tabs {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: fit-content;
+      position: absolute;
+      top: -14px;
+      right: 12px;
+      z-index: 2;
+    }
+    .env-tab-btn {
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .env-tab-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-card);
+    }
+    .env-tab-btn.active {
+      color: var(--accent);
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-weight: 600;
+    }
+    .env-tab-btn svg {
+      flex-shrink: 0;
+    }
+    .env-tab-panel {
+      display: none;
+    }
+    .env-tab-panel.active {
+      display: block;
+    }
+
+    /* ── VSCode Mockup ── */
+    .vscode-mockup {
+      background: #1E1E1E;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      min-height: 420px;
+    }
+    .vscode-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #323233;
+      font-size: 12px;
+      color: #CCCCCC;
+      font-family: var(--font);
+    }
+    .vscode-titlebar-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .vscode-titlebar-dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .vscode-titlebar-dots .red { background: #EF4444; }
+    .vscode-titlebar-dots .yellow { background: #F59E0B; }
+    .vscode-titlebar-dots .green { background: #22C55E; }
+    .vscode-titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      color: #999;
+    }
+    .vscode-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+    .vscode-activity-bar {
+      width: 42px;
+      background: #333333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 8px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .vscode-activity-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      color: #858585;
+      transition: color 0.15s;
+    }
+    .vscode-activity-icon.active {
+      color: #FFFFFF;
+    }
+    .vscode-sidebar-panel {
+      width: 180px;
+      background: #252526;
+      border-right: 1px solid #3C3C3C;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .vscode-sidebar-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #BBBBBB;
+      padding: 10px 16px 6px;
+      font-family: var(--font);
+    }
+    .vscode-file-tree {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .vscode-file-tree li {
+      font-size: 12px;
+      font-family: var(--font);
+      color: #CCCCCC;
+      padding: 3px 16px 3px 24px;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+    }
+    .vscode-file-tree li:hover {
+      background: #2A2D2E;
+    }
+    .vscode-file-tree li.active {
+      background: #37373D;
+    }
+    .vscode-file-icon {
+      font-size: 11px;
+      width: 14px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .vscode-file-icon.folder { color: #DCBA7A; }
+    .vscode-file-icon.py { color: #519ABA; }
+    .vscode-file-icon.md { color: #519ABA; }
+    .vscode-file-icon.json { color: #CBCB41; }
+    .vscode-file-icon.env { color: #6D8086; }
+    .vscode-editor-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: #1E1E1E;
+    }
+    .vscode-tab-bar {
+      display: flex;
+      background: #252526;
+      border-bottom: 1px solid #3C3C3C;
+      height: 34px;
+      overflow: hidden;
+    }
+    .vscode-tab {
+      padding: 0 16px;
+      font-size: 12px;
+      font-family: var(--font);
+      color: #969696;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-right: 1px solid #3C3C3C;
+      white-space: nowrap;
+    }
+    .vscode-tab.active {
+      background: #1E1E1E;
+      color: #FFFFFF;
+      border-bottom: 1px solid #1E1E1E;
+      margin-bottom: -1px;
+    }
+    .vscode-editor-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+    }
+    .vscode-editor-placeholder {
+      color: #5A5A5A;
+      font-size: 12px;
+      font-family: var(--font);
+    }
+    .vscode-terminal-area {
+      border-top: 1px solid #3C3C3C;
+      background: #1E1E1E;
+      flex-shrink: 0;
+    }
+    .vscode-terminal-tabs {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      background: #252526;
+      height: 30px;
+      gap: 2px;
+      border-bottom: 1px solid #3C3C3C;
+    }
+    .vscode-terminal-tab-label {
+      font-size: 11px;
+      font-family: var(--font);
+      color: #CCCCCC;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .vscode-terminal-tab-icon {
+      font-size: 12px;
+      color: #89D185;
+    }
+    .vscode-terminal-body pre {
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    /* ── Responsive: env-tabs ── */
+    @media (max-width: 600px) {
+      .env-tabs {
+        position: static;
+        margin-bottom: 8px;
+      }
+      .env-tab-container {
+        margin-top: 0;
+      }
+      .vscode-sidebar-panel {
+        display: none;
+      }
+      .vscode-activity-bar {
+        width: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Dark mode toggle -->
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit</a>
+      <div class="sidebar-nav">
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Getting Started</div>
+          <a class="sidebar-link" href="index.html">Welcome</a>
+          <a class="sidebar-link" href="getting-started.html">Installation</a>
+          <a class="sidebar-link" href="first-session.html">Your First Session</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Core Concepts</div>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
+          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
+          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link active" href="context.html">Context &amp; Sessions</a>
+          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
+          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Commands</div>
+          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
+          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
+          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+          <a class="sidebar-link nested" href="commands.html#planning">Planning &amp; Ideas</a>
+          <a class="sidebar-link nested" href="commands.html#multiagent">Advanced</a>
+          <a class="sidebar-link nested" href="commands.html#maintenance">Maintenance</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Workflows</div>
+          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
+          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
+          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Examples</div>
+          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
+          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
+          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
+          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Reference</div>
+          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link" href="glossary.html">Glossary</a>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ── Main Content ── -->
+    <div class="content-area">
+      <div class="content">
+
+        <h1>Context &amp; Sessions</h1>
+        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">The most important operational concept in AI-assisted development &mdash; and the one that catches everyone out.</p>
+
+        <!-- What is the Context Window -->
+        <h2 id="context-window">What is the Context Window</h2>
+        <p>Think of the context window as Claude's desk. Everything Claude can see right now &mdash; your messages, its responses, files it has read, tool outputs, system instructions &mdash; is spread across this desk. Claude can only work with what's on the desk. Anything that falls off the edge is gone.</p>
+        <p>The current context window is approximately <strong>1 million tokens</strong> (roughly 750,000 words). That sounds enormous &mdash; and it is. But it fills up faster than you'd expect. A single large source file might consume thousands of tokens just by being read. Every message back and forth adds more. Tool outputs from running scripts pile up. System prompts, memory files, and CLAUDE.md all take space before you've even started working.</p>
+        <p>Bigger doesn't mean infinite. Even with a million tokens, quality starts to degrade well before the window is full. Claude's attention is strongest on recent messages and weakest on content from the start of a long conversation. The practical limit is significantly lower than the theoretical maximum.</p>
+
+        <div class="plain-english">
+          <h4>In Plain English</h4>
+          <p>Claude has a limited amount of text it can "see" at once. Everything in the conversation uses some of that space. When it fills up, Claude starts forgetting things and making mistakes. DOE's session discipline is designed to prevent this from ever becoming a problem.</p>
+        </div>
+
+        <!-- The Danger Zones -->
+        <h2 id="danger-zones">The Danger Zones</h2>
+        <p>Context usage isn't a smooth gradient from "fine" to "broken". There are distinct thresholds where behaviour changes noticeably.</p>
+
+        <div class="danger-bar">
+          <div class="danger-bar-label">Context Window Usage</div>
+          <div class="danger-bar-track">
+            <div class="danger-bar-segment safe">0 &ndash; 50%</div>
+            <div class="danger-bar-segment caution">50 &ndash; 70%</div>
+            <div class="danger-bar-segment danger">70 &ndash; 85%</div>
+            <div class="danger-bar-segment critical">85%+</div>
+          </div>
+          <div class="danger-bar-markers">
+            <span>0%</span>
+            <span>50%</span>
+            <span>70%</span>
+            <span>85%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <ul>
+          <li><strong>0 &ndash; 50% (green):</strong> Full performance. Claude tracks all decisions, remembers earlier context, works accurately. This is where you want to be.</li>
+          <li><strong>50 &ndash; 70% (yellow):</strong> Claude starts to lose track of earlier decisions. You may notice it asking about something you already discussed, or slightly contradicting an earlier plan. Quality is noticeably lower than a fresh session.</li>
+          <li><strong>70 &ndash; 85% (orange):</strong> The <strong>danger zone</strong>. Claude may forget what it agreed to, re-read files it already looked at, or contradict itself. Errors become more frequent. This is where you should wrap up and start fresh.</li>
+          <li><strong>85%+ (red):</strong> Critical. Multiple compactions have likely occurred. Claude is working from summaries of summaries. You will lose work at this level &mdash; decisions get forgotten, code gets overwritten, entire sections of progress can vanish.</li>
+        </ul>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>The 50% rule:</strong> Wrap proactively when you hit ~50% context usage. It sounds early, but the quality difference between a fresh session and a 60% session is significant. Your future self will thank you.
+          </div>
+        </div>
+
+        <!-- Why One Task Per Session -->
+        <h2 id="one-task">Why One Task Per Session</h2>
+        <p>Context is a finite resource. Every message, file read, and tool output consumes some of it. If you spend context on unrelated topics &mdash; discussing deployment, then switching to a UI bug, then asking about database schemas &mdash; you're diluting Claude's focus and burning through your window faster.</p>
+        <p>Tightly grouped tasks keep Claude accurate. When every message in the conversation is about the same feature, Claude holds all the relevant details in sharp focus. There's no noise from unrelated topics competing for attention.</p>
+        <p>If a session drifts to a different topic, the right move is to wrap the current session and start fresh. The few minutes it takes to wrap and restart are nothing compared to the errors you'll get from a cluttered, unfocused context.</p>
+        <p>DOE's session discipline &mdash; <code>/stand-up</code> to begin, work on one thing, <code>/wrap</code> to save progress &mdash; is designed around this constraint. It's not bureaucracy; it's context hygiene.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Rule of thumb:</strong> If you find yourself saying "while we're at it, can you also..." &mdash; that's a signal to finish the current task, wrap, and handle the new thing in a fresh session.
+          </div>
+        </div>
+
+        <!-- How Compaction Works -->
+        <h2 id="compaction">How Compaction Works</h2>
+        <p>When the context window fills up, Claude Code automatically <strong>compacts</strong> the conversation. Compaction summarises earlier messages to free up space, keeping the most recent context intact while condensing older content into shorter summaries.</p>
+        <p>The first compaction is tolerable. Some detail is lost, but the main thread of the conversation is preserved. You might lose the exact wording of an earlier decision, but the gist survives.</p>
+        <p>The problem is <strong>multiple compactions</strong>. Each compaction summarises what came before &mdash; including previous summaries. After two or three rounds, you're working from a summary of a summary of a summary. Critical details are gone. Decisions you made early in the session have been compressed into vague approximations.</p>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>Multiple compactions will cost you real work.</strong> Decisions get forgotten. Code gets overwritten. Claude may redo work it already completed because it can't remember having done it. This is why DOE wraps sessions proactively &mdash; it's cheaper to spend 2 minutes wrapping than to lose 30 minutes of progress.
+          </div>
+        </div>
+
+        <p>Compaction is a safety net, not a feature. You should never plan to rely on it. If your workflow regularly triggers compaction, your sessions are too long or too unfocused.</p>
+
+        <!-- The /context Command -->
+        <h2 id="context-command">The /context Command</h2>
+        <p>DOE includes a <code>/context</code> command that shows you exactly how much of your context window is in use. Run it at any time to check where you stand.</p>
+
+        <!-- Environment Tabs: Terminal vs VSCode -->
+        <div class="env-tab-container" style="margin-top: 24px;">
+          <div class="env-tabs" data-tab-group="context-usage-env">
+            <button class="env-tab-btn active" data-tab="terminal">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              Terminal
+            </button>
+            <button class="env-tab-btn" data-tab="vscode">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+              VSCode
+            </button>
+          </div>
+
+          <!-- Terminal view -->
+          <div class="env-tab-panel active" data-tab-group="context-usage-env" data-tab="terminal">
+            <div class="terminal" style="margin-top: 0;">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Terminal &mdash; /context</span>
+              </div>
+              <pre><span class="t-cmd">/context</span>
+
+<span style="color:#CBD5E1">&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;</span>
+<span style="color:#CBD5E1">&#x2502;  CONTEXT USAGE                                            &#x2502;</span>
+<span style="color:#CBD5E1">&#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;</span>
+<span style="color:#CBD5E1">&#x2502;  Model       Opus 4 (1M context)                          &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Used        287,431 / 1,000,000 tokens                   &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Percentage  28.7%                                        &#x2502;</span>
+<span style="color:#CBD5E1">&#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;</span>
+<span style="color:#CBD5E1">&#x2502;  BREAKDOWN                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  System prompt     42,100 tokens   (14.7%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Tools             18,200 tokens    (6.3%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Memory files       8,900 tokens    (3.1%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Skills             3,400 tokens    (1.2%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Messages         214,831 tokens   (74.8%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Free space       712,569 tokens                          &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                            &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  &#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;  28.7% used                  &#x2502;</span>
+<span style="color:#CBD5E1">&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;</span></pre>
+            </div>
+          </div>
+
+          <!-- VSCode view -->
+          <div class="env-tab-panel" data-tab-group="context-usage-env" data-tab="vscode">
+            <div class="vscode-mockup" style="margin-top: 0;">
+              <div class="vscode-titlebar">
+                <div class="vscode-titlebar-dots">
+                  <span class="red"></span>
+                  <span class="yellow"></span>
+                  <span class="green"></span>
+                </div>
+                <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+              </div>
+              <div class="vscode-body">
+                <div class="vscode-activity-bar">
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon active">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  </div>
+                </div>
+                <div class="vscode-sidebar-panel">
+                  <div class="vscode-sidebar-title">Explorer</div>
+                  <ul class="vscode-file-tree">
+                    <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                    <li class="active"><span class="vscode-file-icon md">M</span> CLAUDE.md</li>
+                    <li><span class="vscode-file-icon md">M</span> STATE.md</li>
+                    <li><span class="vscode-file-icon json">J</span> stats.json</li>
+                    <li><span class="vscode-file-icon env">E</span> .env</li>
+                  </ul>
+                </div>
+                <div class="vscode-editor-area">
+                  <div class="vscode-tab-bar">
+                    <div class="vscode-tab active">
+                      <span style="color:#89D185;">&#9679;</span> CLAUDE.md
+                    </div>
+                    <div class="vscode-tab">STATE.md</div>
+                  </div>
+                  <div class="vscode-editor-content">
+                    <span class="vscode-editor-placeholder">Project configuration loaded</span>
+                  </div>
+                  <div class="vscode-terminal-area">
+                    <div class="vscode-terminal-tabs">
+                      <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; /context</span>
+                    </div>
+                    <div class="vscode-terminal-body">
+                      <pre><span class="t-cmd">/context</span>
+
+<span style="color:#CBD5E1">&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;</span>
+<span style="color:#CBD5E1">&#x2502;  CONTEXT USAGE                                            &#x2502;</span>
+<span style="color:#CBD5E1">&#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;</span>
+<span style="color:#CBD5E1">&#x2502;  Model       Opus 4 (1M context)                          &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Used        287,431 / 1,000,000 tokens                   &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Percentage  28.7%                                        &#x2502;</span>
+<span style="color:#CBD5E1">&#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;</span>
+<span style="color:#CBD5E1">&#x2502;  BREAKDOWN                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  System prompt     42,100 tokens   (14.7%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Tools             18,200 tokens    (6.3%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Memory files       8,900 tokens    (3.1%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Skills             3,400 tokens    (1.2%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Messages         214,831 tokens   (74.8%)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  Free space       712,569 tokens                          &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                            &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  &#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;&#x2591;  28.7% used                  &#x2502;</span>
+<span style="color:#CBD5E1">&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;</span></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p>Here's what the numbers mean:</p>
+        <ul>
+          <li><strong>System prompt:</strong> CLAUDE.md, project rules, and Claude Code's built-in instructions. This is fixed overhead &mdash; it's there before you say anything.</li>
+          <li><strong>Tools:</strong> The definitions of all available tools (Bash, Read, Edit, etc.). Also fixed overhead.</li>
+          <li><strong>Memory files:</strong> STATE.md, learnings.md, and any other memory files Claude loads at session start.</li>
+          <li><strong>Skills:</strong> Custom slash commands loaded from <code>.claude/commands/</code>.</li>
+          <li><strong>Messages:</strong> Everything you and Claude have said, plus file contents read and tool outputs. This is the part that grows as you work.</li>
+          <li><strong>Free space:</strong> What's left. When this gets low, you're in trouble.</li>
+        </ul>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>When to worry:</strong> If the percentage is above 50%, consider wrapping soon. If it's above 70%, wrap now. Run <code>/context</code> periodically &mdash; especially during long or complex tasks.
+          </div>
+        </div>
+
+        <!-- /wrap — Your Safety Valve -->
+        <h2 id="wrap">/wrap &mdash; Your Safety Valve</h2>
+        <p>The <code>/wrap</code> command is how you save your session's progress before clearing the conversation. It's the single most important habit in DOE.</p>
+
+        <h3>What /wrap saves</h3>
+        <ul>
+          <li><strong>STATE.md</strong> &mdash; Your current position: what feature you're working on, what step you're at, any blockers, and what to do next. This is the short-term memory that lets the next session pick up where you left off.</li>
+          <li><strong>learnings.md</strong> &mdash; Anything discovered during the session: patterns, gotchas, things that failed and why. This is the long-term memory that makes the project smarter over time.</li>
+          <li><strong>Session stats</strong> &mdash; Duration, commits made, files changed, and other metrics. Useful for tracking velocity and patterns.</li>
+        </ul>
+
+        <h3>What /wrap does NOT save</h3>
+        <ul>
+          <li><strong>The conversation itself.</strong> Once you <code>/clear</code>, the messages are gone. Claude won't remember what you discussed. This is by design &mdash; the conversation is the most expensive part of context, and starting fresh is the whole point.</li>
+          <li><strong>Uncommitted code changes.</strong> Wrap saves metadata, not code. If you have uncommitted work, commit it before wrapping. (DOE commits after every completed task, so this is rarely an issue.)</li>
+        </ul>
+
+        <!-- Environment Tabs: Terminal vs VSCode -->
+        <div class="env-tab-container" style="margin-top: 24px;">
+          <div class="env-tabs" data-tab-group="context-wrap-env">
+            <button class="env-tab-btn active" data-tab="terminal">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              Terminal
+            </button>
+            <button class="env-tab-btn" data-tab="vscode">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+              VSCode
+            </button>
+          </div>
+
+          <!-- Terminal view -->
+          <div class="env-tab-panel active" data-tab-group="context-wrap-env" data-tab="terminal">
+            <div class="terminal" style="margin-top: 0;">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">Terminal &mdash; /wrap</span>
+              </div>
+              <pre><span class="t-cmd">/wrap</span>
+
+<span style="color:#CBD5E1">&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;</span>
+<span style="color:#CBD5E1">&#x2502;  SESSION WRAP -- 14:32 - 14/03/26        my-app v0.4.1    &#x2502;</span>
+<span style="color:#CBD5E1">&#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;</span>
+<span style="color:#CBD5E1">&#x2502;  COMPLETED                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  -- Search component (3 files, tests pass)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  -- Filter dropdown styling                               &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                            &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  NEXT SESSION                                              &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  -- Step 5: pagination for search results                 &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                            &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  STATS   2h 14m  |  4 commits  |  12 files changed         &#x2502;</span>
+<span style="color:#CBD5E1">&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;</span>
+
+<span class="t-comment"># STATE.md and learnings.md updated</span>
+<span class="t-comment"># Ready to /clear and start fresh</span></pre>
+            </div>
+          </div>
+
+          <!-- VSCode view -->
+          <div class="env-tab-panel" data-tab-group="context-wrap-env" data-tab="vscode">
+            <div class="vscode-mockup" style="margin-top: 0;">
+              <div class="vscode-titlebar">
+                <div class="vscode-titlebar-dots">
+                  <span class="red"></span>
+                  <span class="yellow"></span>
+                  <span class="green"></span>
+                </div>
+                <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+              </div>
+              <div class="vscode-body">
+                <div class="vscode-activity-bar">
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                  </div>
+                  <div class="vscode-activity-icon active">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  </div>
+                </div>
+                <div class="vscode-sidebar-panel">
+                  <div class="vscode-sidebar-title">Explorer</div>
+                  <ul class="vscode-file-tree">
+                    <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                    <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                    <li class="active"><span class="vscode-file-icon md">M</span> STATE.md</li>
+                    <li><span class="vscode-file-icon md">M</span> learnings.md</li>
+                    <li><span class="vscode-file-icon json">J</span> stats.json</li>
+                    <li><span class="vscode-file-icon env">E</span> .env</li>
+                  </ul>
+                </div>
+                <div class="vscode-editor-area">
+                  <div class="vscode-tab-bar">
+                    <div class="vscode-tab active">
+                      <span style="color:#89D185;">&#9679;</span> STATE.md
+                    </div>
+                    <div class="vscode-tab">learnings.md</div>
+                  </div>
+                  <div class="vscode-editor-content">
+                    <span class="vscode-editor-placeholder">Session state saved</span>
+                  </div>
+                  <div class="vscode-terminal-area">
+                    <div class="vscode-terminal-tabs">
+                      <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; /wrap</span>
+                    </div>
+                    <div class="vscode-terminal-body">
+                      <pre><span class="t-cmd">/wrap</span>
+
+<span style="color:#CBD5E1">&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;</span>
+<span style="color:#CBD5E1">&#x2502;  SESSION WRAP -- 14:32 - 14/03/26        my-app v0.4.1    &#x2502;</span>
+<span style="color:#CBD5E1">&#x251C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2524;</span>
+<span style="color:#CBD5E1">&#x2502;  COMPLETED                                                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  -- Search component (3 files, tests pass)                &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  -- Filter dropdown styling                               &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                            &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  NEXT SESSION                                              &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  -- Step 5: pagination for search results                 &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;                                                            &#x2502;</span>
+<span style="color:#CBD5E1">&#x2502;  STATS   2h 14m  |  4 commits  |  12 files changed         &#x2502;</span>
+<span style="color:#CBD5E1">&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;</span>
+
+<span class="t-comment"># STATE.md and learnings.md updated</span>
+<span class="t-comment"># Ready to /clear and start fresh</span></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3>The golden pattern</h3>
+        <p>This is the session lifecycle that keeps context clean and progress safe:</p>
+
+        <div class="diagram">
+          <svg viewBox="0 0 580 80" width="580" height="80" xmlns="http://www.w3.org/2000/svg">
+            <!-- Work -->
+            <rect x="0" y="20" width="100" height="40" rx="8" fill="#6366F1" opacity="0.15" stroke="#6366F1" stroke-width="1.5"/>
+            <text x="50" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="#6366F1">Work</text>
+            <!-- Arrow -->
+            <line x1="104" y1="40" x2="132" y2="40" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.5"/>
+            <polygon points="128,35 136,40 128,45" fill="var(--text-muted)" opacity="0.5"/>
+            <!-- /wrap -->
+            <rect x="140" y="20" width="100" height="40" rx="8" fill="#F59E0B" opacity="0.15" stroke="#F59E0B" stroke-width="1.5"/>
+            <text x="190" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="#F59E0B">/wrap</text>
+            <!-- Arrow -->
+            <line x1="244" y1="40" x2="272" y2="40" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.5"/>
+            <polygon points="268,35 276,40 268,45" fill="var(--text-muted)" opacity="0.5"/>
+            <!-- /clear -->
+            <rect x="280" y="20" width="100" height="40" rx="8" fill="#F43F5E" opacity="0.15" stroke="#F43F5E" stroke-width="1.5"/>
+            <text x="330" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="#F43F5E">/clear</text>
+            <!-- Arrow -->
+            <line x1="384" y1="40" x2="412" y2="40" stroke="var(--text-muted)" stroke-width="1.5" opacity="0.5"/>
+            <polygon points="408,35 416,40 408,45" fill="var(--text-muted)" opacity="0.5"/>
+            <!-- /stand-up -->
+            <rect x="420" y="20" width="140" height="40" rx="8" fill="#10B981" opacity="0.15" stroke="#10B981" stroke-width="1.5"/>
+            <text x="490" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="#10B981">/stand-up</text>
+          </svg>
+        </div>
+
+        <p><strong>Work</strong> on a focused task. <strong>/wrap</strong> to save progress to STATE.md and learnings.md. <strong>/clear</strong> to reset the conversation. <strong>/stand-up</strong> (or <code>/crack-on</code>) to begin the next session with a fresh context and full awareness of where you left off.</p>
+
+        <!-- What To Do When Context Runs Out -->
+        <h2 id="runs-out">What To Do When Context Runs Out</h2>
+        <p>Even with good habits, you'll occasionally find yourself in a high-context situation. Here's how to handle it.</p>
+
+        <h3>If quality is dropping mid-task</h3>
+        <p>You'll notice the signs: Claude re-reads files it already looked at, asks about decisions you already made, or produces code that contradicts earlier work. When this happens, run <code>/wrap</code> immediately, then <code>/clear</code>. Don't try to push through &mdash; the errors will compound.</p>
+
+        <h3>If Claude seems confused or loops</h3>
+        <p>Sometimes Claude gets stuck in a loop &mdash; trying the same fix repeatedly, or going back and forth between two approaches. This is almost always a context problem. Wrap, clear, and start fresh. A clean context often resolves the issue instantly because Claude can approach the problem without the noise of previous failed attempts.</p>
+
+        <h3>If you lost context unexpectedly</h3>
+        <p>Don't panic. Your progress is safe in multiple places:</p>
+        <ul>
+          <li><strong>Git commits</strong> have all your code changes. DOE commits after every completed task, so your work is captured.</li>
+          <li><strong>STATE.md</strong> has your position &mdash; what you were working on and what's next (assuming you wrapped before losing context).</li>
+          <li><strong>learnings.md</strong> has anything discovered during the session.</li>
+          <li><strong>tasks/todo.md</strong> has the full task breakdown with contract checkboxes showing what's been completed.</li>
+        </ul>
+        <p>Nothing built is ever lost. Only the conversation is gone &mdash; and that's the disposable part. Start a new session with <code>/stand-up</code> and Claude will rebuild its understanding from the files.</p>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>Prevention beats recovery.</strong> Run <code>/context</code> periodically. Wrap proactively at ~50%. The habit of wrapping early saves more work than any other DOE practice.
+          </div>
+        </div>
+
+        <h3>Quick reference</h3>
+        <div class="code-block"><pre><span style="color:#64748B"># Feeling like context is getting heavy?</span>
+<span style="color:#CBD5E1">/context              </span><span style="color:#64748B"># Check usage</span>
+
+<span style="color:#64748B"># Above 50%? Wrap and start fresh:</span>
+<span style="color:#CBD5E1">/wrap                 </span><span style="color:#64748B"># Save progress</span>
+<span style="color:#CBD5E1">/clear                </span><span style="color:#64748B"># Reset conversation</span>
+<span style="color:#CBD5E1">/stand-up             </span><span style="color:#64748B"># Fresh briefing</span>
+
+<span style="color:#64748B"># Need to immediately continue building?</span>
+<span style="color:#CBD5E1">/crack-on             </span><span style="color:#64748B"># Skip briefing, resume work</span></pre></div>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Next:</strong> See every command explained with when and why to use it &mdash; <a href="commands.html">Commands</a>.
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <a href="key-concepts.html">
+            <div class="pg-label">Previous</div>
+            <div class="pg-title">&larr; DOE Architecture</div>
+          </a>
+          <a href="commands.html" class="next">
+            <div class="pg-label">Next</div>
+            <div class="pg-title">Commands &rarr;</div>
+          </a>
+        </div>
+
+        <footer class="site-footer">DOE Starter Kit v1.30.1</footer>
+
+      </div><!-- /content -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script>
+    // ── Dark mode ──
+    (function () {
+      var btn  = document.getElementById('themeBtn');
+      var html = document.documentElement;
+
+      function applyTheme(dark) {
+        if (dark) {
+          html.setAttribute('data-theme', 'dark');
+          btn.innerHTML = '&#9788;';
+        } else {
+          html.removeAttribute('data-theme');
+          btn.innerHTML = '&#9789;';
+        }
+      }
+
+      var stored = localStorage.getItem('doe-docs-theme');
+      applyTheme(stored === 'dark');
+
+      btn.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        localStorage.setItem('doe-docs-theme', isDark ? 'light' : 'dark');
+        applyTheme(!isDark);
+      });
+    })();
+
+    // ── Mobile sidebar ──
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar   = document.getElementById('sidebar');
+      var overlay   = document.getElementById('sidebarOverlay');
+
+      function open()  { sidebar.classList.add('open');    overlay.classList.add('visible'); }
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+      hamburger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? close() : open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+
+    // ── Tab switching (env-tabs) ──
+    (function () {
+      function initTabGroup(containerSelector, btnClass, panelClass) {
+        document.querySelectorAll(containerSelector).forEach(function (tabBar) {
+          var group = tabBar.getAttribute('data-tab-group');
+          var buttons = tabBar.querySelectorAll('.' + btnClass);
+
+          buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var tabId = btn.getAttribute('data-tab');
+
+              // Deactivate all buttons in this tab bar
+              buttons.forEach(function (b) { b.classList.remove('active'); });
+              btn.classList.add('active');
+
+              // Toggle panels matching this group
+              document.querySelectorAll('.' + panelClass + '[data-tab-group="' + group + '"]').forEach(function (panel) {
+                if (panel.getAttribute('data-tab') === tabId) {
+                  panel.classList.add('active');
+                } else {
+                  panel.classList.remove('active');
+                }
+              });
+            });
+          });
+        });
+      }
+
+      initTabGroup('.env-tabs', 'env-tab-btn', 'env-tab-panel');
+    })();
+  </script>
+
+</body>
+</html>

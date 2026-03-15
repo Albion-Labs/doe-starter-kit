@@ -7,6 +7,25 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.32.0] — 2026-03-15
+
+### Added
+- `docs/tutorial/context.html` — new Context Management tutorial page covering compaction, danger zone, /context command, /wrap, and recovery flows
+- Tab infrastructure across all tutorial pages: content tabs (card-style toggling) and environment tabs (Terminal vs VSCode toggle)
+- VSCode mockup component system with editor chrome, activity bar, and panel styling
+- Hooks coverage and recovery flows section in tips-and-mistakes page
+- Built-in vs DOE badge distinction on commands page
+
+### Changed
+- All 10 existing tutorial pages enhanced with Terminal/VSCode environment tabs (29 mockups across 9 pages)
+- Getting Started: card-tabs for setup options with GitHub clone instructions
+- Workflows: card-tabs with Path A as default active tab
+- Commands: sidebar navigation with Planning/Maintenance section links
+- Daily Flow: box-drawing terminal mockup classes for consistent styling
+- Key Concepts and First Session: glossary cross-links to glossary.html anchors
+- Context page added to sidebar navigation across all pages
+- `crack-on.md`, `sitrep.md`, `stand-up.md` global commands: expanded DOE Kit check path mapping documentation
+
 ## [v1.31.0] — 2026-03-13
 
 ### Added

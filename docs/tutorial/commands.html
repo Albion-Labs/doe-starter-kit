@@ -559,6 +559,30 @@
       white-space: nowrap;
       flex-shrink: 0;
     }
+    .cmd-origin {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .cmd-origin.doe {
+      background: var(--accent-light);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+    .cmd-origin.builtin {
+      background: #DBEAFE;
+      color: #3B82F6;
+      border: 1px solid #3B82F6;
+    }
+    [data-theme="dark"] .cmd-origin.builtin {
+      background: #1E3A5F;
+      color: #93C5FD;
+      border-color: #93C5FD;
+    }
     .cmd-summary {
       font-size: 14px;
       color: var(--text-secondary);
@@ -678,6 +702,321 @@
     @media (min-width: 601px) and (max-width: 900px) {
       .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ── Content Tabs ── */
+    .content-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      width: fit-content;
+    }
+    .content-tab-btn {
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .content-tab-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-card);
+    }
+    .content-tab-btn.active {
+      color: var(--accent);
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-weight: 600;
+    }
+    .content-tab-panel {
+      display: none;
+    }
+    .content-tab-panel.active {
+      display: block;
+    }
+
+    /* ── Environment Tabs ── */
+    .env-tab-container {
+      position: relative;
+    }
+    .env-tabs {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: fit-content;
+      position: absolute;
+      top: -14px;
+      right: 12px;
+      z-index: 2;
+    }
+    .env-tab-btn {
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .env-tab-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-card);
+    }
+    .env-tab-btn.active {
+      color: var(--accent);
+      background: var(--bg-card);
+      border-color: var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-weight: 600;
+    }
+    .env-tab-btn svg {
+      flex-shrink: 0;
+    }
+    .env-tab-panel {
+      display: none;
+    }
+    .env-tab-panel.active {
+      display: block;
+    }
+
+    /* ── VSCode Mockup ── */
+    .vscode-mockup {
+      background: #1E1E1E;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 24px 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      min-height: 420px;
+    }
+    .vscode-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #323233;
+      font-size: 12px;
+      color: #CCCCCC;
+      font-family: var(--font);
+    }
+    .vscode-titlebar-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .vscode-titlebar-dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .vscode-titlebar-dots .red { background: #EF4444; }
+    .vscode-titlebar-dots .yellow { background: #F59E0B; }
+    .vscode-titlebar-dots .green { background: #22C55E; }
+    .vscode-titlebar-text {
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      color: #999;
+    }
+    .vscode-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+    .vscode-activity-bar {
+      width: 42px;
+      background: #333333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 8px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .vscode-activity-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      color: #858585;
+      transition: color 0.15s;
+    }
+    .vscode-activity-icon.active {
+      color: #FFFFFF;
+    }
+    .vscode-sidebar-panel {
+      width: 180px;
+      background: #252526;
+      border-right: 1px solid #3C3C3C;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .vscode-sidebar-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #BBBBBB;
+      padding: 10px 16px 6px;
+      font-family: var(--font);
+    }
+    .vscode-file-tree {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .vscode-file-tree li {
+      font-size: 12px;
+      font-family: var(--font);
+      color: #CCCCCC;
+      padding: 3px 16px 3px 24px;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+    }
+    .vscode-file-tree li:hover {
+      background: #2A2D2E;
+    }
+    .vscode-file-tree li.active {
+      background: #37373D;
+    }
+    .vscode-file-icon {
+      font-size: 11px;
+      width: 14px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .vscode-file-icon.folder { color: #DCBA7A; }
+    .vscode-file-icon.py { color: #519ABA; }
+    .vscode-file-icon.md { color: #519ABA; }
+    .vscode-file-icon.json { color: #CBCB41; }
+    .vscode-file-icon.env { color: #6D8086; }
+    .vscode-editor-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: #1E1E1E;
+    }
+    .vscode-tab-bar {
+      display: flex;
+      background: #252526;
+      border-bottom: 1px solid #3C3C3C;
+      height: 34px;
+      overflow: hidden;
+    }
+    .vscode-tab {
+      padding: 0 16px;
+      font-size: 12px;
+      font-family: var(--font);
+      color: #969696;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-right: 1px solid #3C3C3C;
+      white-space: nowrap;
+    }
+    .vscode-tab.active {
+      background: #1E1E1E;
+      color: #FFFFFF;
+      border-bottom: 1px solid #1E1E1E;
+      margin-bottom: -1px;
+    }
+    .vscode-editor-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+    }
+    .vscode-editor-placeholder {
+      color: #5A5A5A;
+      font-size: 12px;
+      font-family: var(--font);
+    }
+    .vscode-terminal-area {
+      border-top: 1px solid #3C3C3C;
+      background: #1E1E1E;
+      flex-shrink: 0;
+    }
+    .vscode-terminal-tabs {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      background: #252526;
+      height: 30px;
+      gap: 2px;
+      border-bottom: 1px solid #3C3C3C;
+    }
+    .vscode-terminal-tab-label {
+      font-size: 11px;
+      font-family: var(--font);
+      color: #CCCCCC;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .vscode-terminal-tab-icon {
+      font-size: 12px;
+      color: #89D185;
+    }
+    .vscode-terminal-body pre {
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: #CBD5E1;
+      overflow-x: auto;
+      margin: 0;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    /* ── Responsive: Tab components ── */
+    @media (max-width: 600px) {
+      .content-tabs {
+        flex-direction: column;
+        width: 100%;
+      }
+      .env-tabs {
+        position: static;
+        margin-bottom: 8px;
+      }
+      .env-tab-container {
+        margin-top: 0;
+      }
+      .vscode-sidebar-panel {
+        display: none;
+      }
+      .vscode-activity-bar {
+        width: 32px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -713,6 +1052,7 @@
           <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
           <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
           <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="context.html">Context &amp; Sessions</a>
           <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
           <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
         </div>
@@ -722,6 +1062,9 @@
           <a class="sidebar-link active" href="commands.html">Session Lifecycle</a>
           <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
           <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+          <a class="sidebar-link nested" href="commands.html#planning">Planning &amp; Ideas</a>
+          <a class="sidebar-link nested" href="commands.html#multiagent">Advanced</a>
+          <a class="sidebar-link nested" href="commands.html#maintenance">Maintenance</a>
         </div>
 
         <div class="sidebar-section">
@@ -840,6 +1183,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/stand-up</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Starts your session and shows you where things stand.</span>
           </div>
           <div class="cmd-detail">
@@ -851,14 +1195,38 @@
             </ul>
             <p>You don't need to remember what you were doing last time &mdash; the stand-up reads <code>STATE.md</code> and reconstructs your context automatically.</p>
 
-            <div class="terminal">
-              <div class="terminal-header">
-                <span class="terminal-dot red"></span>
-                <span class="terminal-dot yellow"></span>
-                <span class="terminal-dot green"></span>
-                <span class="terminal-title">Terminal — /stand-up output</span>
-              </div>
-              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+            <!-- Content Tabs: Kick-off vs Status mode -->
+            <div class="content-tabs" data-tab-group="standup-mode">
+              <button class="content-tab-btn active" data-tab="kickoff">Kick-off mode</button>
+              <button class="content-tab-btn" data-tab="status">Status mode</button>
+            </div>
+
+            <!-- Kick-off mode panel -->
+            <div class="content-tab-panel active" data-tab-group="standup-mode" data-tab="kickoff">
+
+              <!-- Environment Tabs: Terminal vs VSCode -->
+              <div class="env-tab-container" style="margin-top: 24px;">
+                <div class="env-tabs" data-tab-group="standup-kickoff-env">
+                  <button class="env-tab-btn active" data-tab="terminal">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                    Terminal
+                  </button>
+                  <button class="env-tab-btn" data-tab="vscode">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+                    VSCode
+                  </button>
+                </div>
+
+                <!-- Terminal view -->
+                <div class="env-tab-panel active" data-tab-group="standup-kickoff-env" data-tab="terminal">
+                  <div class="terminal" style="margin-top: 0;">
+                    <div class="terminal-header">
+                      <span class="terminal-dot red"></span>
+                      <span class="terminal-dot yellow"></span>
+                      <span class="terminal-dot green"></span>
+                      <span class="terminal-title">Terminal — /stand-up output</span>
+                    </div>
+                    <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
 <span class="t-label">&#9474;</span>  <span class="t-label">STAND-UP</span> <span class="t-dim">-- 09:15 - 13/03/26</span>          <span class="t-dim">my-project v1.2.3</span>  <span class="t-label">&#9474;</span>
 <span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
 <span class="t-label">&#9474;</span>  <span class="t-section">FEATURE</span>    User Dashboard [APP] v1.2.x                   <span class="t-label">&#9474;</span>
@@ -883,6 +1251,198 @@
 <span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
 <span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
 <span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                  </div>
+                </div>
+
+                <!-- VSCode view -->
+                <div class="env-tab-panel" data-tab-group="standup-kickoff-env" data-tab="vscode">
+                  <div class="vscode-mockup" style="margin-top: 0;">
+                    <div class="vscode-titlebar">
+                      <div class="vscode-titlebar-dots">
+                        <span class="red"></span>
+                        <span class="yellow"></span>
+                        <span class="green"></span>
+                      </div>
+                      <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+                    </div>
+                    <div class="vscode-body">
+                      <div class="vscode-activity-bar">
+                        <div class="vscode-activity-icon">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                        </div>
+                        <div class="vscode-activity-icon">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </div>
+                        <div class="vscode-activity-icon">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                        </div>
+                        <div class="vscode-activity-icon active">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                        </div>
+                      </div>
+                      <div class="vscode-sidebar-panel">
+                        <div class="vscode-sidebar-title">Explorer</div>
+                        <ul class="vscode-file-tree">
+                          <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                          <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                          <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                          <li class="active"><span class="vscode-file-icon md">M</span> CLAUDE.md</li>
+                          <li><span class="vscode-file-icon md">M</span> STATE.md</li>
+                          <li><span class="vscode-file-icon json">J</span> stats.json</li>
+                          <li><span class="vscode-file-icon env">E</span> .env</li>
+                        </ul>
+                      </div>
+                      <div class="vscode-editor-area">
+                        <div class="vscode-tab-bar">
+                          <div class="vscode-tab active">
+                            <span style="color:#89D185;">&#9679;</span> CLAUDE.md
+                          </div>
+                          <div class="vscode-tab">STATE.md</div>
+                        </div>
+                        <div class="vscode-editor-content">
+                          <span class="vscode-editor-placeholder">Project configuration loaded</span>
+                        </div>
+                        <div class="vscode-terminal-area">
+                          <div class="vscode-terminal-tabs">
+                            <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; /stand-up</span>
+                          </div>
+                          <div class="vscode-terminal-body">
+                            <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">STAND-UP</span> <span class="t-dim">-- 09:15 - 13/03/26</span>          <span class="t-dim">my-project v1.2.3</span>  <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">FEATURE</span>    User Dashboard [APP] v1.2.x                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PROGRESS</span>   <span class="t-progress-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span><span class="t-progress-empty">&#9617;&#9617;</span> 5/7 steps                          <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">CONTRACT</span>   Valid (4 auto, 1 manual)                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">BLOCKERS</span>   1 active                                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>    <span class="t-warn">!!</span> Weather API rate limit (free tier)                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PLAN</span>                                                     <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -&gt; Step 6: Housekeeping -- changelog, version bump       <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  -&gt; Step 7: Retro                                         <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status mode panel -->
+            <div class="content-tab-panel" data-tab-group="standup-mode" data-tab="status">
+
+              <!-- Environment Tabs: Terminal vs VSCode -->
+              <div class="env-tab-container" style="margin-top: 24px;">
+                <div class="env-tabs" data-tab-group="standup-status-env">
+                  <button class="env-tab-btn active" data-tab="terminal">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                    Terminal
+                  </button>
+                  <button class="env-tab-btn" data-tab="vscode">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+                    VSCode
+                  </button>
+                </div>
+
+                <!-- Terminal view -->
+                <div class="env-tab-panel active" data-tab-group="standup-status-env" data-tab="terminal">
+                  <div class="terminal" style="margin-top: 0;">
+                    <div class="terminal-header">
+                      <span class="terminal-dot red"></span>
+                      <span class="terminal-dot yellow"></span>
+                      <span class="terminal-dot green"></span>
+                      <span class="terminal-title">Terminal — /stand-up (status mode)</span>
+                    </div>
+                    <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">STAND-UP</span> <span class="t-dim">-- 10:42 - 13/03/26 (status)</span> <span class="t-dim">my-project v1.2.3</span>  <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">FEATURE</span>    User Dashboard [APP] v1.2.x                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PROGRESS</span>   <span class="t-progress-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span><span class="t-progress-empty">&#9617;&#9617;</span> 5/7 steps                          <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">CONTRACT</span>   Valid (4 auto, 1 manual)                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">BLOCKERS</span>   1 active                                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>    <span class="t-warn">!!</span> Weather API rate limit (free tier)                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Session active (started 09:15). Read-only refresh.</span>       <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                  </div>
+                </div>
+
+                <!-- VSCode view -->
+                <div class="env-tab-panel" data-tab-group="standup-status-env" data-tab="vscode">
+                  <div class="vscode-mockup" style="margin-top: 0;">
+                    <div class="vscode-titlebar">
+                      <div class="vscode-titlebar-dots">
+                        <span class="red"></span>
+                        <span class="yellow"></span>
+                        <span class="green"></span>
+                      </div>
+                      <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+                    </div>
+                    <div class="vscode-body">
+                      <div class="vscode-activity-bar">
+                        <div class="vscode-activity-icon">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                        </div>
+                        <div class="vscode-activity-icon">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </div>
+                        <div class="vscode-activity-icon">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                        </div>
+                        <div class="vscode-activity-icon active">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                        </div>
+                      </div>
+                      <div class="vscode-sidebar-panel">
+                        <div class="vscode-sidebar-title">Explorer</div>
+                        <ul class="vscode-file-tree">
+                          <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                          <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                          <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                          <li class="active"><span class="vscode-file-icon md">M</span> CLAUDE.md</li>
+                          <li><span class="vscode-file-icon md">M</span> STATE.md</li>
+                          <li><span class="vscode-file-icon json">J</span> stats.json</li>
+                          <li><span class="vscode-file-icon env">E</span> .env</li>
+                        </ul>
+                      </div>
+                      <div class="vscode-editor-area">
+                        <div class="vscode-tab-bar">
+                          <div class="vscode-tab active">
+                            <span style="color:#89D185;">&#9679;</span> CLAUDE.md
+                          </div>
+                          <div class="vscode-tab">STATE.md</div>
+                        </div>
+                        <div class="vscode-editor-content">
+                          <span class="vscode-editor-placeholder">Project configuration loaded</span>
+                        </div>
+                        <div class="vscode-terminal-area">
+                          <div class="vscode-terminal-tabs">
+                            <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; /stand-up (status)</span>
+                          </div>
+                          <div class="vscode-terminal-body">
+                            <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">STAND-UP</span> <span class="t-dim">-- 10:42 (status)</span>     <span class="t-dim">my-project v1.2.3</span>  <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">FEATURE</span>    User Dashboard [APP] v1.2.x                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PROGRESS</span>   <span class="t-progress-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span><span class="t-progress-empty">&#9617;&#9617;</span> 5/7 steps                          <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">BLOCKERS</span>   1 active                                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>    <span class="t-warn">!!</span> Weather API rate limit (free tier)                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Session active (started 09:15). Read-only refresh.</span>       <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <h4>What each section means</h4>
@@ -906,6 +1466,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/crack-on</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Resume after a break &mdash; refamiliarises and starts building immediately.</span>
           </div>
           <div class="cmd-detail">
@@ -933,20 +1494,35 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/sitrep</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Quick mid-session progress snapshot. Read-only, completely safe.</span>
           </div>
           <div class="cmd-detail">
             <p><strong>When to use it:</strong> Whenever you want to see where things stand without changing anything. Run it as often as you like &mdash; no side effects.</p>
             <p><strong>How it works:</strong> Reads the current feature's <code>todo.md</code> steps and shows which are done, which is current, and what's coming next. Think of it as a progress bar for your feature.</p>
 
-            <div class="terminal">
-              <div class="terminal-header">
-                <span class="terminal-dot red"></span>
-                <span class="terminal-dot yellow"></span>
-                <span class="terminal-dot green"></span>
-                <span class="terminal-title">Terminal — /sitrep output</span>
+            <div class="env-tab-container" style="margin-top: 24px;">
+              <div class="env-tabs" data-tab-group="cmd-sitrep-env">
+                <button class="env-tab-btn active" data-tab="terminal">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  Terminal
+                </button>
+                <button class="env-tab-btn" data-tab="vscode">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+                  VSCode
+                </button>
               </div>
-              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+
+              <!-- Terminal view -->
+              <div class="env-tab-panel active" data-tab-group="cmd-sitrep-env" data-tab="terminal">
+                <div class="terminal" style="margin-top: 0;">
+                  <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">Terminal — /sitrep output</span>
+                  </div>
+                  <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
 <span class="t-label">&#9474;</span>  <span class="t-label">SITREP</span> <span class="t-dim">-- 13/03/26</span>                                     <span class="t-label">&#9474;</span>
 <span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
 <span class="t-label">&#9474;</span>  <span class="t-section">WORKING ON</span>   User Dashboard [APP] v1.2.x                 <span class="t-label">&#9474;</span>
@@ -964,6 +1540,79 @@
 <span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
 <span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
 <span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                </div>
+              </div>
+
+              <!-- VSCode view -->
+              <div class="env-tab-panel" data-tab-group="cmd-sitrep-env" data-tab="vscode">
+                <div class="vscode-mockup" style="margin-top: 0;">
+                  <div class="vscode-titlebar">
+                    <div class="vscode-titlebar-dots">
+                      <span class="red"></span>
+                      <span class="yellow"></span>
+                      <span class="green"></span>
+                    </div>
+                    <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+                  </div>
+                  <div class="vscode-body">
+                    <div class="vscode-activity-bar">
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon active">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                      </div>
+                    </div>
+                    <div class="vscode-sidebar-panel">
+                      <div class="vscode-sidebar-title">Explorer</div>
+                      <ul class="vscode-file-tree">
+                        <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                        <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                        <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                        <li class="active"><span class="vscode-file-icon md">M</span> CLAUDE.md</li>
+                        <li><span class="vscode-file-icon md">M</span> STATE.md</li>
+                        <li><span class="vscode-file-icon json">J</span> stats.json</li>
+                        <li><span class="vscode-file-icon env">E</span> .env</li>
+                      </ul>
+                    </div>
+                    <div class="vscode-editor-area">
+                      <div class="vscode-tab-bar">
+                        <div class="vscode-tab active">
+                          <span style="color:#89D185;">&#9679;</span> CLAUDE.md
+                        </div>
+                        <div class="vscode-tab">STATE.md</div>
+                      </div>
+                      <div class="vscode-editor-content">
+                        <span class="vscode-editor-placeholder">Project configuration loaded</span>
+                      </div>
+                      <div class="vscode-terminal-area">
+                        <div class="vscode-terminal-tabs">
+                          <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; /sitrep</span>
+                        </div>
+                        <div class="vscode-terminal-body">
+                          <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">SITREP</span> <span class="t-dim">-- 13/03/26</span>                                     <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">WORKING ON</span>   User Dashboard [APP] v1.2.x                 <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PHASE GOAL</span>   Role-based nav, targeting, playbook, area   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">PROGRESS</span>     <span class="t-progress-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span><span class="t-progress-empty">&#9617;&#9617;</span> 5/7 steps (71%)                  <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">NEXT STEP</span>    Step 6 -- Housekeeping                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">MOMENTUM</span>     On track -- 5 of 7 steps done               <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <h4>What each section means</h4>
@@ -984,6 +1633,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/wrap</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Closes your session. Records what happened so the project remembers it next time.</span>
           </div>
           <div class="cmd-detail">
@@ -997,14 +1647,28 @@
             </ol>
             <p>Think of <code>/wrap</code> as saving your game. The state is written to files that persist between sessions.</p>
 
-            <div class="terminal">
-              <div class="terminal-header">
-                <span class="terminal-dot red"></span>
-                <span class="terminal-dot yellow"></span>
-                <span class="terminal-dot green"></span>
-                <span class="terminal-title">Terminal — /wrap output</span>
+            <div class="env-tab-container" style="margin-top: 24px;">
+              <div class="env-tabs" data-tab-group="cmd-wrap-env">
+                <button class="env-tab-btn active" data-tab="terminal">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  Terminal
+                </button>
+                <button class="env-tab-btn" data-tab="vscode">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+                  VSCode
+                </button>
               </div>
-              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+
+              <!-- Terminal view -->
+              <div class="env-tab-panel active" data-tab-group="cmd-wrap-env" data-tab="terminal">
+                <div class="terminal" style="margin-top: 0;">
+                  <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">Terminal — /wrap output</span>
+                  </div>
+                  <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
 <span class="t-label">&#9474;</span>  <span class="t-label">WRAP</span> <span class="t-dim">-- 11:48 - 13/03/26</span>              <span class="t-dim">my-project v1.2.4</span>  <span class="t-label">&#9474;</span>
 <span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
 <span class="t-label">&#9474;</span>  Session duration    1h 33m                               <span class="t-label">&#9474;</span>
@@ -1025,6 +1689,77 @@
 <span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
 <span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
 <span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                </div>
+              </div>
+
+              <!-- VSCode view -->
+              <div class="env-tab-panel" data-tab-group="cmd-wrap-env" data-tab="vscode">
+                <div class="vscode-mockup" style="margin-top: 0;">
+                  <div class="vscode-titlebar">
+                    <div class="vscode-titlebar-dots">
+                      <span class="red"></span>
+                      <span class="yellow"></span>
+                      <span class="green"></span>
+                    </div>
+                    <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+                  </div>
+                  <div class="vscode-body">
+                    <div class="vscode-activity-bar">
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon active">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                      </div>
+                    </div>
+                    <div class="vscode-sidebar-panel">
+                      <div class="vscode-sidebar-title">Explorer</div>
+                      <ul class="vscode-file-tree">
+                        <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                        <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                        <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                        <li class="active"><span class="vscode-file-icon md">M</span> STATE.md</li>
+                        <li><span class="vscode-file-icon json">J</span> stats.json</li>
+                        <li><span class="vscode-file-icon md">M</span> learnings.md</li>
+                      </ul>
+                    </div>
+                    <div class="vscode-editor-area">
+                      <div class="vscode-tab-bar">
+                        <div class="vscode-tab active">
+                          <span style="color:#89D185;">&#9679;</span> STATE.md
+                        </div>
+                        <div class="vscode-tab">learnings.md</div>
+                      </div>
+                      <div class="vscode-editor-content">
+                        <span class="vscode-editor-placeholder">Session state saved</span>
+                      </div>
+                      <div class="vscode-terminal-area">
+                        <div class="vscode-terminal-tabs">
+                          <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; /wrap</span>
+                        </div>
+                        <div class="vscode-terminal-body">
+                          <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">WRAP</span> <span class="t-dim">-- 11:48 - 13/03/26</span>              <span class="t-dim">my-project v1.2.4</span>  <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  Session duration    1h 33m                               <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Commits             3                                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Steps completed     1 (Step 6 of 7)                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Streak              13 days                              <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <h4>What each section means</h4>
@@ -1046,20 +1781,35 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/eod</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">End-of-day report aggregating all sessions from today.</span>
           </div>
           <div class="cmd-detail">
             <p><strong>When to use it:</strong> At the end of your working day, after your final <code>/wrap</code>.</p>
             <p><strong>How it works:</strong> Reads the git log and session records for the current day, then assembles a visual summary. If you ran three sessions today, it combines all three into one report.</p>
 
-            <div class="terminal">
-              <div class="terminal-header">
-                <span class="terminal-dot red"></span>
-                <span class="terminal-dot yellow"></span>
-                <span class="terminal-dot green"></span>
-                <span class="terminal-title">Terminal — /eod output</span>
+            <div class="env-tab-container" style="margin-top: 24px;">
+              <div class="env-tabs" data-tab-group="cmd-eod-env">
+                <button class="env-tab-btn active" data-tab="terminal">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  Terminal
+                </button>
+                <button class="env-tab-btn" data-tab="vscode">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+                  VSCode
+                </button>
               </div>
-              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+
+              <!-- Terminal view -->
+              <div class="env-tab-panel active" data-tab-group="cmd-eod-env" data-tab="terminal">
+                <div class="terminal" style="margin-top: 0;">
+                  <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">Terminal — /eod output</span>
+                  </div>
+                  <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
 <span class="t-label">&#9474;</span>  <span class="t-label">END OF DAY</span> <span class="t-dim">-- 13/03/26</span>                                   <span class="t-label">&#9474;</span>
 <span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
 <span class="t-label">&#9474;</span>  Sessions today      3                                    <span class="t-label">&#9474;</span>
@@ -1086,6 +1836,76 @@
 <span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
 <span class="t-label">&#9474;</span>  Streak: 13 days                                          <span class="t-label">&#9474;</span>
 <span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                </div>
+              </div>
+
+              <!-- VSCode view -->
+              <div class="env-tab-panel" data-tab-group="cmd-eod-env" data-tab="vscode">
+                <div class="vscode-mockup" style="margin-top: 0;">
+                  <div class="vscode-titlebar">
+                    <div class="vscode-titlebar-dots">
+                      <span class="red"></span>
+                      <span class="yellow"></span>
+                      <span class="green"></span>
+                    </div>
+                    <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+                  </div>
+                  <div class="vscode-body">
+                    <div class="vscode-activity-bar">
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon active">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                      </div>
+                    </div>
+                    <div class="vscode-sidebar-panel">
+                      <div class="vscode-sidebar-title">Explorer</div>
+                      <ul class="vscode-file-tree">
+                        <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                        <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                        <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                        <li class="active"><span class="vscode-file-icon json">J</span> stats.json</li>
+                        <li><span class="vscode-file-icon md">M</span> STATE.md</li>
+                      </ul>
+                    </div>
+                    <div class="vscode-editor-area">
+                      <div class="vscode-tab-bar">
+                        <div class="vscode-tab active">
+                          <span style="color:#89D185;">&#9679;</span> stats.json
+                        </div>
+                        <div class="vscode-tab">STATE.md</div>
+                      </div>
+                      <div class="vscode-editor-content">
+                        <span class="vscode-editor-placeholder">Daily session data loaded</span>
+                      </div>
+                      <div class="vscode-terminal-area">
+                        <div class="vscode-terminal-tabs">
+                          <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; /eod</span>
+                        </div>
+                        <div class="vscode-terminal-body">
+                          <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">END OF DAY</span> <span class="t-dim">-- 13/03/26</span>                                   <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  Sessions today      3                                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Total commits       8                                    <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Total duration      3h 45m                               <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Streak: 13 days                                          <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <h4>What each section means</h4>
@@ -1102,20 +1922,35 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/hq</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Project dashboard &mdash; session history, feature timelines, and metrics at a glance.</span>
           </div>
           <div class="cmd-detail">
             <p><strong>When to use it:</strong> When you want the big picture. How many sessions have you run? What features have you shipped? What's your commit velocity? Run it weekly.</p>
             <p>This is a read-only command &mdash; it doesn't change anything. Useful for motivation, reporting, or spotting trends.</p>
 
-            <div class="terminal">
-              <div class="terminal-header">
-                <span class="terminal-dot red"></span>
-                <span class="terminal-dot yellow"></span>
-                <span class="terminal-dot green"></span>
-                <span class="terminal-title">Terminal — /hq output</span>
+            <div class="env-tab-container" style="margin-top: 24px;">
+              <div class="env-tabs" data-tab-group="cmd-hq-env">
+                <button class="env-tab-btn active" data-tab="terminal">
+                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                  Terminal
+                </button>
+                <button class="env-tab-btn" data-tab="vscode">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
+                  VSCode
+                </button>
               </div>
-              <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+
+              <!-- Terminal view -->
+              <div class="env-tab-panel active" data-tab-group="cmd-hq-env" data-tab="terminal">
+                <div class="terminal" style="margin-top: 0;">
+                  <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">Terminal — /hq output</span>
+                  </div>
+                  <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
 <span class="t-label">&#9474;</span>  <span class="t-label">HQ DASHBOARD</span>                                             <span class="t-label">&#9474;</span>
 <span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
 <span class="t-label">&#9474;</span>  Project: my-project                                      <span class="t-label">&#9474;</span>
@@ -1139,6 +1974,79 @@
 <span class="t-label">&#9474;</span>  +77,609 / -63,849 lines (net +13,760)                   <span class="t-label">&#9474;</span>
 <span class="t-label">&#9474;</span>  First session: 28 Feb 2026 (14 days ago)                 <span class="t-label">&#9474;</span>
 <span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                </div>
+              </div>
+
+              <!-- VSCode view -->
+              <div class="env-tab-panel" data-tab-group="cmd-hq-env" data-tab="vscode">
+                <div class="vscode-mockup" style="margin-top: 0;">
+                  <div class="vscode-titlebar">
+                    <div class="vscode-titlebar-dots">
+                      <span class="red"></span>
+                      <span class="yellow"></span>
+                      <span class="green"></span>
+                    </div>
+                    <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+                  </div>
+                  <div class="vscode-body">
+                    <div class="vscode-activity-bar">
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+                      </div>
+                      <div class="vscode-activity-icon active">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                      </div>
+                    </div>
+                    <div class="vscode-sidebar-panel">
+                      <div class="vscode-sidebar-title">Explorer</div>
+                      <ul class="vscode-file-tree">
+                        <li><span class="vscode-file-icon folder">&#128193;</span> directives/</li>
+                        <li><span class="vscode-file-icon folder">&#128193;</span> execution/</li>
+                        <li><span class="vscode-file-icon folder">&#128193;</span> tasks/</li>
+                        <li class="active"><span class="vscode-file-icon json">J</span> stats.json</li>
+                        <li><span class="vscode-file-icon md">M</span> STATE.md</li>
+                      </ul>
+                    </div>
+                    <div class="vscode-editor-area">
+                      <div class="vscode-tab-bar">
+                        <div class="vscode-tab active">
+                          <span style="color:#89D185;">&#9679;</span> stats.json
+                        </div>
+                        <div class="vscode-tab">STATE.md</div>
+                      </div>
+                      <div class="vscode-editor-content">
+                        <span class="vscode-editor-placeholder">Project metrics loaded</span>
+                      </div>
+                      <div class="vscode-terminal-area">
+                        <div class="vscode-terminal-tabs">
+                          <span class="vscode-terminal-tab-label"><span class="vscode-terminal-tab-icon">&#9654;</span> claude &mdash; /hq</span>
+                        </div>
+                        <div class="vscode-terminal-body">
+                          <pre><span class="t-border">&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span>
+<span class="t-label">&#9474;</span>  <span class="t-label">HQ DASHBOARD</span>                                             <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  Project: my-project                                      <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Sessions: 117 total, 13-day streak                       <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  Features shipped: 14                                     <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>                                                           <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  <span class="t-section">RECENT FEATURES</span>                                          <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  User Dashboard        <span class="t-progress-fill">&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;</span> Done                   <span class="t-label">&#9474;</span>
+<span class="t-label">&#9474;</span>  DOE Documentation     <span class="t-progress-fill">&#9608;&#9608;</span><span class="t-progress-empty">&#9617;&#9617;&#9617;&#9617;&#9617;&#9617;&#9617;&#9617;&#9617;</span> 25%                    <span class="t-label">&#9474;</span>
+<span class="t-border">&#9500;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9508;</span>
+<span class="t-label">&#9474;</span>  <span class="t-dim">Model: Opus 4.6 -- Thinking: high</span>                        <span class="t-label">&#9474;</span>
+<span class="t-border">&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span></pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <h4>What each section means</h4>
@@ -1162,6 +2070,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/audit</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Runs automated checks across the entire project and reports what needs attention.</span>
           </div>
           <div class="cmd-detail">
@@ -1182,6 +2091,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/agent-verify</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Runs all Verify: patterns from the current task's contract.</span>
           </div>
           <div class="cmd-detail">
@@ -1202,6 +2112,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/fact-check</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Reads a document and checks whether its claims match the actual codebase.</span>
           </div>
           <div class="cmd-detail">
@@ -1214,6 +2125,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/review</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Adversarial code review &mdash; looking for problems, not compliments.</span>
           </div>
           <div class="cmd-detail">
@@ -1233,6 +2145,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/test-suite</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Runs the project's accumulated test suite and reports results.</span>
           </div>
           <div class="cmd-detail">
@@ -1302,6 +2215,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/scope</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Takes a fuzzy idea and turns it into a clear, buildable brief through guided conversation.</span>
           </div>
           <div class="cmd-detail">
@@ -1320,6 +2234,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/pitch</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Reads the project state and generates strategic suggestions for what to build next.</span>
           </div>
           <div class="cmd-detail">
@@ -1333,6 +2248,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/roast</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Honest, humorous critique of your codebase &mdash; looking for the embarrassing bits.</span>
           </div>
           <div class="cmd-detail">
@@ -1352,6 +2268,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/agent-launch</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Sets up a wave &mdash; scans tasks, finds parallel candidates, assigns each to a terminal.</span>
           </div>
           <div class="cmd-detail">
@@ -1378,6 +2295,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/agent-status</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Dashboard of the current wave &mdash; which terminals are active and how far along.</span>
           </div>
           <div class="cmd-detail">
@@ -1396,6 +2314,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/sync-doe</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Pushes universal improvements back to the DOE Starter Kit repository.</span>
           </div>
           <div class="cmd-detail">
@@ -1408,6 +2327,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/pull-doe</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Pulls the latest DOE Starter Kit updates into your project.</span>
           </div>
           <div class="cmd-detail">
@@ -1420,6 +2340,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/commands</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Shows all available slash commands, their status, and version information.</span>
           </div>
           <div class="cmd-detail">
@@ -1432,6 +2353,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/codemap</span>
+            <span class="cmd-origin doe">DOE</span>
             <span class="cmd-summary">Generates a structured index of the project &mdash; files, functions, and relationships.</span>
           </div>
           <div class="cmd-detail">
@@ -1441,11 +2363,65 @@
           </div>
         </div>
 
+        <!-- ============================================================= -->
+        <!-- 7. Built-in Claude Commands                                    -->
+        <!-- ============================================================= -->
+        <h2 id="builtin">Built-in Claude Commands</h2>
+        <p>These commands come with Claude Code itself &mdash; they&rsquo;re available in any project, whether or not you use DOE.</p>
+
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/clear</span>
+            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-summary">Clears conversation history and resets context. Use when switching topics or when context gets polluted.</span>
+          </div>
+        </div>
+
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/help</span>
+            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-summary">Shows available commands and usage information.</span>
+          </div>
+        </div>
+
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/model</span>
+            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-summary">Switches the active model (e.g. Opus, Sonnet, Haiku) mid-session.</span>
+          </div>
+        </div>
+
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/memory</span>
+            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-summary">Manages persistent memory &mdash; facts Claude remembers across sessions.</span>
+          </div>
+        </div>
+
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/context</span>
+            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-summary">Shows current context window usage and what&rsquo;s loaded.</span>
+          </div>
+        </div>
+
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/compact</span>
+            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-summary">Compresses conversation history to free up context space without losing key information.</span>
+          </div>
+        </div>
+
         <!-- Pagination -->
         <div class="pagination">
-          <a href="key-concepts.html">
+          <a href="context.html">
             <div class="pg-label">Previous</div>
-            <div class="pg-title">&larr; Key Concepts</div>
+            <div class="pg-title">&larr; Context &amp; Sessions</div>
           </a>
           <a href="daily-flow.html" class="next">
             <div class="pg-label">Next</div>
@@ -1499,6 +2475,38 @@
         sidebar.classList.contains('open') ? close() : open();
       });
       overlay.addEventListener('click', close);
+    })();
+
+    // ── Tab switching (content-tabs + env-tabs) ──
+    (function () {
+      function initTabGroup(containerSelector, btnClass, panelClass) {
+        document.querySelectorAll(containerSelector).forEach(function (tabBar) {
+          var group = tabBar.getAttribute('data-tab-group');
+          var buttons = tabBar.querySelectorAll('.' + btnClass);
+
+          buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var tabId = btn.getAttribute('data-tab');
+
+              // Deactivate all buttons in this tab bar
+              buttons.forEach(function (b) { b.classList.remove('active'); });
+              btn.classList.add('active');
+
+              // Toggle panels matching this group
+              document.querySelectorAll('.' + panelClass + '[data-tab-group="' + group + '"]').forEach(function (panel) {
+                if (panel.getAttribute('data-tab') === tabId) {
+                  panel.classList.add('active');
+                } else {
+                  panel.classList.remove('active');
+                }
+              });
+            });
+          });
+        });
+      }
+
+      initTabGroup('.content-tabs', 'content-tab-btn', 'content-tab-panel');
+      initTabGroup('.env-tabs', 'env-tab-btn', 'env-tab-panel');
     })();
   </script>
 

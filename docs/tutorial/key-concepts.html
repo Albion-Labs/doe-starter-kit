@@ -600,6 +600,7 @@
           <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
           <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
           <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="context.html">Context &amp; Sessions</a>
           <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
           <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
         </div>
@@ -609,6 +610,9 @@
           <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
           <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
           <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+          <a class="sidebar-link nested" href="commands.html#planning">Planning &amp; Ideas</a>
+          <a class="sidebar-link nested" href="commands.html#multiagent">Advanced</a>
+          <a class="sidebar-link nested" href="commands.html#maintenance">Maintenance</a>
         </div>
 
         <div class="sidebar-section">
@@ -702,7 +706,7 @@
 
         <div class="plain-english">
           <h4>In Plain English</h4>
-          <p>Directives are written instructions. Claude reads them and decides what to do. Execution scripts do the actual work. The separation means the AI handles the thinking, deterministic code handles the doing &mdash; no hallucinated file operations.</p>
+          <p><a href="glossary.html#directive">Directives</a> are written instructions. Claude reads them and decides what to do. <a href="glossary.html#execution-script">Execution scripts</a> do the actual work. The separation means the AI handles the thinking, deterministic code handles the doing &mdash; no hallucinated file operations.</p>
         </div>
 
         <!-- Directives -->
@@ -737,7 +741,7 @@ Import election results from the Nomis API into src/data/
 
         <!-- Contracts -->
         <h2 id="contracts">Contracts</h2>
-        <p>A contract is a checklist attached to every task in <code>tasks/todo.md</code>. Each item is a specific, testable criterion &mdash; not vague ("looks good") but concrete ("the file exists and contains this function").</p>
+        <p>A <a href="glossary.html#contract">contract</a> is a checklist attached to every task in <code>tasks/todo.md</code>. Each item is a specific, testable criterion &mdash; not vague ("looks good") but concrete ("the file exists and contains this function").</p>
         <p>There are two types. <strong>[auto]</strong> criteria are verified by running a command or inspecting a file &mdash; Claude runs these itself after completing the work. If a check fails, it fixes the code and re-checks, up to three attempts. <strong>[manual]</strong> criteria need human eyes &mdash; does the layout look right? Does the interaction feel smooth?</p>
 
         <div class="plain-english">
@@ -791,7 +795,7 @@ Contract:
 
         <!-- Self-Annealing -->
         <h2 id="self-annealing">Self-Annealing</h2>
-        <p>Self-annealing is DOE's system for learning from failure. When something goes wrong, the framework doesn't just fix the immediate problem &mdash; it records what happened, why it happened, and how to prevent it next time. Over time, the project builds up immunity to its own failure patterns.</p>
+        <p><a href="glossary.html#self-annealing">Self-annealing</a> is DOE's system for learning from failure. When something goes wrong, the framework doesn't just fix the immediate problem &mdash; it records what happened, why it happened, and how to prevent it next time. Over time, the project builds up immunity to its own failure patterns.</p>
         <p>The name comes from metallurgy: annealing heats metal and cools it slowly to remove internal stresses. Each cycle makes the metal stronger. DOE does the same with software projects &mdash; each failure, properly recorded, makes the system less likely to fail that way again.</p>
 
         <div class="plain-english">
@@ -811,9 +815,7 @@ Contract:
         <p>DOE builds on top of Claude Code. To use DOE effectively, it helps to understand a few core concepts that affect how you work day to day. None of these require technical background &mdash; just a basic understanding of what's happening under the hood.</p>
 
         <h3>Context Window</h3>
-        <p>Claude can only "see" a limited amount of text at once &mdash; like a desk that can only hold so many papers. This is the context window. Everything in the current conversation &mdash; your messages, Claude's responses, file contents it has read, tool outputs &mdash; takes up space in this window.</p>
-        <p>When the context window fills up, Claude starts forgetting earlier parts of the conversation. It might forget a decision you made an hour ago, or re-read a file it already looked at. Quality degrades as the window fills.</p>
-        <p>DOE handles this with <code>/wrap</code> (saves progress to files so nothing is lost) and <code>/clear</code> (resets the conversation but keeps all your files). Keep sessions focused &mdash; one task per session &mdash; and the context window won't be a problem.</p>
+        <p>Claude works within a context window &mdash; a limited amount of text it can see at once. Understanding how this works is essential for productive sessions. This is the single most important operational concept in AI-assisted development. <a href="context.html">Read the full guide: Managing Context</a>.</p>
 
         <h3>Models</h3>
         <p>Claude comes in different versions (models) &mdash; <strong>Opus</strong> (most capable, slower), <strong>Sonnet</strong> (balanced), and <strong>Haiku</strong> (fastest, simplest). Some tasks need deep reasoning &mdash; architecture decisions, diagnosing subtle bugs. These benefit from Opus. Other tasks are mechanical &mdash; renaming files, running a known script. These work fine with Sonnet or Haiku.</p>
@@ -824,7 +826,7 @@ Contract:
         <p>DOE's execution scripts run outside the context window entirely &mdash; they don't cost tokens. Only the script's output comes back into the conversation.</p>
 
         <h3>Subagents</h3>
-        <p>Claude can spawn helper "agents" to handle specific tasks. Each subagent gets its own context window and works independently, then reports back with a summary. This keeps the main conversation focused and prevents context window bloat. A subagent might read 10 files and generate 200 lines of code, but the main conversation only sees a brief summary: "Created the search component in 3 files, all tests pass."</p>
+        <p>Claude can spawn helper "agents" to handle specific tasks. Each <a href="glossary.html#subagent">subagent</a> gets its own context window and works independently, then reports back with a summary. This keeps the main conversation focused and prevents context window bloat. A subagent might read 10 files and generate 200 lines of code, but the main conversation only sees a brief summary: "Created the search component in 3 files, all tests pass."</p>
 
         <div class="callout tip">
           <span class="callout-icon">&#9432;</span>
@@ -839,9 +841,9 @@ Contract:
             <div class="pg-label">Previous</div>
             <div class="pg-title">&larr; Your First Session</div>
           </a>
-          <a href="commands.html" class="next">
+          <a href="context.html" class="next">
             <div class="pg-label">Next</div>
-            <div class="pg-title">Commands &rarr;</div>
+            <div class="pg-title">Context &amp; Sessions &rarr;</div>
           </a>
         </div>
 
