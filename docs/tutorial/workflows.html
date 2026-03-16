@@ -1613,6 +1613,97 @@ by name or category.</span>
           </div>
         </div>
 
+        <!-- ============================================================= -->
+        <!-- Manual Testing & Sign-off                                      -->
+        <!-- ============================================================= -->
+        <h2 id="manual-testing">Manual Testing &amp; Sign-off</h2>
+        <p>When a feature reaches Awaiting Sign-off, all code is written and every <code>[auto]</code> criterion passes. What remains are the <code>[manual]</code> items &mdash; things that need human eyes. The <code>/snagging</code> command turns these into an interactive test checklist you can work through systematically.</p>
+
+        <h3>When It Triggers</h3>
+        <p>After the final build step completes and all <code>[auto]</code> contract criteria pass, Claude checks whether any <code>[manual]</code> items remain. If they do, you run <code>/snagging</code> to generate the test checklist. This is the bridge between &ldquo;code complete&rdquo; and &ldquo;actually done.&rdquo;</p>
+
+        <h3>The /snagging Command</h3>
+        <p>Running <code>/snagging</code> reads your <code>todo.md</code>, extracts all <code>[manual]</code> contract items for the current feature, and generates a standalone HTML checklist at <code>docs/[feature-name]-manual-tests.html</code>.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">Terminal &mdash; /snagging</span>
+          </div>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">/snagging</span>
+
+<span class="t-output">Reading todo.md... found 8 [manual] items across 3 steps</span>
+<span class="t-output">Splitting multi-sentence items into individual checks...</span>
+<span class="t-output">Detecting console commands and setup prerequisites...</span>
+<span class="t-output">Tracing code for known edge cases...</span>
+
+<span class="t-output">Generated: docs/user-dashboard-manual-tests.html</span>
+<span class="t-output">  14 individual checks across 3 sections</span>
+<span class="t-output">  2 console commands with copy buttons</span>
+<span class="t-output">  1 known bug flagged from code trace</span>
+
+<span class="t-output">Open in your browser alongside the app to begin testing.</span></pre>
+        </div>
+
+        <h3>The Test Checklist</h3>
+        <p>The generated HTML page is a self-contained testing tool. Open it in your browser alongside the app and work through the checks.</p>
+
+        <div class="callout info">
+          <span class="callout-icon">&#8505;</span>
+          <div class="callout-body">
+            <strong>Checklist features:</strong> Three-state toggles (untested / pass / fail) with square checkboxes that cycle on click. Failed items expand a notes field for recording what went wrong. Console commands appear in copyable code blocks. Each section has setup prerequisites and amber &ldquo;Restore&rdquo; callouts between sections to reset state. A timer tracks total test duration. Progress persists in localStorage so you can close the tab and resume later. Export buttons let you copy full results or failures only.
+          </div>
+        </div>
+
+        <h3>The Feedback Loop</h3>
+        <p>The testing workflow is a loop, not a one-shot process:</p>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-number">1</div>
+            <h4>Test</h4>
+            <p>Open the checklist and work through each item. Mark checks as pass or fail. Add notes to failures describing what you saw.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">2</div>
+            <h4>Export</h4>
+            <p>Click <strong>Copy Test Results</strong> (or <strong>Copy Failures Only</strong> if everything else passed). This copies a structured summary to your clipboard.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">3</div>
+            <h4>Paste &amp; Fix</h4>
+            <p>Paste the results back into Claude. Claude reads the failures, fixes the underlying code, and commits the fixes.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">4</div>
+            <h4>Regenerate</h4>
+            <p>Run <code>/snagging</code> again to get an updated checklist reflecting the fixes. Known bugs update automatically based on code analysis.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">5</div>
+            <h4>Repeat</h4>
+            <p>Continue the loop until all items pass. Once they do, the feature moves from Awaiting Sign-off to Done.</p>
+          </li>
+        </ol>
+
+        <h3>Writing Good [manual] Items</h3>
+        <p>The quality of your test checklist depends on how well the <code>[manual]</code> contract items are written. A few guidelines:</p>
+
+        <ul>
+          <li><strong>One testable action per sentence.</strong> &ldquo;Click the search bar, type a query, and verify results filter in real time&rdquo; is three checks. Split them so each can pass or fail independently.</li>
+          <li><strong>Specify the expected result.</strong> Not &ldquo;check the chart looks right&rdquo; but &ldquo;bar chart shows 5 bars, tallest bar is labelled &lsquo;London&rsquo;.&rdquo; If you can&rsquo;t describe what &ldquo;right&rdquo; looks like, the check isn&rsquo;t testable.</li>
+          <li><strong>For console tests, describe what to verify &mdash; not what to type.</strong> The generator detects console commands automatically. Write &ldquo;print output shows 12 rows with no duplicates&rdquo; rather than &ldquo;run <code>python3 execution/export.py</code> and check the output.&rdquo;</li>
+        </ul>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>Prefer [auto] over [manual] where possible.</strong> DOM presence checks, data flow assertions, and function call verification can all be <code>[auto]</code> criteria with <code>Verify:</code> patterns. Reserve <code>[manual]</code> for things that genuinely need human judgement &mdash; visual layout, interaction feel, print rendering.
+          </div>
+        </div>
+
         <!-- Pagination -->
         <div class="pagination">
           <a href="daily-flow.html">
@@ -1636,6 +1727,7 @@ by name or category.</span>
       <a href="#planning" class="toc-link">From Idea to Build-Ready Plan</a>
       <a href="#better-results" class="toc-link">Getting Better Results</a>
       <a href="#feature-lifecycle" class="toc-link">Feature Lifecycle</a>
+      <a href="#manual-testing" class="toc-link">Manual Testing &amp; Sign-off</a>
     </nav>
 
   </div><!-- /layout -->

@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.36.0] — 2026-03-16
+
+### Added
+- `global-commands/snagging.md`: `/snagging` command — auto-generates interactive HTML test checklists from todo.md `[manual]` contract items
+- `directives/manual-testing.md`: SOP for the manual testing workflow (generation, testing, feedback loop, sign-off)
+- `execution/generate_test_checklist.py`: HTML checklist generator with three-state toggles, timer, localStorage persistence, console code blocks with copy buttons, and export-to-clipboard
+- `docs/tutorial/workflows.html`: "Manual Testing & Sign-off" section covering the /snagging workflow
+- `docs/tutorial/commands.html`: `/snagging` command reference entry
+- `CLAUDE.md`: Progressive Disclosure trigger for manual testing
+
+### Changed
+- `global-commands/wrap.md`: explicit `git push` at every commit point (housekeeping, stats, wrap data); `awaitingSignOff` now scans `## Current` for completed steps with unchecked `[manual]` items; added `checklistPath` field for linking to test checklists
+- `global-commands/README.md`: added `/snagging` entry in Quality section
+
 ## [v1.35.0] — 2026-03-16
 
 ### Added

@@ -58,6 +58,10 @@ Runs the project's accumulated test suite from `tests/suite.json`. Updates metad
 Generates a structured project index at `.claude/codemap.md`. Scans file tree, maps key modules, functions, and entry points. Helps agents navigate without re-exploring each session.
 *Added 04/03/26*
 
+### `/snagging`
+Generates (or regenerates) an interactive HTML manual test checklist for the current feature. Identifies unchecked `[manual]` items from todo.md, optionally runs an automated code trace first, then calls `execution/generate_test_checklist.py`. Outputs a summary card and opens the checklist in the browser.
+*Added 16/03/26*
+
 ## Visual
 
 ### `/project-recap`

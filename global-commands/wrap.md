@@ -5,7 +5,7 @@ Before ending this session, complete all steps in order.
 1. **Update STATE.md** — Write the current position, any decisions made, blockers found, and a 1-2 sentence summary under Last Session.
 2. **Update tasks/todo.md** — Make sure all completed steps have timestamps. Move any completed features to Done if needed.
 3. **Check for learnings** — If anything failed and was fixed, or a useful pattern was discovered, log it to learnings.md or ~/.claude/CLAUDE.md.
-4. **Commit and push** — Make sure all work is committed. No uncommitted changes should remain.
+4. **Commit and push** — Make sure all work is committed and pushed. Run `git status` to check for uncommitted changes, commit them if any, then `git push` to sync with remote. No uncommitted or unpushed changes should remain.
 5. **Clean up session timer** — Run `rm -f .tmp/.session-start` to delete the session timer file.
 6. **DOE Kit sync check** — If `~/doe-starter-kit` exists, first check STATE.md for `DOE Role`. Then:
    - **Always check inbound:** Is the kit tag newer than STATE.md's "DOE Starter Kit" version? If yes, flag for `/pull-doe`.
@@ -55,7 +55,7 @@ if data.get('recentSessions'):
 
 Do this BEFORE committing stats.json.
 
-Commit stats.json with message: "Update session stats".
+Commit stats.json with message: "Update session stats" and push.
 
 Register this project in the global project registry (for `/archive-global`):
 ```bash
@@ -131,6 +131,7 @@ Using the stats JSON from Step 2, compose a JSON object with this schema. You mu
       "feature": "Feature Name [APP] (vX.Y.Z)",
       "summary": "One-line description of what needs testing",
       "manualItems": N,
+      "checklistPath": "docs/feature-name-manual-tests.html or null",
       "groups": [
         {"name": "Group Name", "items": ["Manual check description", "..."]},
         {"name": "Another Group", "items": ["..."]}
@@ -146,7 +147,7 @@ Using the stats JSON from Step 2, compose a JSON object with this schema. You mu
 }
 ```
 
-**awaitingSignOff**: Parse `## Awaiting Sign-off` in todo.md. For each feature heading (`###`), collect all unchecked `[ ] [manual]` lines. Group related items by theme (e.g. "Modal & Navigation", "Responsive", "Data Validation") -- use your judgment to create 2-5 groups per feature based on what the checks are testing. Each entry has: `feature` (heading text), `summary` (one-line description of what needs testing overall), `manualItems` (total count), and `groups` (array of `{name, items}` where items are the check descriptions stripped of `- [ ] [manual]` prefix). Cards render as collapsible -- the summary and count are always visible, groups expand on click. If the section is empty or has no features, use an empty array `[]` -- the renderer omits the section.
+**awaitingSignOff**: Parse `## Awaiting Sign-off` in todo.md. For each feature heading (`###`), collect all unchecked `[ ] [manual]` lines. Also check `## Current` for unchecked `[manual]` items on completed steps (steps marked `[x]` but with `[ ] [manual]` items). Group related items by theme (e.g. "Modal & Navigation", "Responsive", "Data Validation") -- use your judgment to create 2-5 groups per feature based on what the checks are testing. Each entry has: `feature` (heading text), `summary` (one-line description of what needs testing overall), `manualItems` (total count), `checklistPath` (path to the test checklist HTML if `docs/{feature-slug}-manual-tests.html` exists, otherwise null), and `groups` (array of `{name, items}` where items are the check descriptions stripped of `- [ ] [manual]` prefix). Cards render as collapsible -- the summary and count are always visible, groups expand on click. When `checklistPath` is non-null, show a "Open test checklist" link pointing to the file. If the section is empty or has no features, use an empty array `[]` -- the renderer omits the section.
 
 **commitGroups**: Group commits by feature or task. Use feature names from todo.md where possible. Commits that don't belong to a feature go in "Housekeeping" or "Other". Every commit in commitLog must appear in exactly one group.
 
@@ -201,7 +202,7 @@ python3 -c "import json; open('docs/wraps/session-<SESSION_NUMBER>.json', 'w').w
 open .tmp/wrap.html
 ```
 
-The `docs/wraps/session-N.json` file is what gets committed. The HTML is generated on demand (by `build_session_archive.py` regenerating it from JSON). The `.tmp/wrap.html` copy is disposable.
+The `docs/wraps/session-N.json` file is what gets committed. The HTML is generated on demand (by `build_session_archive.py` regenerating it from JSON). The `.tmp/wrap.html` copy is disposable. Commit this file with message "Save session N wrap data" and push.
 
 Print a one-line summary to the terminal: `Session [N] wrap-up opened in browser. [X] commits, [Y] steps, [duration].`
 
