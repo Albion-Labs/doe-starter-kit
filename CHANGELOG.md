@@ -7,6 +7,11 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.37.4] — 2026-03-16
+
+### Fixed
+- `execution/audit_claims.py`: retro steps (name starting with "Retro") now exempt from version tag check, same as `[INFRA]` steps. Prevents false WARN on `[APP]` feature retros which structurally don't get their own version bump.
+
 ## [v1.37.3] — 2026-03-16
 
 ### Added

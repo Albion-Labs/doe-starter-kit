@@ -311,6 +311,7 @@ def parse_completed_tasks(path: Path) -> list[dict]:
             "version": version_m.group(1) if version_m else None,
             "timestamp": ts_m.group(1) if ts_m else None,
             "infra": "[INFRA]" in current_heading,
+            "retro": name.lower().startswith("retro"),
         })
     return tasks
 
@@ -417,9 +418,11 @@ def check_task_format(report: AuditReport):
             continue
 
         no_timestamp = [t for t in tasks if not t["timestamp"]]
-        # [INFRA] tasks don't bump app version — skip version tag check
-        no_version = [t for t in tasks if not t["version"] and not t.get("infra")]
-        good = [t for t in tasks if t["timestamp"] and (t["version"] or t.get("infra"))]
+        # [INFRA] tasks and retro steps don't bump app version — skip version tag check
+        def _has_version_exemption(t):
+            return t.get("infra") or t.get("retro")
+        no_version = [t for t in tasks if not t["version"] and not _has_version_exemption(t)]
+        good = [t for t in tasks if t["timestamp"] and (t["version"] or _has_version_exemption(t))]
 
         if no_timestamp:
             for t in no_timestamp:
