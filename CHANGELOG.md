@@ -7,6 +7,11 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.34.3] — 2026-03-16
+
+### Added
+- Dev server learning in `universal-claude-md-template.md`: new `## Dev Servers` section — kill stale instances before starting new ones to prevent on-demand compilation hangs (macOS + Windows commands)
+
 ## [v1.33.0] — 2026-03-16
 
 ### Added

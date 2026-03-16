@@ -20,6 +20,10 @@ Tag source: e.g. "[retro: feature-name vX.Y.Z]"
 - zsh `for f in glob-*` fails with `no matches found` when no files match (bash silently skips). Guard with `(setopt nullglob 2>/dev/null; for f in ...)` or `ls glob-* 2>/dev/null`. [retro: universal]
 - `$$` in Claude Code Bash tool calls is the subshell PID, not the parent Claude Code process. Each tool call gets a different `$$`. Don't use `$$` for cross-call file naming — use a fixed name instead (worktrees handle multi-session isolation). [retro: universal]
 
+## Dev Servers
+
+- Before starting any dev server (Next.js, Vite, Webpack, etc.), kill existing instances on the same or adjacent ports. Stale servers compete for CPU/memory during on-demand compilation, causing unvisited routes to hang while cached pages work fine. macOS: `pkill -f "next dev"` or `lsof -ti:3000 | xargs kill`. Windows: `taskkill //f //im node.exe`. [retro: universal]
+
 ## Hooks & Session Files
 
 - Hooks that write per-invocation files (e.g. per-PID tracking) will accumulate hundreds of orphans per session. Always write to a single fixed-name file and overwrite — hooks only need the latest state, not history. [retro: universal]
