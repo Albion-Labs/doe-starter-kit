@@ -177,3 +177,19 @@ git stash drop
 - If audit_claims.py gained new universal checks, sync those but leave the extension point comment intact
 - If the starter kit has content this project doesn't have, ALWAYS preserve it — it came from another project's sync
 - If git pull in Step 2 reveals conflicts, stop and show the user — do not auto-resolve
+
+## Post-Sync Checklist
+- [ ] Update tutorial footers (`docs/tutorial/*.html`) to match new version number
+- [ ] Check if tutorial docs need updating for framework changes:
+
+| If this changed... | Check this tutorial page |
+|---|---|
+| `setup.sh` | `getting-started.html` (install flow, terminal mockups) |
+| `wrap.md` or `wrap_stats.py` or `wrap_html.py` | `commands.html` (command description), `daily-flow.html` (session end section) |
+| New/removed command in `global-commands/` | `commands.html` (add/remove entry), sidebar in all pages if navigation changed |
+| `.githooks/` or `check_contract.py` | `tips-and-mistakes.html` (hooks section) |
+| `STATE.md` template | `key-concepts.html` (state management), `getting-started.html` (initial setup) |
+| `CLAUDE.md` operating rules | `key-concepts.html` (DOE architecture), `workflows.html` (feature lifecycle) |
+| Multi-agent scripts | `multi-agent.html` (terminal mockups, worked example) |
+
+Only update if the change is user-facing. Internal refactors don't need doc updates.
