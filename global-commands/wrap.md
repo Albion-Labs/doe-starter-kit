@@ -11,7 +11,8 @@ Before ending this session, complete all steps in order.
    - **Always check inbound:** Is the kit tag newer than STATE.md's "DOE Starter Kit" version? If yes, flag for `/pull-doe`.
    - **Only if `DOE Role: creator`:** Check outbound — do any key syncable files differ? Diff key files (~/.claude/commands/*.md, .githooks/*, .claude/hooks/*.py) against the starter kit. **For CLAUDE.md**, do a smart diff: only flag if universal sections (Who We Are, Operating Rules, Guardrails, Code Hygiene, Self-Annealing) differ. Ignore project-specific sections (Directory Structure, Progressive Disclosure triggers). If outbound diffs exist, flag for `/sync-doe`.
    - **If `DOE Role: consumer` (or missing/unset):** Skip the outbound check entirely. Never mention `/sync-doe`.
-   - Record result for the System Checks section. If nothing flagged, record as synced.
+   - **Classify each differing file as `u` (user-facing) or `c` (creator-facing).** User-facing: slash commands, hooks, CLAUDE.md universal sections. Creator-facing: setup.sh, tutorials, README, version scripts. Include u/c counts in the recorded result.
+   - Record result for the System Checks section. If nothing flagged, record as synced. If flagged, record with u/c counts (e.g. `"doeKit": {"version": "v1.36.1", "synced": false, "userCount": 1, "creatorCount": 2}`).
 7. **Quick audit** — Run `python3 execution/audit_claims.py --hook` (fast checks only). Record the PASS/WARN/FAIL counts for the System Checks section. If any FAIL items exist, fix them before proceeding. WARN items can be noted and left for the next session.
 8. **Structural change check** — Run `git diff --name-status HEAD~$(git rev-list --count HEAD --since="$(cat .tmp/.session-start 2>/dev/null || echo '1 hour ago')") 2>/dev/null` to detect new/moved/deleted files this session. If structural changes are found (files added, renamed, or deleted — not just modified), ask: "Structural changes detected — run /codemap to update the project index?" Only run `/codemap` if the user says yes.
 
@@ -124,14 +125,13 @@ Using the stats JSON from Step 2, compose a JSON object with this schema. You mu
   ],
   "checks": {
     "audit": {"pass": N, "warn": N, "fail": N, "details": ["detail string if warn/fail"]},
-    "doeKit": {"version": "vX.Y.Z", "synced": true|false}
+    "doeKit": {"version": "vX.Y.Z", "synced": true|false, "userCount": 0, "creatorCount": 0}
   },
   "awaitingSignOff": [
     {
       "feature": "Feature Name [APP] (vX.Y.Z)",
       "summary": "One-line description of what needs testing",
       "manualItems": N,
-      "checklistPath": "docs/feature-name-manual-tests.html or null",
       "groups": [
         {"name": "Group Name", "items": ["Manual check description", "..."]},
         {"name": "Another Group", "items": ["..."]}

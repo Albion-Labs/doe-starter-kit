@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.37.0] — 2026-03-16
+
+### Changed
+- `global-commands/stand-up.md`: DOE KIT line now shows u/c classification — `* pull (1u 2c)` where `u` = user-facing (commands, hooks, rules) and `c` = creator-facing (kit infra, tutorials, setup)
+- `global-commands/crack-on.md`: same u/c classification for DOE KIT line
+- `global-commands/wrap.md`: DOE Kit sync check classifies diffs as u/c, JSON schema includes `userCount`/`creatorCount` fields for HTML renderers
+
 ## [v1.36.1] — 2026-03-16
 
 ### Fixed
