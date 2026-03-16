@@ -30,6 +30,7 @@
       --accent-blue: #3B82F6;
       --accent-rose: #F43F5E;
       --sidebar-w: 260px;
+      --toc-w: 220px;
       --content-max: 720px;
       --radius: 8px;
       --radius-lg: 12px;
@@ -900,6 +901,49 @@
         width: 32px;
       }
     }
+
+    /* ── Right-side TOC ── */
+    .toc {
+      width: var(--toc-w);
+      min-width: var(--toc-w);
+      position: fixed;
+      right: 24px;
+      top: 120px;
+      font-size: 12px;
+    }
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .toc-link {
+      display: block;
+      padding: 3px 0 3px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-left: 2px solid var(--border);
+      transition: all 0.1s;
+    }
+    .toc-link:hover {
+      color: var(--text-secondary);
+      border-color: var(--text-muted);
+    }
+    .toc-link.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    @media (min-width: 1201px) {
+      .content-area { padding-right: calc(var(--toc-w) + 48px); }
+    }
+    @media (max-width: 1200px) {
+      .toc { display: none; }
+      .content-area { padding-right: 0 !important; }
+    }
   </style>
 </head>
 <body>
@@ -984,7 +1028,7 @@
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Everything you need to install DOE and Claude Code &mdash; even if you've never used a <a href="glossary.html#terminal-dev">terminal</a> before.</p>
 
         <!-- Prerequisites -->
-        <h2>Prerequisites</h2>
+        <h2 id="prerequisites">Prerequisites</h2>
         <p>Before you can use DOE, you need three things set up on your machine. Each card below explains what it is, why you need it, and how to get it.</p>
 
         <div class="card-grid cols-3">
@@ -1043,7 +1087,7 @@
         </details>
 
         <!-- Choose Your Setup -->
-        <h2>Choose Your Setup</h2>
+        <h2 id="setup">Choose Your Setup</h2>
         <p>There are two paths to get DOE running. Both give you the same result &mdash; a project folder with all the configuration, commands, and scripts that make DOE work.</p>
 
         <div class="content-tabs" data-tab-group="setup-choice">
@@ -1165,7 +1209,7 @@ bash setup.sh</pre></div>
         </div>
 
         <!-- Configure Your Project -->
-        <h2>Configure Your Project</h2>
+        <h2 id="configure">Configure Your Project</h2>
 
         <h3>CLAUDE.md &mdash; The Project Instruction File</h3>
         <p><code>CLAUDE.md</code> is the single most important file in DOE. It's the instruction manual that Claude reads at the start of every conversation. It controls how Claude behaves: what rules it follows, what it's allowed to do, and where it puts files.</p>
@@ -1239,7 +1283,7 @@ learnings.md        # Project learnings log
         <p>If your project uses external APIs, store the keys in a <code>.env</code> file in the project root. This file is automatically excluded from Git so your secrets stay safe. Claude Code reads <code>.env</code> automatically when running execution scripts.</p>
 
         <!-- Your First Command -->
-        <h2>Your First Command</h2>
+        <h2 id="first-command">Your First Command</h2>
 
         <p>With everything installed and configured, start Claude Code and run your first DOE command:</p>
 
@@ -1360,6 +1404,14 @@ learnings.md        # Project learnings log
       </div><!-- /content -->
     </div><!-- /content-area -->
 
+    <nav class="toc">
+      <div class="toc-title">On this page</div>
+      <a href="#prerequisites" class="toc-link">Prerequisites</a>
+      <a href="#setup" class="toc-link">Choose Your Setup</a>
+      <a href="#configure" class="toc-link">Configure Your Project</a>
+      <a href="#first-command" class="toc-link">Your First Command</a>
+    </nav>
+
   </div><!-- /layout -->
 
   <script>
@@ -1433,6 +1485,28 @@ learnings.md        # Project learnings log
 
       initTabGroup('.env-tabs', 'env-tab-btn', 'env-tab-panel');
       initTabGroup('.content-tabs', 'content-tab-btn', 'content-tab-panel');
+    })();
+
+    // TOC scrollspy
+    (function() {
+      var tocLinks = document.querySelectorAll('.toc-link');
+      var sections = [];
+      tocLinks.forEach(function(link) {
+        var id = link.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+      });
+      if (!sections.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(l) { l.classList.remove('active'); });
+            var match = sections.find(function(s) { return s.id === entry.target.id; });
+            if (match) match.link.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -70% 0px' });
+      sections.forEach(function(s) { observer.observe(s.el); });
     })();
   </script>
 

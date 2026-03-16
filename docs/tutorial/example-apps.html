@@ -30,6 +30,7 @@
       --accent-blue: #3B82F6;
       --accent-rose: #F43F5E;
       --sidebar-w: 260px;
+      --toc-w: 220px;
       --content-max: 720px;
       --radius: 8px;
       --radius-lg: 12px;
@@ -906,6 +907,49 @@
         width: 32px;
       }
     }
+
+    /* ── Right-side TOC ── */
+    .toc {
+      width: var(--toc-w);
+      min-width: var(--toc-w);
+      position: fixed;
+      right: 24px;
+      top: 120px;
+      font-size: 12px;
+    }
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .toc-link {
+      display: block;
+      padding: 3px 0 3px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-left: 2px solid var(--border);
+      transition: all 0.1s;
+    }
+    .toc-link:hover {
+      color: var(--text-secondary);
+      border-color: var(--text-muted);
+    }
+    .toc-link.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    @media (min-width: 1201px) {
+      .content-area { padding-right: calc(var(--toc-w) + 48px); }
+    }
+    @media (max-width: 1200px) {
+      .toc { display: none; }
+      .content-area { padding-right: 0 !important; }
+    }
   </style>
 </head>
 <body>
@@ -1027,7 +1071,7 @@
         <!-- 1. Recipe Book                                                 -->
         <!-- ============================================================= -->
         <div class="app-section" id="recipe">
-          <h2>Recipe Book</h2>
+          <h2 id="recipe-book">Recipe Book</h2>
 
           <div class="app-meta-card">
             <div class="app-tagline">"Making it up as I go"</div>
@@ -1306,7 +1350,7 @@
         <!-- 2. Fitness Tracker                                             -->
         <!-- ============================================================= -->
         <div class="app-section" id="fitness">
-          <h2>Fitness Tracker</h2>
+          <h2 id="fitness-tracker">Fitness Tracker</h2>
 
           <div class="app-meta-card">
             <div class="app-tagline">"I have a rough idea"</div>
@@ -1483,7 +1527,7 @@
         <!-- 3. Local Events Board                                          -->
         <!-- ============================================================= -->
         <div class="app-section" id="events">
-          <h2>Local Events Board</h2>
+          <h2 id="events-board">Local Events Board</h2>
 
           <div class="app-meta-card">
             <div class="app-tagline">"I have a detailed spec"</div>
@@ -1760,7 +1804,7 @@
         <!-- 4. Team Dashboard                                              -->
         <!-- ============================================================= -->
         <div class="app-section" id="dashboard">
-          <h2>Team Dashboard</h2>
+          <h2 id="team-dashboard">Team Dashboard</h2>
 
           <div class="app-meta-card">
             <div class="app-tagline">"Full spec with roadmap"</div>
@@ -2048,6 +2092,14 @@
       </div><!-- /content -->
     </div><!-- /content-area -->
 
+    <nav class="toc">
+      <div class="toc-title">On this page</div>
+      <a href="#recipe-book" class="toc-link">Recipe Book</a>
+      <a href="#fitness-tracker" class="toc-link">Fitness Tracker</a>
+      <a href="#events-board" class="toc-link">Local Events Board</a>
+      <a href="#team-dashboard" class="toc-link">Team Dashboard</a>
+    </nav>
+
   </div><!-- /layout -->
 
   <script>
@@ -2120,6 +2172,28 @@
       }
 
       initTabGroup('.env-tabs', 'env-tab-btn', 'env-tab-panel');
+    })();
+
+    // TOC scrollspy
+    (function() {
+      var tocLinks = document.querySelectorAll('.toc-link');
+      var sections = [];
+      tocLinks.forEach(function(link) {
+        var id = link.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+      });
+      if (!sections.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(l) { l.classList.remove('active'); });
+            var match = sections.find(function(s) { return s.id === entry.target.id; });
+            if (match) match.link.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -70% 0px' });
+      sections.forEach(function(s) { observer.observe(s.el); });
     })();
   </script>
 

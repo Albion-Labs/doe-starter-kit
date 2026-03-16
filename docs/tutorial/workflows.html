@@ -30,6 +30,7 @@
       --accent-blue: #3B82F6;
       --accent-rose: #F43F5E;
       --sidebar-w: 260px;
+      --toc-w: 220px;
       --content-max: 720px;
       --radius: 8px;
       --radius-lg: 12px;
@@ -977,6 +978,49 @@
         width: 32px;
       }
     }
+
+    /* ── Right-side TOC ── */
+    .toc {
+      width: var(--toc-w);
+      min-width: var(--toc-w);
+      position: fixed;
+      right: 24px;
+      top: 120px;
+      font-size: 12px;
+    }
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .toc-link {
+      display: block;
+      padding: 3px 0 3px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-left: 2px solid var(--border);
+      transition: all 0.1s;
+    }
+    .toc-link:hover {
+      color: var(--text-secondary);
+      border-color: var(--text-muted);
+    }
+    .toc-link.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    @media (min-width: 1201px) {
+      .content-area { padding-right: calc(var(--toc-w) + 48px); }
+    }
+    @media (max-width: 1200px) {
+      .toc { display: none; }
+      .content-area { padding-right: 0 !important; }
+    }
   </style>
 </head>
 <body>
@@ -1063,7 +1107,7 @@
         <p>Not every project starts the same way. Sometimes you have no idea what you&rsquo;re building. Sometimes you have bullet points. Sometimes you have a full spec. DOE handles all three &mdash; the workflow adjusts to match your starting point, then converges on the same build pipeline once the plan is ready.</p>
 
         <!-- ── Choose Your Starting Point ── -->
-        <h2>Choose Your Starting Point</h2>
+        <h2 id="starting-point">Choose Your Starting Point</h2>
         <p>Pick the path that matches where you are right now. All three paths lead to the same place: a plan in <code>.claude/plans/</code> with contracted steps in <code>todo.md</code>, ready to build.</p>
 
         <div class="content-tabs" data-tab-group="starting-point">
@@ -1419,7 +1463,7 @@ by name or category.</span>
         <p>From here, Claude builds step by step, verifying contracts as it goes. You don&rsquo;t need to manage the process &mdash; Claude follows the plan and contracts automatically. You&rsquo;ll be called in for <code>[manual]</code> checks at the right moments, and everything else runs on autopilot.</p>
 
         <!-- ── Prompting Guide ── -->
-        <h2>Getting Better Results</h2>
+        <h2 id="better-results">Getting Better Results</h2>
         <p>The way you describe what you want directly affects what Claude builds. A vague prompt gets a vague result. A specific prompt gets something closer to what you actually need. But &ldquo;specific&rdquo; doesn&rsquo;t mean &ldquo;write a technical spec&rdquo; &mdash; it means giving Claude enough context to either build the right thing or ask the right questions.</p>
 
         <h3>Before and After: Three Examples</h3>
@@ -1513,7 +1557,7 @@ by name or category.</span>
         </div>
 
         <!-- ── Feature Lifecycle ── -->
-        <h2>Feature Lifecycle</h2>
+        <h2 id="feature-lifecycle">Feature Lifecycle</h2>
         <p>Regardless of which path you start from, every feature follows the same lifecycle. The path determines how you enter the pipeline &mdash; the pipeline itself is always the same.</p>
 
         <div class="lifecycle-flow">
@@ -1585,6 +1629,14 @@ by name or category.</span>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
+
+    <nav class="toc">
+      <div class="toc-title">On this page</div>
+      <a href="#starting-point" class="toc-link">Choose Your Starting Point</a>
+      <a href="#planning" class="toc-link">From Idea to Build-Ready Plan</a>
+      <a href="#better-results" class="toc-link">Getting Better Results</a>
+      <a href="#feature-lifecycle" class="toc-link">Feature Lifecycle</a>
+    </nav>
 
   </div><!-- /layout -->
 
@@ -1659,6 +1711,28 @@ by name or category.</span>
 
       initTabGroup('.content-tabs', 'content-tab-btn', 'content-tab-panel');
       initTabGroup('.env-tabs', 'env-tab-btn', 'env-tab-panel');
+    })();
+
+    // TOC scrollspy
+    (function() {
+      var tocLinks = document.querySelectorAll('.toc-link');
+      var sections = [];
+      tocLinks.forEach(function(link) {
+        var id = link.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+      });
+      if (!sections.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(l) { l.classList.remove('active'); });
+            var match = sections.find(function(s) { return s.id === entry.target.id; });
+            if (match) match.link.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -70% 0px' });
+      sections.forEach(function(s) { observer.observe(s.el); });
     })();
   </script>
 
