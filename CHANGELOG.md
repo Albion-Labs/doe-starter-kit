@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.33.0] — 2026-03-16
+
+### Added
+- `docs/tutorial/multi-agent.html` — new Multi-Agent Workflows tutorial page covering waves, /agent-launch, /agent-status, worked example, merge process, and common pitfalls
+- `docs/tutorial/faq.html` — new FAQ page with 12 Q&A pairs across 3 categories (Setup, Session, Framework problems) with cross-links to relevant pages
+- Right-side Table of Contents (TOC) with scrollspy on 3 content-heavy pages: commands, daily-flow, context
+- Git basics orientation expandable section in getting-started page
+
+### Changed
+- Footer version updated to v1.32.0 across all tutorial pages
+- Sidebar navigation updated across all 13 pages with multi-agent and FAQ links
+- Pagination chain updated: workflows → multi-agent → example-apps, tips → faq → glossary
+- Post-sync checklist added to starter-kit-sync directive for footer version tracking
+
 ## [v1.32.0] — 2026-03-15
 
 ### Added

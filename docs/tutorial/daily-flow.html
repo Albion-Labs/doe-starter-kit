@@ -30,6 +30,7 @@
       --accent-blue: #3B82F6;
       --accent-rose: #F43F5E;
       --sidebar-w: 260px;
+      --toc-w: 220px;
       --content-max: 720px;
       --radius: 8px;
       --radius-lg: 12px;
@@ -986,6 +987,49 @@
         width: 32px;
       }
     }
+
+    /* ── Right-side TOC ── */
+    .toc {
+      width: var(--toc-w);
+      min-width: var(--toc-w);
+      position: fixed;
+      right: 24px;
+      top: 120px;
+      font-size: 12px;
+    }
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .toc-link {
+      display: block;
+      padding: 3px 0 3px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-left: 2px solid var(--border);
+      transition: all 0.1s;
+    }
+    .toc-link:hover {
+      color: var(--text-secondary);
+      border-color: var(--text-muted);
+    }
+    .toc-link.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    @media (min-width: 1201px) {
+      .content-area { padding-right: calc(var(--toc-w) + 48px); }
+    }
+    @media (max-width: 1200px) {
+      .toc { display: none; }
+      .content-area { padding-right: 0 !important; }
+    }
   </style>
 </head>
 <body>
@@ -1041,6 +1085,7 @@
           <a class="sidebar-link active" href="daily-flow.html">A Day with DOE</a>
           <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
           <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+          <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
         </div>
 
         <div class="sidebar-section">
@@ -1054,6 +1099,7 @@
         <div class="sidebar-section">
           <div class="sidebar-section-title">Reference</div>
           <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link" href="faq.html">FAQ</a>
           <a class="sidebar-link" href="glossary.html">Glossary</a>
         </div>
 
@@ -1111,7 +1157,7 @@
         </div>
 
         <!-- Morning -->
-        <h2>Morning &mdash; Starting Your Day</h2>
+        <h2 id="morning">Morning &mdash; Starting Your Day</h2>
 
         <p>Open your project, launch Claude Code, and run <code>/stand-up</code>. This is your daily kick-off &mdash; Claude reads <code>STATE.md</code> and <code>todo.md</code>, then presents a briefing card.</p>
 
@@ -1256,7 +1302,7 @@
         </div>
 
         <!-- Working -->
-        <h2>Working &mdash; Building in Plain English</h2>
+        <h2 id="working">Working &mdash; Building in Plain English</h2>
 
         <p>Once you've approved the stand-up plan, just start talking to Claude. Describe what you want in plain English. No special syntax, no commands &mdash; conversation is the interface.</p>
 
@@ -1363,7 +1409,7 @@
         <p>Each piece of work gets verified against its contract and committed. You can follow the plan step by step or do freeform work &mdash; mix them freely in the same session.</p>
 
         <!-- Sitrep -->
-        <h2>Midday &mdash; Quick Status Check</h2>
+        <h2 id="midday">Midday &mdash; Quick Status Check</h2>
 
         <p>At any point during a session, run <code>/sitrep</code> to see a compact progress snapshot. Completely read-only &mdash; safe to run as many times as you like.</p>
 
@@ -1476,7 +1522,7 @@
         <p>Use <code>/sitrep</code> when you've lost track of where you are, before a meeting, or whenever you want a quick sense of progress. It doesn't update anything &mdash; just shows the current state.</p>
 
         <!-- Wrap -->
-        <h2>Session End &mdash; Saving Your Progress</h2>
+        <h2 id="session-end">Session End &mdash; Saving Your Progress</h2>
 
         <p>Before stepping away from a session &mdash; lunch, a meeting, end of the day &mdash; run <code>/wrap</code>. Think of it as saving your game.</p>
 
@@ -1606,7 +1652,7 @@
         </div>
 
         <!-- Crack-on -->
-        <h2>After a Break &mdash; Resume with /crack-on</h2>
+        <h2 id="after-break">After a Break &mdash; Resume with /crack-on</h2>
 
         <p>When you return after a break and the context window has been cleared &mdash; whether from starting a new conversation, using <code>/clear</code>, or coming back from lunch &mdash; use <code>/crack-on</code> to <strong>resume</strong>.</p>
 
@@ -1741,7 +1787,7 @@
         </div>
 
         <!-- End of Day -->
-        <h2>End of Day &mdash; Review Everything</h2>
+        <h2 id="end-of-day">End of Day &mdash; Review Everything</h2>
 
         <p>After your final <code>/wrap</code>, run <code>/eod</code> to get a summary of everything you did across all sessions today.</p>
 
@@ -1866,7 +1912,7 @@
         <p><code>/eod</code> shows what shipped, what's in progress, a timeline of sessions, and aggregate metrics for the day. Useful for personal records, sharing with collaborators, or just the satisfaction of seeing a productive day laid out clearly.</p>
 
         <!-- Weekly -->
-        <h2>Weekly &mdash; Portfolio View</h2>
+        <h2 id="weekly">Weekly &mdash; Portfolio View</h2>
 
         <p>Once a week (or whenever you want perspective across projects), run <code>/hq</code> for a full project dashboard.</p>
 
@@ -1991,7 +2037,7 @@
         <p>Use the weekly check-in to review <code>ROADMAP.md</code> &mdash; are features moving from "Up Next" to "Complete"? Check <code>learnings.md</code> for patterns. Reassess priorities: does the plan still make sense?</p>
 
         <!-- Command Reference -->
-        <h2>Command Reference</h2>
+        <h2 id="command-ref">Command Reference</h2>
 
         <p>The six commands that cover the full daily cycle.</p>
 
@@ -2044,7 +2090,7 @@
         </div>
 
         <!-- Key Habits -->
-        <h2>Key Habits</h2>
+        <h2 id="key-habits">Key Habits</h2>
 
         <p>The habits that make the biggest difference, distilled from the daily routine above.</p>
 
@@ -2092,10 +2138,23 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.30.1</footer>
+        <footer class="site-footer">DOE Starter Kit v1.32.0</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
+
+    <nav class="toc">
+      <div class="toc-title">On this page</div>
+      <a href="#morning" class="toc-link">Starting Your Day</a>
+      <a href="#working" class="toc-link">Building in Plain English</a>
+      <a href="#midday" class="toc-link">Quick Status Check</a>
+      <a href="#session-end" class="toc-link">Saving Your Progress</a>
+      <a href="#after-break" class="toc-link">Resume with /crack-on</a>
+      <a href="#end-of-day" class="toc-link">Review Everything</a>
+      <a href="#weekly" class="toc-link">Portfolio View</a>
+      <a href="#command-ref" class="toc-link">Command Reference</a>
+      <a href="#key-habits" class="toc-link">Key Habits</a>
+    </nav>
 
   </div><!-- /layout -->
 
@@ -2169,6 +2228,28 @@
       }
 
       initTabGroup('.env-tabs', 'env-tab-btn', 'env-tab-panel');
+    })();
+
+    // TOC scrollspy
+    (function() {
+      var tocLinks = document.querySelectorAll('.toc-link');
+      var sections = [];
+      tocLinks.forEach(function(link) {
+        var id = link.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+      });
+      if (!sections.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(l) { l.classList.remove('active'); });
+            var match = sections.find(function(s) { return s.id === entry.target.id; });
+            if (match) match.link.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -70% 0px' });
+      sections.forEach(function(s) { observer.observe(s.el); });
     })();
   </script>
 

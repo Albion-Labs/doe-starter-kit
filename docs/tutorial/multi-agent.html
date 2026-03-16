@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DOE Architecture — DOE Starter Kit</title>
+  <title>Multi-Agent Workflows — DOE Starter Kit</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -286,7 +286,6 @@
       gap: 16px;
       margin-bottom: 24px;
     }
-    .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
 
     .m-card {
       border: 1px solid var(--border);
@@ -394,6 +393,18 @@
       color: #166534;
     }
     [data-theme="dark"] .callout.tip { border-color: #064E3B; color: #6EE7B7; }
+    .callout.info {
+      background: var(--bg-callout-info);
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+    [data-theme="dark"] .callout.info { border-color: #1E3A5F; color: #93C5FD; }
+    .callout.warn {
+      background: var(--bg-callout-warn);
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+    [data-theme="dark"] .callout.warn { border-color: #78350F; color: #FCD34D; }
     .callout strong { font-weight: 600; }
     .callout a { color: inherit; font-weight: 500; }
     .callout .callout-body { color: inherit; }
@@ -448,22 +459,6 @@
     }
     .step a { color: var(--accent); }
 
-    /* ── Code block ── */
-    .code-block {
-      background: var(--bg-code);
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      margin: 12px 0 16px;
-      overflow-x: auto;
-    }
-    .code-block pre {
-      margin: 0;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      line-height: 1.6;
-      color: #CBD5E1;
-    }
-
     /* ── Plain English box ── */
     .plain-english {
       background: linear-gradient(135deg, var(--accent-light), var(--bg-card));
@@ -476,7 +471,7 @@
       font-size: 13px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
       color: var(--accent);
       margin-bottom: 8px;
     }
@@ -484,22 +479,6 @@
       color: var(--text-secondary);
       font-size: 14px;
       margin: 0;
-    }
-
-    /* ── Diagram container ── */
-    .diagram {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 28px 24px;
-      margin: 24px 0;
-      text-align: center;
-      box-shadow: var(--shadow-card);
-      overflow-x: auto;
-    }
-    .diagram svg {
-      max-width: 100%;
-      height: auto;
     }
 
     /* ── Pagination ── */
@@ -559,11 +538,6 @@
 
     @media (max-width: 600px) {
       .card-grid { grid-template-columns: 1fr; }
-      .card-grid.cols-3 { grid-template-columns: 1fr; }
-    }
-
-    @media (min-width: 601px) and (max-width: 900px) {
-      .card-grid.cols-3 { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -596,7 +570,7 @@
 
         <div class="sidebar-section">
           <div class="sidebar-section-title">Core Concepts</div>
-          <a class="sidebar-link active" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
           <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
           <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
           <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
@@ -619,8 +593,8 @@
           <div class="sidebar-section-title">Workflows</div>
           <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
           <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
-          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
-          <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
+          <a class="sidebar-link nested" href="workflows.html#planning">Planning &amp; Prompts</a>
+          <a class="sidebar-link active" href="multi-agent.html">Multi-Agent</a>
         </div>
 
         <div class="sidebar-section">
@@ -645,207 +619,225 @@
     <div class="content-area">
       <div class="content">
 
-        <h1>DOE Architecture</h1>
-        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Understanding the three-layer system that keeps AI-assisted development organised.</p>
+        <h1>Multi-Agent Workflows</h1>
+        <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Run parallel Claude sessions to build faster.</p>
 
-        <!-- The Three Layers -->
-        <h2>The Three Layers</h2>
-        <p>DOE stands for <strong>Directive, Orchestration, Execution</strong>. It separates your project into three layers, each with a specific job. The AI handles reasoning (where it excels). Deterministic code handles mechanical tasks (where AI is unreliable). This separation is the foundation of everything DOE does.</p>
-
-        <!-- SVG Diagram -->
-        <div class="diagram">
-          <svg viewBox="0 0 520 340" width="520" height="340" xmlns="http://www.w3.org/2000/svg">
-            <!-- Directive layer -->
-            <rect x="60" y="20" width="400" height="70" rx="12" fill="#6366F1" opacity="0.12" stroke="#6366F1" stroke-width="2"/>
-            <text x="260" y="48" text-anchor="middle" font-size="15" font-weight="700" fill="#6366F1">DIRECTIVE</text>
-            <text x="260" y="72" text-anchor="middle" font-size="12" fill="var(--text-secondary)" opacity="0.8">Plain-English instructions in directives/</text>
-
-            <!-- Arrow 1 -->
-            <line x1="260" y1="90" x2="260" y2="130" stroke="var(--text-muted)" stroke-width="2" opacity="0.4"/>
-            <polygon points="252,126 260,138 268,126" fill="var(--text-muted)" opacity="0.4"/>
-            <text x="290" y="118" font-size="11" fill="var(--text-muted)" font-style="italic">reads</text>
-
-            <!-- Orchestration layer -->
-            <rect x="60" y="140" width="400" height="70" rx="12" fill="#F59E0B" opacity="0.12" stroke="#F59E0B" stroke-width="2"/>
-            <text x="260" y="168" text-anchor="middle" font-size="15" font-weight="700" fill="#F59E0B">ORCHESTRATION</text>
-            <text x="260" y="192" text-anchor="middle" font-size="12" fill="var(--text-secondary)" opacity="0.8">Claude &mdash; the intelligent decision-maker</text>
-
-            <!-- Arrow 2 -->
-            <line x1="260" y1="210" x2="260" y2="250" stroke="var(--text-muted)" stroke-width="2" opacity="0.4"/>
-            <polygon points="252,246 260,258 268,246" fill="var(--text-muted)" opacity="0.4"/>
-            <text x="290" y="238" font-size="11" fill="var(--text-muted)" font-style="italic">calls</text>
-
-            <!-- Execution layer -->
-            <rect x="60" y="260" width="400" height="70" rx="12" fill="#10B981" opacity="0.12" stroke="#10B981" stroke-width="2"/>
-            <text x="260" y="288" text-anchor="middle" font-size="15" font-weight="700" fill="#10B981">EXECUTION</text>
-            <text x="260" y="312" text-anchor="middle" font-size="12" fill="var(--text-secondary)" opacity="0.8">Deterministic Python scripts in execution/</text>
-          </svg>
-        </div>
-
-        <div class="card-grid cols-3">
-          <div class="m-card" style="cursor: default;">
-            <div class="card-icon indigo">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            </div>
-            <h4>Directive</h4>
-            <p>Plain-English instructions stored in directives/. Like SOPs for how to handle specific tasks. No code here &mdash; just written intent.</p>
-          </div>
-          <div class="m-card" style="cursor: default;">
-            <div class="card-icon amber">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            </div>
-            <h4>Orchestration</h4>
-            <p>Claude itself. Reads the directives, decides what to do, calls execution scripts in the right order, and handles errors.</p>
-          </div>
-          <div class="m-card" style="cursor: default;">
-            <div class="card-icon green">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            </div>
-            <h4>Execution</h4>
-            <p>Deterministic Python scripts for API calls, data transforms, file operations. These run the same way every time &mdash; no hallucination risk.</p>
-          </div>
-        </div>
+        <!-- ── What Are Waves ── -->
+        <h2 id="waves">What Are Waves</h2>
 
         <div class="plain-english">
           <h4>In Plain English</h4>
-          <p><a href="glossary.html#directive">Directives</a> are written instructions. Claude reads them and decides what to do. <a href="glossary.html#execution-script">Execution scripts</a> do the actual work. The separation means the AI handles the thinking, deterministic code handles the doing &mdash; no hallucinated file operations.</p>
+          <p>A wave is like having multiple Claude assistants working simultaneously &mdash; each in their own terminal, each on a different task. A coordinator manages the work from a separate terminal. When everyone&rsquo;s done, the coordinator merges the results back together.</p>
         </div>
 
-        <!-- Directives -->
-        <h2 id="directives">Directives</h2>
-        <p>Directives are plain-English Markdown files in the <code>directives/</code> folder. Each one is an SOP (Standard Operating Procedure) for a specific type of task &mdash; how to handle data imports, how to deploy, how to write tests, etc.</p>
-        <p>They define goals, inputs, tools to use, expected outputs, and edge cases. Claude reads the relevant directive before starting a task, so it knows the rules and constraints without you having to repeat them every session.</p>
-        <p>Directives are written by humans. They don't contain code &mdash; just clear instructions. When a directive is wrong or incomplete, you update it, and every future session automatically follows the new rules.</p>
+        <p>Waves split independent tasks across terminals. Each agent gets an isolated copy of the code (a &ldquo;worktree&rdquo;), works on its task without affecting the others, and the coordinator brings all the changes back together when everyone finishes. Think of it as a team of builders working on different rooms of the same house &mdash; they don&rsquo;t need to share tools or get in each other&rsquo;s way.</p>
 
-        <div class="code-block"><pre># directives/data-import.md
+        <p>The key requirement is <strong>independence</strong>. Each task in a wave must touch different files. If two tasks need to edit the same file, they can&rsquo;t run in parallel &mdash; one must finish before the other starts.</p>
 
-## Goal
-Import election results from the Nomis API into src/data/
-
-## Inputs
-- Nomis API endpoint (in .env as NOMIS_URL)
-- Census table ID passed as argument
-
-## Process
-1. Run execution/import_nomis.py with the table ID
-2. Validate the output CSV has expected columns
-3. Log row count to learnings.md if significantly different from last import
-
-## Edge Cases
-- API returns paginated results: script handles this automatically
-- Rate limiting: script retries with exponential backoff</pre></div>
-
-        <!-- Execution Scripts -->
-        <h2 id="execution">Execution Scripts</h2>
-        <p>Execution scripts live in <code>execution/</code> and are deterministic Python files. They handle the mechanical work that AI shouldn't improvise: API calls, data transforms, file operations, builds, and verification checks.</p>
-        <p>The key property is <strong>determinism</strong>: given the same inputs, an execution script produces the same output every time. There's no creativity, no judgment, and no hallucination risk. If a script worked yesterday with the same inputs, it will work today.</p>
-        <p>When no execution script exists for a task, Claude creates a new one following the patterns in existing scripts &mdash; same structure, same error handling, same logging. The new script becomes part of the toolkit for next time.</p>
-
-        <!-- Contracts -->
-        <h2 id="contracts">Contracts</h2>
-        <p>A <a href="glossary.html#contract">contract</a> is a checklist attached to every task in <code>tasks/todo.md</code>. Each item is a specific, testable criterion &mdash; not vague ("looks good") but concrete ("the file exists and contains this function").</p>
-        <p>There are two types. <strong>[auto]</strong> criteria are verified by running a command or inspecting a file &mdash; Claude runs these itself after completing the work. If a check fails, it fixes the code and re-checks, up to three attempts. <strong>[manual]</strong> criteria need human eyes &mdash; does the layout look right? Does the interaction feel smooth?</p>
-
-        <div class="plain-english">
-          <h4>In Plain English</h4>
-          <p>A contract is a checklist attached to every task. Before Claude says "done", it runs each check to prove the work actually functions. This stops Claude from confidently claiming something works when it doesn't.</p>
-        </div>
-
-        <p>Here's what a contract looks like in <code>tasks/todo.md</code>:</p>
-
-        <div class="code-block"><pre>### Step 3: Add search to recipe list
-Contract:
-- [x] [auto] Verify: file: src/recipes.js contains searchFunction
-- [x] [auto] Verify: run: node tests/search.test.js
-- [ ] [manual] Search feels responsive, results update as you type</pre></div>
-
-        <p>When all auto criteria pass, the feature moves to <strong>Awaiting Sign-off</strong> &mdash; not straight to Done. Manual items are presented for you to test, and the feature only moves to Done once everything passes.</p>
-
-        <!-- Key Files -->
-        <h2>Key Files</h2>
+        <!-- ── When to Use Waves vs Single Session ── -->
+        <h2 id="when">When to Use Waves vs Single Session</h2>
 
         <div class="card-grid">
-          <div class="m-card" style="cursor: default;">
-            <div class="card-icon indigo">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </div>
-            <h4>CLAUDE.md</h4>
-            <p>The project's constitution. Permanent rules, guardrails, directory structure, and triggers. Claude reads this at the start of every session.</p>
+          <div class="m-card">
+            <div class="card-icon amber">&#9881;</div>
+            <h4>Use a Single Session When</h4>
+            <p>Tasks depend on each other. You&rsquo;re exploring or designing. There are fewer than 3 tasks. Tasks share the same files.</p>
           </div>
-          <div class="m-card" style="cursor: default;">
-            <div class="card-icon rose">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-            </div>
-            <h4>STATE.md</h4>
-            <p>Short-term memory. Current position, last session summary, blockers, and what to do next. Updated by /wrap at the end of each session.</p>
-          </div>
-          <div class="m-card" style="cursor: default;">
-            <div class="card-icon blue">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            </div>
-            <h4>learnings.md</h4>
-            <p>Long-term memory. Patterns discovered, things that went wrong and how they were fixed. Grows over the project's lifetime.</p>
-          </div>
-          <div class="m-card" style="cursor: default;">
-            <div class="card-icon green">
-              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-            </div>
-            <h4>tasks/todo.md</h4>
-            <p>Active work tracker. Tasks, steps, contracts, and progress. The source of truth for what's been done and what's next.</p>
+          <div class="m-card">
+            <div class="card-icon indigo">&#9889;</div>
+            <h4>Use Waves When</h4>
+            <p>You have 3+ independent tasks. Tasks touch different files. You want to finish faster. Each task has clear contracts.</p>
           </div>
         </div>
-
-        <!-- Self-Annealing -->
-        <h2 id="self-annealing">Self-Annealing</h2>
-        <p><a href="glossary.html#self-annealing">Self-annealing</a> is DOE's system for learning from failure. When something goes wrong, the framework doesn't just fix the immediate problem &mdash; it records what happened, why it happened, and how to prevent it next time. Over time, the project builds up immunity to its own failure patterns.</p>
-        <p>The name comes from metallurgy: annealing heats metal and cools it slowly to remove internal stresses. Each cycle makes the metal stronger. DOE does the same with software projects &mdash; each failure, properly recorded, makes the system less likely to fail that way again.</p>
-
-        <div class="plain-english">
-          <h4>In Plain English</h4>
-          <p>When something fails, the system doesn't just fix it &mdash; it writes down what went wrong and why, so the same failure can't happen again. Over time, the system accumulates immunity to its own mistakes.</p>
-        </div>
-
-        <p>A fresh DOE project has no learnings. Early sessions have more failures as patterns get discovered. But after 20 sessions, <code>learnings.md</code> contains the most common gotchas. After 50 sessions, Claude navigates the problem space with real expertise. The failure rate drops because the patterns are already known.</p>
-        <p>Routine failures get a one-line entry with a source tag:</p>
-        <div class="code-block"><pre>- macOS sed requires empty backup arg: sed -i '' '...'. [retro: data-pipeline]
-- Nomis API pagination starts at 0, not 1. [retro: census-import]</pre></div>
-
-        <p>Significant failures (cost &gt;30 minutes, broke something important, or recurred) get a structured entry with four parts: What happened, Root cause, Fix applied, Prevention added.</p>
-
-        <!-- AI Concepts -->
-        <h2>AI Concepts You'll Encounter</h2>
-        <p>DOE builds on top of Claude Code. To use DOE effectively, it helps to understand a few core concepts that affect how you work day to day. None of these require technical background &mdash; just a basic understanding of what's happening under the hood.</p>
-
-        <h3>Context Window</h3>
-        <p>Claude works within a context window &mdash; a limited amount of text it can see at once. Understanding how this works is essential for productive sessions. This is the single most important operational concept in AI-assisted development. <a href="context.html">Read the full guide: Managing Context</a>.</p>
-
-        <h3>Models</h3>
-        <p>Claude comes in different versions (models) &mdash; <strong>Opus</strong> (most capable, slower), <strong>Sonnet</strong> (balanced), and <strong>Haiku</strong> (fastest, simplest). Some tasks need deep reasoning &mdash; architecture decisions, diagnosing subtle bugs. These benefit from Opus. Other tasks are mechanical &mdash; renaming files, running a known script. These work fine with Sonnet or Haiku.</p>
-        <p>DOE plan files recommend a model and thinking level for each step, so you know when to switch.</p>
-
-        <h3>Tokens</h3>
-        <p>The unit Claude reads and writes in. Roughly 4 characters equals 1 token. Both your input (what you say plus file contents) and Claude's output (responses plus code) consume tokens. Large files eat tokens fast &mdash; a 1,000-line source file might consume thousands of tokens just by being read.</p>
-        <p>DOE's execution scripts run outside the context window entirely &mdash; they don't cost tokens. Only the script's output comes back into the conversation.</p>
-
-        <h3>Subagents</h3>
-        <p>Claude can spawn helper "agents" to handle specific tasks. Each <a href="glossary.html#subagent">subagent</a> gets its own context window and works independently, then reports back with a summary. This keeps the main conversation focused and prevents context window bloat. A subagent might read 10 files and generate 200 lines of code, but the main conversation only sees a brief summary: "Created the search component in 3 files, all tests pass."</p>
 
         <div class="callout tip">
           <span class="callout-icon">&#9432;</span>
           <div class="callout-body">
-            <strong>Next:</strong> See every command explained with when and why to use it &mdash; <a href="commands.html">Commands</a>.
+            <strong>Rule of thumb:</strong> If you can draw clear lines between which files each task touches and none of them overlap, waves will speed things up. If you&rsquo;re not sure, start with a single session &mdash; you can always parallelise later once the plan is clearer.
+          </div>
+        </div>
+
+        <!-- ── How /agent-launch Works ── -->
+        <h2 id="launch">How /agent-launch Works</h2>
+
+        <p>From your coordinator terminal, run <code>/agent-launch</code>. Claude analyses your <code>todo.md</code> to find tasks that can run in parallel, then shows you what it found.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">Coordinator Terminal</span>
+          </div>
+          <pre><span class="t-prompt">$</span> <span class="t-cmd">claude</span>
+<span class="t-prompt">&gt;</span> <span class="t-cmd">/agent-launch</span>
+
+Wave Setup
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Tasks eligible for parallel work:
+  1. Step 3: Add search component    <span class="t-comment">[owns: src/js/search.js, src/styles/search.css]</span>
+  2. Step 4: Add filter sidebar       <span class="t-comment">[owns: src/js/filters.js, src/styles/filters.css]</span>
+  3. Step 5: Add sort controls        <span class="t-comment">[owns: src/js/sort.js]</span>
+
+Shared files (coordinator only): todo.md, CLAUDE.md, learnings.md
+
+Launch 3 agents? [y/n]</pre>
+        </div>
+
+        <p>Each agent gets its own terminal and its own <strong>worktree</strong> &mdash; an isolated copy of the codebase where it can make changes without interfering with other agents. The coordinator terminal stays open for monitoring progress.</p>
+
+        <p>The <code>[owns: ...]</code> tags in each task tell the system which files that agent is allowed to edit. This is the contract that prevents conflicts &mdash; no two agents can own the same file.</p>
+
+        <!-- ── How /agent-status Works ── -->
+        <h2 id="status">How /agent-status Works</h2>
+
+        <p>While agents are working, check progress from the coordinator terminal with <code>/agent-status</code>.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">Coordinator Terminal</span>
+          </div>
+          <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">/agent-status</span>
+
+Wave Status &mdash; wave-20260315-1430
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Agent 1: Step 3 (search)     <span style="color:#22C55E;">██████████</span> Complete
+  Agent 2: Step 4 (filters)    <span style="color:#3B82F6;">██████</span><span style="color:#475569;">░░░░</span> In Progress (60%)
+  Agent 3: Step 5 (sort)       <span style="color:#F59E0B;">████████</span><span style="color:#475569;">░░</span> Verifying...
+
+  Elapsed: 12m    Shared file conflicts: 0</pre>
+        </div>
+
+        <p>The dashboard shows each agent&rsquo;s progress, how long the wave has been running, and whether any shared file conflicts have been detected. You can run <code>/agent-status</code> as often as you like &mdash; it&rsquo;s a read-only check.</p>
+
+        <!-- ── Worked Example ── -->
+        <h2 id="example">Worked Example: Building 3 Independent UI Components</h2>
+
+        <p>You&rsquo;re building an app and your <code>todo.md</code> has three steps ready to build, each touching different files. Here&rsquo;s how a wave plays out from start to finish.</p>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-number">1</div>
+            <h4>Identify parallel tasks in todo.md</h4>
+            <p>Three steps are in the Queue, each with an <code>[owns: ...]</code> block listing different files. No overlap means they can run simultaneously.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">2</div>
+            <h4>Open coordinator terminal, run <code>/agent-launch</code></h4>
+            <p>Claude shows the three eligible tasks and asks for confirmation. You say yes. Three new terminal windows open automatically.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">3</div>
+            <h4>Agents work independently</h4>
+            <p>Each agent reads its task&rsquo;s contract from <code>todo.md</code>, builds the feature, runs the <code>[auto]</code> verification criteria, and commits when done. They don&rsquo;t see each other&rsquo;s work.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">4</div>
+            <h4>Monitor with <code>/agent-status</code></h4>
+            <p>From the coordinator terminal, check progress at any time. You&rsquo;ll see which agents are done, which are still building, and whether any issues have come up.</p>
+          </li>
+          <li class="step">
+            <div class="step-number">5</div>
+            <h4>Agents complete &mdash; coordinator merges</h4>
+            <p>When all agents are done, run <code>--complete</code> to verify each agent&rsquo;s work, then <code>--merge</code> to bring all changes back into the main branch. Three features built in the time it takes to build one.</p>
+          </li>
+        </ol>
+
+        <!-- ── The Merge Process ── -->
+        <h2 id="merge">The Merge Process</h2>
+
+        <p>When agents finish their work, the coordinator brings everything together in two steps.</p>
+
+        <h3>Step 1: Verify with <code>--complete</code></h3>
+        <p>Run <code>--complete</code> from the coordinator terminal. This re-runs each agent&rsquo;s contract criteria to confirm everything still passes. If an agent&rsquo;s work fails verification, you&rsquo;ll see which criteria failed and can fix them before merging.</p>
+
+        <h3>Step 2: Merge with <code>--merge</code></h3>
+        <p>Once all agents pass verification, run <code>--merge</code> to bring their changes into the main branch. The coordinator then updates shared files &mdash; marking steps complete in <code>todo.md</code>, recording any learnings, and updating <code>STATE.md</code>.</p>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">Coordinator Terminal</span>
+          </div>
+          <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">--complete</span>
+
+Verifying agent work...
+  Agent 1 (search):   4/4 criteria pass
+  Agent 2 (filters):  5/5 criteria pass
+  Agent 3 (sort):     3/3 criteria pass
+
+All agents verified. Ready to merge.
+
+<span class="t-prompt">&gt;</span> <span class="t-cmd">--merge</span>
+
+Merging wave-20260315-1430...
+  Merging agent-1 (search)...     done
+  Merging agent-2 (filters)...    done
+  Merging agent-3 (sort)...       done
+
+Cleaning up worktrees...          done
+Updating todo.md...               done
+
+Wave complete. 3 steps merged successfully.</pre>
+        </div>
+
+        <h3>Shared file rules</h3>
+        <p>During a wave, agents <strong>must not</strong> edit shared files. These include:</p>
+        <ul>
+          <li><code>todo.md</code> &mdash; task tracking (coordinator updates after merge)</li>
+          <li><code>CLAUDE.md</code> &mdash; project instructions</li>
+          <li><code>learnings.md</code> &mdash; institutional memory</li>
+          <li><code>STATE.md</code> &mdash; session state</li>
+        </ul>
+        <p>The coordinator is the only one who touches these files, and only after the merge is complete. This rule prevents merge conflicts and keeps the project&rsquo;s single source of truth intact.</p>
+
+        <!-- ── Common Pitfalls ── -->
+        <h2 id="pitfalls">Common Pitfalls</h2>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>Editing shared files from an agent.</strong> If an agent edits <code>todo.md</code>, <code>learnings.md</code>, or other shared files, the merge will conflict. The coordinator handles all shared file updates after the wave completes.
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>Tasks that depend on each other.</strong> If Step 4 needs the output of Step 3 (imports a module it creates, reads a file it generates), they cannot run in parallel. Finish Step 3 first, then launch Step 4. Dependencies must be sequential.
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>Too many agents at once.</strong> Each agent uses its own terminal and memory. Running 6+ agents on a laptop will slow everything down. The sweet spot is 3&ndash;4 agents for most machines.
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-icon">&#9888;</span>
+          <div class="callout-body">
+            <strong>Forgetting to verify before merge.</strong> Always run <code>--complete</code> before <code>--merge</code>. Merging unverified work can introduce bugs that are harder to track down after the worktrees are cleaned up.
           </div>
         </div>
 
         <!-- Pagination -->
         <div class="pagination">
-          <a href="first-session.html">
+          <a href="workflows.html">
             <div class="pg-label">Previous</div>
-            <div class="pg-title">&larr; Your First Session</div>
+            <div class="pg-title">&larr; Feature Lifecycle</div>
           </a>
-          <a href="context.html" class="next">
+          <a href="example-apps.html" class="next">
             <div class="pg-label">Next</div>
-            <div class="pg-title">Context &amp; Sessions &rarr;</div>
+            <div class="pg-title">Example Apps &rarr;</div>
           </a>
         </div>
 

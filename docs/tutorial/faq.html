@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ — DOE Starter Kit</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-body: #FFFFFF;
+      --bg-sidebar: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-code: #0F172A;
+      --bg-callout-info: #EFF6FF;
+      --bg-callout-tip: #F0FDF4;
+      --bg-callout-warn: #FFFBEB;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --text-sidebar: #334155;
+      --text-sidebar-active: #0F172A;
+      --accent: #6366F1;
+      --accent-light: #EEF2FF;
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-blue: #3B82F6;
+      --accent-rose: #F43F5E;
+      --sidebar-w: 260px;
+      --content-max: 720px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #243347;
+      --bg-code: #020617;
+      --bg-callout-info: #1E293B;
+      --bg-callout-tip: #1E293B;
+      --bg-callout-warn: #1E293B;
+      --border: #1E293B;
+      --border-light: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-sidebar: #94A3B8;
+      --text-sidebar-active: #F1F5F9;
+      --accent-light: #1E1B4B;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-brand {
+      display: block;
+      padding: 20px 16px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .sidebar-brand:hover { color: var(--accent); }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-sidebar);
+      text-decoration: none;
+      line-height: 1.4;
+      transition: background 0.1s, color 0.1s;
+    }
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-sidebar-active);
+    }
+    .sidebar-link.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .sidebar-link.nested {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* ── Dark mode button ── */
+    .theme-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg-card-hover); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Content area ── */
+    .content-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 48px;
+      min-width: 0;
+    }
+
+    .content {
+      max-width: var(--content-max);
+      width: 100%;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .content p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content ul, .content ol {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 20px;
+    }
+    .content li { margin-bottom: 6px; }
+
+    .content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .content a:hover { text-decoration: underline; }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-sidebar);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Accordion ── */
+    .accordion {
+      margin: 24px 0;
+    }
+    .accordion details {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      background: var(--bg-card);
+      transition: border-color 0.15s;
+    }
+    .accordion details[open] {
+      border-color: var(--accent);
+    }
+    .accordion summary {
+      padding: 14px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+    .accordion summary::-webkit-details-marker { display: none; }
+    .accordion summary::before {
+      content: '\25B6';
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .accordion details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .accordion summary:hover { color: var(--accent); }
+    .accordion .acc-body {
+      padding: 0 16px 16px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .accordion .acc-body p { margin-bottom: 10px; color: var(--text-secondary); }
+    .accordion .acc-body ul, .accordion .acc-body ol {
+      padding-left: 18px;
+      margin-bottom: 10px;
+      color: var(--text-secondary);
+    }
+    .accordion .acc-body li { margin-bottom: 5px; }
+    .accordion .acc-body strong { color: var(--text-primary); font-weight: 600; }
+    .accordion .acc-body code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-sidebar);
+      padding: 1px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .accordion .acc-body a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .accordion .acc-body a:hover { text-decoration: underline; }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination a {
+      flex: 1;
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+    .pagination a:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card);
+      text-decoration: none;
+    }
+    .pg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .pg-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .pagination .next { text-align: right; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Page subtitle ── */
+    .page-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .sidebar.open { transform: translateX(0); }
+      .content-area { margin-left: 0; padding: 24px 20px; padding-top: 60px; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Dark mode toggle -->
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit</a>
+
+      <div class="sidebar-nav">
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Getting Started</div>
+          <a class="sidebar-link" href="index.html">Welcome</a>
+          <a class="sidebar-link" href="getting-started.html">Installation</a>
+          <a class="sidebar-link" href="first-session.html">Your First Session</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Core Concepts</div>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
+          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
+          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="context.html">Context &amp; Sessions</a>
+          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
+          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Commands</div>
+          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
+          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
+          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+          <a class="sidebar-link nested" href="commands.html#planning">Planning &amp; Ideas</a>
+          <a class="sidebar-link nested" href="commands.html#multiagent">Advanced</a>
+          <a class="sidebar-link nested" href="commands.html#maintenance">Maintenance</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Workflows</div>
+          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
+          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
+          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+          <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Examples</div>
+          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
+          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
+          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
+          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Reference</div>
+          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link nested" href="tips-and-mistakes.html#hooks">Understanding Hooks</a>
+          <a class="sidebar-link nested" href="tips-and-mistakes.html#recovery">When Things Go Wrong</a>
+          <a class="sidebar-link active" href="faq.html">FAQ</a>
+          <a class="sidebar-link" href="glossary.html">Glossary</a>
+        </div>
+
+      </div><!-- /sidebar-nav -->
+    </nav>
+
+    <!-- ── Main content ── -->
+    <div class="content-area">
+      <div class="content">
+
+        <h1>Frequently Asked Questions</h1>
+        <p class="page-subtitle">Quick answers with links to detailed explanations</p>
+
+        <!-- Setup Problems -->
+        <h2>Setup Problems</h2>
+
+        <div class="accordion">
+
+          <details>
+            <summary>Claude won't start — "command not found"</summary>
+            <div class="acc-body">
+              <p>Claude Code needs to be installed globally. Make sure you ran <code>npm install -g @anthropic-ai/claude-code</code> and your terminal can find it.</p>
+              <p>Read more &rarr; <a href="getting-started.html">Installation guide</a></p>
+            </div>
+          </details>
+
+          <details>
+            <summary>A hook is blocking my commit</summary>
+            <div class="acc-body">
+              <p>Hooks are safety checks. Read the error message — it usually tells you exactly what to fix. Common causes: missing STATE.md update, no commit message.</p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html#hooks">Tips &amp; Mistakes — Understanding Hooks</a></p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Git errors during setup</summary>
+            <div class="acc-body">
+              <p>Make sure git is installed (<code>git --version</code>). If you see "not a git repository", run <code>git init</code> in your project folder first.</p>
+              <p>Read more &rarr; <a href="getting-started.html">Installation guide</a></p>
+            </div>
+          </details>
+
+          <details>
+            <summary>setup.sh failed or won't run</summary>
+            <div class="acc-body">
+              <p>On macOS, you may need to run <code>chmod +x setup.sh</code> first. If it fails partway through, it's safe to run again — it won't duplicate anything.</p>
+              <p>Read more &rarr; <a href="getting-started.html">Installation guide</a></p>
+            </div>
+          </details>
+
+        </div><!-- /accordion -->
+
+        <!-- Session Problems -->
+        <h2>Session Problems</h2>
+
+        <div class="accordion">
+
+          <details>
+            <summary>Context is running out mid-task</summary>
+            <div class="acc-body">
+              <p>Run <code>/wrap</code> to save progress, then start a fresh session with <code>/stand-up</code> or <code>/crack-on</code>. One task per session prevents this.</p>
+              <p>Read more &rarr; <a href="context.html">Context &amp; Sessions</a></p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Claude seems confused or is going in circles</summary>
+            <div class="acc-body">
+              <p>Run <code>/clear</code> to reset the conversation. If the problem persists, check STATE.md for stale information.</p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html#wrong">Tips &amp; Mistakes — When Things Go Wrong</a></p>
+            </div>
+          </details>
+
+          <details>
+            <summary>I lost work — Claude's changes disappeared</summary>
+            <div class="acc-body">
+              <p>Check <code>git log</code> — every completed task creates a commit (save point). Use <code>git diff</code> to see what changed.</p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html#wrong">Tips &amp; Mistakes — When Things Go Wrong</a></p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Claude made unwanted changes to my code</summary>
+            <div class="acc-body">
+              <p>Run <code>git diff</code> to see what changed, then <code>git checkout -- filename</code> to undo specific files. For bigger rollbacks, see break-glass.md.</p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html#wrong">Tips &amp; Mistakes — When Things Go Wrong</a></p>
+            </div>
+          </details>
+
+        </div><!-- /accordion -->
+
+        <!-- Framework Problems -->
+        <h2>Framework Problems</h2>
+
+        <div class="accordion">
+
+          <details>
+            <summary>Slash commands aren't working (/stand-up, /wrap, etc.)</summary>
+            <div class="acc-body">
+              <p>Commands live in <code>.claude/commands/</code>. Make sure setup.sh copied them. Run <code>ls .claude/commands/</code> to check.</p>
+              <p>Read more &rarr; <a href="commands.html">Commands reference</a></p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Files are ending up in the wrong places</summary>
+            <div class="acc-body">
+              <p>DOE has a strict directory structure. Check CLAUDE.md for the correct locations.</p>
+              <p>Read more &rarr; <a href="key-concepts.html">DOE Architecture</a></p>
+            </div>
+          </details>
+
+          <details>
+            <summary>How do I update to a newer DOE version?</summary>
+            <div class="acc-body">
+              <p>Run <code>/sync-doe</code> (if installed) or <code>/pull-doe</code> to pull the latest starter kit improvements.</p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html#sync">Tips &amp; Mistakes — sync/pull section</a></p>
+            </div>
+          </details>
+
+          <details>
+            <summary>What does this error message mean?</summary>
+            <div class="acc-body">
+              <p>Most errors include the file and line number. Read the full message before asking Claude to fix it. Claude is good at explaining errors if you paste them.</p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html">Tips &amp; Common Mistakes</a></p>
+            </div>
+          </details>
+
+        </div><!-- /accordion -->
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <a href="tips-and-mistakes.html">
+            <div class="pg-label">Previous</div>
+            <div class="pg-title">&larr; Tips &amp; Mistakes</div>
+          </a>
+          <a href="glossary.html" class="next">
+            <div class="pg-label">Next</div>
+            <div class="pg-title">Glossary &rarr;</div>
+          </a>
+        </div>
+
+        <footer class="site-footer">DOE Starter Kit v1.32.0</footer>
+
+      </div><!-- /content -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script>
+    // ── Dark mode ──
+    (function () {
+      var btn  = document.getElementById('themeBtn');
+      var html = document.documentElement;
+
+      function applyTheme(dark) {
+        if (dark) {
+          html.setAttribute('data-theme', 'dark');
+          btn.innerHTML = '&#9788;';
+        } else {
+          html.removeAttribute('data-theme');
+          btn.innerHTML = '&#9789;';
+        }
+      }
+
+      var stored = localStorage.getItem('doe-docs-theme');
+      applyTheme(stored === 'dark');
+
+      btn.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        localStorage.setItem('doe-docs-theme', isDark ? 'light' : 'dark');
+        applyTheme(!isDark);
+      });
+    })();
+
+    // ── Mobile sidebar ──
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar   = document.getElementById('sidebar');
+      var overlay   = document.getElementById('sidebarOverlay');
+
+      function open()  { sidebar.classList.add('open');    overlay.classList.add('visible'); }
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+      hamburger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? close() : open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+  </script>
+
+</body>
+</html>

@@ -30,6 +30,7 @@
       --accent-blue: #3B82F6;
       --accent-rose: #F43F5E;
       --sidebar-w: 260px;
+      --toc-w: 220px;
       --content-max: 720px;
       --radius: 8px;
       --radius-lg: 12px;
@@ -807,6 +808,49 @@
         width: 32px;
       }
     }
+
+    /* ── Right-side TOC ── */
+    .toc {
+      width: var(--toc-w);
+      min-width: var(--toc-w);
+      position: fixed;
+      right: 24px;
+      top: 120px;
+      font-size: 12px;
+    }
+    .toc-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .toc-link {
+      display: block;
+      padding: 3px 0 3px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-left: 2px solid var(--border);
+      transition: all 0.1s;
+    }
+    .toc-link:hover {
+      color: var(--text-secondary);
+      border-color: var(--text-muted);
+    }
+    .toc-link.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    @media (min-width: 1201px) {
+      .content-area { padding-right: calc(var(--toc-w) + 48px); }
+    }
+    @media (max-width: 1200px) {
+      .toc { display: none; }
+      .content-area { padding-right: 0 !important; }
+    }
   </style>
 </head>
 <body>
@@ -862,6 +906,7 @@
           <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
           <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
           <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+          <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
         </div>
 
         <div class="sidebar-section">
@@ -875,6 +920,7 @@
         <div class="sidebar-section">
           <div class="sidebar-section-title">Reference</div>
           <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link" href="faq.html">FAQ</a>
           <a class="sidebar-link" href="glossary.html">Glossary</a>
         </div>
 
@@ -1334,10 +1380,21 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.30.1</footer>
+        <footer class="site-footer">DOE Starter Kit v1.32.0</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
+
+    <nav class="toc">
+      <div class="toc-title">On this page</div>
+      <a href="#context-window" class="toc-link">What is the Context Window</a>
+      <a href="#danger-zones" class="toc-link">The Danger Zones</a>
+      <a href="#one-task" class="toc-link">Why One Task Per Session</a>
+      <a href="#compaction" class="toc-link">How Compaction Works</a>
+      <a href="#context-command" class="toc-link">The /context Command</a>
+      <a href="#wrap" class="toc-link">/wrap — Your Safety Valve</a>
+      <a href="#runs-out" class="toc-link">What To Do When Context Runs Out</a>
+    </nav>
 
   </div><!-- /layout -->
 
@@ -1411,6 +1468,28 @@
       }
 
       initTabGroup('.env-tabs', 'env-tab-btn', 'env-tab-panel');
+    })();
+
+    // TOC scrollspy
+    (function() {
+      var tocLinks = document.querySelectorAll('.toc-link');
+      var sections = [];
+      tocLinks.forEach(function(link) {
+        var id = link.getAttribute('href').slice(1);
+        var el = document.getElementById(id);
+        if (el) sections.push({ id: id, el: el, link: link });
+      });
+      if (!sections.length) return;
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function(l) { l.classList.remove('active'); });
+            var match = sections.find(function(s) { return s.id === entry.target.id; });
+            if (match) match.link.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-80px 0px -70% 0px' });
+      sections.forEach(function(s) { observer.observe(s.el); });
     })();
   </script>
 
