@@ -7,6 +7,19 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.36.1] — 2026-03-16
+
+### Fixed
+- `global-commands/snagging.md`: report box now uses Unicode box-drawing characters (`┌─┐`, `├─┤`, `└─┘`, `│`) instead of ASCII (`+`, `--`, `|`) for consistency with all other DOE command output
+- `docs/tutorial/*.html`: fixed stale footer version stamps (v1.32.0 -> v1.36.0) across all 13 tutorial pages
+
+### Added
+- `execution/stamp_tutorial_version.py`: automation script to update tutorial footer/hero badge version strings; integrated into sync directive and `/sync-doe` command so footers are stamped before every release commit
+
+### Changed
+- `directives/starter-kit-sync.md`: Step 10 now runs `stamp_tutorial_version.py` before `git add -A`; post-sync checklist updated to reference auto-stamping
+- `global-commands/sync-doe.md`: added step 11a to run `stamp_tutorial_version.py` before committing
+
 ## [v1.36.0] — 2026-03-16
 
 ### Added
