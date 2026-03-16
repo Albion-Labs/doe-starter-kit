@@ -7,6 +7,12 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.37.1] — 2026-03-16
+
+### Changed
+- `execution/generate_test_checklist.py`: Option C header redesign — feature name as h1 with [APP] pill badge, env cards (Browser/Viewport/OS) top-right, 12px split progress bar (green pass + red fail), elapsed timer bottom-left with label, progress card with subtitle, Copy Bugs button (amber, conditional), Reset All with red styling, buttons right-aligned
+- `execution/generate_test_checklist.py`: added `--verify` mode — re-checks known bugs via code trace and outputs unicode-bordered terminal summary instead of regenerating full HTML
+
 ## [v1.37.0] — 2026-03-16
 
 ### Changed

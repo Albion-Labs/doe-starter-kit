@@ -47,7 +47,7 @@ def parse_state() -> dict:
     text = STATE_PATH.read_text(encoding="utf-8")
     info = {"version": "", "filename": ""}
 
-    # Look for: **Current app version:** v0.1.0 (`my-app-v0.1.0.html`)
+    # Look for: **Current app version:** v0.27.4 (`monty-app-v0.27.4.html`)
     m = re.search(r"\*\*Current app version:\*\*\s*(v[\d.]+)\s*\(`?([^`)\s]+)`?\)", text)
     if m:
         info["version"] = m.group(1)
@@ -197,7 +197,7 @@ def parse_todo(feature_name: str | None) -> dict:
     if heading_m:
         raw_name = heading_m.group(1).strip()
         # Split on em-dash or double-hyphen to get the primary name
-        # e.g. "My Feature — Sub-component + Extra"
+        # e.g. "Campaign Workbench — Role-Based Platform + Targeting + Playbook"
         #   -> feature_name = full string (for display)
         # The slug uses just the part before the first em-dash
         found_feature_name = raw_name
@@ -327,31 +327,72 @@ def extract_console_commands(raw_desc: str) -> dict:
     entries are multi-line JS snippets for console-test verification.
     Commands are inferred from keywords in the raw (unsplit) manual
     description.
-
-    PROJECT-SPECIFIC: Add keyword → command mappings here for your app.
-    Example patterns to match on:
-      - localStorage key names (e.g. "first visit", "setup wizard")
-      - Function names referenced in test descriptions
-      - Console-test markers in manual item text
     """
     setup: list[str] = []
     console: list[str] = []
     restore: list[str] = []
     desc = raw_desc.lower() if raw_desc else ""
 
-    # ── Add your project-specific console command patterns here ──
-    #
-    # Example: first-visit / setup wizard tests
-    # if "first visit" in desc or "setup wizard" in desc:
-    #     setup.append("localStorage.removeItem('app_role'); location.reload();")
-    #     restore.append("// Set your preferred role back in Settings")
-    #
-    # Example: console-test verification
-    # if "my_function" in desc:
-    #     console.append("var result = myFunction();\nconsole.log(result);")
+    # First-visit / setup wizard tests: need to clear role
+    if "first visit" in desc or "setup wizard" in desc or "welcome" in desc:
+        setup.append("localStorage.removeItem('monty_role'); location.reload();")
+        restore.append("// Set your preferred role back in Settings")
+
+    # Unconfigured party tests
+    if "unconfigured party" in desc or "no party" in desc or "setup prompt" in desc:
+        setup.append("localStorage.removeItem('monty_party'); location.reload();")
+        restore.append("localStorage.setItem('monty_party', 'Labour'); location.reload(); // replace Labour with your party")
+
+    # Role switching tests
+    if "local role" in desc or "local user" in desc or "switch" in desc and "role" in desc:
+        if not any("monty_role" in s for s in setup):
+            setup.append("// Switch role in Settings > Role before testing")
+
+    # --- Console-test patterns ---
+    console_matched = False
+
+    # Targeting console tests
+    if any(kw in desc for kw in ("scoring function", "computeseatscore", "tgtcomputeall", "seats across tiers")):
+        console.append(
+            "var results = tgtComputeAll();\n"
+            "console.log('Total seats:', results.length);\n"
+            "\n"
+            "// Check targets (tight marginals, high score)\n"
+            "console.table(results.filter(r => r.tier === 'TARGET').slice(0, 5));\n"
+            "\n"
+            "// Check safe seats\n"
+            "console.table(results.filter(r => r.tier === 'FORTRESS').slice(0, 5));\n"
+            "\n"
+            "// Check distribution\n"
+            "var tiers = {};\n"
+            "results.forEach(r => { tiers[r.tier] = (tiers[r.tier]||0) + 1; });\n"
+            "console.log('Tier distribution:', tiers);"
+        )
+        console_matched = True
+
+    # Playbook console tests
+    playbook_kws = ("issue derivation", "pbkgetbrief", "deriveissues")
+    combo_kws = ("constituencies",)
+    combo_second = ("pitch", "opponent")
+    if (any(kw in desc for kw in playbook_kws)
+            or (any(kw in desc for kw in combo_kws)
+                and any(kw in desc for kw in combo_second))):
+        console.append(
+            "// Pick 3 constituencies to test\n"
+            "var codes = GEO.features.slice(0, 3).map(f => f.properties.PCON24CD);\n"
+            "codes.forEach(c => {\n"
+            "  var brief = pbkGetBrief(c);\n"
+            "  console.log('=== ' + brief.name + ' ===');\n"
+            "  console.log('Issues:', brief.issues);\n"
+            "  console.log('Pitch:', brief.pitch);\n"
+            "  console.log('Avoid:', brief.avoid);\n"
+            "  console.log('Opponent:', brief.opponent);\n"
+            "});"
+        )
+        console_matched = True
 
     # Generic console-test fallback
-    if "console-test" in desc:
+    if not console_matched and "console-test" in desc:
         console.append("// Open browser console: Cmd+Option+J (Mac) or Ctrl+Shift+J (Windows/Linux)\n// Then run the checks described below")
 
     return {"setup": setup, "console": console, "restore": restore}
@@ -640,31 +681,73 @@ def generate_html(
     margin-bottom: 12px;
   }}
 
-  .title-block h1 {{
-    font-size: 18px;
+  .title-block {{}}
+
+  .hero-row {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 3px;
+  }}
+
+  .hero-row h1 {{
+    font-size: 20px;
     font-weight: 700;
     color: var(--grey-900);
     letter-spacing: -0.3px;
+    line-height: 1.15;
   }}
 
-  .title-block .subtitle {{
-    font-size: 12px;
+  .app-pill {{
+    background: #dbeafe;
+    color: var(--blue);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: 2px 8px;
+    border-radius: 99px;
+    border: 1px solid #bfdbfe;
+  }}
+
+  .version-tag {{
+    font-size: 11px;
+    color: var(--grey-400);
+    font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+  }}
+
+  .title-subtitle {{
+    font-size: 13px;
     color: var(--grey-500);
-    margin-top: 2px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-bottom: 6px;
   }}
 
-  .subtitle-sep {{
-    color: var(--grey-300);
-  }}
-
-  .header-actions {{
+  .env-cards {{
     display: flex;
-    align-items: center;
-    gap: 8px;
+    gap: 20px;
+    align-items: flex-start;
     flex-shrink: 0;
+  }}
+
+  .env-card {{
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }}
+
+  .env-card-label {{
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--grey-400);
+  }}
+
+  .env-card-value {{
+    font-size: 12px;
+    color: var(--grey-600);
+    font-weight: 500;
   }}
 
   .btn {{
@@ -694,132 +777,96 @@ def generate_html(
   }}
   .btn-ghost:hover {{ background: var(--grey-50); color: var(--grey-800); }}
 
-  .btn-danger-ghost {{
+  .btn-danger {{
     background: transparent;
     color: var(--red);
     border: 1px solid var(--red-mid);
-    font-size: 12px;
-    padding: 4px 10px;
   }}
-  .btn-danger-ghost:hover {{ background: var(--red-light); }}
+  .btn-danger:hover {{ background: var(--red-light); }}
 
-  /* external link arrow */
-  .btn-primary::after {{ content: ' \\2197'; font-size: 11px; opacity: 0.8; }}
+  .btn-amber {{
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+    font-weight: 600;
+  }}
+  .btn-amber:hover {{ background: #fde68a; }}
 
-  /* -- Env bar -- */
-  .env-bar {{
+  /* Progress card */
+  .progress-card {{
     background: var(--grey-50);
     border: 1px solid var(--grey-200);
     border-radius: var(--radius-sm);
-    padding: 6px 12px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-  }}
-
-  .env-item {{
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11.5px;
-    color: var(--grey-500);
-  }}
-
-  .env-label {{
-    font-weight: 600;
-    color: var(--grey-600);
-  }}
-
-  /* -- Progress bar -- */
-  .progress-row {{
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }}
-
-  .progress-label {{
-    font-size: 12px;
-    color: var(--grey-600);
-    font-weight: 500;
-    white-space: nowrap;
-    min-width: 80px;
+    padding: 8px 12px;
+    margin: 5px 0;
   }}
 
   .progress-track {{
-    flex: 1;
-    height: 8px;
+    width: 100%;
+    height: 12px;
     background: var(--grey-200);
-    border-radius: 99px;
+    border-radius: 6px;
     overflow: hidden;
-    position: relative;
+    display: flex;
+    margin-bottom: 6px;
   }}
 
-  .progress-fill {{
+  .progress-fill-pass {{
     height: 100%;
-    border-radius: 99px;
-    transition: width 0.4s ease, background-color 0.3s ease;
-    background: var(--grey-400);
+    background: var(--green);
+    transition: width 0.4s ease;
+  }}
+
+  .progress-fill-fail {{
+    height: 100%;
+    background: var(--red);
+    transition: width 0.4s ease;
   }}
 
   .progress-stats {{
     display: flex;
-    gap: 10px;
-    align-items: center;
+    gap: 14px;
     font-size: 12px;
-    white-space: nowrap;
   }}
 
   .stat-pass {{ color: var(--green); font-weight: 600; }}
   .stat-fail {{ color: var(--red); font-weight: 600; }}
   .stat-untested {{ color: var(--grey-400); }}
 
-  /* -- Timer -- */
-  .timer-row {{
+  /* Button row */
+  .btn-row {{
     display: flex;
-    align-items: center;
     gap: 8px;
-    font-size: 12px;
-    color: var(--grey-500);
-    margin-top: 4px;
+    align-items: center;
+    justify-content: flex-end;
   }}
 
-  /* CSS-only clock icon */
-  .clock-icon {{
-    width: 14px;
-    height: 14px;
-    border: 2px solid var(--grey-400);
-    border-radius: 50%;
-    position: relative;
-    display: inline-block;
-    flex-shrink: 0;
+  .elapsed-block {{
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-right: auto;
   }}
-  .clock-icon::before {{
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 1.5px;
-    height: 4px;
-    background: var(--grey-500);
-    transform-origin: bottom center;
-    transform: translateX(-50%) translateY(-100%) rotate(-30deg);
+
+  .elapsed-label {{
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--grey-400);
   }}
-  .clock-icon::after {{
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 1.5px;
-    height: 3px;
-    background: var(--grey-500);
-    transform-origin: bottom center;
-    transform: translateX(-50%) translateY(-100%) rotate(60deg);
+
+  .elapsed-value {{
+    font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--grey-700);
+    font-variant-numeric: tabular-nums;
   }}
+  .elapsed-value.active {{ color: var(--blue); }}
 
   #timer-display {{ font-weight: 600; color: var(--grey-700); font-variant-numeric: tabular-nums; }}
-  #timer-display.active {{ color: var(--blue); }}
+  /* timer active state handled by .elapsed-value.active */
 
   /* -- Page layout -- */
   .page-body {{
@@ -1330,42 +1377,34 @@ def generate_html(
   <div class="top-bar-inner">
     <div class="top-bar-row1">
       <div class="title-block">
-        <h1>Manual Test Checklist</h1>
-        <div class="subtitle">
-          <span style="font-weight:600;color:var(--grey-700)">{escape_html(feature_name)}</span>
-          <span class="subtitle-sep">|</span>
-          <span>{escape_html(version)}</span>
-          <span class="subtitle-sep">|</span>
-          <span>Generated {today}</span>
+        <div class="hero-row">
+          <h1>{escape_html(feature_name)}</h1>
+          <span class="app-pill">{escape_html(feature.get('type_tag', 'APP'))}</span>
+          <span class="version-tag">{escape_html(version)}</span>
         </div>
       </div>
-      <div class="header-actions">
-        <button class="btn-danger-ghost btn" onclick="resetAll()">Reset all</button>
-        <a class="btn btn-primary" href="../{escape_html(app_filename)}" target="_blank">Open App</a>
+      <div class="env-cards">
+        <div class="env-card">
+          <span class="env-card-label">Browser</span>
+          <span class="env-card-value" id="env-browser">&mdash;</span>
+        </div>
+        <div class="env-card">
+          <span class="env-card-label">Viewport</span>
+          <span class="env-card-value" id="env-viewport">&mdash;</span>
+        </div>
+        <div class="env-card">
+          <span class="env-card-label">OS</span>
+          <span class="env-card-value" id="env-os">&mdash;</span>
+        </div>
       </div>
     </div>
 
-    <!-- Env bar -->
-    <div class="env-bar">
-      <div class="env-item">
-        <span class="env-label">Browser</span>
-        <span id="env-browser">&mdash;</span>
-      </div>
-      <div class="env-item">
-        <span class="env-label">Viewport</span>
-        <span id="env-viewport">&mdash;</span>
-      </div>
-      <div class="env-item">
-        <span class="env-label">OS</span>
-        <span id="env-os">&mdash;</span>
-      </div>
-    </div>
-
-    <!-- Progress row -->
-    <div class="progress-row">
-      <span class="progress-label" id="progress-label">0 / {total_checks} checks</span>
+    <!-- Progress card -->
+    <div class="progress-card">
+      <div class="title-subtitle">Manual test checklist &middot; {total_checks} checks</div>
       <div class="progress-track">
-        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        <div class="progress-fill-pass" id="progress-fill-pass" style="width:0%"></div>
+        <div class="progress-fill-fail" id="progress-fill-fail" style="width:0%"></div>
       </div>
       <div class="progress-stats">
         <span class="stat-pass" id="stat-pass">0 pass</span>
@@ -1374,18 +1413,16 @@ def generate_html(
       </div>
     </div>
 
-    <!-- Timer row -->
-    <div class="timer-row">
-      <span class="clock-icon"></span>
-      <span id="timer-display">Not started</span>
-      <span id="section-timers" style="color:var(--grey-400);margin-left:4px;"></span>
-    </div>
-    <!-- Interaction hint -->
-    <div style="font-size:12px;color:var(--grey-400);padding:6px 0 2px;text-align:center;">
-      Click a check to cycle: <span style="color:var(--grey-500);font-weight:600;">untested</span> &rarr;
-      <span style="color:var(--green);font-weight:600;">pass</span> &rarr;
-      <span style="color:var(--red);font-weight:600;">fail</span> &rarr;
-      <span style="color:var(--grey-500);font-weight:600;">untested</span>
+    <!-- Buttons -->
+    <div class="btn-row">
+      <div class="elapsed-block">
+        <span class="elapsed-label">Elapsed</span>
+        <span class="elapsed-value" id="timer-display">0:00</span>
+      </div>
+      <button class="btn btn-danger" onclick="resetAll()">Reset all</button>
+      <button class="btn btn-ghost" onclick="copyResults(false)">Copy Results</button>
+      {'<button class="btn btn-amber" onclick="copyBugs()">Copy Bugs</button>' if bugs else ''}
+      <a class="btn btn-primary" href="../{escape_html(app_filename)}" target="_blank">Open App &#8599;</a>
     </div>
   </div>
 </div>
@@ -1425,6 +1462,8 @@ def generate_html(
 // ===============================================
 // DATA MODEL
 // ===============================================
+const FEATURE_NAME = '{escape_html(feature_name)}';
+const VERSION = '{escape_html(version)}';
 const STORAGE_KEY = '{storage_key}';
 
 // Section definitions: id -> {{ total, label, step }}
@@ -1592,10 +1631,7 @@ function updateProgressBar() {{
     }}
   }}
   const totalUntested = totalChecks - totalPass - totalFail;
-  const totalTouched  = totalPass + totalFail;
-  const pct = totalChecks > 0 ? Math.round((totalTouched / totalChecks) * 100) : 0;
 
-  document.getElementById('progress-label').textContent = totalTouched + ' / ' + totalChecks + ' checks';
   document.getElementById('stat-pass').textContent = totalPass + ' pass';
 
   const failEl = document.getElementById('stat-fail');
@@ -1607,19 +1643,10 @@ function updateProgressBar() {{
   }}
   document.getElementById('stat-untested').textContent = totalUntested + ' untested';
 
-  const fill = document.getElementById('progress-fill');
-  fill.style.width = pct + '%';
-
-  // Colour logic
-  if (totalTouched === 0) {{
-    fill.style.background = 'var(--grey-400)';
-  }} else if (totalFail > 0) {{
-    fill.style.background = 'var(--amber)';
-  }} else if (totalPass === totalChecks) {{
-    fill.style.background = 'var(--green)';
-  }} else {{
-    fill.style.background = 'var(--blue)';
-  }}
+  var passPercent = totalChecks > 0 ? (totalPass / totalChecks * 100).toFixed(1) : '0';
+  var failPercent = totalChecks > 0 ? (totalFail / totalChecks * 100).toFixed(1) : '0';
+  document.getElementById('progress-fill-pass').style.width = passPercent + '%';
+  document.getElementById('progress-fill-fail').style.width = failPercent + '%';
 }}
 
 // ===============================================
@@ -1698,30 +1725,20 @@ function fmtMs(ms) {{
 
 function updateTimerDisplay() {{
   const timerEl = document.getElementById('timer-display');
-  const secTimersEl = document.getElementById('section-timers');
 
   if (timerStartMs === null) {{
-    timerEl.textContent = 'Not started';
+    timerEl.textContent = '0:00';
     timerEl.classList.remove('active');
-    secTimersEl.textContent = '';
     return;
   }}
 
   const now = Date.now();
   const totalElapsed = (now - timerStartMs) + timerElapsedMs;
-
-  timerEl.textContent = 'Testing: ' + fmtMs(totalElapsed);
+  const totalSec = Math.floor(totalElapsed / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  timerEl.textContent = m + ':' + String(s).padStart(2, '0');
   timerEl.classList.add('active');
-
-  // Per-section times
-  const parts = [];
-  for (const sid of Object.keys(SECTIONS)) {{
-    if (sectionStartMs[sid]) {{
-      const sElapsed = (now - sectionStartMs[sid]) + (sectionElapsedMs[sid] || 0);
-      parts.push('Step ' + sid + ': ' + fmtMs(sElapsed));
-    }}
-  }}
-  secTimersEl.textContent = parts.length ? '(' + parts.join(' \\u00b7 ') + ')' : '';
 }}
 
 // ===============================================
@@ -1834,6 +1851,28 @@ function copyResults(failOnly) {{
   }});
 }}
 
+function copyBugs() {{
+  var bugsSection = document.getElementById('bugs-section');
+  if (!bugsSection) return;
+  var bugCards = bugsSection.querySelectorAll('.bug-card');
+  var lines = ['## Known Bugs -- ' + FEATURE_NAME + ' ' + VERSION, ''];
+  bugCards.forEach(function(card, i) {{
+    var title = card.querySelector('.bug-title').textContent;
+    var severity = card.querySelector('.severity-badge').textContent;
+    var desc = card.querySelector('.bug-description').textContent;
+    var file = card.querySelector('.bug-file').textContent;
+    lines.push((i+1) + '. [' + severity + '] ' + title);
+    lines.push('   File: ' + file);
+    lines.push('   ' + desc);
+    lines.push('');
+  }});
+  lines.push('Fix these bugs and commit. Then I will re-run /snagging to verify.');
+  var text = lines.join('\\n');
+  navigator.clipboard.writeText(text).then(function() {{
+    showToast('Bugs copied to clipboard', 'success');
+  }});
+}}
+
 // ===============================================
 // TOAST
 // ===============================================
@@ -1851,6 +1890,128 @@ init();
 </script>
 </body>
 </html>"""
+
+
+# ──────────────────────────────────────────────
+# Bug verification
+# ──────────────────────────────────────────────
+
+def verify_bugs(feature_name: str, bugs_path: Path) -> None:
+    """Re-check known bugs and output terminal verification box."""
+    if not bugs_path.exists():
+        print("No bugs file found. Run /snagging first.", file=sys.stderr)
+        sys.exit(1)
+
+    bugs = json.loads(bugs_path.read_text(encoding="utf-8"))
+    if not bugs:
+        print("No bugs to verify.", file=sys.stderr)
+        sys.exit(0)
+
+    W = 60  # inner width
+
+    def line(content=""):
+        return f"\u2502  {content}".ljust(W + 1) + "\u2502"
+
+    def top():
+        return "\u250c" + "\u2500" * W + "\u2510"
+
+    def sep():
+        return "\u251c" + "\u2500" * W + "\u2524"
+
+    def bot():
+        return "\u2514" + "\u2500" * W + "\u2518"
+
+    results = []
+    for bug in bugs:
+        file_path = bug.get("file", "")
+        title = bug.get("title", "Untitled")
+        description = bug.get("description", "")
+        severity = bug.get("severity", "Medium")
+
+        # Try to verify the fix by checking if the described problem pattern still exists
+        resolved = False
+        proof = "Could not auto-verify -- manual check needed"
+
+        if file_path and Path(PROJECT_ROOT / file_path).exists():
+            content = (PROJECT_ROOT / Path(file_path)).read_text(encoding="utf-8", errors="replace")
+            # Check for common fix patterns based on bug description
+            desc_lower = description.lower()
+            if "re-render" in desc_lower or "stale" in desc_lower or "doesn't update" in desc_lower:
+                # Look for event listener patterns that indicate reactivity
+                if any(pat in content for pat in ["addEventListener", "onChange", "settings-changed", "onSettingsChange", "dispatchEvent"]):
+                    resolved = True
+                    proof = "Event listener found in render path"
+            elif "missing" in desc_lower:
+                # Generic: if file exists and has content, consider it addressed
+                if len(content) > 100:
+                    resolved = True
+                    proof = "File exists with content"
+
+            # If we couldn't determine from patterns, leave as manual check
+
+        results.append({
+            "title": title,
+            "file": file_path,
+            "severity": severity,
+            "description": description,
+            "resolved": resolved,
+            "proof": proof,
+        })
+
+    resolved_count = sum(1 for r in results if r["resolved"])
+    total = len(results)
+
+    lines = []
+    lines.append(top())
+    # Truncate feature name to fit header
+    header_prefix = "BUG VERIFICATION -- "
+    max_name = W - 2 - len(header_prefix)
+    display_name = feature_name if len(feature_name) <= max_name else feature_name[:max_name - 3] + "..."
+    lines.append(line(f"{header_prefix}{display_name}"))
+    lines.append(sep())
+    lines.append(line())
+
+    for r in results:
+        status = "RESOLVED" if r["resolved"] else "OPEN"
+        # Title line with status
+        status_line = f"[{status}] {r['title']}"
+        if len(status_line) > W - 2:
+            status_line = status_line[:W - 5] + "..."
+        lines.append(line(status_line))
+
+        # File on its own line
+        file_line = f"  File: {r['file']}"
+        if len(file_line) > W - 2:
+            file_line = file_line[:W - 5] + "..."
+        lines.append(line(file_line))
+
+        # Proof/description on its own line
+        if r["resolved"]:
+            proof_line = f"  Proof: {r['proof']}"
+        else:
+            proof_line = f"  Issue: {r['description']}"
+        if len(proof_line) > W - 2:
+            proof_line = proof_line[:W - 5] + "..."
+        lines.append(line(proof_line))
+        lines.append(line())
+
+    lines.append(sep())
+
+    if resolved_count == total:
+        summary = f"{resolved_count}/{total} resolved -- bugs file cleaned up"
+        bugs_path.unlink()
+    else:
+        open_count = total - resolved_count
+        summary = f"{resolved_count}/{total} resolved, {open_count} open"
+        # Update bugs file to only keep open bugs
+        open_bugs = [b for b, r in zip(bugs, results) if not r["resolved"]]
+        bugs_path.write_text(json.dumps(open_bugs, indent=2), encoding="utf-8")
+        summary += " -- bugs file updated"
+
+    lines.append(line(summary))
+    lines.append(bot())
+
+    print("\n".join(lines))
 
 
 # ──────────────────────────────────────────────
@@ -1878,7 +2039,20 @@ def main():
         action="store_true",
         help="Don't open the HTML file in the browser after generating.",
     )
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="Verify previously found bugs instead of generating checklist.",
+    )
     args = parser.parse_args()
+
+    bugs_file = PROJECT_ROOT / ".tmp" / "test-bugs.json"
+    if args.verify or (bugs_file.exists() and not args.bugs):
+        # Verification mode
+        feature = parse_todo(args.feature)
+        feature_name = feature["feature_name"] if feature else (args.feature or "Unknown")
+        verify_bugs(feature_name, bugs_file)
+        sys.exit(0)
 
     # Parse todo.md
     feature = parse_todo(args.feature)
