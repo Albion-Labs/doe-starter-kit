@@ -47,7 +47,7 @@ def parse_state() -> dict:
     text = STATE_PATH.read_text(encoding="utf-8")
     info = {"version": "", "filename": ""}
 
-    # Look for: **Current app version:** v0.27.4 (`monty-app-v0.27.4.html`)
+    # Look for: **Current app version:** vX.Y.Z (`your-app-vX.Y.Z.html`)
     m = re.search(r"\*\*Current app version:\*\*\s*(v[\d.]+)\s*\(`?([^`)\s]+)`?\)", text)
     if m:
         info["version"] = m.group(1)
@@ -190,19 +190,27 @@ def parse_todo(feature_name: str | None) -> dict:
 
     # Parse heading: ### Feature Name — Description [APP] (v0.27.x)
     # Or: ### Feature Name [APP] (v0.27.x)
+    # Try with version range first: ### Name [APP] (v0.27.x)
     heading_m = re.match(
         r"###\s+(.+?)\s+\[(APP|INFRA)\]\s+\((v[\d.x]+)\)",
         heading_line,
     )
+    # Try without version range: ### Name [APP]
+    heading_m2 = re.match(
+        r"###\s+(.+?)\s+\[(APP|INFRA)\]",
+        heading_line,
+    ) if not heading_m else None
+
     if heading_m:
         raw_name = heading_m.group(1).strip()
-        # Split on em-dash or double-hyphen to get the primary name
-        # e.g. "Campaign Workbench — Role-Based Platform + Targeting + Playbook"
-        #   -> feature_name = full string (for display)
-        # The slug uses just the part before the first em-dash
         found_feature_name = raw_name
         found_type_tag = heading_m.group(2)
         found_version_range = heading_m.group(3)
+    elif heading_m2:
+        raw_name = heading_m2.group(1).strip()
+        found_feature_name = raw_name
+        found_type_tag = heading_m2.group(2)
+        found_version_range = ""
     else:
         # Fallback: just grab everything after ###
         found_feature_name = heading_line.lstrip("#").strip()
@@ -222,6 +230,9 @@ def parse_todo(feature_name: str | None) -> dict:
     steps = []
     current_step = None
 
+    # Count all numbered steps in the feature block for total_steps
+    total_steps = sum(1 for fl in feature_lines if re.match(r"^\d+\.\s+\[", fl))
+
     for line in feature_lines:
         # Match step line: N. [x] Step name — description -> vX.Y.Z ...
         step_m = re.match(
@@ -238,10 +249,14 @@ def parse_todo(feature_name: str | None) -> dict:
             step_name = re.sub(r"\s*(?:->|→)\s*v[\d.]+.*$", "", step_name).strip()
             # Trim description after double-dash (keep just the primary name)
             step_name = re.split(r"\s+--\s+", step_name)[0].strip()
+            # Extract completed timestamp: *(completed HH:MM DD/MM/YY)*
+            time_m = re.search(r"\*\(completed\s+(.+?)\)\*", line)
+            completed_time = time_m.group(1) if time_m else ""
             current_step = {
                 "step_num": step_num,
                 "step_name": step_name,
                 "completed": step_done,
+                "completed_time": completed_time,
                 "manual_items": [],
             }
             continue
@@ -278,8 +293,431 @@ def parse_todo(feature_name: str | None) -> dict:
         "feature_name": found_feature_name,
         "type_tag": found_type_tag,
         "version_range": found_version_range,
+        "total_steps": total_steps,
         "steps": steps,
     }
+
+
+def load_test_results(results_path: str | None) -> dict | None:
+    """Load automated test suite results JSON if provided and valid."""
+    if not results_path:
+        return None
+    p = Path(results_path)
+    if not p.exists():
+        return None
+    try:
+        with open(p, encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def build_auto_results_html(tr: dict) -> str:
+    """Build the automated results HTML section from test-suite-results.json.
+
+    Design: single card matching the wireframe — header row with status badge,
+    grey tile strip with vertical separators, expandable detail sections.
+    """
+    if tr is None:
+        return ""
+
+    duration = tr.get("duration_seconds", 0)
+    warnings = tr.get("warnings", [])
+    pw = tr.get("playwright", {})
+    a11y = tr.get("accessibility", {})
+    lh = tr.get("lighthouse", {})
+    hc = tr.get("health_check", {})
+
+    # -- Determine overall status badge --
+    statuses = [pw.get("status"), a11y.get("status"), lh.get("status"), hc.get("status")]
+    if "fail" in statuses:
+        badge_text, badge_cls = "FAILURES", "badge-fail"
+    elif "error" in statuses:
+        badge_text, badge_cls = "ERRORS", "badge-warn"
+    elif "warn" in statuses:
+        badge_text, badge_cls = "WARNINGS", "badge-warn"
+    else:
+        badge_text, badge_cls = "ALL PASS", "badge-pass"
+
+    # -- Build tile data --
+    def _tile(title, value, detail, status):
+        color_cls = {
+            "pass": "val-green", "warn": "val-amber", "fail": "val-red",
+            "error": "val-amber", "first": "val-blue",
+        }.get(status, "val-grey")
+        return (
+            f'<div class="ar-tile">'
+            f'<div class="ar-tile-title">{title}</div>'
+            f'<div class="ar-tile-value {color_cls}">{value}</div>'
+            f'<div class="ar-tile-detail">{detail}</div>'
+            f'</div>'
+        )
+
+    tiles = []
+
+    # Browser Tests
+    pw_status = pw.get("status", "error")
+    if pw_status == "error":
+        tiles.append(_tile("Browser Tests", "&mdash;", escape_html(pw.get("error_message", "Error")), "error"))
+    else:
+        route_count = len(pw.get("routes", []))
+        tiles.append(_tile(
+            "Browser Tests",
+            f'{pw.get("passed", 0)}/{pw.get("total", 0)}',
+            f'All pages load, nav works' if pw.get("failed", 0) == 0 else f'{pw.get("failed", 0)} failures',
+            pw_status,
+        ))
+
+    # Visual Regression
+    diffs = pw.get("visual_diffs", [])
+    if pw_status == "error":
+        tiles.append(_tile("Visual Regression", "&mdash;", "Requires browser tests", "error"))
+    else:
+        diff_count = len(diffs)
+        vr_status = "fail" if diff_count > 0 else "pass"
+        tiles.append(_tile(
+            "Visual Regression",
+            f'{diff_count} diff{"s" if diff_count != 1 else ""}',
+            f'4 screenshots match baseline' if diff_count == 0 else f'{diff_count} screenshot{"s" if diff_count != 1 else ""} changed',
+            vr_status,
+        ))
+
+    # Accessibility
+    a11y_status = a11y.get("status", "error")
+    new_crit = a11y.get("new_critical", 0)
+    known_crit = a11y.get("known_critical", 0)
+    if a11y_status == "error":
+        tiles.append(_tile("Accessibility", "&mdash;", escape_html(a11y.get("error_message", "Error")), "error"))
+    elif new_crit == "unknown":
+        tiles.append(_tile("Accessibility", "FAIL", "1+ new violation(s)", "fail"))
+    else:
+        tiles.append(_tile("Accessibility", f'{new_crit} new', f'{known_crit} known, at baseline', a11y_status))
+
+    # Performance
+    lh_status = lh.get("status", "error")
+    if lh_status == "error":
+        err = lh.get("error_message", "Error")
+        tiles.append(_tile("Performance", "&mdash;", escape_html(err), "error"))
+    else:
+        score = lh.get("score", 0)
+        delta = lh.get("delta", 0)
+        noise = lh.get("noise_adjusted", False)
+        first = lh.get("first_run", False)
+        sign = "+" if delta >= 0 else ""
+        if first:
+            detail = "Baseline set"
+        elif noise:
+            detail = "Lighthouse score, no change"
+        else:
+            detail = f'Lighthouse score, {sign}{delta} from baseline'
+        tiles.append(_tile("Performance", f'{score} ({sign}{delta})', detail, "first" if first else lh_status))
+
+    tiles_html = "\n".join(tiles)
+
+    # -- Warnings banner --
+    warnings_html = ""
+    if warnings:
+        items = "".join(f'<li>{escape_html(w)}</li>' for w in warnings)
+        warnings_html = f'<div class="ar-warnings"><ul>{items}</ul></div>'
+
+    # -- Stale a11y note --
+    stale_html = ""
+    age_days = a11y.get("known_critical_age_days", 0)
+    if age_days > 30 and known_crit > 0:
+        stale_html = (
+            f'<div class="ar-stale-note">'
+            f'{known_crit} known violations, oldest from {age_days} days ago '
+            f'&mdash; consider fixing.</div>'
+        )
+
+    # -- Failure cards --
+    failure_cards_html = ""
+    if pw.get("failed", 0) > 0:
+        for route in pw.get("routes", []):
+            if route.get("status") == "fail":
+                failure_cards_html += (
+                    f'<div class="ar-fail-card">'
+                    f'<span class="ar-fail-label">Route</span> '
+                    f'<strong>{escape_html(route["name"])}</strong> page failed to render'
+                    f'</div>'
+                )
+    for diff in diffs:
+        failure_cards_html += (
+            f'<div class="ar-fail-card">'
+            f'<span class="ar-fail-label">Visual</span> '
+            f'<strong>{escape_html(diff.get("page", ""))}</strong> screenshot changed'
+            f'<div class="ar-fail-path">{escape_html(diff.get("diff_path", ""))}</div>'
+            f'</div>'
+        )
+
+    # -- Expandable detail sections --
+    details_html = ""
+
+    # Health check detail
+    checks = hc.get("checks", [])
+    hc_summary = hc.get("summary", {})
+    if checks:
+        hc_pass = hc_summary.get("pass", 0)
+        hc_warn = hc_summary.get("warn", 0)
+        hc_detail_parts = [f'{hc_pass} pass']
+        if hc_warn:
+            # Find the first warn detail for inline summary
+            warn_detail = ""
+            for ck in checks:
+                if ck.get("status") == "WARN":
+                    d = ck.get("detail", "")
+                    if d:
+                        warn_detail = f' ({d.split(":")[0].strip() if ":" in d else d})'
+                    break
+            hc_detail_parts.append(f'{hc_warn} warning{warn_detail}')
+        summary_text = f'Health check &mdash; {", ".join(hc_detail_parts)}'
+        rows = ""
+        for ck in checks:
+            st = ck.get("status", "OK")
+            cls = "hc-warn" if st == "WARN" else ("hc-fail" if st == "FAIL" else "hc-ok")
+            detail = f' &mdash; {escape_html(ck["detail"])}' if ck.get("detail") else ""
+            rows += f'<div class="hc-row {cls}"><span class="hc-status">{st}</span> {escape_html(ck["name"])}{detail}</div>'
+        chevron = '<span class="chevron-icon"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg></span>'
+        details_html += (
+            f'<details class="ar-detail">'
+            f'<summary>{chevron}{summary_text}</summary>'
+            f'<div class="ar-detail-body">{rows}</div>'
+            f'</details>'
+        )
+
+    # Route coverage detail
+    routes = pw.get("routes", [])
+    if routes:
+        chevron = '<span class="chevron-icon"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg></span>'
+        rows = ""
+        for r in routes:
+            cls = "route-pass" if r["status"] == "pass" else "route-fail"
+            icon = "&#10003;" if r["status"] == "pass" else "&#10007;"
+            rows += f'<div class="route-row {cls}"><span class="route-icon">{icon}</span> {escape_html(r["name"])}</div>'
+        details_html += (
+            f'<details class="ar-detail">'
+            f'<summary>{chevron}Route coverage &mdash; {len(routes)} pages tested</summary>'
+            f'<div class="ar-detail-body">{rows}</div>'
+            f'</details>'
+        )
+
+    return (
+        f'<!-- AUTOMATED RESULTS -->\n'
+        f'<div class="ar-section">\n'
+        f'  <div class="ar-card">\n'
+        f'    <div class="ar-header">\n'
+        f'      <div class="ar-header-left">\n'
+        f'        <span class="ar-title">Automated Results</span>\n'
+        f'        <span class="ar-badge {badge_cls}">{badge_text}</span>\n'
+        f'      </div>\n'
+        f'      <span class="ar-duration">completed in {duration}s</span>\n'
+        f'    </div>\n'
+        f'    <div class="ar-tiles-strip">\n{tiles_html}\n    </div>\n'
+        f'{warnings_html}\n'
+        f'{stale_html}\n'
+        f'{failure_cards_html}\n'
+        f'{details_html}\n'
+        f'  </div>\n'
+        f'</div>\n'
+    )
+
+
+def build_auto_results_css() -> str:
+    """Return CSS for the automated results section (wireframe card design)."""
+    return """
+  /* -- Automated Results -- */
+  .ar-section {
+    max-width: 900px;
+    margin: 24px auto 20px;
+    padding: 0 24px;
+  }
+  .ar-card {
+    background: white;
+    border: 1px solid var(--grey-200);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* Header row */
+  .ar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 14px;
+  }
+  .ar-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ar-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--grey-800);
+  }
+  .ar-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+  .badge-pass { background: var(--green-light); color: var(--green); border: 1px solid var(--green-mid); }
+  .badge-warn { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-mid); }
+  .badge-fail { background: var(--red-light); color: var(--red); border: 1px solid var(--red-mid); }
+  .ar-duration {
+    font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    color: var(--grey-400);
+  }
+
+  /* Tiles strip */
+  .ar-tiles-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: var(--grey-50);
+    border-top: 1px solid var(--grey-200);
+    border-bottom: 1px solid var(--grey-200);
+  }
+  .ar-tile {
+    padding: 16px 20px;
+    border-right: 1px solid var(--grey-200);
+  }
+  .ar-tile:last-child { border-right: none; }
+  .ar-tile-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--grey-500);
+    margin-bottom: 6px;
+  }
+  .ar-tile-value {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .ar-tile-detail {
+    font-size: 12px;
+    color: var(--grey-500);
+    line-height: 1.3;
+  }
+  .val-green { color: var(--green); }
+  .val-amber { color: var(--amber); }
+  .val-red { color: var(--red); }
+  .val-blue { color: var(--blue); }
+  .val-grey { color: var(--grey-400); }
+
+  /* Expandable details inside card */
+  .ar-detail {
+    border-top: 1px solid var(--grey-100);
+  }
+  .ar-detail summary {
+    font-size: 14px;
+    color: var(--grey-600);
+    cursor: pointer;
+    padding: 12px 20px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ar-detail summary::-webkit-details-marker { display: none; }
+  .ar-detail summary:hover { color: var(--grey-800); background: var(--grey-50); }
+  .chevron-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--grey-400);
+    transition: transform 0.15s;
+  }
+  .chevron-icon svg { width: 14px; height: 14px; }
+  .ar-detail[open] .chevron-icon { transform: rotate(90deg); }
+  .ar-detail-body {
+    padding: 0 20px 14px;
+  }
+  .hc-row, .route-row {
+    padding: 4px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--grey-100);
+  }
+  .hc-row:last-child, .route-row:last-child { border-bottom: none; }
+  .hc-status {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    width: 44px;
+  }
+  .hc-ok .hc-status { color: var(--green); }
+  .hc-warn .hc-status { color: var(--amber); }
+  .hc-fail .hc-status { color: var(--red); }
+  .route-icon { margin-right: 6px; }
+  .route-pass .route-icon { color: var(--green); }
+  .route-fail .route-icon { color: var(--red); }
+
+  /* Warnings & failures inside card */
+  .ar-warnings {
+    padding: 10px 20px;
+    background: var(--amber-light);
+    border-top: 1px solid var(--amber-mid);
+    font-size: 13px;
+    color: var(--amber);
+  }
+  .ar-warnings ul { list-style: none; }
+  .ar-warnings li::before { content: "! "; font-weight: 700; }
+
+  .ar-stale-note {
+    padding: 8px 20px;
+    font-size: 12px;
+    color: var(--amber);
+    border-top: 1px solid var(--grey-100);
+  }
+
+  .ar-fail-card {
+    padding: 8px 20px;
+    font-size: 13px;
+    border-top: 1px solid var(--red-mid);
+    background: var(--red-light);
+  }
+  .ar-fail-label {
+    display: inline-block;
+    background: var(--red);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+  }
+  .ar-fail-path {
+    font-size: 11px;
+    color: var(--grey-500);
+    margin-top: 2px;
+    font-family: monospace;
+  }
+"""
+
+
+def build_signpost_html(total_checks: int, test_results: dict | None) -> str:
+    """Build a banner divider between auto results and manual checks."""
+    if total_checks == 0:
+        return ""
+    if test_results is None:
+        return ""
+    return (
+        f'<div class="signpost-banner">\n'
+        f'  <div class="signpost-banner-line"></div>\n'
+        f'  <span class="signpost-banner-text">YOUR REVIEW &mdash; {total_checks} checks below</span>\n'
+        f'  <div class="signpost-banner-line"></div>\n'
+        f'</div>\n'
+    )
 
 
 def load_bugs(bugs_path: str | None) -> list:
@@ -327,72 +765,29 @@ def extract_console_commands(raw_desc: str) -> dict:
     entries are multi-line JS snippets for console-test verification.
     Commands are inferred from keywords in the raw (unsplit) manual
     description.
+
+    Customize this function for your project — add keyword matches for
+    your app's localStorage keys, console-testable functions, etc.
     """
     setup: list[str] = []
     console: list[str] = []
     restore: list[str] = []
     desc = raw_desc.lower() if raw_desc else ""
 
-    # First-visit / setup wizard tests: need to clear role
-    if "first visit" in desc or "setup wizard" in desc or "welcome" in desc:
-        setup.append("localStorage.removeItem('monty_role'); location.reload();")
-        restore.append("// Set your preferred role back in Settings")
-
-    # Unconfigured party tests
-    if "unconfigured party" in desc or "no party" in desc or "setup prompt" in desc:
-        setup.append("localStorage.removeItem('monty_party'); location.reload();")
-        restore.append("localStorage.setItem('monty_party', 'Labour'); location.reload(); // replace Labour with your party")
-
-    # Role switching tests
-    if "local role" in desc or "local user" in desc or "switch" in desc and "role" in desc:
-        if not any("monty_role" in s for s in setup):
-            setup.append("// Switch role in Settings > Role before testing")
-
-    # --- Console-test patterns ---
-    console_matched = False
-
-    # Targeting console tests
-    if any(kw in desc for kw in ("scoring function", "computeseatscore", "tgtcomputeall", "seats across tiers")):
-        console.append(
-            "var results = tgtComputeAll();\n"
-            "console.log('Total seats:', results.length);\n"
-            "\n"
-            "// Check targets (tight marginals, high score)\n"
-            "console.table(results.filter(r => r.tier === 'TARGET').slice(0, 5));\n"
-            "\n"
-            "// Check safe seats\n"
-            "console.table(results.filter(r => r.tier === 'FORTRESS').slice(0, 5));\n"
-            "\n"
-            "// Check distribution\n"
-            "var tiers = {};\n"
-            "results.forEach(r => { tiers[r.tier] = (tiers[r.tier]||0) + 1; });\n"
-            "console.log('Tier distribution:', tiers);"
-        )
-        console_matched = True
-
-    # Playbook console tests
-    playbook_kws = ("issue derivation", "pbkgetbrief", "deriveissues")
-    combo_kws = ("constituencies",)
-    combo_second = ("pitch", "opponent")
-    if (any(kw in desc for kw in playbook_kws)
-            or (any(kw in desc for kw in combo_kws)
-                and any(kw in desc for kw in combo_second))):
-        console.append(
-            "// Pick 3 constituencies to test\n"
-            "var codes = GEO.features.slice(0, 3).map(f => f.properties.PCON24CD);\n"
-            "codes.forEach(c => {\n"
-            "  var brief = pbkGetBrief(c);\n"
-            "  console.log('=== ' + brief.name + ' ===');\n"
-            "  console.log('Issues:', brief.issues);\n"
-            "  console.log('Pitch:', brief.pitch);\n"
-            "  console.log('Avoid:', brief.avoid);\n"
-            "  console.log('Opponent:', brief.opponent);\n"
-            "});"
-        )
-        console_matched = True
+    # --- Project-specific patterns ---
+    # Add your own keyword matches here. Examples:
+    #
+    # First-visit / setup wizard tests:
+    # if "first visit" in desc or "setup wizard" in desc:
+    #     setup.append("localStorage.removeItem('app_role'); location.reload();")
+    #     restore.append("// Set your preferred role back in Settings")
+    #
+    # Console-test patterns:
+    # if "scoring" in desc:
+    #     console.append("var results = computeAll();\nconsole.table(results);")
 
     # Generic console-test fallback
-    if not console_matched and "console-test" in desc:
+    if "console-test" in desc:
         console.append("// Open browser console: Cmd+Option+J (Mac) or Ctrl+Shift+J (Windows/Linux)\n// Then run the checks described below")
 
     return {"setup": setup, "console": console, "restore": restore}
@@ -436,17 +831,18 @@ def build_restore_callout(cmds: list[str]) -> str:
       </div>"""
 
 
-def build_section_html(step: dict, is_first: bool, global_check_offset: int) -> str:
+def build_section_html(step: dict, is_first: bool, global_check_offset: int, total_steps: int = 0) -> str:
     """Build one section card's HTML."""
     sid = step["step_num"]
     items = step["manual_items"]
     total = len(items)
     raw_desc = step.get("raw_description", "")
+    completed_time = step.get("completed_time", "")
     prereq = build_prerequisite(sid, items[0]["description"] if items else "", is_first)
     console_cmds = extract_console_commands(raw_desc)
 
     chevron_svg = (
-        '<svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">'
+        '<svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">'
         '<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>'
         '</svg>'
     )
@@ -467,15 +863,22 @@ def build_section_html(step: dict, is_first: bool, global_check_offset: int) -> 
           </div>
         </div>"""
 
+    stripe_time = f'Completed {escape_html(completed_time)}' if completed_time else "In progress"
     return f"""
   <div class="section-card" id="section-{sid}">
+    <div class="section-stripe">
+      <div class="section-stripe-left">
+        <span class="section-step-pill">Step {sid}</span>
+        <span class="section-stripe-time">{stripe_time}</span>
+      </div>
+      <span class="section-stripe-pos">{sid} of {total_steps}</span>
+    </div>
     <div class="section-header" onclick="toggleSection('section-{sid}')">
       <div class="section-header-left">
         <div class="section-chevron">
           {chevron_svg}
         </div>
         <span class="section-title">{escape_html(step["step_name"])}</span>
-        <span class="section-step">Step {sid}</span>
       </div>
       <span class="section-pill" id="pill-section-{sid}">0 / {total}</span>
     </div>
@@ -582,6 +985,7 @@ def generate_html(
     state_info: dict,
     bugs: list,
     today: str,
+    test_results: dict | None = None,
 ) -> str:
     """Generate the complete HTML string."""
     feature_name = feature["feature_name"]
@@ -593,10 +997,23 @@ def generate_html(
     # Total checks
     total_checks = sum(len(s["manual_items"]) for s in feature["steps"])
 
+    # Automated results
+    auto_results_html = build_auto_results_html(test_results)
+    auto_results_css = build_auto_results_css() if test_results else ""
+    auto_verified_count = 0
+    if test_results:
+        pw = test_results.get("playwright", {})
+        if pw.get("status") not in ("error", None):
+            auto_verified_count = pw.get("total", 0)
+
+    # Build signpost callout
+    signpost_html = build_signpost_html(total_checks, test_results)
+
     # Build section cards
+    total_steps = feature.get("total_steps", 0)
     sections_html = ""
     for idx, step in enumerate(feature["steps"]):
-        sections_html += build_section_html(step, idx == 0, 0)
+        sections_html += build_section_html(step, idx == 0, 0, total_steps)
 
     # Build bugs
     bugs_html = build_bugs_html(bugs)
@@ -675,7 +1092,7 @@ def generate_html(
 
   .top-bar-row1 {{
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 12px;
@@ -702,13 +1119,14 @@ def generate_html(
   .app-pill {{
     background: #dbeafe;
     color: var(--blue);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .08em;
-    padding: 2px 8px;
+    letter-spacing: .06em;
+    padding: 3px 10px;
     border-radius: 99px;
     border: 1px solid #bfdbfe;
+    white-space: nowrap;
   }}
 
   .version-tag {{
@@ -873,7 +1291,7 @@ def generate_html(
   .page-body {{
     max-width: 900px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 8px 24px 24px;
   }}
 
   /* -- Section card -- */
@@ -906,8 +1324,8 @@ def generate_html(
   }}
 
   .section-chevron {{
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     color: var(--grey-400);
     transition: transform 0.2s;
     flex-shrink: 0;
@@ -928,6 +1346,62 @@ def generate_html(
     background: var(--grey-100);
     border-radius: 99px;
     padding: 2px 8px;
+  }}
+
+  /* -- Section stripe (Concept C) -- */
+  .section-stripe {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 18px;
+    background: var(--grey-50);
+    border-bottom: 1px solid var(--grey-100);
+    font-size: 12px;
+  }}
+  .section-stripe-left {{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }}
+  .section-step-pill {{
+    background: var(--grey-200);
+    color: var(--grey-600);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 99px;
+  }}
+  .section-stripe-time {{
+    color: var(--grey-500);
+    font-size: 12px;
+  }}
+  .section-stripe-pos {{
+    font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    font-size: 11px;
+    color: var(--grey-400);
+  }}
+
+  /* -- Signpost banner divider -- */
+  .signpost-banner {{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 900px;
+    margin: 4px auto 8px;
+    padding: 0 24px;
+  }}
+  .signpost-banner-line {{
+    flex: 1;
+    height: 1px;
+    background: var(--grey-300);
+  }}
+  .signpost-banner-text {{
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--grey-500);
+    white-space: nowrap;
   }}
 
   .section-pill {{
@@ -1054,8 +1528,8 @@ def generate_html(
   .check-row {{
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    padding: 9px 10px;
+    gap: 8px;
+    padding: 9px 4px 9px 4px;
     cursor: pointer;
     user-select: none;
   }}
@@ -1063,7 +1537,7 @@ def generate_html(
   .check-num {{
     font-size: 11px;
     color: var(--grey-400);
-    min-width: 18px;
+    min-width: 14px;
     text-align: right;
     padding-top: 2px;
     flex-shrink: 0;
@@ -1369,6 +1843,131 @@ def generate_html(
   .toast.show {{ opacity: 1; transform: translateY(0); }}
   .toast.success {{ background: var(--green); }}
   .toast.error {{ background: var(--red); }}
+
+  /* -- Dark mode (toggle-driven, not auto) -- */
+  body.dark {{
+    --blue: #3b82f6;
+    --blue-light: #1e3a5f;
+    --blue-mid: #1d4ed880;
+    --green: #4ade80;
+    --green-light: #052e16;
+    --green-mid: #16653480;
+    --red: #f87171;
+    --red-light: #450a0a;
+    --red-mid: #991b1b80;
+    --amber: #fbbf24;
+    --amber-light: #451a0380;
+    --amber-mid: #92400e80;
+    --grey-50: #1a2332;
+    --grey-100: #1f2937;
+    --grey-200: #374151;
+    --grey-300: #4b5563;
+    --grey-400: #9ca3af;
+    --grey-500: #9ca3af;
+    --grey-600: #d1d5db;
+    --grey-700: #e5e7eb;
+    --grey-800: #f3f4f6;
+    --grey-900: #f9fafb;
+    --radius: 8px;
+    --radius-sm: 4px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.15);
+    background: #0f172a;
+    color: #e2e8f0;
+  }}
+  body.dark .top-bar {{ background: #1e293b; border-color: #334155; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }}
+  body.dark .hero-row h1 {{ color: #f1f5f9; }}
+  body.dark .app-pill {{ background: #1e3a5f; color: #60a5fa; border-color: #1d4ed880; }}
+  body.dark .section-card {{ background: #1e293b; border-color: #334155; }}
+  body.dark .section-header:hover {{ background: #334155; }}
+  body.dark .section-body {{ border-color: #334155; }}
+  body.dark .section-stripe {{ background: #0f172a; border-color: #334155; }}
+  body.dark .section-step-pill {{ background: #334155; color: #94a3b8; }}
+  body.dark .section-stripe-time {{ color: #94a3b8; }}
+  body.dark .section-title {{ color: #e2e8f0; }}
+  body.dark .section-pill {{ background: #334155; color: #94a3b8; }}
+  body.dark .section-pill.has-pass {{ background: #052e16; color: #4ade80; }}
+  body.dark .section-pill.has-fail {{ background: #450a0a; color: #f87171; }}
+  body.dark .section-pill.all-pass {{ background: #052e16; color: #4ade80; }}
+  body.dark .section-chevron {{ color: #64748b; }}
+  body.dark .progress-card {{ background: #1e293b; border-color: #334155; }}
+  body.dark .progress-track {{ background: #334155; }}
+  body.dark .check-text {{ color: #cbd5e1; }}
+  body.dark .check-num {{ color: #64748b; }}
+  body.dark .check-item.state-pass {{ background: #052e1680; border-color: #166534; }}
+  body.dark .check-item.state-fail {{ background: #450a0a80; border-color: #991b1b; }}
+  body.dark .state-toggle {{ background: #334155; border-color: #475569; }}
+  body.dark .state-toggle:hover {{ border-color: #64748b; }}
+  body.dark .callout-info {{ background: #1e3a5f; border-color: #1d4ed880; color: #93c5fd; }}
+  body.dark .callout-info .callout-title {{ color: #60a5fa; }}
+  body.dark .callout-amber {{ background: #451a0380; border-color: #92400e80; color: #fbbf24; }}
+  body.dark .callout-amber .callout-title {{ color: #fbbf24; }}
+  body.dark .code-block {{ background: #0f172a; }}
+  body.dark .code-block-header {{ background: #1e293b; }}
+  body.dark .copy-btn {{ border-color: #475569; color: #94a3b8; }}
+  body.dark .copy-btn:hover {{ background: #334155; color: #e2e8f0; }}
+  body.dark .ar-card {{ background: #1e293b; border-color: #334155; }}
+  body.dark .ar-header {{ border-color: #334155; }}
+  body.dark .ar-title {{ color: #e2e8f0; }}
+  body.dark .ar-tiles-strip {{ background: #0f172a; border-color: #334155; }}
+  body.dark .ar-tile {{ border-color: #334155; }}
+  body.dark .ar-tile-label {{ color: #94a3b8; }}
+  body.dark .ar-tile-detail {{ color: #94a3b8; }}
+  body.dark .ar-badge {{ background: #052e16; color: #4ade80; border-color: #16653480; }}
+  body.dark .ar-badge.warn {{ background: #451a0380; color: #fbbf24; border-color: #92400e80; }}
+  body.dark .ar-badge.fail {{ background: #450a0a80; color: #f87171; border-color: #991b1b80; }}
+  body.dark .ar-detail {{ border-color: #334155; }}
+  body.dark .ar-detail summary {{ color: #94a3b8; }}
+  body.dark .ar-detail summary:hover {{ background: #334155; color: #e2e8f0; }}
+  body.dark .ar-detail-body {{ color: #cbd5e1; }}
+  body.dark .chevron-icon {{ color: #64748b; }}
+  body.dark .hc-row, body.dark .route-row {{ border-color: #334155; }}
+  body.dark .signpost-banner-line {{ background: #475569; }}
+  body.dark .signpost-banner-text {{ color: #94a3b8; }}
+  body.dark .export-section {{ border-color: #334155; }}
+  body.dark .export-title {{ color: #e2e8f0; }}
+  body.dark .btn-export {{ background: #334155; border-color: #475569; color: #cbd5e1; }}
+  body.dark .btn-export:hover {{ background: #475569; }}
+  body.dark .btn-export.primary {{ background: #1d4ed8; border-color: #1d4ed8; color: white; }}
+  body.dark .btn {{ color: #cbd5e1; border-color: #475569; }}
+  body.dark .btn:hover {{ background: #334155; }}
+  body.dark .btn-primary {{ background: #2563eb; color: white; }}
+  body.dark .btn-primary:hover {{ background: #1d4ed8; }}
+  body.dark .btn-danger {{ color: #f87171; border-color: #991b1b; }}
+  body.dark .btn-danger:hover {{ background: #450a0a80; }}
+  body.dark .btn-ghost {{ border-color: #475569; color: #94a3b8; }}
+  body.dark .btn-ghost:hover {{ background: #334155; color: #e2e8f0; }}
+  body.dark .env-card-label {{ color: #64748b; }}
+  body.dark .env-card-value {{ color: #cbd5e1; }}
+  body.dark .fail-notes-wrap textarea {{ background: #0f172a; border-color: #475569; color: #e2e8f0; }}
+  body.dark .fail-notes-label {{ color: #94a3b8; }}
+  body.dark .footer {{ color: #64748b; }}
+  body.dark .toast {{ background: #334155; color: #e2e8f0; }}
+  body.dark .title-subtitle {{ color: #94a3b8; }}
+  body.dark .ar-warnings {{ background: #451a0340; border-color: #92400e60; }}
+  body.dark .ar-stale-note {{ color: #fbbf24; background: #451a0340; }}
+  body.dark .ar-fail-card {{ background: #450a0a40; border-color: #991b1b60; }}
+
+  /* Dark mode toggle button */
+  .theme-toggle {{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--grey-300);
+    background: transparent;
+    cursor: pointer;
+    color: var(--grey-500);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }}
+  .theme-toggle:hover {{ background: var(--grey-100); color: var(--grey-700); }}
+  .theme-toggle svg {{ width: 16px; height: 16px; }}
+  body.dark .theme-toggle {{ border-color: #475569; color: #94a3b8; }}
+  body.dark .theme-toggle:hover {{ background: #334155; color: #e2e8f0; }}
+{auto_results_css}
 </style>
 </head>
 <body>
@@ -1397,12 +1996,16 @@ def generate_html(
           <span class="env-card-label">OS</span>
           <span class="env-card-value" id="env-os">&mdash;</span>
         </div>
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+          <svg id="theme-icon-sun" viewBox="0 0 20 20" fill="currentColor" style="display:none"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"/></svg>
+          <svg id="theme-icon-moon" viewBox="0 0 20 20" fill="currentColor"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+        </button>
       </div>
     </div>
 
     <!-- Progress card -->
     <div class="progress-card">
-      <div class="title-subtitle">Manual test checklist &middot; {total_checks} checks</div>
+      <div class="title-subtitle">Manual test checklist &middot; {total_checks} checks{f' ({auto_verified_count} auto-verified)' if auto_verified_count else ''}</div>
       <div class="progress-track">
         <div class="progress-fill-pass" id="progress-fill-pass" style="width:0%"></div>
         <div class="progress-fill-fail" id="progress-fill-fail" style="width:0%"></div>
@@ -1428,6 +2031,8 @@ def generate_html(
   </div>
 </div>
 
+{auto_results_html}
+{signpost_html}
 <!-- PAGE BODY -->
 <div class="page-body">
 {sections_html}
@@ -1784,6 +2389,19 @@ function buildResultsText(failOnly) {{
   const lines = [];
 
   if (!failOnly) {{
+    // Include automated results in export if present
+    var arSection = document.querySelector('.ar-section');
+    if (arSection) {{
+      lines.push('## Automated Results (completed in ' + (arSection.querySelector('.ar-duration') || {{}}).textContent + ')');
+      var tiles = arSection.querySelectorAll('.ar-tile');
+      tiles.forEach(function(t) {{
+        var title = t.querySelector('.ar-tile-title').textContent;
+        var value = t.querySelector('.ar-tile-value').textContent;
+        var detail = t.querySelector('.ar-tile-detail').textContent;
+        lines.push(title + ': ' + value + (detail ? ' (' + detail + ')' : ''));
+      }});
+      lines.push('');
+    }}
     lines.push('## Manual Test Results -- {export_feature} {export_version}');
     lines.push('Tested: ' + dateStr + ' | Browser: ' + browser + ' | Viewport: ' + viewport);
     lines.push('Duration: ' + timerVal);
@@ -1820,7 +2438,7 @@ function buildResultsText(failOnly) {{
 
     if (failOnly && sFail === 0) continue;
 
-    lines.push('### Test ' + sid + ': ' + label + ' (' + step + ') -- ' + sPass + '/' + total + ' pass, ' + sFail + ' fail');
+    lines.push('### Step ' + sid + ': ' + label + ' -- ' + sPass + '/' + total + ' pass, ' + sFail + ' fail');
     for (const fl of failLines) lines.push(fl);
     lines.push('');
   }}
@@ -1885,6 +2503,27 @@ function showToast(msg, type) {{
   clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => {{ el.classList.remove('show'); }}, 2800);
 }}
+
+// -- Theme toggle --
+function toggleTheme() {{
+  var isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('snagging-theme', isDark ? 'dark' : 'light');
+  updateThemeIcon(isDark);
+}}
+
+function updateThemeIcon(isDark) {{
+  document.getElementById('theme-icon-sun').style.display = isDark ? '' : 'none';
+  document.getElementById('theme-icon-moon').style.display = isDark ? 'none' : '';
+}}
+
+function initTheme() {{
+  var saved = localStorage.getItem('snagging-theme');
+  if (saved === 'dark') {{
+    document.body.classList.add('dark');
+    updateThemeIcon(true);
+  }}
+}}
+initTheme();
 
 // -- Boot --
 init();
@@ -2036,6 +2675,12 @@ def main():
         help="Path to JSON file with known bugs from automated testing.",
     )
     parser.add_argument(
+        "--test-results",
+        type=str,
+        default=None,
+        help="Path to test-suite-results.json from run_test_suite.py.",
+    )
+    parser.add_argument(
         "--no-open",
         action="store_true",
         help="Don't open the HTML file in the browser after generating.",
@@ -2081,9 +2726,12 @@ def main():
     # Load bugs
     bugs = load_bugs(args.bugs)
 
+    # Load automated test results
+    test_results = load_test_results(args.test_results)
+
     # Generate
     today = date.today().strftime("%d/%m/%Y")
-    html = generate_html(feature, state_info, bugs, today)
+    html = generate_html(feature, state_info, bugs, today, test_results)
 
     # Write to docs/
     DOCS_DIR.mkdir(exist_ok=True)

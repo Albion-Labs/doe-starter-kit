@@ -7,6 +7,23 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.39.0] — 2026-03-17
+
+### Added
+- **Snagging v2: Automated test results integration** — `/snagging` now runs `execution/run_test_suite.py` (if it exists) before generating the checklist. Results rendered as an automated results card with status badge (ALL PASS / WARNINGS / FAILURES), metric tile strip (Browser Tests, Visual Regression, Accessibility, Performance), expandable detail sections (health check, route coverage), and banner divider separating auto from manual checks.
+- **Dark mode toggle** on snagging checklists — moon/sun button in the top bar, preference persisted in localStorage. Light mode is always the default.
+- **Concept C step stripes** — section cards now have a thin header stripe showing step pill, completion timestamp, and "N of M" position indicator. Card title is just the clean feature name.
+- **`--test-results` argument** for `generate_test_checklist.py` — accepts path to orchestrator JSON output. When omitted, generator produces the same output as before (manual checks only). Fully backwards-compatible.
+- **Signpost banner divider** — "YOUR REVIEW — N checks below" separates automated results from manual check sections.
+- **Baseline update instructions** in `/snagging` command — `--update-baselines`, `--update-visual`, `--update-lighthouse`, `--update-a11y`.
+
+### Changed
+- Snagging command restructured: new Step 2 (run test suite, portability-guarded), steps renumbered, paste-back handling documented.
+- Checkbox indentation tightened — less left padding, narrower number column, smaller gaps.
+- Disclosure arrows upgraded from tiny unicode triangles to proportional SVG chevrons with rotation animation.
+- Heading parser now handles `[APP]`/`[INFRA]` tags without version ranges (e.g. `### Feature [INFRA]`).
+- `extract_console_commands()` genericized — project-specific patterns replaced with commented examples.
+
 ## [v1.38.0] — 2026-03-17
 
 ### Added

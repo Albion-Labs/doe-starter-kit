@@ -1,4 +1,4 @@
-Generate (or regenerate) the manual test checklist for the current feature.
+Generate (or regenerate) the manual test checklist for the current feature, with automated test results when available.
 
 ## Step 1: Identify the target feature
 
@@ -10,7 +10,21 @@ If no unchecked `[manual]` items exist for the current feature, check `## Awaiti
 
 If nothing is found anywhere, report: "No manual tests pending." and stop.
 
-## Step 2: Offer automated code trace
+## Step 2: Run automated test suite (if available)
+
+**Portability guard:** Only run this step if `execution/run_test_suite.py` exists. If it doesn't exist, skip to Step 3.
+
+Tell the user: "Running automated tests (Playwright, Lighthouse, health check) -- about 30-60 seconds."
+
+```bash
+python3 execution/run_test_suite.py
+```
+
+Use `timeout: 180000` on the Bash tool call (3 minutes max).
+
+**APP_PATH mismatch handling:** If the results JSON (`.tmp/test-suite-results.json`) contains a warning about APP_PATH mismatch, update the `APP_PATH` constant in all 3 test files (`tests/app.spec.js`, `tests/accessibility.spec.js`, `tests/visual.spec.js`) to match the current version from STATE.md, then re-run the test suite.
+
+## Step 3: Offer automated code trace
 
 If automated code trace verification hasn't been run yet for this feature's `[manual]` items, offer:
 
@@ -26,15 +40,15 @@ If yes, perform a code trace on the relevant files. If any bugs are found, write
 
 If no, or if bugs file doesn't exist after trace, proceed without `--bugs`.
 
-## Step 3: Run the generator
+## Step 4: Run the generator
 
 ```bash
-python3 execution/generate_test_checklist.py [--feature "Name"] [--bugs .tmp/test-bugs.json]
+python3 execution/generate_test_checklist.py [--feature "Name"] [--bugs .tmp/test-bugs.json] [--test-results .tmp/test-suite-results.json]
 ```
 
-Include `--feature` if targeting a named feature. Include `--bugs` only if `.tmp/test-bugs.json` exists.
+Include `--feature` if targeting a named feature. Include `--bugs` only if `.tmp/test-bugs.json` exists. Include `--test-results` only if `.tmp/test-suite-results.json` exists (i.e., the test suite ran in Step 2).
 
-## Step 4: Report
+## Step 5: Report
 
 Show a brief summary:
 
@@ -43,12 +57,15 @@ Show a brief summary:
 │  TEST CHECKLIST -- [Feature name]                │
 ├──────────────────────────────────────────────────┤
 │  Manual checks:  N items                         │
+│  Auto-verified:  N tests (or "skipped")          │
 │  Bugs surfaced:  N (or none)                     │
 │  Checklist:      open in browser                 │
 └──────────────────────────────────────────────────┘
 ```
 
 Use Unicode box-drawing characters (`┌─┐`, `├─┤`, `└─┘`, `│`). No emojis inside the box.
+
+**If test suite results show failures or warnings, mention them before telling the user to work through the checklist.** For example: "Playwright found 2 test failures and Lighthouse dropped 12 points -- see the automated results section at the top of the checklist."
 
 Then tell the user:
 
@@ -57,8 +74,27 @@ Work through the checklist, then paste the exported results back here.
 I'll fix any failures and regenerate.
 ```
 
+## Step 6: Handle paste-back results
+
+Items prefixed `[auto]` in the exported results were machine-verified during this snagging run -- distinct from `[auto]` contract criteria in todo.md. Do not ask the user about `[auto]` items. Only act on `[ ]` failures and manual `[x]` passes.
+
+## Baseline updates
+
+If the user wants to accept the current state as the new baseline (e.g., after an intentional UI redesign or accepted performance regression), run:
+
+```bash
+python3 execution/run_test_suite.py --update-baselines
+```
+
+For specific baselines only:
+- `--update-visual` -- visual regression screenshots
+- `--update-lighthouse` -- Lighthouse performance score
+- `--update-a11y` -- accessibility known violations
+
+Each update command automatically re-runs the full suite and writes fresh results.
+
 ## Important notes
 
-- If `execution/generate_test_checklist.py` doesn't exist, report the error and stop — do not generate a checklist inline
+- If `execution/generate_test_checklist.py` doesn't exist, report the error and stop -- do not generate a checklist inline
 - Arguments override auto-detection: `/snagging Feature Name` always targets that feature
 - Clean up `.tmp/test-bugs.json` after the checklist is generated (it's ephemeral)
