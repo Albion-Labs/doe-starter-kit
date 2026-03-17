@@ -7,6 +7,11 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.39.5] — 2026-03-17
+
+### Fixed
+- **SVG diagrams across 3 pages**: commands.html viewBox widened to 610 (fixes "weekly" text clipping). key-concepts.html and context.html SVGs changed from fixed `width`/`height` attributes to `width:100%;height:auto` so they scale responsively. Container padding reduced across all diagram containers.
+
 ## [v1.39.4] — 2026-03-17
 
 ### Fixed
