@@ -532,7 +532,7 @@
     .cmd-entry {
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 20px 24px;
+      padding: 18px 20px;
       margin-bottom: 16px;
       background: var(--bg-card);
       transition: background 0.2s, border-color 0.2s;
@@ -542,9 +542,9 @@
     }
     .cmd-header {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
       margin-bottom: 0;
     }
     .cmd-badge {
@@ -558,37 +558,38 @@
       border-radius: 6px;
       border: 1px solid var(--accent);
       white-space: nowrap;
-      flex-shrink: 0;
     }
     .cmd-origin {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 600;
       padding: 2px 8px;
       border-radius: 4px;
-      margin-left: 8px;
-      vertical-align: middle;
+      letter-spacing: 0.02em;
+      height: 22px;
     }
     .cmd-origin.doe {
       background: var(--accent-light);
       color: var(--accent);
       border: 1px solid var(--accent);
     }
-    .cmd-origin.builtin {
+    .cmd-origin.default {
       background: #DBEAFE;
       color: #3B82F6;
       border: 1px solid #3B82F6;
     }
-    [data-theme="dark"] .cmd-origin.builtin {
+    [data-theme="dark"] .cmd-origin.default {
       background: #1E3A5F;
       color: #93C5FD;
       border-color: #93C5FD;
     }
     .cmd-summary {
+      flex-basis: 100%;
       font-size: 14px;
       color: var(--text-secondary);
       line-height: 1.5;
-      padding-top: 3px;
+      margin-top: 4px;
     }
     .cmd-detail {
       margin-top: 16px;
@@ -647,14 +648,14 @@
     .lifecycle-flow {
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 28px 24px;
-      margin: 24px 0 40px;
+      padding: 20px 16px 12px;
+      margin: 24px 0 24px;
       background: var(--bg-card);
       overflow-x: auto;
     }
     .lifecycle-flow h3 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       margin-top: 0;
       font-size: 15px;
       font-weight: 600;
@@ -665,12 +666,12 @@
     .flow-svg {
       display: block;
       margin: 0 auto;
-      max-width: 100%;
+      width: 100%;
       height: auto;
     }
 
     /* ── Annotation list ── */
-    .annotation-list {
+    .content .annotation-list {
       list-style: none;
       padding-left: 0;
       margin: 0 0 12px;
@@ -2411,15 +2412,15 @@
         </div>
 
         <!-- ============================================================= -->
-        <!-- 7. Built-in Claude Commands                                    -->
+        <!-- 7. Default Commands                                              -->
         <!-- ============================================================= -->
-        <h2 id="builtin">Built-in Claude Commands</h2>
+        <h2 id="default">Default Commands</h2>
         <p>These commands come with Claude Code itself &mdash; they&rsquo;re available in any project, whether or not you use DOE.</p>
 
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/clear</span>
-            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-origin default">Default</span>
             <span class="cmd-summary">Clears conversation history and resets context. Use when switching topics or when context gets polluted.</span>
           </div>
         </div>
@@ -2427,7 +2428,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/help</span>
-            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-origin default">Default</span>
             <span class="cmd-summary">Shows available commands and usage information.</span>
           </div>
         </div>
@@ -2435,7 +2436,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/model</span>
-            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-origin default">Default</span>
             <span class="cmd-summary">Switches the active model (e.g. Opus, Sonnet, Haiku) mid-session.</span>
           </div>
         </div>
@@ -2443,7 +2444,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/memory</span>
-            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-origin default">Default</span>
             <span class="cmd-summary">Manages persistent memory &mdash; facts Claude remembers across sessions.</span>
           </div>
         </div>
@@ -2451,7 +2452,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/context</span>
-            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-origin default">Default</span>
             <span class="cmd-summary">Shows current context window usage and what&rsquo;s loaded.</span>
           </div>
         </div>
@@ -2459,7 +2460,7 @@
         <div class="cmd-entry">
           <div class="cmd-header">
             <span class="cmd-badge">/compact</span>
-            <span class="cmd-origin builtin">Built-in</span>
+            <span class="cmd-origin default">Default</span>
             <span class="cmd-summary">Compresses conversation history to free up context space without losing key information.</span>
           </div>
         </div>
@@ -2476,7 +2477,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.39.2</footer>
+        <footer class="site-footer">DOE Starter Kit v1.39.3</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
@@ -2489,7 +2490,7 @@
       <a href="#planning" class="toc-link">Planning &amp; Ideas</a>
       <a href="#multiagent" class="toc-link">Advanced: Parallel Work</a>
       <a href="#maintenance" class="toc-link">Maintenance</a>
-      <a href="#builtin" class="toc-link">Built-in Claude Commands</a>
+      <a href="#default" class="toc-link">Default Commands</a>
     </nav>
 
   </div><!-- /layout -->

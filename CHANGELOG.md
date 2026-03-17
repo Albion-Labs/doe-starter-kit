@@ -7,6 +7,15 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.39.3] — 2026-03-17
+
+### Changed
+- **Command card layout** (commands.html): badge + origin tag now share a row (flex-wrap), summary text forced below via `flex-basis: 100%`. Reduced card padding from 20px 24px to 18px 20px.
+- **"Built-in" renamed to "Default"** across all 6 command entries, section heading, and TOC link. CSS class `.cmd-origin.builtin` renamed to `.cmd-origin.default`.
+- **Origin tag styling**: now uses `display: inline-flex; align-items: center; height: 22px` for consistent vertical alignment with the command badge.
+- **SVG lifecycle diagram**: reduced container padding (28px 24px → 20px 16px 12px), reduced bottom margin (40px → 24px), SVG width changed from `max-width: 100%` to `width: 100%` to fill container.
+- **Annotation list specificity**: `.annotation-list` → `.content .annotation-list` to override `.content ul { padding-left: 20px }` without relying on source order.
+
 ## [v1.39.2] — 2026-03-17
 
 ### Changed
