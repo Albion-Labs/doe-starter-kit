@@ -7,6 +7,11 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.41.3] — 2026-03-18
+
+### Fixed
+- **Snagging dark mode** — section header and export section had `background: white` without dark mode overrides, causing white strips in dark mode. Both now get `background: #1e293b`.
+
 ## [v1.41.2] — 2026-03-18
 
 ### Changed

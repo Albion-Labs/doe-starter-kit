@@ -1945,6 +1945,7 @@ def generate_html(
   body.dark .hero-row h1 {{ color: #f1f5f9; }}
   body.dark .app-pill {{ background: #1e3a5f; color: #60a5fa; border-color: #1d4ed880; }}
   body.dark .section-card {{ background: #1e293b; border-color: #334155; }}
+  body.dark .section-header {{ background: #1e293b; }}
   body.dark .section-header:hover {{ background: #334155; }}
   body.dark .section-body {{ border-color: #334155; }}
   body.dark .section-stripe {{ background: #0f172a; border-color: #334155; }}
@@ -1990,7 +1991,7 @@ def generate_html(
   body.dark .hc-row, body.dark .route-row {{ border-color: #334155; }}
   body.dark .signpost-banner-line {{ background: #475569; }}
   body.dark .signpost-banner-text {{ color: #94a3b8; }}
-  body.dark .export-section {{ border-color: #334155; }}
+  body.dark .export-section {{ background: #1e293b; border-color: #334155; }}
   body.dark .export-title {{ color: #e2e8f0; }}
   body.dark .btn-export {{ background: #334155; border-color: #475569; color: #cbd5e1; }}
   body.dark .btn-export:hover {{ background: #475569; }}
