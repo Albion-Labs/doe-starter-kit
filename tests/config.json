@@ -1,6 +1,9 @@
 {
   "buildCommand": "",
   "testTimeout": 30,
-  "projectType": "",
-  "dependencies": []
+  "projectType": "html-app",
+  "dependencies": [],
+  "appPrefix": "",
+  "routes": [],
+  "initScript": ""
 }
