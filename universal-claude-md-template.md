@@ -33,6 +33,10 @@ Tag source: e.g. "[retro: feature-name vX.Y.Z]"
 - Multi-section formatted output (wrap-ups, reports, dashboards) must be assembled and printed as a single block — never fragment across multiple tool calls. Generate the entire output in one script. [retro: universal]
 - After generating formatted output (wrap-ups, dashboards) via a Bash/Python script, re-present the full output as text in your response. Tool output alone is not sufficient — the user expects it as your actual reply. Never summarise what was already generated; echo it in full. [retro: universal]
 
+## DOE Starter Kit
+
+- Never commit directly to `~/doe-starter-kit` during feature work — not even "as you go." Make all changes in the project repo first, then run `/sync-doe` once at the end. The sync procedure handles tutorial footer stamping, changelog, tagging, pushing, AND creating the GitHub release. Committing directly skips all of these — the tag may exist locally but users see no release on GitHub. [retro: universal]
+
 ## Verification
 
 - After creating or editing files, verify with `ls`/`cat`/`grep` before reporting success. Don't skip this even for "obvious" edits. [retro: universal]

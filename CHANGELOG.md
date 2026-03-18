@@ -7,6 +7,11 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.40.1] — 2026-03-18
+
+### Added
+- **Universal learning** — DOE Starter Kit section in `universal-claude-md-template.md`: never commit directly to `~/doe-starter-kit` during feature work, always use `/sync-doe` for the full release pipeline.
+
 ## [v1.40.0] — 2026-03-18
 
 ### Added
