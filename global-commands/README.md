@@ -59,8 +59,12 @@ Generates a structured project index at `.claude/codemap.md`. Scans file tree, m
 *Added 04/03/26*
 
 ### `/snagging`
-Generates an interactive HTML test checklist for the current feature. Runs automated test suite first (Playwright, Lighthouse, a11y, health check -- if `execution/run_test_suite.py` exists), then generates a checklist with automated results card (status badge, metric tiles, expandable details), banner divider, and manual check sections with step stripes. Supports baseline updates, dark mode toggle, and paste-back result handling. Optionally runs code trace before generating.
-*Added 16/03/26 · Updated 17/03/26*
+Generates (or regenerates) an interactive HTML manual test checklist for the current feature. Identifies unchecked `[manual]` items from todo.md, optionally runs an automated code trace first, then calls `execution/generate_test_checklist.py`. Outputs a summary card and opens the checklist in the browser.
+*Added 16/03/26*
+
+### `/report-doe-bug`
+Triage-first DOE framework bug reporter. 5-phase flow: gather user description + Claude's reconstruction + environment, check if fixed in newer version (route to `/pull-doe`), detect user error (route to tutorial docs), search for duplicates (offer to comment), then sanitise and file a GitHub Issue on the upstream repo with labels. Falls back to local markdown if `gh` is unavailable.
+*Added 18/03/26*
 
 ## Visual
 

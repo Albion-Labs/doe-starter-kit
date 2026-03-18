@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## [v1.41.0] — 2026-03-18
+
+### Added
+- **`/report-doe-bug` command** — triage-first bug reporter for the DOE framework. 5-phase flow: gather user description + Claude reconstruction + environment capture, check if fixed in newer version (route to `/pull-doe`), detect user error (route to tutorial docs via dynamic HTML scanning), search for duplicates (offer to comment), then sanitise and file a structured GitHub Issue with labels (`bug`, `user-reported`, version tag, severity). Falls back to local markdown if `gh` CLI is unavailable.
+- **`execution/doe_bug_report.py`** — deterministic execution script supporting the bug reporter. Subcommands: `--environment` (DOE version, OS, Node, Python, shell), `--version-check` (compare to upstream releases, parse CHANGELOG), `--check-gh` (verify GitHub CLI), `--scan-tutorials` (search tutorial HTML headings via stdlib HTMLParser), `--search-duplicates` (query existing issues), `--sanitise` (strip API keys, secrets, paths, emails), `--file-issue` (create GitHub Issue with labels), `--add-comment` (add context to duplicates). All output JSON.
+- **Tutorial update** — added `/report-doe-bug` entry to `commands.html` Quality section.
+
 ## [v1.40.1] — 2026-03-18
 
 ### Added

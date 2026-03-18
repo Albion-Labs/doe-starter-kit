@@ -2202,6 +2202,19 @@
           </div>
         </div>
 
+        <!-- /report-doe-bug -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/report-doe-bug</span>
+            <span class="cmd-origin doe">DOE</span>
+            <span class="cmd-summary">Triage-first bug reporter for the DOE framework itself. Gathers context, checks fixes, detects user error, and files a GitHub Issue only if needed.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you hit a bug in the DOE framework &mdash; a command crashes, a hook blocks valid actions, an execution script fails on valid input, or documentation is wrong.</p>
+            <p><strong>How it works:</strong> Runs a 5-phase triage pipeline. First gathers your description and Claude&rsquo;s reconstruction of what happened, plus environment data (DOE version, OS, Node, Python). Then checks if the bug is already fixed in a newer version (routes you to <code>/pull-doe</code>). Then assesses whether it&rsquo;s a framework bug or a usage mistake (routes you to the relevant tutorial page). Then searches existing GitHub issues for duplicates. Only if it passes all three gates does it sanitise the report (stripping API keys, secrets, and project-specific paths) and file a structured GitHub Issue with labels. Falls back to a local markdown file if <code>gh</code> CLI is not available.</p>
+          </div>
+        </div>
+
         <!-- /test-suite -->
         <div class="cmd-entry">
           <div class="cmd-header">
@@ -2477,7 +2490,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.40.1</footer>
+        <footer class="site-footer">DOE Starter Kit v1.41.0</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
