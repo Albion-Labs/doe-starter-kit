@@ -499,7 +499,44 @@ def main():
     parser.add_argument("--update-visual", action="store_true", help="Update visual baselines only")
     parser.add_argument("--update-lighthouse", action="store_true", help="Update Lighthouse baseline only")
     parser.add_argument("--update-a11y", action="store_true", help="Update a11y baseline only")
+    parser.add_argument("--bootstrap", action="store_true", help="Install dependencies and create initial baselines")
     args = parser.parse_args()
+
+    # Bootstrap mode: install deps, Playwright browser, and create baselines
+    if args.bootstrap:
+        print("Bootstrapping Quality Stack...")
+        pkg_json = PROJECT_ROOT / "package.json"
+        if not pkg_json.exists():
+            print("  Creating package.json...")
+            subprocess.run(["npm", "init", "-y"], cwd=str(PROJECT_ROOT), capture_output=True)
+        print("  Installing dependencies...")
+        subprocess.run(
+            ["npm", "install", "--save-dev", "@playwright/test", "@axe-core/playwright", "serve"],
+            cwd=str(PROJECT_ROOT), timeout=120,
+        )
+        print("  Installing Chromium browser...")
+        subprocess.run(
+            ["npx", "playwright", "install", "chromium"],
+            cwd=str(PROJECT_ROOT), timeout=120,
+        )
+        BASELINES_DIR.mkdir(parents=True, exist_ok=True)
+        if not LIGHTHOUSE_BASELINE.exists():
+            LIGHTHOUSE_BASELINE.write_text('{"score": 0, "first_run": true}\n', encoding="utf-8")
+        if not A11Y_BASELINE.exists():
+            A11Y_BASELINE.write_text('{"known_violations": [], "total_known_critical": 0}\n', encoding="utf-8")
+        print("  Bootstrap complete. Run again without --bootstrap to execute tests.")
+        sys.exit(0)
+
+    # Check Playwright is installed
+    pw_bin = PROJECT_ROOT / "node_modules" / ".bin" / "playwright"
+    if not pw_bin.exists():
+        print(
+            "Quality Stack not bootstrapped. Run:\n"
+            "  python3 execution/run_test_suite.py --bootstrap\n"
+            "to install dependencies and create baselines.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
 
     start_time = time.time()
     TMP_DIR.mkdir(parents=True, exist_ok=True)
