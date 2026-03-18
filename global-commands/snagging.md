@@ -14,6 +14,8 @@ If nothing is found anywhere, report: "No manual tests pending." and stop.
 
 **Portability guard:** Only run this step if `execution/run_test_suite.py` exists. If it doesn't exist, skip to Step 3.
 
+**Bootstrap check:** Before running, verify Playwright is installed by checking if `node_modules/.bin/playwright` exists. If not, tell the user: "Quality Stack not bootstrapped. Run: `python3 execution/run_test_suite.py --bootstrap` to install dependencies and create baselines." Then skip to Step 3.
+
 Tell the user: "Running automated tests (Playwright, Lighthouse, health check) -- about 30-60 seconds."
 
 ```bash
@@ -24,29 +26,34 @@ Use `timeout: 180000` on the Bash tool call (3 minutes max).
 
 **APP_PATH mismatch handling:** If the results JSON (`.tmp/test-suite-results.json`) contains a warning about APP_PATH mismatch, update the `APP_PATH` constant in all 3 test files (`tests/app.spec.js`, `tests/accessibility.spec.js`, `tests/visual.spec.js`) to match the current version from STATE.md, then re-run the test suite.
 
-## Step 3: Offer automated code trace
+## Step 3: Run automated code trace
 
-If automated code trace verification hasn't been run yet for this feature's `[manual]` items, offer:
+**Always run this step** -- code trace is available in every DOE project and provides automated verification without any dependencies.
 
-```
-Some [manual] items may be verifiable by code trace. Run automated checks first to reduce manual testing burden? (yes/no)
-```
+Tell the user: "Running code trace on feature files..."
 
-If yes, perform a code trace on the relevant files. If any bugs are found, write them to `.tmp/test-bugs.json`:
+Perform a code trace on the files relevant to the current feature's `[manual]` items. Read the source files referenced in the manual checks, identify the functions/modules involved, and check for:
+- Logic errors or unreachable code paths
+- Missing null/undefined guards on data the manual check depends on
+- DOM elements referenced in manual checks that may not exist or have wrong IDs/classes
+- Event handlers that may not be wired up correctly
+- Data flow issues (function called but return value not used, stale closures, etc.)
+
+Write findings to `.tmp/test-code-trace.json`:
 
 ```json
-[{"title": "Bug title", "description": "Description", "file": "path/to/file.js", "line": 123, "severity": "High|Medium|Low", "found_by": "automated code trace"}]
+[{"title": "Brief issue title", "description": "What the code trace found", "file": "path/to/file.js", "line": 123, "severity": "High|Medium|Low", "found_by": "code-trace"}]
 ```
 
-If no, or if bugs file doesn't exist after trace, proceed without `--bugs`.
+If no issues found, write an empty array `[]` to the file. This ensures the automated summary section still renders showing "Code Trace: Clean".
 
 ## Step 4: Run the generator
 
 ```bash
-python3 execution/generate_test_checklist.py [--feature "Name"] [--bugs .tmp/test-bugs.json] [--test-results .tmp/test-suite-results.json]
+python3 execution/generate_test_checklist.py [--feature "Name"] [--bugs .tmp/test-bugs.json] [--test-results .tmp/test-suite-results.json] [--code-trace .tmp/test-code-trace.json]
 ```
 
-Include `--feature` if targeting a named feature. Include `--bugs` only if `.tmp/test-bugs.json` exists. Include `--test-results` only if `.tmp/test-suite-results.json` exists (i.e., the test suite ran in Step 2).
+Include `--feature` if targeting a named feature. Include `--bugs` only if `.tmp/test-bugs.json` exists (from a previous run, not from code trace). Include `--test-results` only if `.tmp/test-suite-results.json` exists (i.e., the test suite ran in Step 2). Include `--code-trace` only if `.tmp/test-code-trace.json` exists (from Step 3).
 
 ## Step 5: Report
 

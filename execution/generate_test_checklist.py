@@ -312,15 +312,40 @@ def load_test_results(results_path: str | None) -> dict | None:
         return None
 
 
-def build_auto_results_html(tr: dict) -> str:
-    """Build the automated results HTML section from test-suite-results.json.
+def load_code_trace(trace_path: str | None) -> list | None:
+    """Load code trace results JSON if provided and valid.
+
+    Returns a list of findings: [{"title", "description", "file", "line", "severity", "found_by"}]
+    Returns None if no path or file doesn't exist. Returns [] if clean trace.
+    """
+    if not trace_path:
+        return None
+    p = Path(trace_path)
+    if not p.exists():
+        return None
+    try:
+        with open(p, encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return data
+        return None
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def build_auto_results_html(tr: dict | None, code_trace: list | None = None) -> str:
+    """Build the automated results HTML section from test-suite-results.json and/or code trace.
 
     Design: single card matching the wireframe — header row with status badge,
     grey tile strip with vertical separators, expandable detail sections.
+    Renders when either test results or code trace data is available.
     """
-    if tr is None:
+    if tr is None and code_trace is None:
         return ""
 
+    # When only code trace is available (no test suite), use empty defaults
+    if tr is None:
+        tr = {}
     duration = tr.get("duration_seconds", 0)
     warnings = tr.get("warnings", [])
     pw = tr.get("playwright", {})
@@ -329,7 +354,12 @@ def build_auto_results_html(tr: dict) -> str:
     hc = tr.get("health_check", {})
 
     # -- Determine overall status badge --
-    statuses = [pw.get("status"), a11y.get("status"), lh.get("status"), hc.get("status")]
+    statuses = [s for s in [pw.get("status"), a11y.get("status"), lh.get("status"), hc.get("status")] if s is not None]
+    # Add code trace status
+    if code_trace is not None:
+        ct_high = sum(1 for f in code_trace if f.get("severity", "").lower() == "high")
+        ct_status = "fail" if ct_high > 0 else ("warn" if len(code_trace) > 0 else "pass")
+        statuses.append(ct_status)
     if "fail" in statuses:
         badge_text, badge_cls = "FAILURES", "badge-fail"
     elif "error" in statuses:
@@ -354,63 +384,77 @@ def build_auto_results_html(tr: dict) -> str:
         )
 
     tiles = []
+    has_test_suite = bool(pw or a11y or lh or hc)
 
-    # Browser Tests
-    pw_status = pw.get("status", "error")
-    if pw_status == "error":
-        tiles.append(_tile("Browser Tests", "&mdash;", escape_html(pw.get("error_message", "Error")), "error"))
-    else:
-        route_count = len(pw.get("routes", []))
-        tiles.append(_tile(
-            "Browser Tests",
-            f'{pw.get("passed", 0)}/{pw.get("total", 0)}',
-            f'All pages load, nav works' if pw.get("failed", 0) == 0 else f'{pw.get("failed", 0)} failures',
-            pw_status,
-        ))
-
-    # Visual Regression
-    diffs = pw.get("visual_diffs", [])
-    if pw_status == "error":
-        tiles.append(_tile("Visual Regression", "&mdash;", "Requires browser tests", "error"))
-    else:
-        diff_count = len(diffs)
-        vr_status = "fail" if diff_count > 0 else "pass"
-        tiles.append(_tile(
-            "Visual Regression",
-            f'{diff_count} diff{"s" if diff_count != 1 else ""}',
-            f'4 screenshots match baseline' if diff_count == 0 else f'{diff_count} screenshot{"s" if diff_count != 1 else ""} changed',
-            vr_status,
-        ))
-
-    # Accessibility
-    a11y_status = a11y.get("status", "error")
-    new_crit = a11y.get("new_critical", 0)
-    known_crit = a11y.get("known_critical", 0)
-    if a11y_status == "error":
-        tiles.append(_tile("Accessibility", "&mdash;", escape_html(a11y.get("error_message", "Error")), "error"))
-    elif new_crit == "unknown":
-        tiles.append(_tile("Accessibility", "FAIL", "1+ new violation(s)", "fail"))
-    else:
-        tiles.append(_tile("Accessibility", f'{new_crit} new', f'{known_crit} known, at baseline', a11y_status))
-
-    # Performance
-    lh_status = lh.get("status", "error")
-    if lh_status == "error":
-        err = lh.get("error_message", "Error")
-        tiles.append(_tile("Performance", "&mdash;", escape_html(err), "error"))
-    else:
-        score = lh.get("score", 0)
-        delta = lh.get("delta", 0)
-        noise = lh.get("noise_adjusted", False)
-        first = lh.get("first_run", False)
-        sign = "+" if delta >= 0 else ""
-        if first:
-            detail = "Baseline set"
-        elif noise:
-            detail = "Lighthouse score, no change"
+    if has_test_suite:
+        # Browser Tests
+        pw_status = pw.get("status", "error")
+        if pw_status == "error":
+            tiles.append(_tile("Browser Tests", "&mdash;", escape_html(pw.get("error_message", "Error")), "error"))
         else:
-            detail = f'Lighthouse score, {sign}{delta} from baseline'
-        tiles.append(_tile("Performance", f'{score} ({sign}{delta})', detail, "first" if first else lh_status))
+            route_count = len(pw.get("routes", []))
+            tiles.append(_tile(
+                "Browser Tests",
+                f'{pw.get("passed", 0)}/{pw.get("total", 0)}',
+                f'All pages load, nav works' if pw.get("failed", 0) == 0 else f'{pw.get("failed", 0)} failures',
+                pw_status,
+            ))
+
+        # Visual Regression
+        diffs = pw.get("visual_diffs", [])
+        if pw_status == "error":
+            tiles.append(_tile("Visual Regression", "&mdash;", "Requires browser tests", "error"))
+        else:
+            diff_count = len(diffs)
+            vr_status = "fail" if diff_count > 0 else "pass"
+            tiles.append(_tile(
+                "Visual Regression",
+                f'{diff_count} diff{"s" if diff_count != 1 else ""}',
+                f'4 screenshots match baseline' if diff_count == 0 else f'{diff_count} screenshot{"s" if diff_count != 1 else ""} changed',
+                vr_status,
+            ))
+
+        # Accessibility
+        a11y_status = a11y.get("status", "error")
+        new_crit = a11y.get("new_critical", 0)
+        known_crit = a11y.get("known_critical", 0)
+        if a11y_status == "error":
+            tiles.append(_tile("Accessibility", "&mdash;", escape_html(a11y.get("error_message", "Error")), "error"))
+        elif new_crit == "unknown":
+            tiles.append(_tile("Accessibility", "FAIL", "1+ new violation(s)", "fail"))
+        else:
+            tiles.append(_tile("Accessibility", f'{new_crit} new', f'{known_crit} known, at baseline', a11y_status))
+
+        # Performance
+        lh_status = lh.get("status", "error")
+        if lh_status == "error":
+            err = lh.get("error_message", "Error")
+            tiles.append(_tile("Performance", "&mdash;", escape_html(err), "error"))
+        else:
+            score = lh.get("score", 0)
+            delta = lh.get("delta", 0)
+            noise = lh.get("noise_adjusted", False)
+            first = lh.get("first_run", False)
+            sign = "+" if delta >= 0 else ""
+            if first:
+                detail = "Baseline set"
+            elif noise:
+                detail = "Lighthouse score, no change"
+            else:
+                detail = f'Lighthouse score, {sign}{delta} from baseline'
+            tiles.append(_tile("Performance", f'{score} ({sign}{delta})', detail, "first" if first else lh_status))
+
+    # Code Trace (available with or without test suite)
+    if code_trace is not None:
+        ct_count = len(code_trace)
+        ct_high = sum(1 for f in code_trace if f.get("severity", "").lower() == "high")
+        ct_med = sum(1 for f in code_trace if f.get("severity", "").lower() == "medium")
+        if ct_count == 0:
+            tiles.append(_tile("Code Trace", "Clean", "No issues found", "pass"))
+        elif ct_high > 0:
+            tiles.append(_tile("Code Trace", f'{ct_count} issue{"s" if ct_count != 1 else ""}', f'{ct_high} high severity', "fail"))
+        else:
+            tiles.append(_tile("Code Trace", f'{ct_count} issue{"s" if ct_count != 1 else ""}', f'{ct_med} medium' if ct_med else 'Low severity', "warn"))
 
     tiles_html = "\n".join(tiles)
 
@@ -501,6 +545,26 @@ def build_auto_results_html(tr: dict) -> str:
             f'</details>'
         )
 
+    # Code trace detail
+    if code_trace is not None and len(code_trace) > 0:
+        chevron = '<span class="chevron-icon"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg></span>'
+        rows = ""
+        for finding in code_trace:
+            sev = finding.get("severity", "Low").lower()
+            cls = "hc-fail" if sev == "high" else ("hc-warn" if sev == "medium" else "hc-ok")
+            loc = ""
+            if finding.get("file"):
+                loc = f' &mdash; {escape_html(finding["file"])}'
+                if finding.get("line"):
+                    loc += f':{finding["line"]}'
+            rows += f'<div class="hc-row {cls}"><span class="hc-status">{finding.get("severity", "Low").upper()}</span> {escape_html(finding.get("title", ""))}{loc}</div>'
+        details_html += (
+            f'<details class="ar-detail" open>'
+            f'<summary>{chevron}Code trace &mdash; {len(code_trace)} issue{"s" if len(code_trace) != 1 else ""} found</summary>'
+            f'<div class="ar-detail-body">{rows}</div>'
+            f'</details>'
+        )
+
     return (
         f'<!-- AUTOMATED RESULTS -->\n'
         f'<div class="ar-section">\n'
@@ -510,7 +574,7 @@ def build_auto_results_html(tr: dict) -> str:
         f'        <span class="ar-title">Automated Results</span>\n'
         f'        <span class="ar-badge {badge_cls}">{badge_text}</span>\n'
         f'      </div>\n'
-        f'      <span class="ar-duration">completed in {duration}s</span>\n'
+        f'      <span class="ar-duration">{f"completed in {duration}s" if duration > 0 else "code trace only"}</span>\n'
         f'    </div>\n'
         f'    <div class="ar-tiles-strip">\n{tiles_html}\n    </div>\n'
         f'{warnings_html}\n'
@@ -986,6 +1050,7 @@ def generate_html(
     bugs: list,
     today: str,
     test_results: dict | None = None,
+    code_trace: list | None = None,
 ) -> str:
     """Generate the complete HTML string."""
     feature_name = feature["feature_name"]
@@ -997,9 +1062,10 @@ def generate_html(
     # Total checks
     total_checks = sum(len(s["manual_items"]) for s in feature["steps"])
 
-    # Automated results
-    auto_results_html = build_auto_results_html(test_results)
-    auto_results_css = build_auto_results_css() if test_results else ""
+    # Automated results (renders when either test results or code trace is available)
+    auto_results_html = build_auto_results_html(test_results, code_trace)
+    has_auto = test_results is not None or code_trace is not None
+    auto_results_css = build_auto_results_css() if has_auto else ""
     auto_verified_count = 0
     if test_results:
         pw = test_results.get("playwright", {})
@@ -2681,6 +2747,12 @@ def main():
         help="Path to test-suite-results.json from run_test_suite.py.",
     )
     parser.add_argument(
+        "--code-trace",
+        type=str,
+        default=None,
+        help="Path to code trace results JSON from automated code trace.",
+    )
+    parser.add_argument(
         "--no-open",
         action="store_true",
         help="Don't open the HTML file in the browser after generating.",
@@ -2729,9 +2801,12 @@ def main():
     # Load automated test results
     test_results = load_test_results(args.test_results)
 
+    # Load code trace results
+    code_trace = load_code_trace(args.code_trace)
+
     # Generate
     today = date.today().strftime("%d/%m/%Y")
-    html = generate_html(feature, state_info, bugs, today, test_results)
+    html = generate_html(feature, state_info, bugs, today, test_results, code_trace)
 
     # Write to docs/
     DOCS_DIR.mkdir(exist_ok=True)
