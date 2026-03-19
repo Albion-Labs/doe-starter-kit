@@ -1343,6 +1343,15 @@
 
         <p>Maestro discovers all <code>.yaml</code> files in <code>.maestro/</code> automatically &mdash; no registration step. Results appear as a "Maestro Flows" tile in the snagging checklist alongside Lighthouse and accessibility results.</p>
 
+        <div class="callout tip">
+          <span class="callout-icon">&#128161;</span>
+          <div class="callout-body">
+            <strong>Let Claude write your flows.</strong> Instead of writing YAML by hand, tell Claude about your app's key user journeys:
+            <em>"Map out the main flows in my app and write Maestro test flows for each one in .maestro/"</em>.
+            Claude can read your components, identify screens and navigation paths, and generate flows that match your actual element IDs and labels. This is much faster and less error-prone than writing flows manually &mdash; especially for apps with many screens.
+          </div>
+        </div>
+
         <div class="callout info">
           <span class="callout-icon">&#9432;</span>
           <div class="callout-body">
