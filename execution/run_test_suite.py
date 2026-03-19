@@ -35,6 +35,8 @@ TMP_DIR = PROJECT_ROOT / ".tmp"
 RESULTS_PATH = TMP_DIR / "test-suite-results.json"
 LIGHTHOUSE_BASELINE = BASELINES_DIR / "lighthouse.json"
 A11Y_BASELINE = BASELINES_DIR / "a11y-known.json"
+BUNDLE_SIZE_BASELINE = BASELINES_DIR / "bundle-size.json"
+STATS_PATH = PROJECT_ROOT / ".claude" / "stats.json"
 
 PORT = 8080
 SERVER_TIMEOUT = 10
@@ -75,6 +77,27 @@ def get_version() -> str | None:
     text = STATE_PATH.read_text(encoding="utf-8")
     m = re.search(r"\*\*Current app version:\*\*\s*(v[\d.]+)", text)
     return m.group(1) if m else None
+
+
+def get_mobile_config() -> dict:
+    """Read mobile-specific config fields from tests/config.json.
+
+    Returns {"appId": "...", "platform": "..."} with sensible defaults.
+    Mobile projects set these in config.json; other tools (Maestro flows) consume them.
+    """
+    config_path = PROJECT_ROOT / "tests" / "config.json"
+    config = {}
+    if config_path.exists():
+        try:
+            with open(config_path) as f:
+                config = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    return {
+        "appId": config.get("appId", "com.example.app"),
+        "platform": config.get("platform", "both"),
+    }
 
 
 def check_app_path(version: str) -> list[str]:
@@ -625,6 +648,162 @@ def build_a11y_results(pw: dict, a11y_info: dict | None) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Bundle size tracking
+# ---------------------------------------------------------------------------
+
+def _format_size(size_bytes: int) -> str:
+    """Format byte count as human-readable string."""
+    if size_bytes >= 1_048_576:
+        return f"{size_bytes / 1_048_576:.1f} MB"
+    elif size_bytes >= 1024:
+        return f"{size_bytes / 1024:.1f} KB"
+    return f"{size_bytes} B"
+
+
+def _dir_size(path: Path) -> int:
+    """Recursively compute total size of all files under a directory."""
+    total = 0
+    for f in path.rglob("*"):
+        if f.is_file():
+            total += f.stat().st_size
+    return total
+
+
+def record_bundle_size(project_type: str) -> dict | None:
+    """Measure the built output size for the current project.
+
+    For web projects: finds the monolith HTML or build output directory.
+    For mobile projects: checks common build artifact locations.
+    Returns {"size_bytes": N, "size_human": "X.X MB", "timestamp": "ISO"} or None.
+    """
+    size_bytes = 0
+
+    if project_type in ("react-native", "expo"):
+        # React Native / Expo build artifacts
+        candidates = [
+            PROJECT_ROOT / "android" / "app" / "build" / "outputs" / "apk",
+            PROJECT_ROOT / "ios" / "build",
+        ]
+        for candidate in candidates:
+            if candidate.exists():
+                size_bytes += _dir_size(candidate)
+    elif project_type == "flutter":
+        candidates = [
+            PROJECT_ROOT / "build" / "app" / "outputs" / "flutter-apk",
+            PROJECT_ROOT / "build" / "ios",
+        ]
+        for candidate in candidates:
+            if candidate.exists():
+                size_bytes += _dir_size(candidate)
+    else:
+        # Web projects: try monolith HTML first, then common build dirs
+        app_prefix = get_app_prefix()
+        version = get_version()
+        if version:
+            monolith = PROJECT_ROOT / f"{app_prefix}-{version}.html"
+            if monolith.exists():
+                size_bytes = monolith.stat().st_size
+
+        # Fall back to build output directories
+        if size_bytes == 0:
+            build_dirs = [
+                PROJECT_ROOT / "dist",
+                PROJECT_ROOT / "build",
+                PROJECT_ROOT / ".next",
+                PROJECT_ROOT / "out",
+                PROJECT_ROOT / "public" / "build",
+            ]
+            for bd in build_dirs:
+                if bd.exists():
+                    size_bytes = _dir_size(bd)
+                    break
+
+    if size_bytes == 0:
+        return None
+
+    return {
+        "size_bytes": size_bytes,
+        "size_human": _format_size(size_bytes),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def check_bundle_growth(bundle_data: dict) -> str | None:
+    """Compare current bundle size against baseline; return warning if >5% growth.
+
+    Creates baseline on first run. Updates baseline file with current data.
+    """
+    current = bundle_data["size_bytes"]
+    BASELINES_DIR.mkdir(parents=True, exist_ok=True)
+
+    if BUNDLE_SIZE_BASELINE.exists():
+        try:
+            baseline = json.loads(BUNDLE_SIZE_BASELINE.read_text(encoding="utf-8"))
+            baseline_size = baseline.get("size_bytes", 0)
+        except (json.JSONDecodeError, OSError):
+            baseline_size = 0
+    else:
+        baseline_size = 0
+
+    # First run or corrupted baseline -- set it
+    if baseline_size == 0:
+        BUNDLE_SIZE_BASELINE.write_text(
+            json.dumps({"size_bytes": current, "timestamp": bundle_data["timestamp"]}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        return None
+
+    growth = (current - baseline_size) / baseline_size
+    if growth > 0.05:
+        pct = growth * 100
+        return (
+            f"Bundle size growth: {_format_size(baseline_size)} -> "
+            f"{_format_size(current)} (+{pct:.1f}%) — exceeds 5% threshold"
+        )
+
+    return None
+
+
+def update_bundle_stats(bundle_data: dict) -> None:
+    """Write bundle size data to .claude/stats.json under a bundleSize key.
+
+    Maintains a history of the last 10 entries.
+    """
+    stats = {}
+    if STATS_PATH.exists():
+        try:
+            stats = json.loads(STATS_PATH.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Read baseline for reference
+    baseline_bytes = 0
+    if BUNDLE_SIZE_BASELINE.exists():
+        try:
+            bl = json.loads(BUNDLE_SIZE_BASELINE.read_text(encoding="utf-8"))
+            baseline_bytes = bl.get("size_bytes", 0)
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    bundle_section = stats.get("bundleSize", {})
+    history = bundle_section.get("history", [])
+    history.append({
+        "size": bundle_data["size_bytes"],
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+    })
+    # Keep last 10 entries
+    history = history[-10:]
+
+    stats["bundleSize"] = {
+        "current": bundle_data["size_bytes"],
+        "baseline": baseline_bytes,
+        "history": history,
+    }
+
+    STATS_PATH.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
 # Baseline updates
 # ---------------------------------------------------------------------------
 
@@ -722,6 +901,10 @@ def main():
         start_time = time.time()
         TMP_DIR.mkdir(parents=True, exist_ok=True)
 
+        # Read mobile config schema fields (appId, platform)
+        mobile_config = get_mobile_config()
+        print(f"  Mobile config: appId={mobile_config['appId']}, platform={mobile_config['platform']}")
+
         # Check if maestro CLI is installed
         maestro_installed = shutil.which("maestro") is not None
         if not maestro_installed:
@@ -734,14 +917,25 @@ def main():
         health_results = run_health_check()
         duration = round(time.time() - start_time)
 
+        warnings: list[str] = []
+
+        # Bundle size tracking for mobile
+        bundle_data = record_bundle_size(project_type)
+        if bundle_data:
+            growth_warning = check_bundle_growth(bundle_data)
+            if growth_warning:
+                warnings.append(growth_warning)
+            update_bundle_stats(bundle_data)
+
         results = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "duration_seconds": duration,
             "project_type": project_type,
-            "warnings": [],
+            "warnings": warnings,
             "maestro_results": maestro_results,
             "lighthouse": _error_result("lighthouse", "Not applicable for mobile projects"),
             "health_check": health_results,
+            "bundle_size": bundle_data,
         }
         RESULTS_PATH.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(results, indent=2))
@@ -987,6 +1181,14 @@ def main():
         # Clean internal keys
         playwright_results.pop("_all_routes_failed", None)
 
+        # 13. Bundle size tracking
+        bundle_data = record_bundle_size(project_type)
+        if bundle_data:
+            growth_warning = check_bundle_growth(bundle_data)
+            if growth_warning:
+                warnings.append(growth_warning)
+            update_bundle_stats(bundle_data)
+
         duration = round(time.time() - start_time)
         results = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -996,6 +1198,7 @@ def main():
             "accessibility": a11y_results,
             "lighthouse": lighthouse_results,
             "health_check": health_results,
+            "bundle_size": bundle_data,
         }
 
         RESULTS_PATH.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")

@@ -493,6 +493,20 @@ def build_auto_results_html(tr: dict | None, code_trace: list | None = None) -> 
         else:
             tiles.append(_tile("Code Trace", f'{ct_count} issue{"s" if ct_count != 1 else ""}', f'{ct_med} medium' if ct_med else 'Low severity', "warn"))
 
+    # Bundle Size (from test suite results)
+    bs = tr.get("bundle_size")
+    if bs and bs.get("size_bytes"):
+        bs_human = bs.get("size_human", f'{bs["size_bytes"]} bytes')
+        bs_growth = bs.get("growth_pct", 0)
+        if bs_growth > 5:
+            tiles.append(_tile("Bundle Size", bs_human, f'+{bs_growth:.1f}% growth -- exceeds 5% threshold', "warn"))
+        elif bs_growth > 0:
+            tiles.append(_tile("Bundle Size", bs_human, f'+{bs_growth:.1f}% from baseline', "pass"))
+        elif bs.get("first_run"):
+            tiles.append(_tile("Bundle Size", bs_human, "Baseline set", "first"))
+        else:
+            tiles.append(_tile("Bundle Size", bs_human, "At or below baseline", "pass"))
+
     tiles_html = "\n".join(tiles)
 
     # -- Warnings banner --
@@ -1118,6 +1132,125 @@ def build_initial_state_js(steps: list) -> str:
     return "\n".join(lines)
 
 
+MOBILE_PROJECT_TYPES = {"react-native", "expo", "flutter"}
+
+MOBILE_SECTIONS = [
+    {
+        "id": "mobile-device",
+        "title": "Device Conditions",
+        "items": [
+            "Dismiss keyboard by scrolling and tapping outside input fields",
+            "Move app to background and return — state preserved correctly",
+            "force kill app and cold restart -- no crashes, expected initial state",
+            "Rotate between portrait and landscape orientation — layout adapts",
+            "Test with low battery mode enabled — no degraded behavior",
+            "Receive a phone call or notification mid-task — app recovers gracefully",
+        ],
+    },
+    {
+        "id": "mobile-a11y",
+        "title": "Accessibility Quick Check",
+        "items": [
+            "Navigate key flows using VoiceOver (iOS) or TalkBack (Android)",
+            "All interactive elements have touch targets of at least 44x44pt",
+            "Enable Dynamic Type (iOS) or font scaling (Android) — text reflows without clipping",
+            "Colour contrast sufficient for text and interactive elements",
+            "Focus order follows logical reading sequence",
+        ],
+    },
+    {
+        "id": "mobile-network",
+        "title": "Network Resilience",
+        "items": [
+            "Enable airplane mode — app shows graceful offline state",
+            "Simulate slow connection (3G) — loading states appear, no timeouts",
+            "Lose connection mid-operation — data not lost, user informed",
+            "Switch from WiFi to cellular — no interruption to active tasks",
+        ],
+    },
+]
+
+
+def build_mobile_sections_html(is_mobile: bool) -> str:
+    """Build mobile-specific test section cards. Returns empty string if not mobile."""
+    if not is_mobile:
+        return ""
+
+    chevron_svg = (
+        '<svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">'
+        '<path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>'
+        '</svg>'
+    )
+
+    html_parts = []
+    for section in MOBILE_SECTIONS:
+        sid = section["id"]
+        title = section["title"]
+        items = section["items"]
+        total = len(items)
+
+        checks_html = ""
+        for i, item_text in enumerate(items):
+            desc = escape_html(item_text)
+            checks_html += f"""
+        <div class="check-item" data-section="{sid}" data-index="{i}">
+          <div class="check-row" onclick="cycleCheck(this)">
+            <span class="check-num">{i + 1}</span>
+            <div class="state-toggle"></div>
+            <span class="check-text">{desc}</span>
+          </div>
+          <div class="fail-notes-wrap">
+            <div class="fail-notes-label">What did you see?</div>
+            <textarea placeholder="Describe what happened instead..."></textarea>
+          </div>
+        </div>"""
+
+        html_parts.append(f"""
+  <div class="section-card" id="section-{sid}">
+    <div class="section-stripe section-stripe-mobile">
+      <div class="section-stripe-left">
+        <span class="section-step-pill section-step-pill-mobile">Mobile Testing</span>
+      </div>
+    </div>
+    <div class="section-header" onclick="toggleSection('section-{sid}')">
+      <div class="section-header-left">
+        <div class="section-chevron">
+          {chevron_svg}
+        </div>
+        <span class="section-title">{escape_html(title)}</span>
+      </div>
+      <span class="section-pill" id="pill-section-{sid}">0 / {total}</span>
+    </div>
+
+    <div class="section-body">
+      <div class="checks-list" id="checks-section-{sid}">{checks_html}
+      </div>
+    </div>
+  </div>""")
+
+    return "\n".join(html_parts)
+
+
+def build_mobile_sections_js(is_mobile: bool) -> str:
+    """Build JS SECTIONS entries for mobile sections. Returns empty string if not mobile."""
+    if not is_mobile:
+        return ""
+    entries = []
+    for section in MOBILE_SECTIONS:
+        sid = section["id"]
+        label = section["title"].replace("'", "\\'")
+        total = len(section["items"])
+        entries.append(f"  '{sid}': {{ label: '{label}', step: 'Mobile Testing', total: {total} }}")
+    return ",\n" + ",\n".join(entries)
+
+
+def count_mobile_checks(is_mobile: bool) -> int:
+    """Return total number of mobile check items, or 0 if not mobile."""
+    if not is_mobile:
+        return 0
+    return sum(len(s["items"]) for s in MOBILE_SECTIONS)
+
+
 def generate_html(
     feature: dict,
     state_info: dict,
@@ -1150,6 +1283,20 @@ def generate_html(
             if pw.get("status") not in ("error", None):
                 auto_verified_count = pw.get("total", 0)
 
+    # Detect mobile project type
+    is_mobile = False
+    try:
+        config_path = PROJECT_ROOT / "tests" / "config.json"
+        if config_path.exists():
+            with open(config_path, encoding="utf-8") as _cf:
+                _cfg = json.load(_cf)
+            is_mobile = _cfg.get("projectType", "") in MOBILE_PROJECT_TYPES
+    except (json.JSONDecodeError, OSError):
+        pass
+
+    # Include mobile checks in total
+    total_checks += count_mobile_checks(is_mobile)
+
     # Build signpost callout
     signpost_html = build_signpost_html(total_checks, test_results)
 
@@ -1159,11 +1306,20 @@ def generate_html(
     for idx, step in enumerate(feature["steps"]):
         sections_html += build_section_html(step, idx == 0, 0, total_steps)
 
+    # Build mobile sections (only for mobile project types)
+    mobile_sections_html = build_mobile_sections_html(is_mobile)
+
     # Build bugs
     bugs_html = build_bugs_html(bugs)
 
     # Build JS data
     sections_js = build_sections_js(feature["steps"])
+    # Append mobile section entries to SECTIONS JS object
+    mobile_js_entries = build_mobile_sections_js(is_mobile)
+    if mobile_js_entries:
+        # Insert mobile entries before the closing brace
+        sections_js = sections_js.rstrip().rstrip("}")
+        sections_js += mobile_js_entries + "\n}"
     initial_state_js = build_initial_state_js(feature["steps"])
 
     # Export section references
@@ -1567,6 +1723,14 @@ def generate_html(
     font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
     font-size: 11px;
     color: var(--grey-400);
+  }}
+  .section-stripe-mobile {{
+    background: #eef2ff;
+    border-bottom-color: #c7d2fe;
+  }}
+  .section-step-pill-mobile {{
+    background: #818cf8;
+    color: #fff;
   }}
 
   /* -- Signpost banner divider -- */
@@ -2027,7 +2191,9 @@ def generate_html(
   body.dark .section-header:hover {{ background: #334155; }}
   body.dark .section-body {{ border-color: #334155; }}
   body.dark .section-stripe {{ background: #0f172a; border-color: #334155; }}
+  body.dark .section-stripe-mobile {{ background: #1e1b4b; border-color: #4338ca; }}
   body.dark .section-step-pill {{ background: #334155; color: #94a3b8; }}
+  body.dark .section-step-pill-mobile {{ background: #6366f1; color: #fff; }}
   body.dark .section-stripe-time {{ color: #94a3b8; }}
   body.dark .section-title {{ color: #e2e8f0; }}
   body.dark .section-pill {{ background: #334155; color: #94a3b8; }}
@@ -2113,6 +2279,100 @@ def generate_html(
   .theme-toggle svg {{ width: 16px; height: 16px; }}
   body.dark .theme-toggle {{ border-color: #475569; color: #94a3b8; }}
   body.dark .theme-toggle:hover {{ background: #334155; color: #e2e8f0; }}
+
+  /* -- Responsive mobile layout -- */
+  @media (max-width: 768px) {{
+    .page-body {{
+      padding: 6px 10px 16px;
+    }}
+    .top-bar {{
+      padding: 0 10px;
+    }}
+    .top-bar-inner {{
+      padding: 10px 0 8px;
+    }}
+    .top-bar-row1 {{
+      flex-wrap: wrap;
+      gap: 8px;
+    }}
+    .section-card {{
+      margin-bottom: 10px;
+    }}
+    .section-header {{
+      padding: 10px 12px;
+    }}
+    .section-body {{
+      padding: 0 8px 8px;
+    }}
+    .check-row {{
+      padding: 8px 2px;
+      gap: 6px;
+    }}
+    .state-toggle {{
+      width: 44px;
+      min-height: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+    }}
+    .state-toggle.pass::before {{
+      width: 16px;
+      height: 10px;
+      border-bottom-width: 3px;
+      border-left-width: 3px;
+    }}
+    .state-toggle.fail::before,
+    .state-toggle.fail::after {{
+      width: 18px;
+      height: 3px;
+    }}
+    .check-text {{
+      font-size: 14px;
+      line-height: 1.4;
+    }}
+    .check-num {{
+      font-size: 12px;
+      padding-top: 12px;
+    }}
+    .ar-section {{
+      padding: 0 10px;
+    }}
+    .ar-tiles-strip {{
+      display: flex;
+      flex-direction: column;
+    }}
+    .ar-tile {{
+      padding: 10px 14px;
+      border-right: none;
+      border-bottom: 1px solid var(--grey-200);
+    }}
+    .ar-tile:last-child {{
+      border-bottom: none;
+    }}
+    .ar-tile-value {{
+      font-size: 20px;
+    }}
+    h1 {{
+      font-size: 18px;
+    }}
+    .elapsed-value {{
+      font-size: 14px;
+    }}
+    .btn {{
+      font-size: 12px;
+      padding: 6px 10px;
+      min-height: 44px;
+    }}
+    .env-cards {{
+      gap: 8px;
+    }}
+    .fail-notes-wrap textarea {{
+      font-size: 14px;
+    }}
+  }}
+
+  body.dark .ar-tile {{
+    border-bottom-color: #334155;
+  }}
 {auto_results_css}
 </style>
 </head>
@@ -2176,6 +2436,7 @@ def generate_html(
           <button class="copy-menu-item" onclick="doCopy('all')">Copy All Results</button>
           <button class="copy-menu-item" onclick="doCopy('fail')">Copy Failures Only <span class="fail-count" id="copy-fail-count"></span></button>
           {'<button class="copy-menu-item" onclick="doCopy(&quot;bugs&quot;)">Copy Bugs</button>' if bugs else ''}
+          <button class="copy-menu-item" onclick="exportJSON()">Export JSON</button>
         </div>
       </div>
       <a class="btn btn-primary" href="../{escape_html(app_filename)}" target="_blank">Open App &#8599;</a>
@@ -2188,6 +2449,8 @@ def generate_html(
 <!-- PAGE BODY -->
 <div class="page-body">
 {sections_html}
+
+{mobile_sections_html}
 
 {bugs_html}
 
@@ -2689,6 +2952,57 @@ function initTheme() {{
   }}
 }}
 initTheme();
+
+// ===============================================
+// JSON EXPORT
+// ===============================================
+function exportJSON() {{
+  document.getElementById('copy-menu').classList.remove('open');
+  const now = new Date();
+  const sections = {{}};
+  for (const sid of Object.keys(SECTIONS)) {{
+    const {{ label, step, total }} = SECTIONS[sid];
+    const checksEl = document.getElementById('checks-section-' + sid);
+    const items = checksEl ? checksEl.querySelectorAll('.check-item') : [];
+    const checks = [];
+    for (let i = 0; i < total; i++) {{
+      const s = state[sid][i] || {{ state: 'untested', note: '' }};
+      const textEl = items[i] ? items[i].querySelector('.check-text') : null;
+      const desc = textEl ? textEl.textContent.trim() : 'Check ' + (i + 1);
+      checks.push({{ index: i, description: desc, state: s.state, note: s.note || '' }});
+    }}
+    sections[sid] = {{
+      label: label,
+      step: step,
+      total: total,
+      checks: checks,
+    }};
+  }}
+
+  const result = {{
+    feature: FEATURE_NAME,
+    version: VERSION,
+    exportedAt: now.toISOString(),
+    environment: {{
+      browser: document.getElementById('env-browser').textContent,
+      viewport: document.getElementById('env-viewport').textContent,
+      os: document.getElementById('env-os').textContent,
+    }},
+    timer: {{
+      elapsed: document.getElementById('timer-display').textContent,
+      elapsedMs: timerElapsedMs + (timerStartMs ? Date.now() - timerStartMs : 0),
+      sectionElapsedMs: Object.assign({{}}, sectionElapsedMs),
+    }},
+    sections: sections,
+  }};
+
+  const json = JSON.stringify(result, null, 2);
+  navigator.clipboard.writeText(json).then(() => {{
+    showToast('JSON copied to clipboard', 'success');
+  }}).catch(() => {{
+    showToast('Clipboard write failed -- try a different browser', 'error');
+  }});
+}}
 
 // -- Boot --
 init();

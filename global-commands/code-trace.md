@@ -35,7 +35,27 @@ Trace one module deeply. This is the probabilistic layer — you're reading code
    - String comparison where numeric comparison was intended (or vice versa)
    - Mutation of input parameters that callers might not expect
 
-6. **Output findings** as a numbered list with severity tags:
+6. **Static accessibility lint** (mobile projects only — gated on projectType from `tests/config.json`):
+
+   **React Native / Expo** (projectType: `react-native` or `expo`):
+   - Check for missing `accessibilityLabel` on touchable/pressable components (TouchableOpacity, TouchableHighlight, Pressable, Button)
+   - Check for missing `accessibilityRole` on interactive elements
+   - Check for hardcoded touch target dimensions below 44x44pt — flag undersized touch target
+   - Check for `<Image>` without `accessibilityLabel` or `accessible` prop
+
+   **Flutter** (projectType: `flutter`):
+   - Check for missing `Semantics` widget wrapping interactive elements (GestureDetector, InkWell, IconButton without tooltip)
+   - Check for `SizedBox` or `Container` with tap handlers where width/height < 44 — flag undersized touch target
+   - Check for `Image.asset` / `Image.network` without `semanticLabel`
+   - Check for missing `excludeFromSemantics` on decorative images
+
+   **All mobile projectType values:**
+   - Check for text with hardcoded font sizes that won't scale with system settings
+   - Check for colour values used without contrast ratio context (INFO-level)
+
+   Skip this entire step for non-mobile projectType values (html-app, nextjs, vite, etc.).
+
+7. **Output findings** as a numbered list with severity tags:
    - **BUG** — incorrect behaviour that will produce wrong results
    - **WARN** — risky pattern that could cause problems under certain conditions
    - **INFO** — style, clarity, or minor improvement suggestion

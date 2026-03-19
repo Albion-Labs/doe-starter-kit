@@ -1059,6 +1059,45 @@
           </div>
         </div>
 
+        <!-- Mobile Testing -->
+        <h2 id="mobile-testing">Mobile Testing</h2>
+
+        <p>DOE automatically detects mobile projects (React Native, Expo, Flutter) from your <code>tests/config.json</code> <code>projectType</code> field. When a mobile project is detected, the quality stack adapts:</p>
+
+        <ul>
+          <li><strong>Maestro</strong> replaces Playwright for UI testing &mdash; native device flows instead of browser automation</li>
+          <li><strong>Bundle size tracking</strong> monitors your app binary and alerts on &gt;5% growth between builds</li>
+          <li><strong>Static a11y linting</strong> in <code>/code-trace</code> checks for missing <code>accessibilityLabel</code> (React Native), <code>Semantics</code> widgets (Flutter), and undersized touch targets</li>
+          <li><strong>Mobile-specific snagging sections</strong> appear in the checklist: Device Conditions, Accessibility Quick Check, and Network Resilience</li>
+        </ul>
+
+        <h3 id="mobile-config">Configuration</h3>
+
+        <p>Your <code>tests/config.json</code> can include mobile-specific fields:</p>
+
+        <pre><code>{
+  "projectType": "react-native",
+  "appId": "com.example.myapp",
+  "platform": "both"
+}</code></pre>
+
+        <ul>
+          <li><code>appId</code> &mdash; Your app's bundle identifier, used by Maestro flows</li>
+          <li><code>platform</code> &mdash; Target platform: <code>"ios"</code>, <code>"android"</code>, or <code>"both"</code> (default)</li>
+        </ul>
+
+        <h3 id="mobile-checklist">Mobile Snagging Sections</h3>
+
+        <p>When you run <code>/snagging</code> on a mobile project, three extra sections appear in the checklist:</p>
+
+        <ul>
+          <li><strong>Device Conditions</strong> &mdash; keyboard dismiss, background/foreground, force kill, orientation, low battery, interruptions</li>
+          <li><strong>Accessibility Quick Check</strong> &mdash; VoiceOver/TalkBack, 44pt touch targets, Dynamic Type scaling, contrast, focus order</li>
+          <li><strong>Network Resilience</strong> &mdash; airplane mode, slow connection, mid-operation disconnect, WiFi/cellular switching</li>
+        </ul>
+
+        <p>These sections are designed to be completed on a real device. The responsive checklist HTML works on phones &mdash; tap pass/fail buttons directly while testing.</p>
+
         <!-- Signposting System -->
         <h2 id="signposting">The Signposting System</h2>
 
@@ -1125,6 +1164,7 @@
       <a href="#your-role" class="toc-link">Your Role</a>
       <a href="#commands" class="toc-link">Commands</a>
       <a href="#snagging-checklist" class="toc-link">The Snagging Checklist</a>
+      <a href="#mobile-testing" class="toc-link">Mobile Testing</a>
       <a href="#signposting" class="toc-link">The Signposting System</a>
     </nav>
 
