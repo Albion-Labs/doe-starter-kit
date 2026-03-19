@@ -20,7 +20,7 @@
       --border-light: #F1F5F9;
       --text-primary: #0F172A;
       --text-secondary: #475569;
-      --text-muted: #94A3B8;
+      --text-muted: #64748B;
       --text-sidebar: #334155;
       --text-sidebar-active: #0F172A;
       --accent: #6366F1;
@@ -266,7 +266,7 @@
 
     .content a {
       color: var(--accent);
-      text-decoration: none;
+      text-decoration: underline;
     }
     .content a:hover { text-decoration: underline; }
 
@@ -340,7 +340,7 @@
     }
     .accordion .acc-body a {
       color: var(--accent);
-      text-decoration: none;
+      text-decoration: underline;
     }
     .accordion .acc-body a:hover { text-decoration: underline; }
 
@@ -552,7 +552,7 @@
             <summary>Claude seems confused or is going in circles</summary>
             <div class="acc-body">
               <p>Run <code>/clear</code> to reset the conversation. If the problem persists, check STATE.md for stale information.</p>
-              <p>Read more &rarr; <a href="tips-and-mistakes.html#wrong">Tips &amp; Mistakes — When Things Go Wrong</a></p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html#recovery">Tips &amp; Mistakes — When Things Go Wrong</a></p>
             </div>
           </details>
 
@@ -560,7 +560,7 @@
             <summary>I lost work — Claude's changes disappeared</summary>
             <div class="acc-body">
               <p>Check <code>git log</code> — every completed task creates a commit (save point). Use <code>git diff</code> to see what changed.</p>
-              <p>Read more &rarr; <a href="tips-and-mistakes.html#wrong">Tips &amp; Mistakes — When Things Go Wrong</a></p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html#recovery">Tips &amp; Mistakes — When Things Go Wrong</a></p>
             </div>
           </details>
 
@@ -568,7 +568,7 @@
             <summary>Claude made unwanted changes to my code</summary>
             <div class="acc-body">
               <p>Run <code>git diff</code> to see what changed, then <code>git checkout -- filename</code> to undo specific files. For bigger rollbacks, see break-glass.md.</p>
-              <p>Read more &rarr; <a href="tips-and-mistakes.html#wrong">Tips &amp; Mistakes — When Things Go Wrong</a></p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html#recovery">Tips &amp; Mistakes — When Things Go Wrong</a></p>
             </div>
           </details>
 
@@ -599,7 +599,7 @@
             <summary>How do I update to a newer DOE version?</summary>
             <div class="acc-body">
               <p>Run <code>/pull-doe</code> to pull the latest starter kit improvements into your project. You don't need a GitHub account &mdash; the command handles everything.</p>
-              <p>Read more &rarr; <a href="tips-and-mistakes.html#sync">Tips &amp; Mistakes — sync/pull section</a></p>
+              <p>Read more &rarr; <a href="tips-and-mistakes.html#updates">Tips &amp; Mistakes — sync/pull section</a></p>
             </div>
           </details>
 
