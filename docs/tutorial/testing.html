@@ -867,58 +867,57 @@
         <p>You don't need to remember any of this. Claude signals the right checks at each transition. This diagram and table are a reference if you want to know what's happening behind the scenes.</p>
 
         <!-- Runs-When Timeline SVG -->
-        <svg id="runs-when-timeline" viewBox="0 0 520 260" style="width:100%;max-width:520px;display:block;margin:0 auto 28px;" aria-label="Timeline showing when each quality tool runs during development">
+        <svg id="runs-when-timeline" viewBox="0 0 700 240" style="width:100%;display:block;margin:0 auto 28px;" aria-label="Timeline showing when each quality tool runs during development">
           <!-- Timeline axis -->
-          <line x1="60" y1="230" x2="490" y2="230" stroke="var(--border)" stroke-width="2"/>
+          <line x1="40" y1="200" x2="680" y2="200" stroke="var(--border)" stroke-width="2"/>
           <!-- Tick marks and labels -->
-          <line x1="90" y1="225" x2="90" y2="235" stroke="var(--text-muted)" stroke-width="1.5"/>
-          <text x="90" y="250" text-anchor="middle" font-size="9.5" fill="var(--text-muted)">Every</text>
-          <text x="90" y="260" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-secondary)">commit</text>
+          <line x1="80" y1="195" x2="80" y2="205" stroke="var(--text-muted)" stroke-width="1.5"/>
+          <text x="80" y="220" text-anchor="middle" font-size="11" fill="var(--text-muted)">Every</text>
+          <text x="80" y="234" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text-secondary)">commit</text>
 
-          <line x1="180" y1="225" x2="180" y2="235" stroke="var(--text-muted)" stroke-width="1.5"/>
-          <text x="180" y="250" text-anchor="middle" font-size="9.5" fill="var(--text-muted)">Every</text>
-          <text x="180" y="260" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-secondary)">build</text>
+          <line x1="220" y1="195" x2="220" y2="205" stroke="var(--text-muted)" stroke-width="1.5"/>
+          <text x="220" y="220" text-anchor="middle" font-size="11" fill="var(--text-muted)">Every</text>
+          <text x="220" y="234" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text-secondary)">build</text>
 
-          <line x1="280" y1="225" x2="280" y2="235" stroke="var(--text-muted)" stroke-width="1.5"/>
-          <text x="280" y="250" text-anchor="middle" font-size="9.5" fill="var(--text-muted)">Every</text>
-          <text x="280" y="260" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-secondary)">step</text>
+          <line x1="370" y1="195" x2="370" y2="205" stroke="var(--text-muted)" stroke-width="1.5"/>
+          <text x="370" y="220" text-anchor="middle" font-size="11" fill="var(--text-muted)">Every</text>
+          <text x="370" y="234" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text-secondary)">step</text>
 
-          <line x1="380" y1="225" x2="380" y2="235" stroke="var(--text-muted)" stroke-width="1.5"/>
-          <text x="380" y="250" text-anchor="middle" font-size="9.5" fill="var(--text-muted)">Every</text>
-          <text x="380" y="260" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-secondary)">feature</text>
+          <line x1="510" y1="195" x2="510" y2="205" stroke="var(--text-muted)" stroke-width="1.5"/>
+          <text x="510" y="220" text-anchor="middle" font-size="11" fill="var(--text-muted)">Every</text>
+          <text x="510" y="234" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text-secondary)">feature</text>
 
-          <line x1="470" y1="225" x2="470" y2="235" stroke="var(--text-muted)" stroke-width="1.5"/>
-          <text x="470" y="250" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-secondary)">CI</text>
+          <line x1="640" y1="195" x2="640" y2="205" stroke="var(--text-muted)" stroke-width="1.5"/>
+          <text x="640" y="228" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text-secondary)">CI</text>
 
-          <!-- Tool bars -->
-          <!-- ESLint: every commit -->
-          <rect x="75" y="20" width="40" height="22" rx="4" fill="var(--accent)" opacity="0.85"/>
-          <text x="95" y="35" text-anchor="middle" font-size="9" font-weight="600" fill="#fff">ESLint</text>
+          <!-- Tool bars — each bar starts at its trigger tick and spans rightward -->
+          <!-- ESLint: commit only -->
+          <rect x="55" y="18" width="90" height="26" rx="5" fill="var(--accent)" opacity="0.85"/>
+          <text x="100" y="35" text-anchor="middle" font-size="11" font-weight="600" fill="#fff">ESLint</text>
 
           <!-- Health check: every build onwards -->
-          <rect x="165" y="50" width="320" height="22" rx="4" fill="var(--accent)" opacity="0.2" stroke="var(--accent)" stroke-width="1"/>
-          <text x="325" y="65" text-anchor="middle" font-size="9" font-weight="500" fill="var(--accent)">health check</text>
+          <rect x="195" y="52" width="470" height="26" rx="5" fill="var(--accent)" opacity="0.15" stroke="var(--accent)" stroke-width="1"/>
+          <text x="430" y="69" text-anchor="middle" font-size="11" font-weight="500" fill="var(--accent)">health check</text>
 
           <!-- Playwright/Lighthouse/axe: every step onwards -->
-          <rect x="255" y="80" width="230" height="22" rx="4" fill="var(--accent-amber)" opacity="0.2" stroke="var(--accent-amber)" stroke-width="1"/>
-          <text x="370" y="95" text-anchor="middle" font-size="9" font-weight="500" fill="var(--accent-amber)">Playwright &bull; Lighthouse &bull; axe-core</text>
+          <rect x="340" y="86" width="325" height="26" rx="5" fill="var(--accent-amber)" opacity="0.15" stroke="var(--accent-amber)" stroke-width="1"/>
+          <text x="502" y="103" text-anchor="middle" font-size="11" font-weight="500" fill="var(--accent-amber)">Playwright  &middot;  Lighthouse  &middot;  axe-core</text>
 
-          <!-- Visual regression / code-trace: every feature -->
-          <rect x="355" y="110" width="130" height="22" rx="4" fill="var(--accent-green)" opacity="0.2" stroke="var(--accent-green)" stroke-width="1"/>
-          <text x="420" y="125" text-anchor="middle" font-size="9" font-weight="500" fill="var(--accent-green)">visual regression &bull; /code-trace</text>
+          <!-- Visual regression / code-trace: every feature onwards -->
+          <rect x="482" y="120" width="183" height="26" rx="5" fill="var(--accent-green)" opacity="0.15" stroke="var(--accent-green)" stroke-width="1"/>
+          <text x="574" y="137" text-anchor="middle" font-size="11" font-weight="500" fill="var(--accent-green)">visual regression  &middot;  /code-trace</text>
 
           <!-- CI: all -->
-          <rect x="455" y="150" width="40" height="50" rx="4" fill="var(--accent-blue)" opacity="0.15" stroke="var(--accent-blue)" stroke-width="1"/>
-          <text x="475" y="170" text-anchor="middle" font-size="9" font-weight="500" fill="var(--accent-blue)">all of</text>
-          <text x="475" y="182" text-anchor="middle" font-size="9" font-weight="500" fill="var(--accent-blue)">above</text>
+          <rect x="615" y="150" width="55" height="36" rx="5" fill="var(--accent-blue)" opacity="0.12" stroke="var(--accent-blue)" stroke-width="1"/>
+          <text x="642" y="172" text-anchor="middle" font-size="11" font-weight="500" fill="var(--accent-blue)">all</text>
 
           <!-- Legend -->
-          <rect x="60" y="160" width="10" height="10" rx="2" fill="var(--accent)" opacity="0.85"/>
-          <text x="75" y="169" font-size="9" fill="var(--text-muted)">Deterministic</text>
-          <rect x="145" y="160" width="10" height="10" rx="2" fill="var(--accent-amber)" opacity="0.6"/>
-          <text x="160" y="169" font-size="9" fill="var(--text-muted)">Probabilistic</text>
-          <rect x="240" y="160" width="10" height="10" rx="2" fill="var(--accent-green)" opacity="0.6"/>
-          <text x="255" y="169" font-size="9" fill="var(--text-muted)">Empirical</text>
+          <rect x="55" y="160" width="12" height="12" rx="2" fill="var(--accent)" opacity="0.85"/>
+          <text x="72" y="171" font-size="10" fill="var(--text-muted)">Deterministic</text>
+          <rect x="165" y="160" width="12" height="12" rx="2" fill="var(--accent-amber)" opacity="0.6"/>
+          <text x="182" y="171" font-size="10" fill="var(--text-muted)">Probabilistic</text>
+          <rect x="275" y="160" width="12" height="12" rx="2" fill="var(--accent-green)" opacity="0.6"/>
+          <text x="292" y="171" font-size="10" fill="var(--text-muted)">Empirical</text>
         </svg>
 
         <table class="quality-table">
@@ -986,24 +985,24 @@
         <p>Every tool in the Quality Stack, grouped by layer. All tools are live and run automatically at the appropriate moment.</p>
 
         <!-- Tool Map SVG -->
-        <svg id="tool-map-svg" viewBox="0 0 500 370" style="width:100%;max-width:500px;display:block;margin:0 auto 24px;" aria-label="Tool map showing all quality tools grouped by layer">
+        <svg id="tool-map-svg" viewBox="0 0 700 290" style="width:100%;display:block;margin:0 auto 24px;" aria-label="Tool map showing all quality tools grouped by layer">
           <!-- Deterministic layer -->
-          <rect x="10" y="10" width="480" height="70" rx="8" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
-          <text x="25" y="32" font-size="12" font-weight="700" fill="var(--accent)">DETERMINISTIC</text>
-          <text x="25" y="48" font-size="10" fill="var(--text-muted)">Same result every time. Runs on commit / build.</text>
-          <rect x="25" y="55" width="60" height="18" rx="4" fill="var(--accent)" opacity="0.15"/><text x="55" y="67" text-anchor="middle" font-size="9" font-weight="600" fill="var(--accent)">ESLint</text>
-          <rect x="95" y="55" width="85" height="18" rx="4" fill="var(--accent)" opacity="0.15"/><text x="137" y="67" text-anchor="middle" font-size="9" font-weight="600" fill="var(--accent)">health check</text>
-          <rect x="190" y="55" width="75" height="18" rx="4" fill="var(--accent)" opacity="0.15"/><text x="228" y="67" text-anchor="middle" font-size="9" font-weight="600" fill="var(--accent)">/code-trace</text>
+          <rect x="10" y="10" width="680" height="75" rx="8" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="25" y="34" font-size="13" font-weight="700" fill="var(--accent)">DETERMINISTIC</text>
+          <text x="200" y="34" font-size="11" fill="var(--text-muted)">Same result every time. Runs on commit / build.</text>
+          <rect x="25" y="50" width="75" height="24" rx="5" fill="var(--accent)" opacity="0.15"/><text x="62" y="66" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent)">ESLint</text>
+          <rect x="112" y="50" width="105" height="24" rx="5" fill="var(--accent)" opacity="0.15"/><text x="164" y="66" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent)">health check</text>
+          <rect x="229" y="50" width="95" height="24" rx="5" fill="var(--accent)" opacity="0.15"/><text x="276" y="66" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent)">/code-trace</text>
 
           <!-- Probabilistic layer -->
-          <rect x="10" y="95" width="480" height="90" rx="8" fill="#FEF3C7" stroke="var(--accent-amber)" stroke-width="1.5"/>
-          <text x="25" y="117" font-size="12" font-weight="700" fill="var(--accent-amber)">PROBABILISTIC</text>
-          <text x="25" y="133" font-size="10" fill="var(--text-muted)">Runs your app and measures outcomes. Runs every step / feature.</text>
-          <rect x="25" y="142" width="70" height="18" rx="4" fill="var(--accent-amber)" opacity="0.15"/><text x="60" y="154" text-anchor="middle" font-size="9" font-weight="600" fill="var(--accent-amber)">Playwright</text>
-          <rect x="105" y="142" width="78" height="18" rx="4" fill="var(--accent-amber)" opacity="0.15"/><text x="144" y="154" text-anchor="middle" font-size="9" font-weight="600" fill="var(--accent-amber)">Lighthouse</text>
-          <rect x="193" y="142" width="65" height="18" rx="4" fill="var(--accent-amber)" opacity="0.15"/><text x="226" y="154" text-anchor="middle" font-size="9" font-weight="600" fill="var(--accent-amber)">axe-core</text>
-          <rect x="268" y="142" width="108" height="18" rx="4" fill="var(--accent-amber)" opacity="0.15"/><text x="322" y="154" text-anchor="middle" font-size="9" font-weight="600" fill="var(--accent-amber)">visual regression</text>
-          <text x="25" y="174" font-size="9.5" font-style="italic" fill="var(--text-muted)">Mobile: Maestro replaces Playwright &bull; bundle size tracking added</text>
+          <rect x="10" y="100" width="680" height="95" rx="8" fill="#FEF3C7" stroke="var(--accent-amber)" stroke-width="1.5"/>
+          <text x="25" y="124" font-size="13" font-weight="700" fill="var(--accent-amber)">PROBABILISTIC</text>
+          <text x="200" y="124" font-size="11" fill="var(--text-muted)">Runs your app and measures outcomes. Every step / feature.</text>
+          <rect x="25" y="140" width="90" height="24" rx="5" fill="var(--accent-amber)" opacity="0.15"/><text x="70" y="156" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent-amber)">Playwright</text>
+          <rect x="127" y="140" width="95" height="24" rx="5" fill="var(--accent-amber)" opacity="0.15"/><text x="174" y="156" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent-amber)">Lighthouse</text>
+          <rect x="234" y="140" width="80" height="24" rx="5" fill="var(--accent-amber)" opacity="0.15"/><text x="274" y="156" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent-amber)">axe-core</text>
+          <rect x="326" y="140" width="135" height="24" rx="5" fill="var(--accent-amber)" opacity="0.15"/><text x="394" y="156" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent-amber)">visual regression</text>
+          <text x="25" y="183" font-size="11" font-style="italic" fill="var(--text-muted)">Mobile: Maestro replaces Playwright  &middot;  bundle size tracking added</text>
           <style>
             [data-theme="dark"] #tool-map-svg rect:nth-of-type(4) { fill: #78350F; opacity: 0.3; }
             [data-theme="dark"] #tool-map-svg rect:nth-of-type(1) { fill: #312E81; opacity: 0.3; }
@@ -1011,11 +1010,11 @@
           </style>
 
           <!-- Empirical layer -->
-          <rect x="10" y="200" width="480" height="70" rx="8" fill="#ECFDF5" stroke="var(--accent-green)" stroke-width="1.5"/>
-          <text x="25" y="222" font-size="12" font-weight="700" fill="var(--accent-green)">EMPIRICAL</text>
-          <text x="25" y="238" font-size="10" fill="var(--text-muted)">Human judgment. Runs at feature complete.</text>
-          <rect x="25" y="248" width="120" height="18" rx="4" fill="var(--accent-green)" opacity="0.15"/><text x="85" y="260" text-anchor="middle" font-size="9" font-weight="600" fill="var(--accent-green)">/snagging checklist</text>
-          <rect x="155" y="248" width="100" height="18" rx="4" fill="var(--accent-green)" opacity="0.15"/><text x="205" y="260" text-anchor="middle" font-size="9" font-weight="600" fill="var(--accent-green)">manual testing</text>
+          <rect x="10" y="210" width="680" height="75" rx="8" fill="#ECFDF5" stroke="var(--accent-green)" stroke-width="1.5"/>
+          <text x="25" y="234" font-size="13" font-weight="700" fill="var(--accent-green)">EMPIRICAL</text>
+          <text x="165" y="234" font-size="11" fill="var(--text-muted)">Human judgment. Runs at feature complete.</text>
+          <rect x="25" y="250" width="145" height="24" rx="5" fill="var(--accent-green)" opacity="0.15"/><text x="98" y="266" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent-green)">/snagging checklist</text>
+          <rect x="182" y="250" width="120" height="24" rx="5" fill="var(--accent-green)" opacity="0.15"/><text x="242" y="266" text-anchor="middle" font-size="11" font-weight="600" fill="var(--accent-green)">manual testing</text>
         </svg>
 
         <h3 id="catches-misses">What each tool catches &mdash; and misses</h3>
