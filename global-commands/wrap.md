@@ -21,12 +21,10 @@ If already on `main`, skip this step entirely.
 4. **Commit and push** — Make sure all work is committed and pushed. Run `git status` to check for uncommitted changes, commit them if any, then `git push` to sync with remote. No uncommitted or unpushed changes should remain.
 4b. **Check pull request state** — Run `gh pr list --state open --json number,title 2>/dev/null` to check for open PRs. If on a feature branch and the feature is complete, note that a PR should be created. Record the branch name and open PR count for the checks section.
 5. **Clean up session timer** — Run `rm -f .tmp/.session-start` to delete the session timer file.
-6. **DOE Kit sync check** — If `~/doe-starter-kit` exists, first check STATE.md for `DOE Role`. Then:
-   - **Always check inbound:** Is the kit tag newer than STATE.md's "DOE Starter Kit" version? If yes, flag for `/pull-doe`.
-   - **Only if `DOE Role: creator`:** Check outbound — do any key syncable files differ? Diff key files (~/.claude/commands/*.md, .githooks/*, .claude/hooks/*.py) against the starter kit. **For CLAUDE.md**, do a smart diff: only flag if universal sections (Who We Are, Operating Rules, Guardrails, Code Hygiene, Self-Annealing) differ. Ignore project-specific sections (Directory Structure, Progressive Disclosure triggers). If outbound diffs exist, flag for `/sync-doe`.
-   - **If `DOE Role: consumer` (or missing/unset):** Skip the outbound check entirely. Never mention `/sync-doe`.
-   - **Classify each differing file as `u` (user-facing) or `c` (creator-facing).** User-facing: slash commands, hooks, CLAUDE.md universal sections. Creator-facing: setup.sh, tutorials, README, version scripts. Include u/c counts in the recorded result.
-   - Record result for the System Checks section. If nothing flagged, record as synced. If flagged, record with u/c counts (e.g. `"doeKit": {"version": "v1.36.1", "synced": false, "userCount": 1, "creatorCount": 2}`).
+6. **DOE Kit sync check** — If `~/doe-starter-kit` exists:
+   - **Version check:** Run `cd ~/doe-starter-kit && git describe --tags --abbrev=0` to get the kit version. Compare against STATE.md's "DOE Starter Kit" version. If kit is newer, flag `* pull` for `/pull-doe`. If versions match, record as `synced`.
+   - **Session-specific syncable file check:** Identify files committed THIS session (since `.tmp/.session-start` or the first session commit) that are kit-syncable: `.githooks/*`, `.claude/hooks/*.py`, `~/.claude/commands/*.md`. If any were modified this session, show a one-line reminder in the wrap output: `Kit-syncable files modified this session: [list]. Run /sync-doe?` This only fires when you actually touched syncable files, not for pre-existing customisations.
+   - Record result for the System Checks section (e.g. `"doeKit": {"version": "v1.36.1", "synced": true}` or `"doeKit": {"version": "v1.36.1", "synced": false, "action": "pull"}`).
 7. **Health check** — Run `python3 execution/health_check.py --quick` (universal checks only). Record pass/warn/fail counts. If the test suite has entries (`tests/suite.json` is non-empty), also run `python3 execution/verify.py --regression` and record results. Include both in the System Checks section (e.g. `"health": {"pass": 5, "warn": 1, "fail": 0}, "regression": {"total": 23, "passed": 23, "failed": 0}`).
 8. **Quick audit** — Run `python3 execution/audit_claims.py --hook` (fast checks only). Record the PASS/WARN/FAIL counts for the System Checks section. If any FAIL items exist, fix them before proceeding. WARN items can be noted and left for the next session.
 9. **Structural change check** — Run `git diff --name-status HEAD~$(git rev-list --count HEAD --since="$(cat .tmp/.session-start 2>/dev/null || echo '1 hour ago')") 2>/dev/null` to detect new/moved/deleted files this session. If structural changes are found (files added, renamed, or deleted — not just modified), ask: "Structural changes detected — run /codemap to update the project index?" Only run `/codemap` if the user says yes.
@@ -140,7 +138,7 @@ Using the stats JSON from Step 2, compose a JSON object with this schema. You mu
   ],
   "checks": {
     "audit": {"pass": N, "warn": N, "fail": N, "details": ["detail string if warn/fail"]},
-    "doeKit": {"version": "vX.Y.Z", "synced": true|false, "userCount": 0, "creatorCount": 0},
+    "doeKit": {"version": "vX.Y.Z", "synced": true|false},
     "pullRequests": {"open": N, "merged": N, "branch": "current-branch-name"}
   },
   "awaitingSignOff": [

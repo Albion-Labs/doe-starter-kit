@@ -6,7 +6,7 @@ Read CLAUDE.md, tasks/todo.md, STATE.md, and learnings.md.
 
 **Curation check:** Read `.claude/stats.json` → `lifetime.totalSessions` and STATE.md → `## Curation` → `next-curation`. If `totalSessions >= next-curation` value (e.g. `session-200` means 200), announce "Learnings curation due (session #N)" in the kick-off card and trigger the curation protocol (see CLAUDE.md Self-Annealing section) before starting any feature work.
 
-**DOE Kit check:** If `~/doe-starter-kit` exists, run `cd ~/doe-starter-kit && git describe --tags --abbrev=0 2>/dev/null` to get the current kit version. Check two things: (1) Is the kit tag newer than STATE.md's "DOE Starter Kit" version? (inbound). (2) Do any key syncable files differ? (outbound). Diff key files using these path mappings: ~/.claude/commands/*.md against ~/doe-starter-kit/global-commands/*.md, .githooks/* against ~/doe-starter-kit/.githooks/*, .claude/hooks/*.py against ~/doe-starter-kit/.claude/hooks/*.py. Count how many have changes. **For CLAUDE.md**, do a smart diff: only flag if universal sections (Who We Are, Operating Rules, Guardrails, Code Hygiene, Self-Annealing) differ between kit and project. Ignore project-specific sections (Directory Structure, Progressive Disclosure triggers, project-specific additions). **Classify each differing file as `u` (user-facing) or `c` (creator-facing).** User-facing: slash commands, hooks, CLAUDE.md universal sections. Creator-facing: setup.sh, tutorials, README, version scripts. If either condition is true, show `*` with u/c counts. If the directory doesn't exist, skip the DOE Kit line entirely.
+**DOE Kit check:** If `~/doe-starter-kit` exists, run `cd ~/doe-starter-kit && git describe --tags --abbrev=0 2>/dev/null` to get the current kit version. Compare against STATE.md's "DOE Starter Kit" version. If versions match → `synced`. If kit tag is newer → `* pull`. No outbound push detection — `/wrap` handles session-specific reminders for modified kit-syncable files. If the directory doesn't exist, skip the DOE Kit line entirely.
 
 Show a bordered kick-off card, then immediately pick up the next incomplete step. One step at a time -- commit, push, then stop and show what you did.
 
@@ -17,7 +17,7 @@ Show a bordered kick-off card, then immediately pick up the next incomplete step
 │  FEATURE    [active feature] [APP/INFRA] vX.Y.x   │
 │  PROGRESS   ██████░░░░ N/M steps                  │
 │  BRANCH     feature/xxx (or main)                  │
-│  DOE KIT    vX.Y.Z [synced / * (Nu Mc)]            │
+│  DOE KIT    vX.Y.Z [synced / * pull]                │
 │                                                   │
 │  PICKING UP Step N -- [step description]          │
 │  [1-2 line plain English summary of what you      │
@@ -34,7 +34,7 @@ Card rules:
 - FEATURE: from STATE.md "Active feature" line. If no active feature, show "No active feature".
 - PROGRESS: count [x] and [ ] steps for the current feature in todo.md ## Current. Bar uses `█` for done, `░` for remaining, scaled to 10 characters. If no current feature, omit this line.
 - BRANCH: Run `git branch --show-current`. Show the current branch name (e.g. `feature/pr-workflow-migration` or `main`).
-- DOE KIT: `vX.Y.Z` if synced. `vX.Y.Z * (Nu Mc)` if either the kit tag is newer or syncable files differ. `u` = user-facing (commands, hooks, rules), `c` = creator-facing (kit infra, tutorials, setup). Omit entirely if `~/doe-starter-kit` doesn't exist.
+- DOE KIT: `vX.Y.Z synced` if kit version matches STATE.md version. `vX.Y.Z * pull` if the kit has a newer version. Omit entirely if `~/doe-starter-kit` doesn't exist.
 - PICKING UP: the next incomplete step (first `[ ]` line) from todo.md ## Current. Show step number and short description. If all steps complete, show "All steps complete -- ready for retro". If no current feature, omit this line.
 - SUMMARY: Immediately after PICKING UP, add 1-2 lines of plain English explaining what you are about to do for this step. Read the step's plan file if one is referenced, or use the step description and todo.md context. Keep it concrete and jargon-free -- e.g. "Creating the reverse sync command so kit updates can flow into projects safely." Not a restatement of the step name -- explain the actual work.
 - BORDER: Fixed width -- always 60 `─` characters between `│` borders (62 total per line). All content lines: `│` + 2 spaces + content + trailing spaces + `│` = 62 chars. If content would exceed 56 characters, truncate with `...`. Never dynamically size -- the box is always the same width. **Generate boxes programmatically** -- define a `line(content)` helper: `f"│  {content}".ljust(W + 1) + "│"` where W is the inner width. ALL rows including headers MUST use this helper -- never construct `f"│{...}│"` manually. Never hand-pad bordered output. Use Unicode box-drawing characters for borders (`┌─┐`, `├─┤`, `└─┘`, `│`). Content inside borders must be ASCII-only (no emojis, no `·`, `✓`, `⚠️`, `—`, `…`) -- use `--` for separators, commas for lists. Exception: progress bar uses `█` (done) and `░` (remaining) -- these render at fixed width in terminals.

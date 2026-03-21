@@ -7,6 +7,7 @@ Generate interactive HTML test checklists from todo.md contracts so manual testi
 - A feature's final code step completes (all `[auto]` criteria pass) and unchecked `[manual]` items remain
 - User runs `/snagging` to generate or regenerate a checklist
 - A feature moves to `## Awaiting Sign-off` and needs a testing handoff
+- Before merging a feature branch PR — snagging serves as the pre-merge verification gate
 
 ## Inputs
 - `tasks/todo.md` — source of `[manual]` contract items per feature
@@ -21,8 +22,12 @@ Generate interactive HTML test checklists from todo.md contracts so manual testi
 3. If automated testing found bugs (e.g. from `/agent-verify` code traces), pass them via `--bugs .tmp/test-bugs.json`
 4. The checklist opens automatically in the browser
 
+### Code verification before testing
+Before presenting manual test steps to the user (or generating a checklist), verify function names, parameter types, valid input values, and API signatures against the actual code. Contracts are written at planning time and may use design-phase names that differ from the shipped implementation. Show exact working commands with real parameter values -- not design-phase abstractions from the contract. If a contract says "call X for any issue", check what X actually accepts and give the user a copy-pasteable command like `X('redistribution')`. This applies whether Claude is walking the user through tests verbally or generating a checklist HTML.
+
 ### Testing workflow
 1. Open the generated checklist and the app side-by-side
+1b. For visual verification, run `/chrome` to open the app in your browser for side-by-side testing
 2. Work through each section in order — sections map to feature steps
 3. Follow prerequisites at the top of each section (console commands have copy buttons)
 4. Click each check item to cycle: **untested** → **pass** → **fail**
@@ -38,7 +43,7 @@ Generate interactive HTML test checklists from todo.md contracts so manual testi
 5. Repeat until all checks pass or failures are accepted as known issues
 
 ### Sign-off
-- When all checks pass: Claude marks the `[manual]` items as `[x]` in todo.md and moves the feature to `## Done`
+- When all checks pass: Claude marks the `[manual]` items as `[x]` in todo.md. If on a feature branch, the PR can be merged. Feature moves to `## Done`
 - When failures are accepted: document accepted issues in the feature's retro, mark `[manual]` items with a note, move to Done
 - When failures need fixing: fix, regenerate checklist, re-test
 

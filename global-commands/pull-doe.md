@@ -5,7 +5,7 @@ Then read directives/starter-kit-pull.md and follow it precisely. The directive 
 1. Pull latest kit from GitHub — ensure you have the newest version before comparing
 2. Read the kit's current version from `git describe --tags` in ~/doe-starter-kit
 3. Read the project's last-synced version from STATE.md's "DOE Starter Kit" line
-4. If versions match, say "Already up to date" and stop
+4. If versions match, say "Already up to date", update STATE.md's "DOE Starter Kit" line to match the kit version (self-correcting if it was stale), and stop
 5. Show kit CHANGELOG entries between the two versions — this is what changed
 6. Global installs: run `~/doe-starter-kit/setup.sh` to update commands, hooks, scripts
 7. Project hooks: compare .claude/hooks/, .claude/settings.json, .githooks/ — show diffs, propose updates, preserve project additions

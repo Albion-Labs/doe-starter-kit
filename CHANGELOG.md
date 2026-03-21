@@ -7,6 +7,18 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.46.0 (2026-03-21)
+
+### Changed
+- **DOE Kit sync check simplified** — stand-up, crack-on, and wrap now use version-only comparison (kit tag vs STATE.md). No more file diffs or u/c classification. Eliminates false positives from project-specific customisations
+- **/sync-doe reverted to direct push** — commits directly to kit main instead of creating a sync branch + PR. The sync procedure itself is the quality gate
+- **/wrap session-specific sync reminder** — at session end, checks if kit-syncable files were modified THIS session and shows a targeted reminder. Replaces the persistent outbound push detection
+- **/pull-doe self-correcting** — always updates STATE.md version after sync, even on "already up to date". Prevents stale version mismatches
+
+### Added
+- **Code verification rule in manual-testing directive** — verify function names, parameter types, and valid inputs against actual code before presenting test steps. Prevents design-phase language from contracts reaching users as broken test instructions
+- **Info banner in test checklist HTML** — reminds testers to verify exact function signatures against the code before testing
+
 ## v1.45.0 (2026-03-21)
 
 ### Added

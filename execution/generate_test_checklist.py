@@ -642,8 +642,8 @@ def build_auto_results_html(tr: dict | None, code_trace: list | None = None) -> 
         )
 
     return (
-        f'<!-- AUTOMATED RESULTS -->\n'
-        f'<div class="ar-section">\n'
+        f'<!-- AUTOMATED RESULTS (chrome visual verification available via /chrome) -->\n'
+        f'<div class="ar-section contract-result">\n'
         f'  <div class="ar-card">\n'
         f'    <div class="ar-header">\n'
         f'      <div class="ar-header-left">\n'
@@ -1332,6 +1332,7 @@ def generate_html(
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Manual Test Checklist &mdash; {escape_html(feature_name)} {escape_html(version)}</title>
+<!-- Pre-merge pull request verification checklist -->
 <style>
   *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
@@ -2446,6 +2447,9 @@ def generate_html(
 
 {auto_results_html}
 {signpost_html}
+<div style="max-width:900px;margin:0 auto 1.5rem;padding:0.75rem 1rem;background:#fef3cd;border:1px solid #ffc107;border-radius:8px;font-size:0.85rem;color:#664d03;line-height:1.4;">
+  <strong>Note:</strong> Manual items reference design-phase names from contracts. Verify exact function signatures and valid inputs against the code before testing.
+</div>
 <!-- PAGE BODY -->
 <div class="page-body">
 {sections_html}
