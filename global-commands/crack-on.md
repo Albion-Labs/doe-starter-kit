@@ -43,4 +43,6 @@ Card rules:
 
 **Post-completion verification:** After finishing the step's work but BEFORE marking it `[x]` in todo.md, run all `[auto]` `Verify:` patterns (via `/agent-verify` if available, or execute them manually). Present `[manual]` criteria to the user for confirmation. Mark each criterion `[x]` in the contract block as it passes. If an `[auto]` criterion fails, attempt up to 3 fixes. Only mark the step `[x]` after all criteria pass.
 
+**Chrome prompt (APP features only):** If the feature is tagged `[APP]`, show after the card: "This is an [APP] feature -- enable Chrome for visual verification? Run `/chrome` to enable, or skip to use manual checks only." Do not auto-enable Chrome (it increases context usage). If the feature is `[INFRA]`, skip this prompt.
+
 After showing the card (and passing contract pre-flight), immediately start working on the step shown in PICKING UP. No sign-off needed -- just go.

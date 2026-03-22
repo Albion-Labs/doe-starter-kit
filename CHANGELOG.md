@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.47.0 (2026-03-22)
+
+### Added
+- **TDD & debugging directive** (`directives/best-practices/tdd-and-debugging.md`) — Red-Green-Refactor enforcement with 7-excuse rationalisation table, 4-phase systematic debugging protocol (Investigate, Pattern Analysis, Hypothesis Testing, Implementation). Includes "when to test" decision table by code type
+- **Chrome verification directive** (`directives/chrome-verification.md`) — protocol for using Claude Code's Chrome MCP integration to auto-verify `[manual]` contract items. DOM checks, console checks, layout screenshots, with graceful degradation
+- **4 CLAUDE.md triggers** — TDD enforcement on new code, systematic debugging on failures, Chrome verification in snagging, Chrome prompt in crack-on for [APP] features
+
+### Changed
+- **crack-on** — Chrome enablement prompt for [APP] features. Does not auto-enable (context cost); just asks
+- **snagging** — new Chrome verification Step 5 between test generation and report. Auto-verifies DOM, console, and layout items; leaves subjective items as `[manual]`
+
+### Fixed
+- **wrap_html.py** — auto-calculate timeline durations from timestamps instead of hand-estimates. Handles midnight crossing. Falls back to session total when timestamps missing
+
 ## v1.46.0 (2026-03-21)
 
 ### Changed

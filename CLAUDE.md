@@ -103,6 +103,10 @@ When a task matches a trigger below, load the linked doc before starting:
 - Building donation or payment features → read `legal-framework.md (if exists)` ## PPERA — Fundraising section. Donation permissibility check is mandatory before accepting payment.
 - Building content generation features (leaflets, emails, social posts) → read `legal-framework.md (if exists)` ## PPERA — Campaign Material Imprints. Auto-imprint is mandatory on all voter-facing output.
 - Building opposition research or attack line features → read `legal-framework.md (if exists)` ## Defamation Act. Source attribution and fact-checking disclaimer are mandatory.
+- Writing new functions, modules, or execution scripts → read `directives/best-practices/tdd-and-debugging.md` for TDD enforcement and the rationalisation table. If you catch yourself thinking "this is too simple to test", the directive applies.
+- Debugging a failure, investigating a bug, or diagnosing unexpected behaviour → read `directives/best-practices/tdd-and-debugging.md` ## Systematic Debugging for the 4-phase root cause investigation protocol. Do not skip phases.
+- Running `/snagging` on an [APP] feature → read `directives/chrome-verification.md` for the Chrome verification step. If Chrome is enabled, auto-verify `[manual]` items before presenting to the user.
+- Starting an [APP] feature session → prompt Chrome enablement per `directives/chrome-verification.md` ## Crack-On section. Do not auto-enable — just prompt.
 - Something went seriously wrong (bad commit, corrupted file, data damage) → read `directives/break-glass.md` and follow it
 - Session number is a multiple of 100 (check `.claude/stats.json` → `lifetime.totalSessions` against STATE.md `## Curation` → `next-curation`) → run the 100-session learnings curation protocol (see Self-Annealing section)
 

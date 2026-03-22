@@ -202,33 +202,68 @@ def _parse_dur_mins(dur_str):
     return mins
 
 
+def _parse_hhmm(time_str):
+    """Parse HH:MM string into total minutes since midnight."""
+    parts = time_str.strip().split(":")
+    if len(parts) == 2:
+        try:
+            return int(parts[0]) * 60 + int(parts[1])
+        except ValueError:
+            pass
+    return None
+
+
 def render_timeline(data):
     items = data.get("timeline", [])
     if not items:
         return ""
 
-    # Calculate total duration in minutes for percentage
-    total_mins = 0
+    # Auto-calculate durations from timestamps
+    # Each entry's duration = next entry's time - this entry's time
+    # Last entry's duration = session end - last entry's time
+    parsed_times = []
     for item in items:
-        dur_str = item.get("dur", "")
-        if dur_str:
-            total_mins += _parse_dur_mins(dur_str)
+        parsed_times.append(_parse_hhmm(item.get("time", "")))
+
+    session_dur_str = data.get("metrics", {}).get("sessionDuration", "")
+    total_mins = _parse_dur_mins(session_dur_str) if session_dur_str else 0
+
+    # Calculate per-entry durations from timestamp gaps
+    computed_durs = []
+    for i, item in enumerate(items):
+        if parsed_times[i] is None:
+            computed_durs.append(0)
+            continue
+        if i + 1 < len(items) and parsed_times[i + 1] is not None:
+            gap = parsed_times[i + 1] - parsed_times[i]
+            if gap < 0:
+                gap += 24 * 60  # handle midnight crossing
+            computed_durs.append(gap)
+        elif total_mins > 0 and parsed_times[0] is not None:
+            # Last entry: use total session duration minus elapsed so far
+            elapsed = sum(computed_durs)
+            computed_durs.append(max(0, total_mins - elapsed))
+        else:
+            computed_durs.append(0)
+
+    # Use total_mins from session duration (authoritative), not sum of computed
+    if total_mins == 0:
+        total_mins = sum(computed_durs)
 
     rows = []
-    for item in items:
+    for i, item in enumerate(items):
         t = esc(item.get("time", ""))
         desc = esc(item.get("desc", ""))
-        dur = item.get("dur", "")
         item_type = item.get("type", "")
         css_class = item_type if item_type in ("start", "major", "fix") else ""
 
-        # Calculate percentage
-        dur_display = esc(dur)
-        if dur and total_mins > 0:
-            mins = _parse_dur_mins(dur)
-            pct = round(mins / total_mins * 100)
-            if pct > 0:
-                dur_display = f"{esc(dur)} ({pct}%)"
+        mins = computed_durs[i]
+        if mins > 0 and item_type != "start":
+            dur_str = f"{mins}m" if mins < 60 else f"{mins // 60}h {mins % 60}m"
+            pct = round(mins / total_mins * 100) if total_mins > 0 else 0
+            dur_display = f"{dur_str} ({pct}%)" if pct > 0 else dur_str
+        else:
+            dur_display = ""
 
         rows.append(
             f'    <div class="timeline-item {css_class}">'
@@ -528,6 +563,8 @@ def render_checks(data):
     # DOE Kit row
     version = esc(doe.get("version", ""))
     synced = doe.get("synced", True)
+    u_count = doe.get("userCount", 0)
+    c_count = doe.get("creatorCount", 0)
     if version:
         if synced:
             rows.append(
@@ -536,10 +573,14 @@ def render_checks(data):
                 f'<span class="check-value">{version}</span></div>'
             )
         else:
+            uc_parts = []
+            if u_count: uc_parts.append(f"{u_count}u")
+            if c_count: uc_parts.append(f"{c_count}c")
+            uc_label = f' ({" ".join(uc_parts)})' if uc_parts else ""
             rows.append(
                 f'    <div class="check-row"><span class="check-warn">{version}*</span> '
                 f'<span class="check-label">DOE Kit</span> '
-                f'<span class="check-value">not synced</span></div>'
+                f'<span class="check-value">not synced{esc(uc_label)}</span></div>'
             )
     if not rows:
         return ""

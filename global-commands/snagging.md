@@ -61,7 +61,25 @@ python3 execution/generate_test_checklist.py [--feature "Name"] [--bugs .tmp/tes
 
 Include `--feature` if targeting a named feature. Include `--bugs` only if `.tmp/test-bugs.json` exists (from a previous run, not from code trace). Include `--test-results` only if `.tmp/test-suite-results.json` exists (i.e., the test suite ran in Step 2). Include `--code-trace` only if `.tmp/test-code-trace.json` exists (from Step 3).
 
-## Step 5: Report
+## Step 5: Chrome verification (if available)
+
+**This step only runs when Chrome MCP tools are available** (user ran `/chrome` or started with `--chrome`). If Chrome is not enabled, skip to Step 6 and show: "Chrome not enabled -- run `/chrome` to auto-verify visual items, or proceed with manual checks."
+
+Read `directives/chrome-verification.md` for the full protocol. In brief:
+
+1. The app is already being served on port 8080 (from Step 2's orchestrator, or start `npx serve -l 8080` if Step 2 was skipped)
+2. Navigate to the app URL
+3. For each `[manual]` item in the checklist, determine if Chrome can verify it:
+   - **DOM/content checks** (element exists, text matches, tab works): Navigate, click, read DOM. Mark `[auto-chrome]` if verified.
+   - **Console checks** (no JS errors): Read console after page load. Mark `[auto-chrome]` if clean.
+   - **Layout checks** (responsive, visual): Screenshot and describe what's visible. Mark `[auto-chrome]` if layout matches description.
+   - **Subjective items** (looks polished, feels smooth, content clarity): Leave as `[manual]` for the user.
+4. Record Chrome-verified items with evidence (what was checked, what was found)
+5. Update the checklist: re-run the generator with Chrome results included, or note Chrome-verified items in the summary card
+
+**Do not block on Chrome failures.** If a Chrome check fails (extension disconnects, page won't load), log the failure and leave the item as `[manual]`.
+
+## Step 6: Report
 
 Show a brief summary:
 
@@ -69,7 +87,7 @@ Show a brief summary:
 ┌──────────────────────────────────────────────────┐
 │  TEST CHECKLIST -- [Feature name]                │
 ├──────────────────────────────────────────────────┤
-│  Manual checks:  N items                         │
+│  Manual checks:  N items (M remaining for user)  │
 │  Auto-verified:  N tests (or "skipped")          │
 │  Bugs surfaced:  N (or none)                     │
 │  Checklist:      open in browser                 │
