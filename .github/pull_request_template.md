@@ -19,9 +19,7 @@
 
 <!-- CI runs automatically. Note any additional testing done locally -->
 
-- [ ] ESLint passes
-- [ ] Playwright tests pass
-- [ ] Lighthouse audit passes
+- [ ] CI Result passes (auto-detects and runs the right checks for your stack)
 
 ## Notes
 
