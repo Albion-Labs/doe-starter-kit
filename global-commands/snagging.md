@@ -12,7 +12,7 @@ If nothing is found anywhere, report: "No manual tests pending." and stop.
 
 ## Pre-merge context
 
-Snagging is the pre-merge verification gate. Before a feature branch PR can be merged to main, the snagging checklist must be completed. This includes automated checks (Playwright, Lighthouse, health check, contract verification via agent-verify) and manual visual checks.
+Snagging is the pre-merge verification gate. Before a feature branch PR can be merged to main, the snagging checklist must be completed. This includes automated checks (CI Result gate, project-specific checks, health check, contract verification via agent-verify) and manual visual checks.
 
 ## Step 2: Run automated test suite (if available)
 
@@ -20,7 +20,7 @@ Snagging is the pre-merge verification gate. Before a feature branch PR can be m
 
 **Auto-bootstrap:** Before running, verify Playwright is installed by checking if `node_modules/.bin/playwright` exists. If not, tell the user: "Quality Stack not bootstrapped -- installing dependencies..." and run `python3 execution/run_test_suite.py --bootstrap` automatically. If bootstrap succeeds, continue with the test suite. If it fails, log the error and skip to Step 3.
 
-Tell the user: "Running automated tests (Playwright, Lighthouse, health check) -- about 30-60 seconds."
+Tell the user: "Running automated tests (health check, contract verification) -- about 30-60 seconds."
 
 ```bash
 python3 execution/run_test_suite.py
@@ -98,7 +98,7 @@ Use Unicode box-drawing characters (`┌─┐`, `├─┤`, `└─┘`, `│`
 
 **Chrome visual verification:** After the automated checks, prompt the user: "Run `/chrome` to open the app in Chrome for visual verification of [manual] items."
 
-**If test suite results show failures or warnings, mention them before telling the user to work through the checklist.** For example: "Playwright found 2 test failures and Lighthouse dropped 12 points -- see the automated results section at the top of the checklist."
+**If test suite results show failures or warnings, mention them before telling the user to work through the checklist.** For example: "2 test failures and a health check warning -- see the automated results section at the top of the checklist."
 
 Then tell the user:
 

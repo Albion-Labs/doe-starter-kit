@@ -34,7 +34,7 @@ Chrome verification is **interactive** — Claude uses the MCP tools during the 
 
 ### 1. Snagging (primary — pre-merge gate)
 
-**When:** After automated tests (Playwright, Lighthouse) and before presenting the checklist to the user.
+**When:** After automated CI checks and before presenting the checklist to the user.
 
 **Flow:**
 1. Automated tests run (`execution/run_test_suite.py`) — server starts on port 8080
