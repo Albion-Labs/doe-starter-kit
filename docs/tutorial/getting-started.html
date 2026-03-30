@@ -1393,6 +1393,35 @@ learnings.md        # Project learnings log
           </div>
         </div>
 
+        <h2 id="branch-protection">Branch Protection (Optional)</h2>
+
+        <p>
+          If your project is on GitHub, you can protect your main branch so that all changes must go through
+          a Pull Request with passing CI checks. DOE's CI workflow (<code>doe-ci.yml</code>) was installed by
+          <code>setup.sh</code> and will auto-detect your project's stack.
+        </p>
+
+        <p>To enable branch protection:</p>
+
+        <ol>
+          <li>Go to your repo on GitHub &rarr; Settings &rarr; Branches</li>
+          <li>Click <strong>Add classic branch protection rule</strong></li>
+          <li>Branch name pattern: <code>main</code></li>
+          <li>Tick <strong>Require a pull request before merging</strong></li>
+          <li>Tick <strong>Require status checks to pass before merging</strong></li>
+          <li>Search for and add: <strong>CI Result</strong></li>
+          <li>Click <strong>Create</strong></li>
+        </ol>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>CI Result</strong> is the only check you need to require. It aggregates the DOE Gate
+            (universal checks) and all auto-detected project checks into a single pass/fail. See
+            <a href="pr-workflow.html#ci">Continuous Integration</a> for details on the three tiers.
+          </div>
+        </div>
+
         <div class="callout tip">
           <span class="callout-icon">&#9432;</span>
           <div class="callout-body">

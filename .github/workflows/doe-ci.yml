@@ -1,0 +1,336 @@
+name: DOE CI
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  # ──────────────────────────────────────────────────────────────
+  # Detection: identify stack AND what files changed
+  # ──────────────────────────────────────────────────────────────
+  detect:
+    name: Detect
+    runs-on: ubuntu-latest
+    outputs:
+      has_node: ${{ steps.stack.outputs.has_node }}
+      has_python: ${{ steps.stack.outputs.has_python }}
+      has_go: ${{ steps.stack.outputs.has_go }}
+      has_flutter: ${{ steps.stack.outputs.has_flutter }}
+      has_rust: ${{ steps.stack.outputs.has_rust }}
+      has_eslint: ${{ steps.stack.outputs.has_eslint }}
+      has_playwright: ${{ steps.stack.outputs.has_playwright }}
+      has_pytest: ${{ steps.stack.outputs.has_pytest }}
+      has_ruff: ${{ steps.stack.outputs.has_ruff }}
+      has_web: ${{ steps.stack.outputs.has_web }}
+      has_npm_test: ${{ steps.stack.outputs.has_npm_test }}
+      code_changed: ${{ steps.changes.outputs.code }}
+      python_changed: ${{ steps.changes.outputs.python }}
+      go_changed: ${{ steps.changes.outputs.go }}
+      flutter_changed: ${{ steps.changes.outputs.flutter }}
+      rust_changed: ${{ steps.changes.outputs.rust }}
+      web_changed: ${{ steps.changes.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # What files changed in this PR?
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'app/**'
+              - 'pages/**'
+              - 'components/**'
+              - 'lib/**'
+              - '**/*.js'
+              - '**/*.ts'
+              - '**/*.jsx'
+              - '**/*.tsx'
+              - '**/*.mjs'
+              - '**/*.cjs'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.eslintrc*'
+              - 'eslint.config.*'
+              - 'playwright.config.*'
+            python:
+              - '**/*.py'
+              - 'requirements.txt'
+              - 'pyproject.toml'
+              - 'setup.py'
+              - 'setup.cfg'
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+            flutter:
+              - '**/*.dart'
+              - 'pubspec.yaml'
+              - 'pubspec.lock'
+            rust:
+              - '**/*.rs'
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+            web:
+              - '**/*.html'
+              - '**/*.css'
+              - '**/*.scss'
+              - 'src/**'
+              - 'app/**'
+              - 'public/**'
+
+      # What stack is in this repo?
+      - id: stack
+        run: |
+          [ -f package.json ] && echo "has_node=true" >> "$GITHUB_OUTPUT" || echo "has_node=false" >> "$GITHUB_OUTPUT"
+          ([ -f requirements.txt ] || [ -f pyproject.toml ] || [ -f setup.py ]) && echo "has_python=true" >> "$GITHUB_OUTPUT" || echo "has_python=false" >> "$GITHUB_OUTPUT"
+          [ -f go.mod ] && echo "has_go=true" >> "$GITHUB_OUTPUT" || echo "has_go=false" >> "$GITHUB_OUTPUT"
+          [ -f pubspec.yaml ] && echo "has_flutter=true" >> "$GITHUB_OUTPUT" || echo "has_flutter=false" >> "$GITHUB_OUTPUT"
+          [ -f Cargo.toml ] && echo "has_rust=true" >> "$GITHUB_OUTPUT" || echo "has_rust=false" >> "$GITHUB_OUTPUT"
+          ([ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f .eslintrc.yml ] || [ -f eslint.config.js ] || [ -f eslint.config.mjs ] || [ -f eslint.config.ts ]) && echo "has_eslint=true" >> "$GITHUB_OUTPUT" || echo "has_eslint=false" >> "$GITHUB_OUTPUT"
+          ([ -f playwright.config.ts ] || [ -f playwright.config.js ]) && echo "has_playwright=true" >> "$GITHUB_OUTPUT" || echo "has_playwright=false" >> "$GITHUB_OUTPUT"
+          (grep -q "pytest" requirements.txt 2>/dev/null || grep -q "pytest" pyproject.toml 2>/dev/null) && echo "has_pytest=true" >> "$GITHUB_OUTPUT" || echo "has_pytest=false" >> "$GITHUB_OUTPUT"
+          (grep -q "ruff" requirements.txt 2>/dev/null || grep -q "ruff" pyproject.toml 2>/dev/null) && echo "has_ruff=true" >> "$GITHUB_OUTPUT" || echo "has_ruff=false" >> "$GITHUB_OUTPUT"
+          ([ -f next.config.ts ] || [ -f next.config.js ] || [ -f next.config.mjs ] || [ -f vite.config.ts ] || [ -f vite.config.js ] || ls *.html 1>/dev/null 2>&1) && echo "has_web=true" >> "$GITHUB_OUTPUT" || echo "has_web=false" >> "$GITHUB_OUTPUT"
+          if [ -f package.json ] && jq -e '.scripts.test // empty | select(. != "echo \"Error: no test specified\" && exit 1")' package.json >/dev/null 2>&1; then
+            echo "has_npm_test=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_npm_test=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ──────────────────────────────────────────────────────────────
+  # Gate tier: universal DOE checks (always runs)
+  # ──────────────────────────────────────────────────────────────
+  gate:
+    name: DOE Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Health Check
+        run: python3 execution/health_check.py --ci
+      - name: Claim Audit
+        run: python3 execution/audit_claims.py --hook --json
+
+  # ──────────────────────────────────────────────────────────────
+  # Project tier: runs only when relevant files changed
+  # ──────────────────────────────────────────────────────────────
+  eslint:
+    name: ESLint
+    needs: detect
+    if: needs.detect.outputs.has_eslint == 'true' && needs.detect.outputs.code_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx eslint .
+
+  node-test:
+    name: Node.js Tests
+    needs: detect
+    if: needs.detect.outputs.has_npm_test == 'true' && needs.detect.outputs.code_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  python-test:
+    name: Python Tests
+    needs: detect
+    if: needs.detect.outputs.has_pytest == 'true' && needs.detect.outputs.python_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt 2>/dev/null || pip install -e ".[test]" 2>/dev/null || true
+      - run: python -m pytest
+
+  python-lint:
+    name: Python Lint
+    needs: detect
+    if: needs.detect.outputs.has_ruff == 'true' && needs.detect.outputs.python_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check .
+
+  go-test:
+    name: Go Tests
+    needs: detect
+    if: needs.detect.outputs.has_go == 'true' && needs.detect.outputs.go_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go vet ./...
+      - run: go test ./...
+
+  flutter-test:
+    name: Flutter Tests
+    needs: detect
+    if: needs.detect.outputs.has_flutter == 'true' && needs.detect.outputs.flutter_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  rust-test:
+    name: Rust Tests
+    needs: detect
+    if: needs.detect.outputs.has_rust == 'true' && needs.detect.outputs.rust_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo clippy -- -D warnings
+      - run: cargo test
+
+  # ──────────────────────────────────────────────────────────────
+  # Advisory tier: informational, never blocks merge
+  # ──────────────────────────────────────────────────────────────
+  playwright:
+    name: Playwright
+    needs: detect
+    if: needs.detect.outputs.has_playwright == 'true' && needs.detect.outputs.code_changed == 'true'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('package-lock.json') }}
+      - run: npx playwright install chromium --with-deps
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+  lighthouse:
+    name: Lighthouse
+    needs: detect
+    if: needs.detect.outputs.has_web == 'true' && needs.detect.outputs.web_changed == 'true'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - name: Build (if build script exists)
+        run: |
+          if [ -f execution/build.py ]; then
+            python3 execution/build.py
+          elif [ -f package.json ] && jq -e '.scripts.build // empty' package.json >/dev/null 2>&1; then
+            npm run build
+          fi
+      - name: Run Lighthouse
+        run: |
+          if [ -f execution/lighthouse.sh ]; then
+            bash execution/lighthouse.sh
+          else
+            echo "No Lighthouse script found -- skipping"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: .tmp/lighthouse.json
+          retention-days: 14
+
+  # ──────────────────────────────────────────────────────────────
+  # CI Result: single aggregator (the ONLY required check)
+  # ──────────────────────────────────────────────────────────────
+  ci-result:
+    name: CI Result
+    if: always()
+    needs: [gate, eslint, node-test, python-test, python-lint, go-test, flutter-test, rust-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        env:
+          GATE: ${{ needs.gate.result }}
+          ESLINT: ${{ needs.eslint.result }}
+          NODE_TEST: ${{ needs.node-test.result }}
+          PYTHON_TEST: ${{ needs.python-test.result }}
+          PYTHON_LINT: ${{ needs.python-lint.result }}
+          GO_TEST: ${{ needs.go-test.result }}
+          FLUTTER_TEST: ${{ needs.flutter-test.result }}
+          RUST_TEST: ${{ needs.rust-test.result }}
+        run: |
+          echo "=== CI Results ==="
+          echo "Gate:         $GATE"
+          echo "ESLint:       $ESLINT"
+          echo "Node Tests:   $NODE_TEST"
+          echo "Python Tests: $PYTHON_TEST"
+          echo "Python Lint:  $PYTHON_LINT"
+          echo "Go Tests:     $GO_TEST"
+          echo "Flutter:      $FLUTTER_TEST"
+          echo "Rust:         $RUST_TEST"
+          echo "================="
+
+          failed=false
+
+          # Gate must pass (universal, always runs)
+          if [ "$GATE" != "success" ]; then
+            echo "::error::DOE Gate failed"
+            failed=true
+          fi
+
+          # Project tier: failure blocks, skipped is fine
+          for check in "$ESLINT" "$NODE_TEST" "$PYTHON_TEST" "$PYTHON_LINT" "$GO_TEST" "$FLUTTER_TEST" "$RUST_TEST"; do
+            if [ "$check" = "failure" ]; then
+              echo "::error::A project check failed"
+              failed=true
+            fi
+          done
+
+          # Advisory tier (playwright, lighthouse) not checked here -- never blocks
+
+          if [ "$failed" = "true" ]; then
+            exit 1
+          fi
+
+          echo "All checks passed"

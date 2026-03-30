@@ -884,8 +884,8 @@
             <div class="step-number">4</div>
             <h4>CI runs automatically</h4>
             <p>
-              As soon as the PR is created, Continuous Integration kicks in. It runs ESLint (code quality),
-              Playwright (browser tests), and Lighthouse (performance audits). All three must pass.
+              As soon as the PR is created, Continuous Integration kicks in. It auto-detects your project's
+              stack and runs the right checks. The CI Result check must pass before you can merge.
             </p>
           </li>
           <li class="step">
@@ -963,37 +963,47 @@
           every time, consistently.
         </p>
 
-        <h3>The three checks</h3>
+        <h3>The three tiers</h3>
+
+        <p>
+          DOE CI auto-detects your project's stack (Node.js, Python, Go, Flutter, Rust, static HTML) and runs
+          the right checks automatically. No configuration needed. Checks are organised into three tiers:
+        </p>
 
         <div class="card-grid cols-3">
           <div class="m-card">
             <div class="card-icon amber">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             </div>
-            <h4>ESLint</h4>
-            <p>Checks code quality and style. Catches unused variables, missing semicolons, and potential bugs before they reach production.</p>
+            <h4>Gate (always runs)</h4>
+            <p>Universal DOE checks: health check (stubs, TODOs, empty functions) and claim audit (documentation integrity). Works for any language. Blocks merge if it fails.</p>
           </div>
           <div class="m-card">
             <div class="card-icon blue">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
             </div>
-            <h4>Playwright</h4>
-            <p>Runs browser tests that click through your application, verifying that pages load, buttons work, and content appears correctly.</p>
+            <h4>Project (auto-detected)</h4>
+            <p>Stack-specific checks that only run when relevant files change. ESLint for JavaScript, pytest for Python, go test for Go. Blocks merge if it fails.</p>
           </div>
           <div class="m-card">
             <div class="card-icon green">
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             </div>
-            <h4>Lighthouse</h4>
-            <p>Audits performance, accessibility, and best practices. Ensures your pages load fast and work for all users, including those with disabilities.</p>
+            <h4>Advisory (informational)</h4>
+            <p>Performance and browser checks like Lighthouse and Playwright. They run and report results, but never block your merge.</p>
           </div>
         </div>
+
+        <p>
+          A single <strong>CI Result</strong> check aggregates all tiers. This is the only check branch protection
+          requires. If you edit only markdown files, the gate passes and project-specific checks are skipped entirely.
+        </p>
 
         <h3>When CI fails</h3>
 
         <p>
-          If any check fails, the PR is blocked from merging. This is intentional &mdash; it prevents broken code
-          from reaching main. The fix is straightforward:
+          If a gate or project check fails, the CI Result check fails and the PR is blocked from merging.
+          This is intentional &mdash; it prevents broken code from reaching main. The fix is straightforward:
         </p>
 
         <ol>
@@ -1037,7 +1047,7 @@
         </p>
 
         <ul>
-          <li><strong>Automated results:</strong> Pass/fail tiles showing the outcome of each CI check (ESLint, Playwright, Lighthouse). These are pre-filled &mdash; you do not need to re-run them.</li>
+          <li><strong>Automated results:</strong> Pass/fail tiles showing the outcome of each CI check (gate, project-specific, and advisory). These are pre-filled &mdash; you do not need to re-run them.</li>
           <li><strong>Manual verification items:</strong> Checks that require a human to look at the result. Visual layout, interaction behaviour, content accuracy. You tick these off one by one.</li>
         </ul>
 

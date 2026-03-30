@@ -123,7 +123,7 @@ fi
 
 # 7. Copy Quality Stack files (only if not already present in project)
 # Execution scripts for test orchestration, health checks, and verification
-QS_SCRIPTS="run_test_suite.py health_check.py verify_tests.py generate_test_checklist.py"
+QS_SCRIPTS="run_test_suite.py health_check.py verify_tests.py generate_test_checklist.py audit_claims.py"
 QS_SCRIPT_COUNT=0
 if [ -d "$SCRIPT_DIR/execution" ]; then
     for script in $QS_SCRIPTS; do
@@ -179,7 +179,33 @@ else
     echo "✓ Quality Stack files already present (not overwritten)"
 fi
 
-# 8. Set DOE Role in STATE.md
+# 8. Copy CI workflow (only if not already present)
+CI_COUNT=0
+if [ -d "$SCRIPT_DIR/.github/workflows" ]; then
+    for f in "$SCRIPT_DIR"/.github/workflows/*.yml; do
+        [ -f "$f" ] || continue
+        fname=$(basename "$f")
+        if [ ! -f ".github/workflows/$fname" ]; then
+            mkdir -p .github/workflows
+            cp "$f" ".github/workflows/$fname"
+            CI_COUNT=$((CI_COUNT + 1))
+        fi
+    done
+fi
+if [ "$CI_COUNT" -gt 0 ]; then
+    echo "✓ $CI_COUNT CI workflow(s) installed to .github/workflows/"
+else
+    echo "✓ CI workflows already present (not overwritten)"
+fi
+
+# 9. Copy PR template (only if not already present)
+if [ -f "$SCRIPT_DIR/.github/pull_request_template.md" ] && [ ! -f ".github/pull_request_template.md" ]; then
+    mkdir -p .github
+    cp "$SCRIPT_DIR/.github/pull_request_template.md" ".github/pull_request_template.md"
+    echo "✓ PR template installed to .github/"
+fi
+
+# 10. Set DOE Role in STATE.md
 STATE_FILE="$SCRIPT_DIR/STATE.md"
 if [ -f "$STATE_FILE" ] && grep -q "DOE Role:" "$STATE_FILE"; then
     echo ""
@@ -196,7 +222,7 @@ if [ -f "$STATE_FILE" ] && grep -q "DOE Role:" "$STATE_FILE"; then
     fi
 fi
 
-# 9. Summary
+# 11. Summary
 echo ""
 echo "✓ $COMMAND_COUNT commands installed to ~/.claude/commands/"
 echo "✓ $HOOK_COUNT hooks installed to ~/.claude/hooks/"
