@@ -80,8 +80,6 @@ jobs:
               - '**/*.html'
               - '**/*.css'
               - '**/*.scss'
-              - 'src/**'
-              - 'app/**'
               - 'public/**'
 
       # What stack is in this repo?
@@ -96,7 +94,7 @@ jobs:
           ([ -f playwright.config.ts ] || [ -f playwright.config.js ]) && echo "has_playwright=true" >> "$GITHUB_OUTPUT" || echo "has_playwright=false" >> "$GITHUB_OUTPUT"
           (grep -q "pytest" requirements.txt 2>/dev/null || grep -q "pytest" pyproject.toml 2>/dev/null) && echo "has_pytest=true" >> "$GITHUB_OUTPUT" || echo "has_pytest=false" >> "$GITHUB_OUTPUT"
           (grep -q "ruff" requirements.txt 2>/dev/null || grep -q "ruff" pyproject.toml 2>/dev/null) && echo "has_ruff=true" >> "$GITHUB_OUTPUT" || echo "has_ruff=false" >> "$GITHUB_OUTPUT"
-          ([ -f next.config.ts ] || [ -f next.config.js ] || [ -f next.config.mjs ] || [ -f vite.config.ts ] || [ -f vite.config.js ] || ls *.html 1>/dev/null 2>&1) && echo "has_web=true" >> "$GITHUB_OUTPUT" || echo "has_web=false" >> "$GITHUB_OUTPUT"
+          ([ -f next.config.ts ] || [ -f next.config.js ] || [ -f next.config.mjs ] || [ -f vite.config.ts ] || [ -f vite.config.js ] || find . -maxdepth 3 -name "*.html" -not -path "./.git/*" 2>/dev/null | grep -q .) && echo "has_web=true" >> "$GITHUB_OUTPUT" || echo "has_web=false" >> "$GITHUB_OUTPUT"
           if [ -f package.json ] && jq -e '.scripts.test // empty | select(. != "echo \"Error: no test specified\" && exit 1")' package.json >/dev/null 2>&1; then
             echo "has_npm_test=true" >> "$GITHUB_OUTPUT"
           else
@@ -115,9 +113,19 @@ jobs:
         with:
           python-version: "3.12"
       - name: Health Check
-        run: python3 execution/health_check.py --ci
+        run: |
+          if [ -f execution/health_check.py ]; then
+            python3 execution/health_check.py --ci
+          else
+            echo "No health_check.py found -- skipping"
+          fi
       - name: Claim Audit
-        run: python3 execution/audit_claims.py --hook --json
+        run: |
+          if [ -f execution/audit_claims.py ]; then
+            python3 execution/audit_claims.py --hook --json
+          else
+            echo "No audit_claims.py found -- skipping"
+          fi
 
   # ──────────────────────────────────────────────────────────────
   # Project tier: runs only when relevant files changed
@@ -160,7 +168,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -r requirements.txt 2>/dev/null || pip install -e ".[test]" 2>/dev/null || true
+      - run: pip install -r requirements.txt || pip install -e ".[test]" || echo "No install file found -- running pytest with current environment"
       - run: python -m pytest
 
   python-lint:
@@ -319,10 +327,10 @@ jobs:
             failed=true
           fi
 
-          # Project tier: failure blocks, skipped is fine
+          # Project tier: failure or cancelled blocks, skipped is fine
           for check in "$ESLINT" "$NODE_TEST" "$PYTHON_TEST" "$PYTHON_LINT" "$GO_TEST" "$FLUTTER_TEST" "$RUST_TEST"; do
-            if [ "$check" = "failure" ]; then
-              echo "::error::A project check failed"
+            if [ "$check" = "failure" ] || [ "$check" = "cancelled" ]; then
+              echo "::error::A project check failed or was cancelled"
               failed=true
             fi
           done

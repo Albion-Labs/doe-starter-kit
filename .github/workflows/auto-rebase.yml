@@ -32,7 +32,9 @@ jobs:
             exit 0
           fi
 
-          echo "$prs" | while read -r pr_number branch_name; do
+          rebase_failed=false
+
+          while read -r pr_number branch_name; do
             echo "=== PR #$pr_number ($branch_name) ==="
 
             # Fetch the branch
@@ -43,8 +45,12 @@ jobs:
 
             if git rebase origin/main; then
               echo "Rebase successful -- pushing"
-              git push --force-with-lease origin "$branch_name"
-              gh pr comment "$pr_number" --body "Auto-rebased onto main by CI."
+              if git push --force-with-lease origin "$branch_name"; then
+                gh pr comment "$pr_number" --body "Auto-rebased onto main by CI."
+              else
+                echo "Push failed for $branch_name"
+                rebase_failed=true
+              fi
             else
               echo "Rebase has conflicts -- aborting"
               git rebase --abort
@@ -53,4 +59,8 @@ jobs:
 
             # Return to main for next iteration
             git checkout main
-          done
+          done <<< "$prs"
+
+          if [ "$rebase_failed" = "true" ]; then
+            echo "::warning::One or more rebase pushes failed"
+          fi
