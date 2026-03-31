@@ -11,6 +11,7 @@ Usage:
   python3 execution/health_check.py              # human-readable output
   python3 execution/health_check.py --json       # machine-parseable JSON
   python3 execution/health_check.py --quick      # universal checks only (no project checks)
+  python3 execution/health_check.py --ci         # CI mode (same as --quick, exit code 0/1)
 """
 
 import json
@@ -388,6 +389,40 @@ def run_universal_checks():
     else:
         results.append({"name": "No 'not implemented' markers", "status": "OK", "detail": ""})
 
+    # todo.md structure validation
+    todo_path = ROOT / "tasks" / "todo.md"
+    if todo_path.exists():
+        todo_text = todo_path.read_text(encoding="utf-8", errors="replace")
+        todo_issues = []
+
+        # Check for conflict markers
+        if "<<<<<<" in todo_text or "=======" in todo_text or ">>>>>>" in todo_text:
+            todo_issues.append("conflict markers found")
+
+        # Check for duplicate section headers
+        import collections
+        sections = re.findall(r"^## (.+)$", todo_text, re.MULTILINE)
+        dupes = [s for s, c in collections.Counter(sections).items() if c > 1]
+        if dupes:
+            todo_issues.append(f"duplicate sections: {', '.join(dupes)}")
+
+        # Check for duplicate feature headings within Queue
+        queue_match = re.search(r"^## Queue\n(.*?)(?=^## |\Z)", todo_text, re.MULTILINE | re.DOTALL)
+        if queue_match:
+            queue_features = re.findall(r"^### (.+)$", queue_match.group(1), re.MULTILINE)
+            queue_dupes = [f for f, c in collections.Counter(queue_features).items() if c > 1]
+            if queue_dupes:
+                todo_issues.append(f"duplicate Queue features: {', '.join(queue_dupes)}")
+
+        if todo_issues:
+            results.append({
+                "name": "todo.md structure valid",
+                "status": "WARN",
+                "detail": "; ".join(todo_issues),
+            })
+        else:
+            results.append({"name": "todo.md structure valid", "status": "OK", "detail": ""})
+
     return results
 
 
@@ -528,7 +563,7 @@ def print_json_output(universal, project):
 def main():
     args = sys.argv[1:]
     use_json = "--json" in args
-    quick = "--quick" in args
+    quick = "--quick" in args or "--ci" in args
 
     universal = run_universal_checks()
     project = None if quick else run_project_checks()
