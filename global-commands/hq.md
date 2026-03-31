@@ -14,7 +14,7 @@ fi
 
 2. Run the HQ generator:
 ```bash
-python3 ~/.claude/scripts/build_hq.py --theme $THEME --output ~/.claude/docs/hq.html
+python3 ~/.claude/scripts/build_hq.py --theme $THEME --source auto --output ~/.claude/docs/hq.html
 ```
 
 3. Open in browser:

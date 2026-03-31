@@ -12,7 +12,8 @@ Then read directives/starter-kit-sync.md and follow it precisely. The directive 
 8. Show me the exact edits before applying — wait for my approval
 9. Verify: grep for project-specific references — must return zero results
 10. Update CHANGELOG.md with what changed, bump the version (patch/minor/major)
-11. Stamp, commit, tag, push, and release directly on main:
+11. Before writing ANY files to ~/doe-starter-kit, run `touch .tmp/.sync-doe-active` in Bash. This disables the kit write guard hook for this session. Remove it when done: `rm -f .tmp/.sync-doe-active`.
+12. Stamp, commit, tag, push, and release directly on main:
     - `cd ~/doe-starter-kit && python3 execution/stamp_tutorial_version.py v[X.Y.Z]`
     - `git add -A && git commit -m "v[X.Y.Z]: Sync from [project] — [summary]"`
     - `git tag v[X.Y.Z] && git push && git push --tags`

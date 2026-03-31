@@ -4,6 +4,10 @@ import json, sys
 DANGEROUS = [
     "rm -rf /", "rm -rf ~", "rm -rf .",
     "DROP TABLE", "DROP DATABASE", "TRUNCATE",
+    "DISABLE ROW LEVEL SECURITY",
+    "supabase db reset",
+    "deleteMany()", ".delete()",
+    "emptyBucket",
     ":(){ :|:& };:", "fork bomb",
     "> /dev/sda", "mkfs.", "dd if=",
 ]

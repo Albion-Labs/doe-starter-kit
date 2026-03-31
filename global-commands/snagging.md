@@ -14,6 +14,16 @@ If nothing is found anywhere, report: "No manual tests pending." and stop.
 
 Snagging is the pre-merge verification gate. Before a feature branch PR can be merged to main, the snagging checklist must be completed. This includes automated checks (CI Result gate, project-specific checks, health check, contract verification via agent-verify) and manual visual checks.
 
+## Step 1b: PR conflict and staleness check
+
+Before running any tests, check for merge risks:
+
+1. **Branch staleness:** Run `git rev-list --count HEAD..origin/main` to see how many commits main is ahead. If > 0, warn: "Branch is N commits behind main -- rebase before merging to avoid surprises." If > 10, escalate: "Branch is significantly behind main (N commits) -- rebase strongly recommended."
+
+2. **PR conflict detection:** If 2+ PRs are open (`gh pr list --state open`), check for file overlaps between this PR and others: run `gh pr view N --json files --jq '.files[].path'` for each. If any files appear in multiple PRs, warn: "Merging this PR will create conflicts for PR #N on [overlapping files]. Merge this one first, then rebase #N -- or merge #N first if it's ready."
+
+Show results in the snagging output. These are warnings, not blockers -- the user decides how to proceed.
+
 ## Step 2: Run automated test suite (if available)
 
 **Portability guard:** Only run this step if `execution/run_test_suite.py` exists. If it doesn't exist, skip to Step 3.

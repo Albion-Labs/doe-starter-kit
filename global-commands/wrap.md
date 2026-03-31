@@ -218,7 +218,24 @@ open .tmp/wrap.html
 
 The `docs/wraps/session-N.json` file is what gets committed. The HTML is generated on demand (by `build_session_archive.py` regenerating it from JSON). The `.tmp/wrap.html` copy is disposable. Commit this file with message "Save session N wrap data" and push.
 
+### 3f: Gist sync (push session to cloud)
+
+After saving the local JSON and committing, push the session data to the Gist for cross-machine access. This is a best-effort step — if it fails, the local wrap still succeeds.
+
+```bash
+python3 ~/.claude/scripts/gist_sync.py --push \
+  --slug <PROJECT_DIR_NAME_LOWERCASED> \
+  --meta '<json with name, path, lifetime, recentSessions from stats.json>' \
+  --session '<the full wrap JSON object>'
+```
+
+Build the `--meta` JSON from stats.json: `{"name": "<project>", "path": "<cwd>", "lifetime": <stats.lifetime>, "recentSessions": <stats.recentSessions>}`.
+
+**Graceful fallback:** If `gist_sync.py` is not found, or if the push fails (non-zero exit), print a warning: `Gist sync: skipped (reason)` and continue. Never let a Gist failure block the wrap.
+
 Print a one-line summary to the terminal: `Session [N] wrap-up opened in browser. [X] commits, [Y] steps, [duration].`
+
+Then check for open PRs: `gh pr list --state open --json number,title,headRefName 2>/dev/null`. If any exist, print a reminder below the summary: `Open PRs: #N [title] (M manual items pending)` for each. Pull manual item counts from the `awaitingSignOff` data already computed. **Conflict detection:** If 2+ PRs are open, check for file overlaps: run `gh pr view N --json files --jq '.files[].path'` for each PR. If any files appear in multiple PRs, add a warning: `Conflict risk: [overlapping files] -- merge [ready PR] first, then rebase the other`. **Branch staleness:** If on a feature branch, run `git rev-list --count HEAD..origin/main`. If > 0, add: `Branch is N commits behind main -- rebase before merging`. This ensures PRs don't go stale and merge order is clear.
 
 ## Important Rules
 

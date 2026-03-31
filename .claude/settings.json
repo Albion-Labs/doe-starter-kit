@@ -13,6 +13,11 @@
             "type": "command",
             "command": "python3 .claude/hooks/block_secrets_in_code.py",
             "description": "Block secrets outside .env"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/guard_kit_writes.py",
+            "description": "Block direct writes to ~/doe-starter-kit"
           }
         ]
       },

@@ -2,6 +2,8 @@ As your very first action, start the session clock: run `mkdir -p .tmp && date -
 
 Read CLAUDE.md, tasks/todo.md, STATE.md, and learnings.md.
 
+**PR check:** Run `gh pr list --state open --json number,title,headRefName 2>/dev/null` to check for open PRs. If any exist, show them in the kick-off card as an `OPEN PRS` row (count + titles). If on `main` and about to create a new branch, add a prompt after the card: "N open PR(s) -- merge first or branch independently? Reply 'merge #N' to merge, or 'go' to continue." Wait for the user's response before branching. If on a feature branch that matches an open PR, note it as the active PR.
+
 **Branch check:** Run `git branch --show-current` to check the current branch. If on `main`, create a feature branch for the active feature: `git checkout -b feature/<feature-slug>` (derive the slug from the feature heading in todo.md ## Current — lowercase, hyphens, no version tag, e.g. "PR Workflow Migration" becomes "feature/pr-workflow-migration"). Push the branch: `git push -u origin feature/<feature-slug>`. If already on a feature branch, continue on it. Show the branch name in the PICKING UP line of the kick-off card.
 
 **Curation check:** Read `.claude/stats.json` → `lifetime.totalSessions` and STATE.md → `## Curation` → `next-curation`. If `totalSessions >= next-curation` value (e.g. `session-200` means 200), announce "Learnings curation due (session #N)" in the kick-off card and trigger the curation protocol (see CLAUDE.md Self-Annealing section) before starting any feature work.
@@ -18,6 +20,7 @@ Show a bordered kick-off card, then immediately pick up the next incomplete step
 │  PROGRESS   ██████░░░░ N/M steps                  │
 │  BRANCH     feature/xxx (or main)                  │
 │  DOE KIT    vX.Y.Z [synced / * pull]                │
+│  OPEN PRS   N open (list titles briefly)           │
 │                                                   │
 │  PICKING UP Step N -- [step description]          │
 │  [1-2 line plain English summary of what you      │
@@ -35,6 +38,7 @@ Card rules:
 - PROGRESS: count [x] and [ ] steps for the current feature in todo.md ## Current. Bar uses `█` for done, `░` for remaining, scaled to 10 characters. If no current feature, omit this line.
 - BRANCH: Run `git branch --show-current`. Show the current branch name (e.g. `feature/pr-workflow-migration` or `main`).
 - DOE KIT: `vX.Y.Z synced` if kit version matches STATE.md version. `vX.Y.Z * pull` if the kit has a newer version. Omit entirely if `~/doe-starter-kit` doesn't exist.
+- OPEN PRS: Run `gh pr list --state open --json number,title --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null`. If none, show "None". If 1-3, show count and titles. If 4+, show count only. Omit entirely if none. **Conflict detection:** If 2+ PRs are open, check for file overlaps: run `gh pr view N --json files --jq '.files[].path'` for each PR. If any files appear in multiple PRs, add a warning line after the PR list: `  !! Conflict risk: [overlapping files] -- merge [ready PR] first, then rebase the other`. If no overlaps, no warning needed. **Branch staleness:** If on a feature branch, run `git rev-list --count HEAD..origin/main`. If > 0, add: `  !! Branch is N commits behind main -- rebase before merging`.
 - PICKING UP: the next incomplete step (first `[ ]` line) from todo.md ## Current. Show step number and short description. If all steps complete, show "All steps complete -- ready for retro". If no current feature, omit this line.
 - SUMMARY: Immediately after PICKING UP, add 1-2 lines of plain English explaining what you are about to do for this step. Read the step's plan file if one is referenced, or use the step description and todo.md context. Keep it concrete and jargon-free -- e.g. "Creating the reverse sync command so kit updates can flow into projects safely." Not a restatement of the step name -- explain the actual work.
 - BORDER: Fixed width -- always 60 `─` characters between `│` borders (62 total per line). All content lines: `│` + 2 spaces + content + trailing spaces + `│` = 62 chars. If content would exceed 56 characters, truncate with `...`. Never dynamically size -- the box is always the same width. **Generate boxes programmatically** -- define a `line(content)` helper: `f"│  {content}".ljust(W + 1) + "│"` where W is the inner width. ALL rows including headers MUST use this helper -- never construct `f"│{...}│"` manually. Never hand-pad bordered output. Use Unicode box-drawing characters for borders (`┌─┐`, `├─┤`, `└─┘`, `│`). Content inside borders must be ASCII-only (no emojis, no `·`, `✓`, `⚠️`, `—`, `…`) -- use `--` for separators, commas for lists. Exception: progress bar uses `█` (done) and `░` (remaining) -- these render at fixed width in terminals.

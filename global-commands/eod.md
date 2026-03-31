@@ -1,12 +1,24 @@
-End-of-day report aggregating all sessions into a single visual HTML page. Answers "what did I do today?"
+End-of-day report aggregating all sessions into a single visual HTML page. Answers "what did I do today?" — or for any past date.
 
 This is a read-only summary command. Do NOT modify any files or start/stop sessions.
 
+## Arguments
+
+Parse the user's arguments (if any) after `/eod`:
+- No arguments → report for today
+- A date argument (e.g. `/eod 2026-03-18`, `/eod 18/03/26`, `/eod yesterday`) → report for that date. Parse flexibly: YYYY-MM-DD, DD/MM/YY, or relative words (yesterday, last Monday, etc.). Convert to YYYY-MM-DD for filtering.
+
 ## Step 1: Data Gathering
 
-Collect all of the following before building the report:
+Collect all of the following before building the report. Use `TARGET_DATE` (today or the date argument) for all filtering:
 
-1. **Today's sessions** — Read `.claude/stats.json` and filter `recentSessions` where `date` matches today (YYYY-MM-DD). For each session, pull `sessionDuration`, `commits`, `stepsCompleted`, `linesAdded`, `linesRemoved`, `filesTouched`, and `summary` (if present). Check if `.tmp/.session-start` exists — if it does, there is one active unwrapped session (compute its duration from the timestamp to now).
+1. **Sessions for the target date** — First try local: read `.claude/stats.json` and filter `recentSessions` where `date` matches TARGET_DATE. If TARGET_DATE is not today and local data has no matching sessions, pull from the Gist via `gist_sync`:
+```bash
+python3 ~/.claude/scripts/gist_sync.py --read <project-slug>
+```
+Parse the returned JSON and filter `.sessions[]` where `.date` matches TARGET_DATE. Use the `.wrapJson` from each matching session entry for metrics. If `gist_sync.py` is not found or fails, fall back to local data only with a note: "No session data found for {date}. Historical data requires Gist sync (/wrap pushes sessions to the Gist)."
+
+For today only: check if `.tmp/.session-start` exists — if it does, there is one active unwrapped session (compute its duration from the timestamp to now).
 
 2. **Today's commits** — Run `git log --oneline --since="$(date +%Y-%m-%d)T00:00:00"` to get all commits from today. Also run `git diff --shortstat` for the range to get total lines/files.
 
@@ -113,4 +125,5 @@ Print a one-line summary to the terminal: `EOD report opened in browser. [N] ses
 - The `summary` is one plain English sentence addressing the user. The `breakdowns` array groups work into subheadings with bullets.
 - Decisions and learnings use Problem/Solution and Discovery/Change format — same as /wrap.
 - Works correctly with 1 session or 10 sessions in a day.
-- If no sessions exist today, still show the report with data from git log.
+- If no sessions exist for the target date and no git data is available, show: "No session data for {date}. Run /wrap during sessions to populate the Gist for retroactive reports."
+- For today: if no sessions exist, still show the report with data from git log.

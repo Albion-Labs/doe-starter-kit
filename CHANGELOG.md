@@ -7,6 +7,31 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.48.0 (2026-03-31)
+
+### Added
+- **Agent Discipline directives** — rationalisation tables (6 domains, excuse-reality format), serial dispatch protocol (SDD workflow with decision tree), subagent status protocol (DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED)
+- **Adversarial review templates** (`directives/adversarial-review/`) — spec-reviewer, code-quality-reviewer, and implementer-prompt templates for two-pass confidence-scored code review
+- **Data compliance directive** (`directives/data-compliance.md`) — UK GDPR, DPA 2018, PPERA guidance for personal data handling
+- **Data safety directive** (`directives/data-safety.md`) — data protection, backup, and integrity rules
+- **Kit write guard hook** (`.claude/hooks/guard_kit_writes.py`) — blocks direct writes to ~/doe-starter-kit, enforces /sync-doe workflow. File-based flag for bypass during sync, SKIP_KIT_GUARD=1 for kit-native work
+- **DOE health checks** (`execution/test_methodology.py`) — 9 methodology scenarios including CLAUDE.md quality scoring with letter grades
+- **/request-doe-feature** command — structured feature request filing for the DOE starter kit
+- **Universal CI pipeline** (`.github/workflows/doe-ci.yml`) — three-tier auto-detecting CI (gates/advisory/AI review) with path filters and CI Result aggregator
+- **Auto-rebase Action** (`.github/workflows/auto-rebase.yml`) — keeps open PR branches current with main
+
+### Changed
+- **9 commands updated** — crack-on, stand-up, sitrep, wrap, review, snagging, eod, hq, sync-doe. All now include PR conflict detection, branch staleness warnings, and open PR awareness
+- **/review** — now supports arguments (--spec, --code, --tests, commit hash), confidence scoring (80+ threshold), bordered output with SPEC+CODE passes and verdict
+- **/eod** — date argument support, Gist source fallback for past dates
+- **/hq** — auto source (Gist + local fallback)
+- **/sync-doe** — kit write guard flag integration
+- **block_dangerous_commands.py** — added Supabase guards (DISABLE ROW LEVEL SECURITY, db reset, deleteMany, emptyBucket)
+- **PR template** — CI Result replaces hardcoded ESLint/Playwright/Lighthouse checks
+- **setup.sh** — enhanced for CI pipeline and org rename
+- **GitHub org** — references updated from iPolyphian to Albion-Labs
+- **Tutorial pages** — version badge in sidebar, PR workflow updates
+
 ## v1.47.0 (2026-03-22)
 
 ### Added

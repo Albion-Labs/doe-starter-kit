@@ -29,8 +29,8 @@ End-of-session routine. Updates STATE.md, todo.md, learnings.md. Computes sessio
 *Added 27/02/26 · Updated 10/03/26*
 
 ### `/eod`
-End-of-day report aggregating all sessions into a visual HTML page via `eod_html.py`. Daily timeline, commit breakdown bars, 9-metric grid, features completed, and position summary. Answers "what did I do today?" Read-only — no files modified. Opens in browser.
-*Added 03/03/26 · Updated 06/03/26*
+End-of-day report aggregating all sessions into a visual HTML page via `eod_html.py`. Daily timeline, commit breakdown bars, 9-metric grid, features completed, and position summary. Answers "what did I do today?" — or for any past date (e.g. `/eod yesterday`, `/eod 2026-03-18`). Pulls from Gist if local data unavailable. Read-only. Opens in browser.
+*Added 03/03/26 · Updated 24/03/26*
 
 ## Quality
 
@@ -47,8 +47,8 @@ Verifies the factual accuracy of a document against the actual codebase and corr
 *Added 04/03/26*
 
 ### `/review`
-Adversarial code reviewer. Reviews staged changes (or specified files) for bugs, security issues, performance problems, and code quality. Direct, specific, and neutral — finds problems, not praise.
-*Added 04/03/26*
+Adversarial code reviewer with confidence scoring. Two-pass (spec compliance then code quality) in a single bordered box. Supports arguments: `--spec`, `--code`, `--tests`, `--all`, or a commit hash. Findings scored 0-100, only 80+ reported. Tags: SECURITY, BUG, BREAKING, DEAD, SILENT, CONVENTION, SCOPE. Verdict: PASS / PASS WITH NOTES / FAIL.
+*Added 04/03/26 · Updated 24/03/26*
 
 ### `/test-suite`
 Runs the project's accumulated test suite from `tests/suite.json`. Updates metadata, handles --prune/--add options.
@@ -61,6 +61,10 @@ Generates a structured project index at `.claude/codemap.md`. Scans file tree, m
 ### `/snagging`
 Generates (or regenerates) an interactive HTML manual test checklist for the current feature. Identifies unchecked `[manual]` items from todo.md, optionally runs an automated code trace first, then calls `execution/generate_test_checklist.py`. Outputs a summary card and opens the checklist in the browser.
 *Added 16/03/26*
+
+### `/request-doe-feature`
+Structured feature request for the DOE starter kit. Guides through description, use case, and context. Scans existing issues for duplicates, sanitises content, and files a GitHub Issue with labels on the upstream repo. Falls back to local markdown if `gh` is unavailable.
+*Added 24/03/26*
 
 ### `/report-doe-bug`
 Triage-first DOE framework bug reporter. 5-phase flow: gather user description + Claude's reconstruction + environment, check if fixed in newer version (route to `/pull-doe`), detect user error (route to tutorial docs), search for duplicates (offer to comment), then sanitise and file a GitHub Issue on the upstream repo with labels. Falls back to local markdown if `gh` is unavailable.
