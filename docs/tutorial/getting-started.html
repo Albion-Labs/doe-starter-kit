@@ -1408,8 +1408,10 @@ learnings.md        # Project learnings log
           <li>Click <strong>Add classic branch protection rule</strong></li>
           <li>Branch name pattern: <code>main</code></li>
           <li>Tick <strong>Require a pull request before merging</strong></li>
+          <li><strong>Uncheck</strong> "Require approvals" (or set to 0). If left on, you cannot merge your own PRs as a solo developer. For teams with multiple developers, set this to 1 or more.</li>
           <li>Tick <strong>Require status checks to pass before merging</strong></li>
           <li>Search for and add: <strong>CI Result</strong></li>
+          <li>Tick <strong>Do not allow bypassing the above settings</strong> (optional but recommended &mdash; prevents accidental direct pushes to main, requires GitHub Team plan)</li>
           <li>Click <strong>Create</strong></li>
         </ol>
 
