@@ -25,6 +25,8 @@ def stamp_version(version: str, root: Path) -> tuple[int, int]:
     patterns = [
         # Footer and hero badge: "DOE Starter Kit v1.2.3"
         (re.compile(r"DOE Starter Kit v\d+\.\d+\.\d+"), f"DOE Starter Kit {version}"),
+        # Sidebar version badge: <span class="sidebar-version">v1.2.3</span>
+        (re.compile(r'(sidebar-version">)v\d+\.\d+\.\d+'), rf"\g<1>{version}"),
         # Terminal mockup: "latest: v1.2.3"
         (re.compile(r"latest: v\d+\.\d+\.\d+"), f"latest: {version}"),
     ]
