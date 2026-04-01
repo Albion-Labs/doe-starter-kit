@@ -10,6 +10,7 @@ DANGEROUS = [
     "emptyBucket",
     ":(){ :|:& };:", "fork bomb",
     "> /dev/sda", "mkfs.", "dd if=",
+    "gh pr merge",  # PRs must be merged by a human, not the AI
 ]
 
 def main():
