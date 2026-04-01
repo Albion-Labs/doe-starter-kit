@@ -7,6 +7,11 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.50.1 (2026-04-01)
+
+### Added
+- **Sync gap check** in `/wrap` command — runs `audit_sync.py --json` and warns if universal files are missing from kit
+
 ## v1.50.0 (2026-04-01)
 
 ### Added
