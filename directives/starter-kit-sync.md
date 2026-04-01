@@ -11,6 +11,21 @@ Keep the universal DOE Claude Code Starter Kit repository in sync with improveme
 
 ## How to Sync
 
+### Step 0: Run sync audit (mandatory pre-flight)
+Before comparing individual files, run the automated audit to catch universal files that might be missing from the kit:
+```bash
+python3 execution/audit_sync.py
+```
+This compares all syncable directories and flags:
+- **MISSING FROM KIT** — universal files that should be synced
+- **NEEDS STRIPPING** — universal structure with project-specific content (strip before sync)
+- **DIVERGED** — files in both repos that differ (examine each)
+- **KIT ONLY** — files in kit that the project doesn't have (may need pulling)
+
+**Decision rule for "universal vs project-specific":** A file is universal if the SCRIPT is generic, even if the DATA it processes is project-specific. Examples: `run_snagging.py` reads todo.md (project data) but the script itself works for any DOE project. `build_session_archive.py` is structurally universal but contains hardcoded feature names — it needs stripping. `build.py` is always project-specific. When in doubt, flag it for the user — don't silently skip.
+
+Review the audit output before proceeding. If MISSING FROM KIT has items, include them in this sync.
+
 ### Step 1: Add the starter kit directory
 ```
 /add-dir ~/doe-starter-kit

@@ -198,12 +198,110 @@ def print_summary(findings):
     print()
 
 
+def self_test():
+    """Create temp fixtures and verify classification logic."""
+    import shutil
+    import tempfile
+
+    tmpdir = Path(tempfile.mkdtemp(prefix="audit_sync_test_"))
+    proj = tmpdir / "project"
+    kit = tmpdir / "kit"
+
+    try:
+        # Set up minimal directory structures
+        for d in ["execution", ".githooks", "directives", "tests/execution"]:
+            (proj / d).mkdir(parents=True, exist_ok=True)
+            (kit / d).mkdir(parents=True, exist_ok=True)
+
+        # 1. Universal file in project, not in kit -> MISSING
+        (proj / "execution" / "universal_tool.py").write_text("# Generic DOE tool\nimport sys\n")
+
+        # 2. Project-specific file (has project reference) -> PROJECT_SPECIFIC
+        (proj / "execution" / "import_data.py").write_text("# Import project-specific data\n")
+
+        # 3. Always-project-specific file -> PROJECT_SPECIFIC
+        (proj / "execution" / "build.py").write_text("# Project build\n")
+
+        # 4. Needs-stripping file -> NEEDS_STRIPPING
+        (proj / "execution" / "build_session_archive.py").write_text("# Has project refs\n")
+
+        # 5. File in both, identical -> IN_SYNC
+        (proj / "execution" / "shared.py").write_text("# Shared tool\n")
+        (kit / "execution" / "shared.py").write_text("# Shared tool\n")
+
+        # 6. File in both, different -> DIVERGED
+        (proj / "execution" / "diverged.py").write_text("# Version A\n")
+        (kit / "execution" / "diverged.py").write_text("# Version B\n")
+
+        # 7. File only in kit -> KIT_ONLY
+        (kit / "directives" / "kit_only.md").write_text("# Kit directive\n")
+
+        # 8. Kit-only file (stamp_tutorial_version.py) -> ignored
+        (kit / "execution" / "stamp_tutorial_version.py").write_text("# Kit only\n")
+
+        # Override KIT_ROOT for test
+        global KIT_ROOT
+        original_root = KIT_ROOT
+        KIT_ROOT = kit
+
+        findings = audit(proj)
+
+        KIT_ROOT = original_root
+
+        # Assertions
+        errors = []
+
+        if "execution/universal_tool.py" not in findings["missing_from_kit"]:
+            errors.append("FAIL: universal_tool.py should be MISSING FROM KIT")
+
+        proj_specific = findings["project_specific"]
+        if not any("build.py" in f for f in proj_specific):
+            errors.append("FAIL: build.py should be PROJECT_SPECIFIC (always list)")
+
+        if not any("build_session_archive.py" in f for f in findings["needs_stripping"]):
+            errors.append("FAIL: build_session_archive.py should be NEEDS_STRIPPING")
+
+        if not any("shared.py" in f for f in findings["in_sync"]):
+            errors.append("FAIL: shared.py should be IN_SYNC")
+
+        if not any("diverged.py" in f for f in findings["diverged"]):
+            errors.append("FAIL: diverged.py should be DIVERGED")
+
+        if not any("kit_only.md" in f for f in findings["kit_only"]):
+            errors.append("FAIL: kit_only.md should be KIT_ONLY")
+
+        # stamp_tutorial_version.py should NOT appear anywhere
+        all_files = []
+        for v in findings.values():
+            if isinstance(v, list):
+                all_files.extend(v)
+        if any("stamp_tutorial_version.py" in f for f in all_files):
+            errors.append("FAIL: stamp_tutorial_version.py should be ignored (KIT_ONLY list)")
+
+        if errors:
+            for e in errors:
+                print(f"  {e}")
+            print(f"\n  {len(errors)} test(s) FAILED")
+            return False
+        else:
+            print("  All self-test assertions passed.")
+            return True
+
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Audit project DOE files against kit")
     parser.add_argument("--verbose", "-v", action="store_true", help="Show all categories")
     parser.add_argument("--json", action="store_true", help="JSON output")
+    parser.add_argument("--self-test", action="store_true", help="Run self-test with fixtures")
     parser.add_argument("--project", default=".", help="Project root (default: cwd)")
     args = parser.parse_args()
+
+    if args.self_test:
+        ok = self_test()
+        sys.exit(0 if ok else 1)
 
     project_root = Path(args.project).resolve()
 

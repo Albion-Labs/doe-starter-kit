@@ -52,7 +52,7 @@ Updated by: [session summary of what changed]
    - Set Last updated to today
    - Set Applies to to the current app version
    - Write a one-line Updated by summary
-3. **If no**, check for staleness: is any governed doc's "Applies to" more than 1 minor version behind the current app? If yes, flag it to the user — it may need a review even if this commit didn't directly affect it.
+3. **If no**, check for staleness: is any governed doc's "Applies to" more than 1 minor version behind the current app version? If yes, flag it to the user — it may need a review even if this commit didn't directly affect it.
 4. **Include the doc update in the same commit** as the code change.
 
 ## Outputs

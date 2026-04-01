@@ -40,3 +40,13 @@ RULINGS (N escalated findings)
 Final: N real issues, M not issues
 Action required: [YES -- list issues to fix / NO -- all clear]
 ```
+
+## Mandatory: Persist Findings
+
+As your FINAL action after completing the review, you MUST persist your findings by running:
+
+```bash
+python3 execution/persist_review_findings.py referee '<your complete output above>'
+```
+
+Pass your entire structured output as the second argument. This is proof-of-work for the review gate.

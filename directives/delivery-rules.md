@@ -44,8 +44,9 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 5. Update feature heading from (vX.Y.x) to (vX.Y.N)
 6. Run brief retro: what worked, what was slow, what to do differently
 7. Promote lasting contracts to `tests/invariants.txt`. Auto-promote: any `[auto]` contract whose `Verify:` pattern references files in `CLAUDE.md`, `directives/`, `.claude/agents/`, `execution/`, `.github/workflows/`, `.githooks/`, `SYSTEM-MAP.md`, `CUSTOMIZATION.md`, or `tests/`. Skip version-specific patterns (containing `vX.Y.Z` or HTML filenames). If the feature intentionally changed something an existing invariant tests, update that invariant to reflect the new state.
-8. PR creation: `gh pr create` from feature branch to main
-9. Move the whole block to ## Done
+8. Run `/review` -- adversarial review of the full feature diff. This records a review artifact that the PR creation hook checks. If the review FAILs, fix issues and re-run before proceeding.
+9. PR creation: `gh pr create` from feature branch to main (blocked by `enforce_review_gate.py` hook unless step 8 passed for current HEAD)
+10. Move the whole block to ## Done
 
 ## IMPORTANT: Guardrails
 

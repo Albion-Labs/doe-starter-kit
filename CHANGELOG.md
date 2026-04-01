@@ -7,6 +7,22 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.51.4 (2026-04-01)
+
+### Added
+- **Review gate hook** (`enforce_review_gate.py`) — blocks PR creation without Finder subagent proof-of-work
+- **Review findings persistence** (`persist_review_findings.py`, `record_review_result.py`) — proof-of-work artifacts for adversarial review gate
+- **Slack wrap notification** (`slack_notify.py`) — posts session wrap summaries to Slack via incoming webhook with Block Kit formatting
+- **Integrations directive** (`directives/integrations.md`) — setup guide for GitHub + Slack notifications (recommended, not required)
+- **Sync audit self-test** in `audit_sync.py` — validates classification logic with `--self-test` flag
+- **Step 0 pre-flight** in sync directive — documents `audit_sync.py` workflow and file classification rules
+
+### Changed
+- **Agent definitions** (Finder, Adversarial, Referee) — persist findings section for review gate integration
+- **Delivery rules** — `/review` step before PR creation, hook enforces review artifact exists
+- **Dangerous commands hook** — blocks `SKIP_REVIEW_GATE`, `SKIP_CONTRACT_CHECK`, `SKIP_SIGNOFF_CHECK` bypass flags
+- **Documentation governance** — clearer staleness rule (1 minor version threshold)
+
 ## v1.50.1 (2026-04-01)
 
 ### Added

@@ -41,3 +41,13 @@ REVIEW (N findings evaluated)
 
 Summary: N confirmed, M dismissed, K escalated
 ```
+
+## Mandatory: Persist Findings
+
+As your FINAL action after completing the review, you MUST persist your findings by running:
+
+```bash
+python3 execution/persist_review_findings.py adversarial '<your complete output above>'
+```
+
+Pass your entire structured output as the second argument. This is proof-of-work for the review gate.

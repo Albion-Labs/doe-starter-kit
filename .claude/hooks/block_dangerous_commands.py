@@ -11,6 +11,9 @@ DANGEROUS = [
     ":(){ :|:& };:", "fork bomb",
     "> /dev/sda", "mkfs.", "dd if=",
     "gh pr merge",  # PRs must be merged by a human, not the AI
+    "SKIP_REVIEW_GATE",  # Review gate bypass must be set by the human, not the AI
+    "SKIP_CONTRACT_CHECK",  # Contract check bypass must be set by the human
+    "SKIP_SIGNOFF_CHECK",  # Sign-off check bypass must be set by the human
 ]
 
 def main():
