@@ -6,7 +6,8 @@ def main():
     tool_name = event.get("tool_name", "")
     tool_input = event.get("tool_input", {})
     path = tool_input.get("file_path", "") or tool_input.get("path", "")
-    if "directives/" in path and tool_name in ("write", "edit"):
+    is_protected = "directives/" in path or ".githooks" in path
+    if is_protected and tool_name in ("write", "edit"):
         print(json.dumps({
             "decision": "block",
             "reason": "GUARDRAIL: Cannot edit existing directives without explicit permission. Show proposed changes to the user and get approval first."

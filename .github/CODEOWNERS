@@ -1,0 +1,5 @@
+# Code Owners — security-critical paths require review before merge.
+
+.githooks                @project-owner
+.github/workflows        @project-owner
+CLAUDE.md                @project-owner

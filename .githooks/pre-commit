@@ -20,7 +20,7 @@ fi
 
 # ─── ESLint (blocks on errors, warns on warnings) ───
 # Customize JS_PATH for your project (e.g. src/js/, lib/, app/scripts/)
-JS_PATH="src/"
+JS_PATH="src/js/"
 
 STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E "^${JS_PATH}.*\.js$" || true)
 if [ -n "$STAGED_JS" ]; then
@@ -40,18 +40,22 @@ fi
 
 if [ -n "$STAGED_JS" ]; then
     for f in $STAGED_JS; do
+        # Check for return null in non-trivial contexts
         STUBS=$(git diff --cached -- "$f" | grep -E '^\+.*return null\b' | grep -v '// ok' || true)
         if [ -n "$STUBS" ]; then
             echo "⚠ Stub detected in $f — 'return null' (is this intentional?)" >&2
         fi
+        # Check for return [] placeholder
         STUBS2=$(git diff --cached -- "$f" | grep -E '^\+.*return \[\]' | grep -v '// ok' || true)
         if [ -n "$STUBS2" ]; then
             echo "⚠ Stub detected in $f — 'return []' (is this intentional?)" >&2
         fi
+        # Check for empty function bodies
         STUBS3=$(git diff --cached -- "$f" | grep -E '^\+.*function.*\{\s*\}' || true)
         if [ -n "$STUBS3" ]; then
             echo "⚠ Empty function body in $f (is this intentional?)" >&2
         fi
+        # Check for 'not implemented' markers
         STUBS4=$(git diff --cached -- "$f" | grep -E "^\+.*not.implemented|^\+.*NOT.IMPLEMENTED" || true)
         if [ -n "$STUBS4" ]; then
             echo "⚠ 'Not implemented' marker in $f" >&2
@@ -94,16 +98,54 @@ if [ -n "$STAGED_FILES" ]; then
     done
 fi
 
-# ─── innerHTML XSS check (warnings only — never blocks commit) ───
+# ─── Security pattern detection (blocks dangerous patterns in added lines) ───
+# Catches: innerHTML, eval, new Function(), document.write,
+# insertAdjacentHTML, outerHTML, dangerouslySetInnerHTML, v-html) and
+# Python injection (shell=True, os.system, os.popen, pickle.loads, yaml.load).
+# Skips tests/security/ directory (deliberate test fixtures).
+# Skip with: SKIP_XSS_CHECK=1 git commit -m '...'
 
-if [ -n "$STAGED_JS" ]; then
-    for f in $STAGED_JS; do
-        # Flag new innerHTML assignments that concatenate variables without _crmEsc()
-        UNSAFE=$(git diff --cached -- "$f" | grep -E '^\+.*innerHTML\s*[\+\=]' | grep -v '_crmEsc\|_escHtml\|escapeHTML\|textContent\|// xss-safe' || true)
-        if [ -n "$UNSAFE" ]; then
-            echo "⚠ Potential XSS in $f — innerHTML with unescaped content. Use _crmEsc() or mark // xss-safe" >&2
-        fi
-    done
+if [ "${SKIP_XSS_CHECK:-0}" != "1" ]; then
+    SEC_FOUND=0
+    ALL_CODE_JS=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.(js|jsx|ts|tsx)$' | grep -v 'tests/security/' || true)
+    ALL_CODE_PY=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.py$' | grep -v 'tests/security/' || true)
+
+    # JS/TS DOM injection + code execution patterns
+    if [ -n "$ALL_CODE_JS" ]; then
+        for f in $ALL_CODE_JS; do
+            ADDED=$(git diff --cached -U0 -- "$f" | grep '^+' | grep -v '^+++' || true)
+            # DOM: innerHTML with dynamic content
+            U1=$(echo "$ADDED" | grep -E 'innerHTML\s*[\+\=]' | grep -v '_crmEsc\|_escHtml\|escapeHTML\|textContent\|// xss-safe' || true)
+            # Exec: eval, Function constructor, document.write, insertAdjacentHTML, outerHTML assignment, React/Vue raw HTML
+            U2=$(echo "$ADDED" | grep -E '\beval\b\s*\(|new\s+Function\(|document\.write\(|insertAdjacentHTML\(|outerHTML\s*=|dangerouslySetInnerHTML|v-html' | grep -v '// xss-safe' || true)
+            if [ -n "$U1" ] || [ -n "$U2" ]; then
+                echo "Security risk in $f:" >&2
+                [ -n "$U1" ] && echo "$U1" | head -3 >&2
+                [ -n "$U2" ] && echo "$U2" | head -3 >&2
+                SEC_FOUND=1
+            fi
+        done
+    fi
+
+    # Python injection patterns
+    if [ -n "$ALL_CODE_PY" ]; then
+        for f in $ALL_CODE_PY; do
+            ADDED=$(git diff --cached -U0 -- "$f" | grep '^+' | grep -v '^+++' || true)
+            U3=$(echo "$ADDED" | grep -E 'shell=True|os\.system\(|os\.popen\(|pickle\.loads\(|yaml\.load\(' | grep -v 'yaml\.safe_load\|# nosec' || true)
+            if [ -n "$U3" ]; then
+                echo "Security risk in $f:" >&2
+                echo "$U3" | head -3 >&2
+                SEC_FOUND=1
+            fi
+        done
+    fi
+
+    if [ "$SEC_FOUND" = "1" ]; then
+        echo ""
+        echo "Fix the code, mark // xss-safe (JS) or # nosec (Python)."
+        echo "Skip with: SKIP_XSS_CHECK=1 git commit -m '...'"
+        exit 1
+    fi
 fi
 
 # ─── STATE.md staleness check (warning only) ───

@@ -1,7 +1,22 @@
 .env
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.*
 .tmp/
 *.pyc
 __pycache__/
 node_modules/
 .DS_Store
 .claude/projects/
+
+# Security: keys, credentials, database files
+*.pem
+*.key
+credentials.json
+.npmrc
+*.sqlite
+*.sqlite3
+*.sql.gz
+*.dump

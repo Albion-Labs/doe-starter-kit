@@ -1,0 +1,37 @@
+version: 2
+updates:
+  # npm ecosystem
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Auto-merge patch updates only (semver-patch)
+    groups:
+      npm-patch:
+        update-types:
+          - "semver-patch"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "willporter"
+
+  # GitHub Actions ecosystem (github-actions)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions-patch:
+        update-types:
+          - "semver-patch"
+    open-pull-requests-limit: 5
+
+  # pip ecosystem
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      pip-patch:
+        update-types:
+          - "semver-patch"
+    open-pull-requests-limit: 10

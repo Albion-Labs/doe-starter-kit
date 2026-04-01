@@ -6,7 +6,10 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
+
+env:
+  LIGHTHOUSE_PERF_THRESHOLD: "80"
 
 jobs:
   # ──────────────────────────────────────────────────────────────
@@ -34,10 +37,10 @@ jobs:
       rust_changed: ${{ steps.changes.outputs.rust }}
       web_changed: ${{ steps.changes.outputs.web }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       # What files changed in this PR?
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3
         id: changes
         with:
           filters: |
@@ -102,16 +105,17 @@ jobs:
           fi
 
   # ──────────────────────────────────────────────────────────────
-  # Gate tier: universal DOE checks (always runs)
+  # Gates tier: blocking checks (must pass to merge)
   # ──────────────────────────────────────────────────────────────
-  gate:
-    name: DOE Gate
+  gates:
+    name: Gates
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
+
       - name: Health Check
         run: |
           if [ -f execution/health_check.py ]; then
@@ -119,6 +123,7 @@ jobs:
           else
             echo "No health_check.py found -- skipping"
           fi
+
       - name: Claim Audit
         run: |
           if [ -f execution/audit_claims.py ]; then
@@ -126,7 +131,8 @@ jobs:
           else
             echo "No audit_claims.py found -- skipping"
           fi
-      - name: Methodology Tests
+
+      - name: Methodology Tests (test_methodology)
         run: |
           if [ -f execution/test_methodology.py ]; then
             python3 execution/test_methodology.py --quick
@@ -134,17 +140,55 @@ jobs:
             echo "No test_methodology.py found -- skipping"
           fi
 
-  # ──────────────────────────────────────────────────────────────
-  # Project tier: runs only when relevant files changed
-  # ──────────────────────────────────────────────────────────────
+      - name: Secret pattern scan
+        run: |
+          echo "Scanning for secret patterns..."
+          PATTERNS='(PRIVATE.KEY|SECRET_KEY|API_KEY|PASSWORD|TOKEN|Bearer\s+[A-Za-z0-9\-._~+/]+|-----BEGIN\s+(RSA|EC|OPENSSH)\s+PRIVATE\s+KEY-----)'
+          # Scan tracked files only (exclude .env*, lock files, binaries)
+          MATCHES=$(git diff --cached --diff-filter=d -U0 HEAD 2>/dev/null | grep -iP "$PATTERNS" || true)
+          if [ -z "$MATCHES" ]; then
+            # Also scan working tree for new repos with no commits yet
+            MATCHES=$(grep -riP "$PATTERNS" --include='*.py' --include='*.js' --include='*.ts' --include='*.yml' --include='*.yaml' --include='*.json' --include='*.sh' --include='*.env.example' . 2>/dev/null \
+              | grep -v 'node_modules/' | grep -v '.git/' | grep -v 'package-lock.json' | grep -v '.env.example' \
+              | grep -v '# v[0-9]' | grep -v 'secret pattern scan' | grep -v 'PATTERNS=' | grep -v 'SECRET_KEY' | head -20 || true)
+          fi
+          if [ -n "$MATCHES" ]; then
+            echo "::warning::Potential secret patterns detected -- review before merge:"
+            echo "$MATCHES" | head -20
+            echo "If these are false positives, add them to .secretignore"
+          else
+            echo "No secret patterns detected"
+          fi
+
+      - name: npm audit (if Node project)
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --ignore-scripts
+            npm audit --audit-level=critical || echo "::warning::npm audit found critical vulnerabilities"
+          else
+            echo "No package-lock.json -- skipping npm audit"
+          fi
+
+      - name: pip-audit (if Python project)
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install pip-audit
+            pip-audit -r requirements.txt || echo "::warning::pip-audit found vulnerabilities"
+          elif [ -f pyproject.toml ]; then
+            pip install pip-audit
+            pip-audit || echo "::warning::pip-audit found vulnerabilities"
+          else
+            echo "No Python dependencies file -- skipping pip-audit"
+          fi
+
   eslint:
     name: ESLint
     needs: detect
     if: needs.detect.outputs.has_eslint == 'true' && needs.detect.outputs.code_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: npm
@@ -157,8 +201,8 @@ jobs:
     if: needs.detect.outputs.has_npm_test == 'true' && needs.detect.outputs.code_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: npm
@@ -171,8 +215,8 @@ jobs:
     if: needs.detect.outputs.has_pytest == 'true' && needs.detect.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt || pip install -e ".[test]" || echo "No install file found -- running pytest with current environment"
@@ -184,8 +228,8 @@ jobs:
     if: needs.detect.outputs.has_ruff == 'true' && needs.detect.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
       - run: pip install ruff
@@ -197,8 +241,8 @@ jobs:
     if: needs.detect.outputs.has_go == 'true' && needs.detect.outputs.go_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: stable
       - run: go vet ./...
@@ -210,8 +254,8 @@ jobs:
     if: needs.detect.outputs.has_flutter == 'true' && needs.detect.outputs.flutter_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
       - run: flutter pub get
@@ -224,76 +268,132 @@ jobs:
     if: needs.detect.outputs.has_rust == 'true' && needs.detect.outputs.rust_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - run: cargo clippy -- -D warnings
       - run: cargo test
 
   # ──────────────────────────────────────────────────────────────
   # Advisory tier: informational, never blocks merge
   # ──────────────────────────────────────────────────────────────
-  playwright:
-    name: Playwright
+  advisory:
+    name: Advisory
     needs: detect
-    if: needs.detect.outputs.has_playwright == 'true' && needs.detect.outputs.code_changed == 'true'
+    if: always()
     runs-on: ubuntu-latest
     continue-on-error: true
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
-          cache: npm
-      - run: npm ci
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ hashFiles('package-lock.json') }}
-      - run: npx playwright install chromium --with-deps
-      - run: npx playwright test
-      - uses: actions/upload-artifact@v4
-        if: always()
+
+      - name: Lighthouse (threshold ${{ env.LIGHTHOUSE_PERF_THRESHOLD }})
+        id: lighthouse
+        if: needs.detect.outputs.has_web == 'true' && needs.detect.outputs.web_changed == 'true'
+        run: |
+          THRESHOLD="${LIGHTHOUSE_PERF_THRESHOLD:-80}"
+          echo "Performance threshold: $THRESHOLD"
+          if [ -f execution/lighthouse.sh ]; then
+            bash execution/lighthouse.sh
+            if [ -f .tmp/lighthouse.json ]; then
+              SCORE=$(jq '.categories.performance.score // 0' .tmp/lighthouse.json 2>/dev/null | awk '{printf "%.0f", $1 * 100}')
+              echo "lighthouse_score=$SCORE" >> "$GITHUB_OUTPUT"
+              if [ "$SCORE" -lt "$THRESHOLD" ]; then
+                echo "::warning::Lighthouse performance score $SCORE is below threshold $THRESHOLD"
+                echo "lighthouse_pass=false" >> "$GITHUB_OUTPUT"
+              else
+                echo "Lighthouse performance score $SCORE meets threshold $THRESHOLD"
+                echo "lighthouse_pass=true" >> "$GITHUB_OUTPUT"
+              fi
+            fi
+          else
+            echo "No Lighthouse script found -- skipping"
+            echo "lighthouse_score=N/A" >> "$GITHUB_OUTPUT"
+            echo "lighthouse_pass=skipped" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Playwright
+        id: playwright
+        if: needs.detect.outputs.has_playwright == 'true' && needs.detect.outputs.code_changed == 'true'
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          fi
+          npx playwright install chromium --with-deps
+          npx playwright test 2>&1 | tee .tmp/playwright-output.txt || true
+          if grep -q "passed" .tmp/playwright-output.txt 2>/dev/null; then
+            echo "playwright_result=passed" >> "$GITHUB_OUTPUT"
+          else
+            echo "playwright_result=failed" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: needs.detect.outputs.has_playwright == 'true' && needs.detect.outputs.code_changed == 'true'
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
 
-  lighthouse:
-    name: Lighthouse
-    needs: detect
-    if: needs.detect.outputs.has_web == 'true' && needs.detect.outputs.web_changed == 'true'
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: npm ci
-      - name: Build (if build script exists)
-        run: |
-          if [ -f execution/build.py ]; then
-            python3 execution/build.py
-          elif [ -f package.json ] && jq -e '.scripts.build // empty' package.json >/dev/null 2>&1; then
-            npm run build
-          fi
-      - name: Run Lighthouse
-        run: |
-          if [ -f execution/lighthouse.sh ]; then
-            bash execution/lighthouse.sh
-          else
-            echo "No Lighthouse script found -- skipping"
-          fi
-      - uses: actions/upload-artifact@v4
-        if: always()
+      - name: Upload Lighthouse report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: needs.detect.outputs.has_web == 'true' && needs.detect.outputs.web_changed == 'true'
         with:
           name: lighthouse-report
           path: .tmp/lighthouse.json
           retention-days: 14
+
+      - name: Post advisory PR comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const lhScore = '${{ steps.lighthouse.outputs.lighthouse_score }}' || 'N/A';
+            const lhPass = '${{ steps.lighthouse.outputs.lighthouse_pass }}' || 'skipped';
+            const pwResult = '${{ steps.playwright.outputs.playwright_result }}' || 'skipped';
+            const threshold = process.env.LIGHTHOUSE_PERF_THRESHOLD || '80';
+
+            const lhIcon = lhPass === 'true' ? ':white_check_mark:' : lhPass === 'false' ? ':warning:' : ':skip_forward:';
+            const pwIcon = pwResult === 'passed' ? ':white_check_mark:' : pwResult === 'failed' ? ':warning:' : ':skip_forward:';
+
+            const body = [
+              '## Advisory CI Results',
+              '',
+              '> These checks are **informational only** and do not block merge.',
+              '',
+              `| Check | Result | Details |`,
+              `|-------|--------|---------|`,
+              `| ${lhIcon} Lighthouse | Score: ${lhScore} | Threshold: ${threshold} |`,
+              `| ${pwIcon} Playwright | ${pwResult} | E2E tests |`,
+              '',
+              '_Posted by DOE CI advisory tier_'
+            ].join('\n');
+
+            // Find and update existing comment, or create new one
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes('Advisory CI Results'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
   # ──────────────────────────────────────────────────────────────
   # CI Result: single aggregator (the ONLY required check)
@@ -301,12 +401,12 @@ jobs:
   ci-result:
     name: CI Result
     if: always()
-    needs: [gate, eslint, node-test, python-test, python-lint, go-test, flutter-test, rust-test]
+    needs: [gates, eslint, node-test, python-test, python-lint, go-test, flutter-test, rust-test]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
         env:
-          GATE: ${{ needs.gate.result }}
+          GATES: ${{ needs.gates.result }}
           ESLINT: ${{ needs.eslint.result }}
           NODE_TEST: ${{ needs.node-test.result }}
           PYTHON_TEST: ${{ needs.python-test.result }}
@@ -316,7 +416,7 @@ jobs:
           RUST_TEST: ${{ needs.rust-test.result }}
         run: |
           echo "=== CI Results ==="
-          echo "Gate:         $GATE"
+          echo "Gates:        $GATES"
           echo "ESLint:       $ESLINT"
           echo "Node Tests:   $NODE_TEST"
           echo "Python Tests: $PYTHON_TEST"
@@ -328,9 +428,9 @@ jobs:
 
           failed=false
 
-          # Gate must pass (universal, always runs)
-          if [ "$GATE" != "success" ]; then
-            echo "::error::DOE Gate failed"
+          # Gates must pass (universal, always runs)
+          if [ "$GATES" != "success" ]; then
+            echo "::error::DOE Gates failed"
             failed=true
           fi
 
@@ -342,7 +442,7 @@ jobs:
             fi
           done
 
-          # Advisory tier (playwright, lighthouse) not checked here -- never blocks
+          # Advisory tier (advisory job) not checked here -- never blocks
 
           if [ "$failed" = "true" ]; then
             exit 1
