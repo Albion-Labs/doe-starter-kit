@@ -1,17 +1,19 @@
 Before ending this session, complete all steps in order.
 
-## Step 0: Post-merge cleanup (if applicable)
+## Step 0: Branch handling
 
-Run `git branch --show-current` to check the current branch. If on a feature branch (not `main`):
+Run `git branch --show-current` to check the current branch.
+
+**On main:** Skip to Step 1.
+
+**On a feature branch:**
 1. Check if the branch's PR has been merged: `gh pr list --state merged --head $(git branch --show-current) --json number,title 2>/dev/null`
 2. If the PR is merged: switch to main, pull latest, and delete the local feature branch:
    ```bash
    git checkout main && git pull && git branch -d <feature-branch-name>
    ```
 3. If the PR is NOT merged but the feature is complete (all steps `[x]` in todo.md): warn "Feature complete but PR not yet merged. Run `/snagging` to verify, then merge before wrapping."
-4. If the PR doesn't exist yet: warn "On a feature branch with no PR. Create one with `gh pr create` or switch to main if this was ad-hoc work."
-
-If already on `main`, skip this step entirely.
+4. If mid-feature (incomplete steps remain): stay on the feature branch. Wrap data (STATE.md, stats.json) commits directly to the feature branch -- no separate housekeeping branch, no PR. This is normal: mid-feature sessions just push to the branch. The PR is created at retro (the final step), not before.
 
 ## Step 1: Housekeeping
 
@@ -19,7 +21,7 @@ If already on `main`, skip this step entirely.
 2. **Update tasks/todo.md** — Make sure all completed steps have timestamps. Move any completed features to Done if needed.
 3. **Check for learnings** — If anything failed and was fixed, or a useful pattern was discovered, log it to learnings.md or ~/.claude/CLAUDE.md.
 4. **Commit and push** — Make sure all work is committed and pushed. Run `git status` to check for uncommitted changes, commit them if any, then `git push` to sync with remote. No uncommitted or unpushed changes should remain.
-4b. **Check pull request state** — Run `gh pr list --state open --json number,title 2>/dev/null` to check for open PRs. If on a feature branch and the feature is complete, note that a PR should be created. Record the branch name and open PR count for the checks section.
+4b. **Check pull request state** — Run `gh pr list --state open --json number,title 2>/dev/null` to check for open PRs. Record the branch name and open PR count for the checks section. Do NOT suggest creating a PR if mid-feature -- PRs are created at retro only.
 5. **Clean up session timer** — Run `rm -f .tmp/.session-start` to delete the session timer file.
 6. **DOE Kit sync check** — If `~/doe-starter-kit` exists:
    - **Version check:** Run `cd ~/doe-starter-kit && git describe --tags --abbrev=0` to get the kit version. Compare against STATE.md's "DOE Starter Kit" version. If kit is newer, flag `* pull` for `/pull-doe`. If versions match, record as `synced`.

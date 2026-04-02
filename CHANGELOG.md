@@ -7,6 +7,12 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.51.5 (2026-04-02)
+
+### Changed
+- **No mid-feature PRs rule** (`building-rules.md`) — push to feature branch to save work between sessions, PRs created at retro only. Reduces PR overhead for multi-session features.
+- **Wrap mid-feature branch handling** (`wrap.md`) — Step 0 rewritten: mid-feature sessions stay on the feature branch, wrap data commits directly to it. No separate housekeeping branch or PR. Step 1 no longer suggests creating PRs mid-feature.
+
 ## v1.51.4 (2026-04-01)
 
 ### Added
