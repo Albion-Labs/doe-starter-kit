@@ -165,7 +165,7 @@ If your project was set up with an older version of the kit, here's what changed
 - `directives/self-annealing.md` — failure response, learnings curation
 - `directives/framework-evolution.md` — track native Claude Code features
 
-**DAG executor for parallel dispatch.** `execution/dispatch_dag.py` parses `Depends:` and `Owns:` metadata from todo.md to build a dependency graph. Use `--validate` to check your step metadata, `--graph` to see wave groupings, `--dispatch` to run parallel steps.
+**DAG executor for parallel dispatch.** `~/.claude/scripts/dispatch_dag.py` parses `Depends:` and `Owns:` metadata from todo.md to build a dependency graph. Use `--validate` to check your step metadata, `--graph` to see wave groupings, `--dispatch` to run parallel steps.
 
 **Custom agent definitions.** `.claude/agents/` contains Finder, Adversarial, Referee, and ReadOnly agents for adversarial review. Edit/Write are mechanically blocked. Run with `claude --agent=Finder`.
 

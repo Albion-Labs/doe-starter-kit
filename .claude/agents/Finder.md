@@ -47,7 +47,7 @@ If no issues found: `NO FINDINGS -- implementation looks correct.`
 As your FINAL action after completing the review, you MUST persist your findings by running:
 
 ```bash
-python3 execution/persist_review_findings.py finder '<your complete output above>'
+python3 ~/.claude/scripts/persist_review_findings.py finder '<your complete output above>'
 ```
 
 Pass your entire structured output (FINDINGS or NO FINDINGS) as the second argument. This is the proof-of-work for the review gate -- if you do not persist findings, PR creation will be blocked.

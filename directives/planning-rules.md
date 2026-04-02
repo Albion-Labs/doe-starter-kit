@@ -61,7 +61,7 @@ One terminal, one feature. Standard context discipline. For large features (5+ s
 2-3 terminals on independent tasks. Shared-file awareness: don't edit STATE.md, learnings.md, todo.md, or CLAUDE.md from multiple terminals simultaneously.
 
 ### Formal Parallel
-DAG executor or serial dispatch. Step ownership via `Owns:`. Automatic parallel dispatch with contract-gated chaining. Integration contracts after wave merge. See `directives/serial-dispatch-protocol.md` for the established protocol and `execution/dispatch_dag.py` for automated dispatch.
+DAG executor or serial dispatch. Step ownership via `Owns:`. Automatic parallel dispatch with contract-gated chaining. Integration contracts after wave merge. See `directives/serial-dispatch-protocol.md` for the established protocol and `~/.claude/scripts/dispatch_dag.py` for automated dispatch.
 
 ## Scoping Tools
 - `/scope` -- interactive scoping partner for turning ideas into plans

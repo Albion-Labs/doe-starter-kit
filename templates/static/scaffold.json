@@ -1,0 +1,15 @@
+{
+  "framework_name": "Static HTML",
+  "directory_docs": {
+    "src/": "HTML, CSS, JavaScript source files",
+    "docs/": "Documentation pages"
+  },
+  "package_manager": null,
+  "build_command": null,
+  "dev_command": null,
+  "test_commands": ["eslint .", "lighthouse"],
+  "init_command": null,
+  "detect": {
+    "files": ["index.html"]
+  }
+}

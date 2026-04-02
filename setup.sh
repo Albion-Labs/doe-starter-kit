@@ -1,6 +1,7 @@
 #!/bin/bash
 # DOE Starter Kit — one-command setup
-# Installs global commands, hooks, scripts, and settings. Activates git hooks.
+# For new/non-DOE projects: runs the init wizard (doe_init.py)
+# For existing DOE projects: installs global commands, hooks, scripts, and settings.
 # Safe to run repeatedly (updates in place, never overwrites user config).
 
 set -e
@@ -17,6 +18,18 @@ SETTINGS_FILE="$HOME/.claude/settings.json"
 # Get kit version from latest git tag (fall back to "unknown")
 KIT_VERSION=$(cd "$SCRIPT_DIR" && git describe --tags --abbrev=0 2>/dev/null || echo "unknown")
 TODAY=$(date +%d/%m/%y)
+
+# --- Wizard delegation ---
+# If this is a new or non-DOE project, run the init wizard instead of blind-copy setup.
+if [ ! -f "CLAUDE.md" ] || [ ! -d "directives" ]; then
+    if [ -f "$SCRIPT_DIR/execution/doe_init.py" ]; then
+        python3 "$SCRIPT_DIR/execution/doe_init.py" --kit-dir "$SCRIPT_DIR" "$@"
+        # After wizard completes, fall through to install global tooling below
+    fi
+fi
+
+# --- Global tooling installation ---
+# Always runs: installs commands, hooks, scripts to ~/.claude/ (global, not per-project).
 
 # 1. Install commands
 mkdir -p "$COMMANDS_DST"

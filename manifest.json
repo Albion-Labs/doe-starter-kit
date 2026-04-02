@@ -1,0 +1,79 @@
+{
+  "layers": {
+    "universal": {
+      "directives": [
+        "planning-rules.md",
+        "building-rules.md",
+        "delivery-rules.md",
+        "context-management.md",
+        "self-annealing.md",
+        "framework-evolution.md",
+        "rationalisation-tables.md",
+        "break-glass.md",
+        "serial-dispatch-protocol.md",
+        "subagent-protocol.md",
+        "security-rules.md",
+        "incident-response.md"
+      ],
+      "execution": [
+        "health_check.py",
+        "verify.py",
+        "audit_claims.py",
+        "generate_test_checklist.py"
+      ],
+      "hooks": ["pre-commit", "commit-msg"],
+      "commands": [
+        "stand-up.md", "crack-on.md", "wrap.md", "sitrep.md",
+        "review.md", "agent-verify.md", "snagging.md", "audit.md"
+      ],
+      "github": [
+        "workflows/doe-ci.yml",
+        "workflows/auto-rebase.yml",
+        "workflows/claude.yml",
+        "pull_request_template.md",
+        "dependabot.yml",
+        "CODEOWNERS"
+      ],
+      "files": [
+        "SECURITY.md",
+        "THREAT_MODEL.md"
+      ]
+    },
+    "public_facing": {
+      "directives": ["chrome-verification.md"],
+      "files": []
+    },
+    "data_handling": {
+      "directives": [],
+      "files": []
+    },
+    "regulated": {
+      "directives": ["data-compliance.md", "documentation-governance.md"],
+      "files": ["data-governance.md", "legal-framework.md"]
+    }
+  },
+  "global_scripts": [
+    "wrap_html.py",
+    "eod_html.py",
+    "dispatch_dag.py",
+    "run_snagging.py",
+    "record_review_result.py",
+    "persist_review_findings.py"
+  ],
+  "triggers": [
+    {"situation": "Planning/scoping", "directive": "planning-rules.md", "layer": "universal"},
+    {"situation": "Building/coding", "directive": "building-rules.md", "layer": "universal"},
+    {"situation": "Delivering (retro, PR, sign-off, wrap)", "directive": "delivery-rules.md", "layer": "universal"},
+    {"situation": "Parallel work / context management", "directive": "context-management.md", "layer": "universal"},
+    {"situation": "Self-annealing / learnings curation", "directive": "self-annealing.md", "layer": "universal"},
+    {"situation": "Platform evolution", "directive": "framework-evolution.md", "layer": "universal"},
+    {"situation": "Adversarial review / /review", "directive": "adversarial-review/", "layer": "universal"},
+    {"situation": "Serial dispatch / subagent work", "directive": "serial-dispatch-protocol.md", "layer": "universal"},
+    {"situation": "About to skip a guardrail", "directive": "rationalisation-tables.md", "layer": "universal"},
+    {"situation": "Something went seriously wrong", "directive": "break-glass.md", "layer": "universal"},
+    {"situation": "Security-sensitive code", "directive": "security-rules.md", "layer": "universal"},
+    {"situation": "[APP] feature", "directive": "chrome-verification.md", "layer": "public_facing", "frameworks": ["nextjs", "vite", "static"]},
+    {"situation": "Personal data features", "directive": "data-compliance.md", "layer": "regulated"},
+    {"situation": "Dataset or legal position change", "directive": "documentation-governance.md", "layer": "regulated"}
+  ]
+}

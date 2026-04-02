@@ -4,13 +4,28 @@ A structured framework for AI-assisted development using Claude Code. **Directiv
 
 ## What This Is
 
-A template repository containing everything you need to run Claude Code with guardrails, session memory, gamified workflows, and documentation governance. Drop these files into any new project and Claude Code knows how to behave.
+A structured framework for AI-assisted development. Drop into any project -- `doe init` asks what you're building and installs only what applies. Supports Next.js, Vite, Python, Go, Flutter, and static HTML.
 
 ## Quick Start
 
-1. Clone this repo or copy files into your project
-2. Run `./setup.sh` (installs commands, hooks, and scripts to `~/.claude/`, merges settings, activates git hooks, writes version receipt)
-3. Start Claude Code and type `/stand-up`
+**New project:**
+```bash
+git clone https://github.com/Albion-Labs/doe-starter-kit.git ~/doe-starter-kit
+mkdir my-project && cd my-project
+bash ~/doe-starter-kit/setup.sh
+```
+
+The `doe init` wizard runs automatically: detects your framework, asks about collaboration mode and data handling, then scaffolds CLAUDE.md, directives, CI, hooks, and execution scripts tailored to your stack.
+
+**Existing project (add DOE):**
+```bash
+cd my-existing-project
+bash ~/doe-starter-kit/setup.sh
+```
+
+The wizard detects your existing code (package.json, go.mod, etc.), infers the framework, and adds DOE files alongside your code. Existing files are never overwritten.
+
+**After setup:** Start Claude Code and type `/stand-up`.
 
 <details>
 <summary>Manual setup (if you prefer not to use the script)</summary>

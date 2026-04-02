@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IDE Compatibility — DOE Starter Kit</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-body: #FFFFFF;
+      --bg-sidebar: #FAFAFA;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F8FAFC;
+      --bg-code: #0F172A;
+      --bg-callout-info: #EFF6FF;
+      --bg-callout-tip: #F0FDF4;
+      --bg-callout-warn: #FFFBEB;
+      --border: #E2E8F0;
+      --border-light: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #64748B;
+      --text-sidebar: #334155;
+      --text-sidebar-active: #0F172A;
+      --accent: #6366F1;
+      --accent-light: #EEF2FF;
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-blue: #3B82F6;
+      --accent-rose: #F43F5E;
+      --sidebar-w: 260px;
+      --content-max: 720px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0B1120;
+      --bg-sidebar: #0F172A;
+      --bg-card: #1E293B;
+      --bg-card-hover: #243347;
+      --bg-code: #020617;
+      --bg-callout-info: #1E293B;
+      --bg-callout-tip: #1E293B;
+      --bg-callout-warn: #1E293B;
+      --border: #1E293B;
+      --border-light: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-sidebar: #94A3B8;
+      --text-sidebar-active: #F1F5F9;
+      --accent-light: #1E1B4B;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text-primary);
+      background: var(--bg-body);
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, background 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-brand {
+      display: block;
+      padding: 20px 16px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .sidebar-brand:hover { color: var(--accent); }
+    .sidebar-version { font-weight: 400; font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 16px 10px 24px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 20px; }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0 4px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-link {
+      display: block;
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-sidebar);
+      text-decoration: none;
+      line-height: 1.4;
+      transition: background 0.1s, color 0.1s;
+    }
+    .sidebar-link:hover {
+      background: var(--border-light);
+      color: var(--text-sidebar-active);
+    }
+    .sidebar-link.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .sidebar-link.nested {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* ── Hamburger (mobile) ── */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .hamburger span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+    }
+
+    /* ── Dark mode button ── */
+    .theme-btn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 200;
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .theme-btn:hover { background: var(--bg-card-hover); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Content area ── */
+    .content-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 48px;
+      min-width: 0;
+    }
+
+    .content {
+      max-width: var(--content-max);
+      width: 100%;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 48px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .content p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .content ul, .content ol {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      padding-left: 20px;
+    }
+    .content li { margin-bottom: 6px; }
+
+    .content a {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    .content a:hover { text-decoration: underline; }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-sidebar);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Callouts ── */
+    .callout {
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      line-height: 1.6;
+    }
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout.tip {
+      background: var(--bg-callout-tip);
+      border: 1px solid #BBF7D0;
+      color: #166534;
+    }
+    [data-theme="dark"] .callout.tip { border-color: #064E3B; color: #6EE7B7; }
+    .callout.info {
+      background: var(--bg-callout-info);
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+    [data-theme="dark"] .callout.info { border-color: #1E3A5F; color: #93C5FD; }
+    .callout.warn {
+      background: var(--bg-callout-warn);
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+    [data-theme="dark"] .callout.warn { border-color: #78350F; color: #FCD34D; }
+    .callout strong { font-weight: 600; }
+    .callout a { color: inherit; font-weight: 500; }
+    .callout .callout-body { color: inherit; }
+
+    /* ── Info table ── */
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0 24px;
+      font-size: 13.5px;
+    }
+    .info-table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: var(--bg-sidebar);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+    .info-table tr:last-child td { border-bottom: none; }
+
+    /* ── Risk badges ── */
+    .risk-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .risk-safe { background: #D1FAE5; color: #065F46; }
+    .risk-risky { background: #FEF3C7; color: #92400E; }
+    .risk-mixed { background: #DBEAFE; color: #1E40AF; }
+    .risk-conflict { background: #FFE4E6; color: #9F1239; }
+    .risk-trap { background: #FEF3C7; color: #92400E; }
+    [data-theme="dark"] .risk-safe { background: #064E3B; color: #6EE7B7; }
+    [data-theme="dark"] .risk-risky { background: #78350F; color: #FCD34D; }
+    [data-theme="dark"] .risk-mixed { background: #1E3A5F; color: #93C5FD; }
+    [data-theme="dark"] .risk-conflict { background: #881337; color: #FDA4AF; }
+    [data-theme="dark"] .risk-trap { background: #78350F; color: #FCD34D; }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination a {
+      flex: 1;
+      display: block;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s;
+    }
+    .pagination a:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-card);
+      text-decoration: none;
+    }
+    .pg-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .pg-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .pagination .next { text-align: right; }
+
+    /* ── Footer ── */
+    .site-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* ── Page subtitle ── */
+    .page-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { transform: translateX(calc(-1 * var(--sidebar-w))); }
+      .sidebar.open { transform: translateX(0); }
+      .content-area { margin-left: 0; padding: 24px 20px; padding-top: 60px; }
+      .hamburger { display: flex; }
+    }
+
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile hamburger -->
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Dark mode toggle -->
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar" id="sidebar">
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.52.0</span></a>
+
+      <div class="sidebar-nav">
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Getting Started</div>
+          <a class="sidebar-link" href="index.html">Welcome</a>
+          <a class="sidebar-link" href="getting-started.html">Installation</a>
+          <a class="sidebar-link" href="new-project.html">Starting a New Project</a>
+          <a class="sidebar-link" href="first-session.html">Your First Session</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Core Concepts</div>
+          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
+          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
+          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
+          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
+          <a class="sidebar-link" href="context.html">Context &amp; Sessions</a>
+          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
+          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Commands</div>
+          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
+          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
+          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
+          <a class="sidebar-link nested" href="commands.html#planning">Planning &amp; Ideas</a>
+          <a class="sidebar-link nested" href="commands.html#multiagent">Advanced</a>
+          <a class="sidebar-link nested" href="commands.html#maintenance">Maintenance</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Workflows</div>
+          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
+          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
+          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
+          <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Examples</div>
+          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
+          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
+          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
+          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Reference</div>
+          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
+          <a class="sidebar-link nested" href="tips-and-mistakes.html#hooks">Understanding Hooks</a>
+          <a class="sidebar-link nested" href="tips-and-mistakes.html#recovery">When Things Go Wrong</a>
+          <a class="sidebar-link" href="faq.html">FAQ</a>
+          <a class="sidebar-link active" href="ide-setup.html">IDE Compatibility</a>
+          <a class="sidebar-link nested" href="ide-setup.html#cursor">Cursor Setup</a>
+          <a class="sidebar-link" href="glossary.html">Glossary</a>
+        </div>
+
+      </div><!-- /sidebar-nav -->
+    </nav>
+
+    <!-- ── Main content ── -->
+    <div class="content-area">
+      <div class="content">
+
+        <h1>IDE Compatibility</h1>
+        <p class="page-subtitle">DOE works with any editor. Here's how to avoid conflicts with AI-powered IDEs.</p>
+
+        <!-- DOE Is IDE-Agnostic -->
+        <h2>DOE Is IDE-Agnostic</h2>
+
+        <p>DOE runs entirely through Claude Code CLI, git, the file system, and Python scripts. Your IDE is just a text editor with a terminal. Everything that makes DOE work &mdash; <code>CLAUDE.md</code>, hooks, contracts, slash commands, directives, execution scripts, stats tracking, session lifecycle &mdash; is independent of which editor you use.</p>
+
+        <p>VS Code, Cursor, Windsurf, Zed, Neovim, plain terminal &mdash; all work identically. DOE doesn't read your IDE settings, doesn't install editor plugins, doesn't depend on any editor API. If you can type in a file and run a terminal command, you have everything DOE needs.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>The test:</strong> if you can open a terminal and run <code>claude</code>, DOE works in your editor.
+          </div>
+        </div>
+
+        <!-- The Problem with AI-Powered Editors -->
+        <h2>The Problem with AI-Powered Editors</h2>
+
+        <p>DOE's architecture has a core principle: <strong>"Probabilistic AI handles reasoning. Deterministic code handles execution."</strong> Claude Code is the probabilistic layer, tightly integrated with the deterministic layer &mdash; hooks, contracts, scripts, commands. Together they form a closed loop where every AI action is tracked, verified, and auditable.</p>
+
+        <p>AI-powered editors like Cursor, Windsurf, and GitHub Copilot Workspace introduce a <strong>second probabilistic layer</strong> with zero integration to DOE's deterministic enforcement. When Cursor's Composer or Windsurf's Cascade edits a file:</p>
+
+        <ul>
+          <li>No PostToolUse hooks fire</li>
+          <li>No contract verification</li>
+          <li>No step tracking or session continuity</li>
+          <li>No <code>CLAUDE.md</code> directives loaded</li>
+          <li>No <code>learnings.md</code> consulted</li>
+          <li>No commit discipline enforced</li>
+        </ul>
+
+        <p>It's a capable AI operating entirely outside your guardrail system.</p>
+
+        <!-- Feature Compatibility Guide -->
+        <h2>Feature Compatibility Guide</h2>
+
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Risk Level</th>
+              <th>Recommendation</th>
+              <th>Why</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Tab autocomplete</strong><br><span style="font-size: 12px; color: var(--text-muted);">Cursor Tab, Copilot suggestions</span></td>
+              <td><span class="risk-badge risk-safe">Safe</span></td>
+              <td>Keep enabled</td>
+              <td>Suggests code as you type. Doesn't modify files autonomously. Doesn't interfere with Claude Code. Useful for repetitive patterns.</td>
+            </tr>
+            <tr>
+              <td><strong>Inline edit</strong><br><span style="font-size: 12px; color: var(--text-muted);">Cursor Cmd+K, Copilot Edit</span></td>
+              <td><span class="risk-badge risk-risky">Risky</span></td>
+              <td>Disable</td>
+              <td>Changes bypass Claude Code's awareness. No audit trail, no contract checking. If Claude Code is mid-session and you inline-edit a file it's tracking, it won't know.</td>
+            </tr>
+            <tr>
+              <td><strong>AI Chat panel</strong><br><span style="font-size: 12px; color: var(--text-muted);">Cursor Chat, Copilot Chat</span></td>
+              <td><span class="risk-badge risk-mixed">Mixed</span></td>
+              <td>Read-only only</td>
+              <td>Safe for "explain this function" lookups. Dangerous if you let it write code &mdash; changes bypass all DOE hooks and contracts.</td>
+            </tr>
+            <tr>
+              <td><strong>Multi-file agent</strong><br><span style="font-size: 12px; color: var(--text-muted);">Cursor Composer, Windsurf Cascade</span></td>
+              <td><span class="risk-badge risk-conflict">Conflict</span></td>
+              <td>Disable</td>
+              <td>Direct conflict with Claude Code's agent mode. No <code>CLAUDE.md</code> loading, no slash commands, no contract verification, no session continuity. Using both is like having two architects who don't talk to each other.</td>
+            </tr>
+            <tr>
+              <td><strong>Project rules</strong><br><span style="font-size: 12px; color: var(--text-muted);">.cursorrules, .windsurfrules</span></td>
+              <td><span class="risk-badge risk-trap">Maintenance trap</span></td>
+              <td>Don't create</td>
+              <td>Second source of truth alongside <code>CLAUDE.md</code>. Will drift within weeks. Every directive update needs duplicating. <code>CLAUDE.md</code> is the single authority.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Recommended Setup -->
+        <h2>Recommended Setup</h2>
+
+        <div class="callout info">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <ol style="margin: 0; padding-left: 18px;">
+              <li style="margin-bottom: 8px;"><strong>Use the AI editor as a better text editor</strong> &mdash; Cursor and Windsurf are genuinely nice editors with good UX. That value is real.</li>
+              <li style="margin-bottom: 8px;"><strong>Keep Tab autocomplete on</strong> &mdash; It's the one AI feature that's purely additive. Doesn't interfere with DOE.</li>
+              <li style="margin-bottom: 8px;"><strong>Disable multi-file agents</strong> (Composer, Cascade) &mdash; Direct conflict with Claude Code. In Cursor: Settings &gt; Features &gt; Composer &gt; disable.</li>
+              <li style="margin-bottom: 8px;"><strong>Disable inline AI edit</strong> (Cmd+K) &mdash; Or restrict to scratch files only. In Cursor: Settings &gt; Features &gt; disable Cmd+K.</li>
+              <li style="margin-bottom: 8px;"><strong>AI Chat: read-only rule</strong> &mdash; Use for quick lookups ("what does this function do?"). Never let it write code.</li>
+              <li style="margin-bottom: 8px;"><strong>Don't create project rules files</strong> &mdash; No <code>.cursorrules</code>, no <code>.windsurfrules</code>. <code>CLAUDE.md</code> is the single source of truth.</li>
+              <li style="margin-bottom: 0;"><strong>All code changes go through Claude Code</strong> &mdash; This preserves the full DOE pipeline: hooks, contracts, session tracking, learnings.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Cursor Quick Start -->
+        <h2 id="cursor">Cursor Quick Start</h2>
+
+        <p>Cursor is a VS Code fork with built-in AI. It's a genuinely nicer editor &mdash; faster, better UI, good autocomplete. Here's how to set it up for DOE without any conflicts.</p>
+
+        <h3>1. Open your project</h3>
+        <p>File &gt; Open Folder &gt; select your project. Everything appears exactly as it did in VS Code &mdash; same file tree, same extensions, same git integration. Nothing to migrate.</p>
+
+        <h3>2. Set the layout to Editor mode</h3>
+        <p>Click the gear icon (top-right) and select <strong>Editor</strong>, not Agent. Editor mode is the traditional code editor layout &mdash; file tree on the left, editor in the centre. Agent mode puts Cursor's AI chat front and centre, which you don't want.</p>
+
+        <h3>3. Move the terminal to the right</h3>
+        <p>Press <code>Cmd+J</code> to open the terminal, then right-click the terminal title bar and select <strong>Move Panel Right</strong>. This docks the terminal alongside your code instead of below it. Alternatively: <code>Cmd+Shift+P</code> &gt; "View: Set Panel Position Right".</p>
+
+        <h3>4. Start Claude Code</h3>
+        <p>In the terminal, type <code>claude</code> and press Enter. That's it. Full Claude Code with all your DOE setup &mdash; hooks, commands, contracts, directives, everything. The terminal in Cursor is identical to VS Code's terminal. Claude Code doesn't know or care which editor hosts it.</p>
+
+        <h3>5. Leave Cursor Tab on</h3>
+        <p>You'll see "Cursor Tab" in the bottom-right status bar &mdash; this is AI autocomplete. It's the one Cursor AI feature that's safe and useful with DOE. It suggests code as you type, doesn't modify files autonomously, and doesn't interfere with Claude Code. The free tier gives 2,000 completions per month, which is plenty when Claude Code writes most of your code.</p>
+
+        <h3>6. Ignore the chat panel</h3>
+        <p>The right panel labelled "New Chat" with "Agent" / "Auto" / "Local" is Cursor's AI agent. You don't need it &mdash; Claude Code in the terminal is your AI. If the chat panel is open, just close it. If you accidentally open it with <code>Cmd+L</code>, close it again. The free tier only gives 50 slow AI requests per month anyway, so it's self-limiting.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">&#9432;</span>
+          <div class="callout-body">
+            <strong>What "Agent", "Auto", and "Local" mean in Cursor's chat panel:</strong>
+            <ul style="margin: 8px 0 0; padding-left: 18px;">
+              <li><strong>Agent</strong> &mdash; the chat mode. Agent is autonomous (reads/writes files, runs commands). Other options: "Ask" (read-only Q&A) and "Manual" (targeted edits). None of these integrate with DOE.</li>
+              <li><strong>Auto</strong> &mdash; the model selector. "Auto" means Cursor picks the model. You can also manually select Claude Sonnet, GPT-4o, etc. Irrelevant if you're not using the chat.</li>
+              <li><strong>Local</strong> &mdash; means the agent runs on your machine (foreground). Cursor Pro has "Background Agents" that run in the cloud. On the free tier, only Local is available.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>7. Free tier is all you need</h3>
+
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Free tier</th>
+              <th>Needed for DOE?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>The editor itself</td>
+              <td>Full</td>
+              <td>Yes &mdash; this is why you're here</td>
+            </tr>
+            <tr>
+              <td>Tab autocomplete</td>
+              <td>2,000/month</td>
+              <td>Nice to have &mdash; Claude Code writes most code</td>
+            </tr>
+            <tr>
+              <td>AI Chat / Agent</td>
+              <td>50 slow requests</td>
+              <td>No &mdash; Claude Code handles all reasoning</td>
+            </tr>
+            <tr>
+              <td>Background Agents</td>
+              <td>Not available</td>
+              <td>No &mdash; DOE has its own multi-agent system</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Your daily workflow</h3>
+        <p>Identical to VS Code. The only difference is occasional Tab completions when you manually type code.</p>
+
+        <pre><code>Cmd+J          &rarr; open terminal
+claude         &rarr; start Claude Code
+/stand-up      &rarr; kick off session
+/crack-on      &rarr; start building
+...            &rarr; all DOE workflow as normal
+/wrap          &rarr; end session</code></pre>
+
+        <!-- The Context Split Problem -->
+        <h2>The Context Split Problem</h2>
+
+        <p>DOE has session continuity. <code>/stand-up</code> loads <code>STATE.md</code> and <code>todo.md</code>. <code>/crack-on</code> reads the plan and starts a step. Each interaction builds on prior context. <code>/wrap</code> closes the session and updates everything. The AI-powered editor's chat and agent has none of this context. Every interaction is a cold start.</p>
+
+        <p>If you split attention between Claude Code and the editor's AI, you fragment your own mental model too. "Did I tell Claude Code about that change or was it a Cmd+K edit?" becomes a real question. The answer matters &mdash; Claude Code tracks what it changed, but it has no visibility into edits made by a different AI agent. Those edits exist in your files but not in DOE's understanding of your project state.</p>
+
+        <p>Keeping one AI agent as the single driver avoids this entirely. Use the editor for what editors are good at &mdash; navigating files, reading code, typing &mdash; and let Claude Code handle the reasoning and execution pipeline.</p>
+
+        <!-- Cost Considerations -->
+        <h2>Cost Considerations</h2>
+
+        <p>Using an AI editor alongside Claude Code means paying for two AI systems:</p>
+
+        <ul>
+          <li><strong>Your Claude plan</strong> &mdash; powers Claude Code, unchanged regardless of editor</li>
+          <li><strong>The editor subscription</strong> &mdash; Cursor Pro $20/mo, Windsurf Pro $15/mo, etc.</li>
+        </ul>
+
+        <p>If you disable the editor's agent features and only use Tab autocomplete, the free tier of most AI editors is sufficient. No need to pay for features you've disabled. Cursor Free gives 2000 Tab completions per month. That's plenty when Claude Code does most of the writing.</p>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <a href="faq.html">
+            <div class="pg-label">Previous</div>
+            <div class="pg-title">&larr; FAQ</div>
+          </a>
+          <a href="glossary.html" class="next">
+            <div class="pg-label">Next</div>
+            <div class="pg-title">Glossary &rarr;</div>
+          </a>
+        </div>
+
+        <footer class="site-footer">DOE Starter Kit v1.52.0</footer>
+
+      </div><!-- /content -->
+    </div><!-- /content-area -->
+
+  </div><!-- /layout -->
+
+  <script>
+    // ── Dark mode ──
+    (function () {
+      var btn  = document.getElementById('themeBtn');
+      var html = document.documentElement;
+
+      function applyTheme(dark) {
+        if (dark) {
+          html.setAttribute('data-theme', 'dark');
+          btn.textContent = '\u263C';
+        } else {
+          html.removeAttribute('data-theme');
+          btn.textContent = '\u263D';
+        }
+      }
+
+      var stored = localStorage.getItem('doe-docs-theme');
+      applyTheme(stored === 'dark');
+
+      btn.addEventListener('click', function () {
+        var isDark = html.getAttribute('data-theme') === 'dark';
+        localStorage.setItem('doe-docs-theme', isDark ? 'light' : 'dark');
+        applyTheme(!isDark);
+      });
+    })();
+
+    // ── Mobile sidebar ──
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar   = document.getElementById('sidebar');
+      var overlay   = document.getElementById('sidebarOverlay');
+
+      function open()  { sidebar.classList.add('open');    overlay.classList.add('visible'); }
+      function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+      hamburger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? close() : open();
+      });
+      overlay.addEventListener('click', close);
+    })();
+  </script>
+
+</body>
+</html>

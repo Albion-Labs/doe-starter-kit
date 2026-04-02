@@ -49,7 +49,7 @@ Standard single-terminal work. Context discipline matters most here because you 
 
 ## Formal Parallel
 
-DAG executor (`execution/dispatch_dag.py`) or serial dispatch (`directives/serial-dispatch-protocol.md`). Step ownership via `Owns:` metadata in todo.md. Every step declares which files it will modify.
+DAG executor (`~/.claude/scripts/dispatch_dag.py`) or serial dispatch (`directives/serial-dispatch-protocol.md`). Step ownership via `Owns:` metadata in todo.md. Every step declares which files it will modify.
 
 **Mechanical collision prevention:**
 - Pre-commit hooks in each worktree enforce the ownership list -- agents cannot commit files outside their `Owns:` declaration

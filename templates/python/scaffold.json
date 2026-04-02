@@ -1,0 +1,16 @@
+{
+  "framework_name": "Python",
+  "directory_docs": {
+    "src/": "Application source code",
+    "routes/": "API route handlers",
+    "tests/": "Test files"
+  },
+  "package_manager": "pip",
+  "build_command": null,
+  "dev_command": "uvicorn src.main:app --reload",
+  "test_commands": ["pytest", "ruff check ."],
+  "init_command": "pip install fastapi uvicorn",
+  "detect": {
+    "files": ["pyproject.toml", "requirements.txt"]
+  }
+}

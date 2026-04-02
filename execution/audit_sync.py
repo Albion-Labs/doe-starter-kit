@@ -40,9 +40,16 @@ NEEDS_STRIPPING = {
     "build_session_archive.py",
 }
 
-# Kit-only files (exist in kit, not expected in project)
+# Kit-only files (exist in kit, not expected in project) or files that moved
+# from execution/ to global-scripts/ (still in project execution/ from old setup)
 KIT_ONLY = {
     "stamp_tutorial_version.py",
+    "wrap_html.py",
+    "eod_html.py",
+    "dispatch_dag.py",
+    "run_snagging.py",
+    "record_review_result.py",
+    "persist_review_findings.py",
 }
 
 # Directories to compare: (project_path, kit_path, description)

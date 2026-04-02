@@ -1,0 +1,17 @@
+{
+  "framework_name": "Flutter",
+  "directory_docs": {
+    "lib/": "Dart application code",
+    "test/": "Test files",
+    "android/": "Android platform code",
+    "ios/": "iOS platform code"
+  },
+  "package_manager": "pub",
+  "build_command": "flutter build",
+  "dev_command": "flutter run",
+  "test_commands": ["flutter test", "flutter analyze"],
+  "init_command": "flutter create .",
+  "detect": {
+    "files": ["pubspec.yaml"]
+  }
+}

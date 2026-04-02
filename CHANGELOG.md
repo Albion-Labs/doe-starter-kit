@@ -7,6 +7,23 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.52.0 (2026-04-02)
+
+### Added
+- **DOE Init Wizard** (`execution/doe_init.py`) — conversational scaffolding tool replacing blind setup.sh copy. 8-card bordered UX, framework auto-detection, composable CLAUDE.md generation, additive capability layers (universal, public-facing, data-handling, regulated). Supports Next.js, Vite, Python, Go, Flutter, static HTML.
+- **Framework templates** (`templates/`) — per-framework scaffold.json, claude_section.md, .gitignore, .env.example for 6 frameworks. Base templates for CLAUDE.md sections and capability layers.
+- **Manifest** (`manifest.json`) — single source of truth mapping layers to kit files and trigger lists. Data-driven file installation.
+- **Integration tests** (`execution/test_doe_init.py`) — 142 checks across 6 frameworks, new-project and existing-project paths.
+- **Tutorial: Starting a New Project** (`docs/tutorial/new-project.html`) — full walkthrough for new and existing projects with terminal card mockups.
+- **IDE Compatibility** (`docs/tutorial/ide-setup.html`) — setup guidance for Cursor and other IDEs.
+
+### Changed
+- **Global script reorg** — 6 shared tooling scripts moved from `execution/` to `global-scripts/` (wrap_html.py, eod_html.py, dispatch_dag.py, run_snagging.py, record_review_result.py, persist_review_findings.py). Installed to `~/.claude/scripts/` by setup.sh.
+- **setup.sh** — delegates to init wizard for new projects. Copies global-scripts/ to ~/.claude/scripts/.
+- **Global commands** (wrap.md, eod.md, crack-on.md) — updated paths from `execution/` to `~/.claude/scripts/`.
+- **Agent definitions** (Finder, Adversarial, Referee) — updated persist_review_findings.py path.
+- **Sidebar navigation** — all 17 tutorial pages updated with new entries.
+
 ## v1.51.7 (2026-04-02)
 
 ### Added

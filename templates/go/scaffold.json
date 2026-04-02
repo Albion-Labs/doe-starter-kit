@@ -1,0 +1,16 @@
+{
+  "framework_name": "Go",
+  "directory_docs": {
+    "cmd/": "Application entry points",
+    "internal/": "Private application code",
+    "pkg/": "Public library code"
+  },
+  "package_manager": "go",
+  "build_command": "go build ./...",
+  "dev_command": "go run cmd/main.go",
+  "test_commands": ["go test ./...", "go vet ./..."],
+  "init_command": "go mod init",
+  "detect": {
+    "files": ["go.mod"]
+  }
+}

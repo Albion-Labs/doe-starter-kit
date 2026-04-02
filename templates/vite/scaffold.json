@@ -1,0 +1,16 @@
+{
+  "framework_name": "Vite/React",
+  "directory_docs": {
+    "src/": "Application source code",
+    "public/": "Static assets (served as-is)"
+  },
+  "package_manager": "npm",
+  "build_command": "vite build",
+  "dev_command": "vite",
+  "test_commands": ["eslint .", "vitest", "playwright test"],
+  "init_command": "npm create vite@latest .",
+  "detect": {
+    "files": ["package.json"],
+    "package_contains": "vite"
+  }
+}

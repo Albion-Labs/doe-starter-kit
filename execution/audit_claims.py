@@ -822,11 +822,14 @@ def check_scale_consistency(report: AuditReport):
 @register("universal", fast=False)
 def check_dag_validation(report: AuditReport):
     """dispatch_dag.py --validate passes cleanly."""
+    # Check project execution/ first, fall back to ~/.claude/scripts/
     executor = PROJECT_ROOT / "execution" / "dispatch_dag.py"
+    if not executor.exists():
+        executor = Path.home() / ".claude" / "scripts" / "dispatch_dag.py"
 
     if not executor.exists():
         report.add(Finding(Severity.WARN, "dag_validation",
-                           "execution/dispatch_dag.py not found — skipping"))
+                           "dispatch_dag.py not found (checked execution/ and ~/.claude/scripts/)"))
         return
 
     try:

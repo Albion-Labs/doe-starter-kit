@@ -93,7 +93,7 @@ reg.write_text(json.dumps(data, indent=2))
 
 ## Step 3: Generate HTML Wrap-Up
 
-Build the wrap-up as an HTML page using `execution/wrap_html.py`. This renders beautifully in the browser instead of fighting terminal formatting.
+Build the wrap-up as an HTML page using `~/.claude/scripts/wrap_html.py`. This renders beautifully in the browser instead of fighting terminal formatting.
 
 ### 3a: Compose the wrap-up data
 
@@ -209,7 +209,7 @@ Determine the theme based on the current time: run `date +%H` to get the current
 
 Run:
 ```bash
-python3 execution/wrap_html.py --json '<the JSON string>' --theme <light|dark> --output .tmp/wrap.html
+python3 ~/.claude/scripts/wrap_html.py --json '<the JSON string>' --theme <light|dark> --output .tmp/wrap.html
 ```
 
 Then save the JSON data permanently for HQ and open the HTML in the browser:

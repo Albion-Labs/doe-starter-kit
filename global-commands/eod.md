@@ -108,7 +108,7 @@ Build a JSON object with this schema:
 
 Run:
 ```bash
-python3 execution/eod_html.py --json '<the JSON string>' --output .tmp/eod.html
+python3 ~/.claude/scripts/eod_html.py --json '<the JSON string>' --output .tmp/eod.html
 ```
 
 Then open in the browser:
