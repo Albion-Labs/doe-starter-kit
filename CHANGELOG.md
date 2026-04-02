@@ -7,6 +7,20 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.51.6 (2026-04-02)
+
+### Fixed
+- **Contract check false positive** (`check_contract.py`) — only blocks on unchecked `[auto]` criteria, no longer treats `[manual]` items as blocking. Eliminates need for `SKIP_CONTRACT_CHECK=1` on every commit after a step with pending manual items.
+- **Review gate scope** (`enforce_review_gate.py`) — gates (steps-complete + adversarial review) now only apply to `feature/*` branches. Housekeeping, wrap, and other non-feature branches pass through freely.
+
+### Added
+- **Step-marking enforcement** (`commit-msg` hook) — blocks commits with "Step N" or version tag `(vX.Y.Z)` in the message unless `tasks/todo.md` is staged. Skip: `SKIP_STEP_MARK_CHECK=1`.
+- **Main-branch protection** (`pre-commit` hook) — blocks direct commits to main/master locally (allows merge commits). Skip: `SKIP_MAIN_PROTECTION=1`.
+- **Steps-complete PR gate** (`enforce_review_gate.py`) — blocks `gh pr create` on feature branches if not all steps in ## Current are complete. Prevents mid-feature PRs.
+
+### Changed
+- **Building rules** (`building-rules.md`) — documents step-marking enforcement hook.
+
 ## v1.51.5 (2026-04-02)
 
 ### Changed

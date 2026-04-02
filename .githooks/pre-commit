@@ -3,6 +3,27 @@
 # Runs only checks marked fast=True — typically <1 second.
 # To skip (emergency only): git commit --no-verify
 
+# ─── Main branch protection ───
+# Block direct commits to main. Only merges (via PR) are allowed.
+# Skip with: SKIP_MAIN_PROTECTION=1 git commit ...
+
+if [ "${SKIP_MAIN_PROTECTION:-0}" != "1" ]; then
+    CURRENT_BRANCH=$(git branch --show-current 2>/dev/null)
+    if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
+        # Allow merge commits (git merge creates these automatically)
+        if [ ! -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]; then
+            echo "" >&2
+            echo "═══ Main branch protection ═══" >&2
+            echo "" >&2
+            echo "  Direct commits to main are not allowed." >&2
+            echo "  Create a feature or housekeeping branch first." >&2
+            echo "" >&2
+            echo "  Skip with: SKIP_MAIN_PROTECTION=1 git commit ..." >&2
+            exit 1
+        fi
+    fi
+fi
+
 export PYTHONIOENCODING=utf-8
 python3 execution/audit_claims.py --hook > /dev/null 2>&1
 EXIT_CODE=$?

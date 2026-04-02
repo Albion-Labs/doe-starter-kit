@@ -86,25 +86,28 @@ def check_contract():
     if not found_contract or not criteria:
         return 0  # No contract block — allow
 
-    checked_count = sum(1 for c, _ in criteria if c)
-    unchecked = [(text) for checked, text in criteria if not checked]
+    # Only [auto] criteria gate commits. [manual] items are batched for human
+    # sign-off at feature end — they must not block mid-feature commits.
+    auto_criteria = [(c, t) for c, t in criteria if "[auto]" in t]
+    auto_checked = sum(1 for c, _ in auto_criteria if c)
+    auto_unchecked = [t for c, t in auto_criteria if not c]
 
-    if not unchecked:
-        return 0  # All criteria pass
+    if not auto_unchecked:
+        return 0  # All [auto] criteria pass (or none exist)
 
-    if checked_count == 0:
-        return 0  # All criteria unchecked — this is the next step, not current work
+    if auto_checked == 0:
+        return 0  # All [auto] unchecked — this is the next step, not current work
 
-    # Mix of [x] and [ ] — work started but verification incomplete
+    # Mix of [x] and [ ] in [auto] criteria — work started but verification incomplete
     step_desc = re.sub(r"^\d+\.\s+\[ \]\s*", "", current_step_line)
     print("")
     print("═══ Contract verification failed ═══")
     print("")
     print(f"  Step: {step_desc}")
-    print(f"  BLOCKED: {len(unchecked)} contract criteria not yet verified")
-    print(f"  ({checked_count} checked, {len(unchecked)} remaining)")
+    print(f"  BLOCKED: {len(auto_unchecked)} [auto] criteria not yet verified")
+    print(f"  ({auto_checked} checked, {len(auto_unchecked)} remaining)")
     print("")
-    for item in unchecked:
+    for item in auto_unchecked:
         print(f"  [ ] {item}")
     print("")
     print("  Run verification first, or skip with:")
