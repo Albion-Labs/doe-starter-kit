@@ -658,6 +658,17 @@ def install_layer_files(config, kit_dir, project_dir):
     if copy_to_project(stats_src, ".claude/stats.json"):
         rows.append(line(".claude/stats.json ................. done"))
 
+    # 5c. Claude Code plans (.claude/plans/)
+    plans_src = kit_dir / ".claude" / "plans"
+    plan_count = 0
+    if plans_src.is_dir():
+        for f in plans_src.iterdir():
+            if f.is_file():
+                if copy_to_project(f, f".claude/plans/{f.name}"):
+                    plan_count += 1
+    if plan_count:
+        rows.append(line(f".claude/plans/ ({plan_count} plans) .......... done"))
+
     # 5d. Claude Code agents (.claude/agents/)
     agents_src = kit_dir / ".claude" / "agents"
     agent_count = 0
