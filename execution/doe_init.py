@@ -85,36 +85,35 @@ def ask_yn(prompt, default="n"):
 
 # ── Framework detection ──────────────────────────────────────────────────
 
-# Detection patterns: check for marker files and content.
-# Matches scaffold.json detect fields -- hardcoded here for Step 0,
-# reads from scaffold.json once templates exist (Step 1+).
-DETECT_PATTERNS = {
-    "nextjs": {
-        "files": ["package.json"],
-        "package_contains": "next",
-        "name": "Next.js",
-    },
-    "vite": {
-        "files": ["package.json"],
-        "package_contains": "vite",
-        "name": "Vite/React",
-    },
-    "python": {
-        "files": ["pyproject.toml", "requirements.txt"],
-        "name": "Python",
-    },
-    "go": {
-        "files": ["go.mod"],
-        "name": "Go",
-    },
-    "flutter": {
-        "files": ["pubspec.yaml"],
-        "name": "Flutter",
-    },
-    "static": {
-        "files": ["index.html"],
-        "name": "Static HTML",
-    },
+
+def load_detect_patterns(kit_dir):
+    """Load detection patterns from scaffold.json files in each template directory."""
+    patterns = {}
+    templates_dir = kit_dir / "templates" if kit_dir else None
+    if templates_dir and templates_dir.is_dir():
+        for d in sorted(templates_dir.iterdir()):
+            scaffold = d / "scaffold.json"
+            if scaffold.is_file():
+                try:
+                    data = json.loads(scaffold.read_text())
+                    detect = data.get("detect", {})
+                    entry = {"files": detect.get("files", []), "name": data.get("framework_name", d.name)}
+                    if "package_contains" in detect:
+                        entry["package_contains"] = detect["package_contains"]
+                    patterns[d.name] = entry
+                except (json.JSONDecodeError, KeyError):
+                    continue
+    return patterns
+
+
+# Fallback if scaffold.json files aren't available (e.g. running standalone)
+_FALLBACK_DETECT_PATTERNS = {
+    "nextjs": {"files": ["package.json"], "package_contains": "next", "name": "Next.js"},
+    "vite": {"files": ["package.json"], "package_contains": "vite", "name": "Vite/React"},
+    "python": {"files": ["pyproject.toml", "requirements.txt"], "name": "Python"},
+    "go": {"files": ["go.mod"], "name": "Go"},
+    "flutter": {"files": ["pubspec.yaml"], "name": "Flutter"},
+    "static": {"files": ["index.html"], "name": "Static HTML"},
 }
 
 # Project type → framework options (ordered, first is recommended)
@@ -160,9 +159,9 @@ FRAMEWORK_PROJECT_TYPE = {
 }
 
 
-def detect_framework(project_dir):
+def detect_framework(project_dir, detect_patterns):
     """Detect framework from existing project files. Returns (key, name) or (None, None)."""
-    for key, pattern in DETECT_PATTERNS.items():
+    for key, pattern in detect_patterns.items():
         for f in pattern["files"]:
             fpath = project_dir / f
             if fpath.exists():
@@ -178,11 +177,11 @@ def detect_framework(project_dir):
     return None, None
 
 
-def detect_project_state(project_dir):
+def detect_project_state(project_dir, detect_patterns):
     """Detect what exists in the project directory."""
     has_git = (project_dir / ".git").exists()
     is_empty = not any(project_dir.iterdir()) if project_dir.exists() else True
-    framework_key, framework_name = detect_framework(project_dir)
+    framework_key, framework_name = detect_framework(project_dir, detect_patterns)
     return {
         "has_git": has_git,
         "is_empty": is_empty,
@@ -676,8 +675,19 @@ def install_layer_files(config, kit_dir, project_dir):
     if settings_src.exists() and not settings_dst.exists():
         settings_dst.parent.mkdir(parents=True, exist_ok=True)
         kit_settings = json.loads(settings_src.read_text())
-        # Copy hooks config only — strip kit-specific keys like enabledPlugins
-        project_settings = {"hooks": kit_settings.get("hooks", {})}
+        # Copy hooks config only — strip kit-specific keys (enabledPlugins)
+        # and kit-contributor-only hooks (guard_kit_writes.py)
+        project_hooks = {}
+        for event, matchers in kit_settings.get("hooks", {}).items():
+            filtered = []
+            for matcher_block in matchers:
+                hook_list = matcher_block.get("hooks", [])
+                cleaned = [h for h in hook_list if "guard_kit_writes" not in h.get("command", "")]
+                if cleaned:
+                    filtered.append({**matcher_block, "hooks": cleaned})
+            if filtered:
+                project_hooks[event] = filtered
+        project_settings = {"hooks": project_hooks}
         settings_dst.write_text(json.dumps(project_settings, indent=2) + "\n")
         total += 1
         rows.append(line(".claude/settings.json .............. done"))
@@ -902,7 +912,8 @@ def get_kit_version(kit_dir):
 def run_wizard(kit_dir, project_dir):
     """Run the full init wizard. Returns config dict."""
     kit_version = get_kit_version(kit_dir)
-    state = detect_project_state(project_dir)
+    detect_patterns = load_detect_patterns(kit_dir) or _FALLBACK_DETECT_PATTERNS
+    state = detect_project_state(project_dir, detect_patterns)
 
     # Card 0: Welcome
     card_welcome(kit_version, project_dir, state)

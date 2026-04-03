@@ -55,6 +55,11 @@ CLAUDE.md tells Claude to check these before starting work:
 | protect_directives.py | `./.claude/hooks/` | Blocks editing existing SOPs. Allows creating new ones. |
 | block_secrets_in_code.py | `./.claude/hooks/` | Blocks API keys outside .env |
 | block_dangerous_commands.py | `./.claude/hooks/` | Blocks force-push, rm -rf, etc |
+| guard_kit_writes.py | `./.claude/hooks/` | Blocks direct writes to ~/doe-starter-kit (kit contributors only) |
+| enforce_review_gate.py | `./.claude/hooks/` | Blocks PR creation without passing adversarial review |
+| confirm_pr_merge.py | `./.claude/hooks/` | Blocks gh pr merge unless user approves |
+| copy_plan_to_project.py | `./.claude/hooks/` | Auto-copies plans from ~/.claude/plans/ to project .claude/plans/ |
+| check_plan_freshness_hook.py | `./.claude/hooks/` | Checks plan freshness when .claude/plans/*.md is read |
 | commit-msg | `./.githooks/` | Strips AI co-author trailers from git commits |
 | pre-commit | `./.githooks/` | Runs fast claim audit checks before every commit. Blocks on FAILs. |
 | pre-push | `./.githooks/` | Runs test_methodology.py --quick before push |
@@ -75,6 +80,7 @@ CLAUDE.md tells Claude to check these before starting work:
 | todo.md | `./tasks/todo.md` | Active tasks with numbered steps, version tags, timestamps. Last 3 done features. |
 | archive.md | `./tasks/archive.md` | Full step-by-step detail for all completed features. |
 | ROADMAP.md | `./ROADMAP.md` | Forward-looking: Up Next, Ideas, Parked. Plus Complete section (one-line summaries). |
+| stats.json | `./.claude/stats.json` | Persistent session stats, streaks, badges, scores. Updated by /wrap. |
 | _TEMPLATE.md | `./directives/` | Template for new SOPs |
 
 ### 📐 The Directives (SOPs)
@@ -207,12 +213,9 @@ SESSION END (/wrap)
 ```
 PROJECT (lives in your repo, shared via git)
 ├── CLAUDE.md
-├── CUSTOMIZATION.md
 ├── STATE.md
 ├── ROADMAP.md
-├── SYSTEM-MAP.md
 ├── learnings.md
-├── universal-claude-md-template.md
 ├── .gitignore
 ├── tasks/
 │   ├── todo.md
@@ -225,29 +228,60 @@ PROJECT (lives in your repo, shared via git)
 │   ├── context-management.md
 │   ├── self-annealing.md
 │   ├── framework-evolution.md
-│   ├── adversarial-review/
-│   ├── documentation-governance.md
+│   ├── rationalisation-tables.md
+│   ├── break-glass.md
+│   ├── serial-dispatch-protocol.md
+│   ├── subagent-protocol.md
+│   ├── security-rules.md
+│   ├── incident-response.md
 │   ├── claim-auditing.md
-│   └── starter-kit-sync.md
+│   ├── testing-strategy.md
+│   ├── architectural-invariants.md
+│   ├── manual-testing.md
+│   ├── integrations.md
+│   ├── starter-kit-sync.md
+│   ├── starter-kit-pull.md
+│   ├── adversarial-review/
+│   └── best-practices/
+│       ├── html-css.md
+│       ├── javascript.md
+│       ├── python.md
+│       ├── react.md
+│       └── tdd-and-debugging.md
 ├── execution/
-│   ├── dispatch_dag.py
-│   ├── test_methodology.py
 │   ├── audit_claims.py
+│   ├── bootstrap_invariants.py
+│   ├── check_contract.py
+│   ├── check_plan_freshness.py
+│   ├── generate_test_checklist.py
+│   ├── health_check.py
+│   ├── lint_todo.py
+│   ├── logger.py
+│   ├── quality_gate.py
+│   ├── run_test_suite.py
+│   ├── scan_docs.py
+│   ├── slack_notify.py
+│   ├── test_methodology.py
+│   ├── verify.py
+│   ├── verify_tests.py
 │   └── wrap_stats.py
 ├── .claude/
-│   ├── settings.json
-│   ├── stats.json
+│   ├── settings.json          ← hook configuration (PreToolUse + PostToolUse)
+│   ├── stats.json             ← session stats, streaks, badges (updated by /wrap)
 │   ├── plans/
 │   ├── hooks/
 │   │   ├── protect_directives.py
 │   │   ├── block_secrets_in_code.py
-│   │   └── block_dangerous_commands.py
-│   ├── agents/               ← custom agents for adversarial review
-│   │   ├── Finder.md         ← Identifies issues (read-only)
-│   │   ├── Adversarial.md    ← Filters false positives (read-only)
-│   │   ├── Referee.md        ← Final arbiter (read-only)
-│   │   └── ReadOnly.md       ← General-purpose read-only agent
-│   └── claude-chat-sync-prompt.md
+│   │   ├── block_dangerous_commands.py
+│   │   ├── enforce_review_gate.py
+│   │   ├── confirm_pr_merge.py
+│   │   ├── copy_plan_to_project.py
+│   │   └── check_plan_freshness_hook.py
+│   └── agents/                ← custom agents for adversarial review
+│       ├── Finder.md          ← Identifies issues (read-only)
+│       ├── Adversarial.md     ← Filters false positives (read-only)
+│       ├── Referee.md         ← Final arbiter (read-only)
+│       └── ReadOnly.md        ← General-purpose read-only agent
 ├── .githooks/
 │   ├── commit-msg
 │   ├── pre-commit
