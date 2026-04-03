@@ -24,7 +24,7 @@ Prevent accidental or AI-caused destruction, exposure, or corruption of data acr
 
 **Production data is irreplaceable regulated data. Every rule below exists to protect it.**
 
-Once your project collects personal data (membership, canvass responses, donations), that data is subject to UK GDPR retention requirements and PPERA record-keeping obligations. Losing it is not just an inconvenience -- it is a reportable data breach (72-hour ICO notification window) and potential regulatory violation. Even before personal data enters the system, treating all data as irreplaceable builds the right habits.
+Once Monty collects personal data (membership, canvass responses, donations), that data is subject to UK GDPR retention requirements and PPERA record-keeping obligations. Losing it is not just an inconvenience -- it is a reportable data breach (72-hour ICO notification window) and potential regulatory violation. Even before personal data enters the system, treating all data as irreplaceable builds the right habits.
 
 ### Data Controller Liability
 
@@ -43,7 +43,7 @@ This remains true until a formal, documented handover of data controllership to 
 - Disclose full register data to an unauthorised person
 - Fail to comply with security requirements for register data
 
-Political parties may use the full register for electoral purposes, but merging it with commercial data, sharing it with third parties, or using it for non-electoral purposes is criminal. If your project integrates electoral register data:
+Political parties may use the full register for electoral purposes, but merging it with commercial data, sharing it with third parties, or using it for non-electoral purposes is criminal. If Monty integrates electoral register data:
 - It must be stored separately from other data, with its own access controls
 - Access must be logged and auditable
 - It must never be included in seed data, test data, backups shared outside the secure environment, or any non-production system
@@ -266,7 +266,7 @@ All secrets (database passwords, API keys, auth provider secrets) must have a do
 Non-production environments use synthetic seed data. Real data never leaves production.
 
 ### Implementation
-- Create `execution/seed_database.py` (or equivalent) that generates realistic but fictional data.
+- Create a seed database script (e.g. seed_database.py) that generates realistic but fictional data.
 - Seed data must cover edge cases: long names, Unicode characters, boundary values, empty fields.
 - Seed data quantity should be sufficient for performance testing (1000+ records for key tables).
 - Never `pg_dump` production and restore to development. Not even "anonymised" -- anonymisation is hard to verify and easy to reverse.

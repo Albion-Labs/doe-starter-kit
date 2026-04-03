@@ -54,7 +54,10 @@ Rules:
 4. All `[auto]` pass + all `[manual]` confirmed -> mark step done
 5. If `[auto]` fails: fix and re-verify (up to 3 attempts)
 
-### Wave mode (multi-agent)
+### Informal parallel (multiple terminals, manual coordination)
+Same as solo mode per-terminal. Each terminal works on a different step. The user coordinates which steps run where. No shared wave infrastructure — just run `/agent-verify` in each terminal independently. Watch for shared-file contention on STATE.md, learnings.md, and todo.md.
+
+### Formal parallel (wave/DAG dispatch)
 1. `/agent-launch` validates contracts at pre-flight
 2. Agent implements the feature
 3. `--complete` runs `execution/verify.py` automatically

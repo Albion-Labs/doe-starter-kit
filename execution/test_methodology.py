@@ -82,13 +82,22 @@ _CONTRACT_RE = re.compile(r"^\s*Contract:", re.IGNORECASE)
 
 
 def scenario_contract_completeness(verbose: bool = False):
-    """Scan tasks/todo.md for steps missing contracts, missing [auto] criteria, or invalid Verify: patterns."""
+    """Scan tasks/todo.md for steps missing contracts, missing [auto] criteria, or invalid Verify: patterns.
+
+    Only checks ## Current and ## Awaiting Sign-off sections.
+    Skips ## Done (historical) and ## Queue (not started).
+    """
     todo = PROJECT_ROOT / "tasks" / "todo.md"
     vlines = []
     if not todo.exists():
         return _result("WARN", "tasks/todo.md not found", vlines)
 
     lines = todo.read_text(encoding="utf-8").splitlines()
+
+    # Only scan active sections (Current, Awaiting Sign-off)
+    _ACTIVE_SECTIONS = {"## current", "## awaiting sign-off"}
+    _SKIP_SECTIONS = {"## done", "## queue", "## pending prs"}
+    in_active_section = False
 
     total_steps = 0
     steps_with_contract = 0
@@ -99,7 +108,14 @@ def scenario_contract_completeness(verbose: bool = False):
     i = 0
     while i < len(lines):
         line = lines[i]
-        if _STEP_LINE_RE.match(line.strip()):
+        stripped_lower = line.strip().lower()
+        if stripped_lower.startswith("## "):
+            section_key = stripped_lower.split("(")[0].strip()
+            if any(section_key.startswith(s) for s in _ACTIVE_SECTIONS):
+                in_active_section = True
+            elif any(section_key.startswith(s) for s in _SKIP_SECTIONS):
+                in_active_section = False
+        if in_active_section and _STEP_LINE_RE.match(line.strip()):
             total_steps += 1
             step_text = line.strip()[:60]
             # Scan ahead for Contract block
@@ -601,11 +617,18 @@ def scenario_router_coverage(verbose: bool = False):
             continue
         all_directives.append(p)
 
+    # Build set of referenced directories (e.g. "directives/adversarial-review/")
+    dir_refs = set(re.findall(r"`(directives/[^`]+/)`", triggers_text))
+
     covered = []
     uncovered = []
     for d in sorted(all_directives):
         rel = str(d.relative_to(PROJECT_ROOT))
+        # Direct reference check
         if rel in triggers_text or d.stem in triggers_text or d.name in triggers_text:
+            covered.append(rel)
+        # Parent directory reference check (e.g. file inside directives/adversarial-review/)
+        elif any(rel.startswith(dr) for dr in dir_refs):
             covered.append(rel)
         else:
             uncovered.append(rel)
@@ -782,8 +805,12 @@ import os as _os
 def scenario_cross_reference_consistency(verbose: bool = False):
     """Validate that directive cross-references and CLAUDE.md triggers point to real files.
 
-    Handles forward references: files referenced by uncompleted todo.md steps
-    are exempt (they don't exist yet).
+    Handles:
+    - Forward references: files from uncompleted todo.md steps are exempt.
+    - Glob patterns: paths containing * are skipped (not resolvable).
+    - Global paths: .claude/ paths also checked at ~/.claude/ (global install).
+    - Layer-conditional: directives/ refs checked in kit as fallback (may be
+      from a different capability layer that isn't active in this project).
     """
     vlines = []
 
@@ -805,7 +832,33 @@ def scenario_cross_reference_consistency(verbose: bool = False):
                     for f in owns_match.group(1).split(","):
                         exempt_files.add(f.strip())
 
+    # Kit directory (fallback for layer-conditional directive refs)
+    kit_dir = Path(_os.path.expanduser("~/doe-starter-kit"))
+
     vlines.append(f"  Forward-reference exempt files: {len(exempt_files)}")
+
+    def _ref_exists(ref):
+        """Check if a reference resolves to a real path."""
+        if "*" in ref:
+            return True  # Glob patterns can't be resolved
+        # Project-relative
+        if (PROJECT_ROOT / ref).exists():
+            return True
+        # Home-relative (.claude/ -> ~/.claude/)
+        if ref.startswith(".claude/"):
+            home_path = Path.home() / ref
+            if home_path.exists():
+                return True
+        # Tilde-expanded
+        expanded = Path(_os.path.expanduser(ref))
+        if expanded.exists():
+            return True
+        # Layer-conditional: directive exists in the kit but not this project
+        if ref.startswith("directives/") and kit_dir.exists():
+            kit_path = kit_dir / ref
+            if kit_path.exists():
+                return True
+        return False
 
     # Check CLAUDE.md trigger references
     claude_md = PROJECT_ROOT / "CLAUDE.md"
@@ -815,22 +868,20 @@ def scenario_cross_reference_consistency(verbose: bool = False):
         text = claude_md.read_text(encoding="utf-8")
         refs = re.findall(r"`((?:directives|execution|\.claude)/[^`]+)`", text)
         for ref in refs:
-            full = PROJECT_ROOT / ref
-            expanded = Path(_os.path.expanduser(ref))
-            if not full.exists() and not expanded.exists() and ref not in exempt_files:
+            if ref not in exempt_files and not _ref_exists(ref):
                 issues.append(f"CLAUDE.md references missing file: {ref}")
                 vlines.append(f"  Missing: {ref} (from CLAUDE.md)")
 
-    # Check directive cross-references
+    # Check directive cross-references (skip templates)
     directives_dir = PROJECT_ROOT / "directives"
     if directives_dir.exists():
         for d in sorted(directives_dir.rglob("*.md")):
+            if d.name.startswith("_"):
+                continue
             text = d.read_text(encoding="utf-8")
             refs = re.findall(r"`((?:directives|execution|\.claude)/[^`]+)`", text)
             for ref in refs:
-                full = PROJECT_ROOT / ref
-                expanded = Path(_os.path.expanduser(ref))
-                if not full.exists() and not expanded.exists() and ref not in exempt_files:
+                if ref not in exempt_files and not _ref_exists(ref):
                     rel = str(d.relative_to(PROJECT_ROOT))
                     issues.append(f"{rel} references missing file: {ref}")
                     vlines.append(f"  Missing: {ref} (from {rel})")

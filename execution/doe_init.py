@@ -500,7 +500,11 @@ def generate_trigger_table(manifest, active_layers, framework):
             continue
         situation = trigger["situation"]
         directive = trigger["directive"]
-        lines.append(f"- {situation} -> `directives/{directive}`")
+        # Paths already qualified (e.g. .claude/plans/) keep their prefix
+        if directive.startswith(".claude/") or directive.startswith("execution/"):
+            lines.append(f"- {situation} -> `{directive}`")
+        else:
+            lines.append(f"- {situation} -> `directives/{directive}`")
     return "\n".join(lines) + "\n"
 
 
@@ -510,7 +514,8 @@ def generate_claude_md(config, kit_dir):
     Concatenation order:
     1. _base/claude_sections/00_header.md
     2. _base/claude_sections/10_methodology.md
-    3. Framework claude_section.md
+    2b. _base/claude_sections/15_commands.md (universal DOE commands)
+    3. Framework claude_section.md (framework-specific commands)
     4. _base/claude_sections/20_structure.md
     5. Layer claude_section.md files (public_facing, data_handling, regulated)
     6. _base/claude_sections/90_context.md
@@ -528,6 +533,11 @@ def generate_claude_md(config, kit_dir):
 
     # 2. Methodology
     parts.append((claude_sections / "10_methodology.md").read_text())
+
+    # 2b. Common commands (universal DOE commands)
+    commands_section = claude_sections / "15_commands.md"
+    if commands_section.exists():
+        parts.append(commands_section.read_text())
 
     # 3. Framework section
     fw_section = templates_dir / framework / "claude_section.md"

@@ -61,17 +61,17 @@ Run the kit's setup script to update globally-installed files (commands, hooks, 
 cd ~/doe-starter-kit && bash setup.sh
 ```
 This updates:
-- `~/.claude/commands/*.md` (global slash commands)
-- `~/.claude/hooks/*.py` (guardrail hooks)
-- `~/.claude/scripts/*.py` (utility scripts)
-- `~/.claude/settings.json` (PostToolUse hook registrations)
-- `~/.claude/.doe-kit-version` (global version receipt)
+- ~/.claude/commands/ (global slash commands)
+- ~/.claude/hooks/ (guardrail hooks)
+- ~/.claude/scripts/ (utility scripts)
+- ~/.claude/settings.json (PostToolUse hook registrations)
+- ~/.claude/.doe-kit-version (global version receipt)
 
 ### Step 7: Project hooks and settings
 Compare the kit's hook/settings templates against the project's versions:
-- `.claude/hooks/*.py` — diff each file
-- `.claude/settings.json` — diff PreToolUse entries
-- `.githooks/*` — diff hook scripts
+- .claude/hooks/ — diff each hook file
+- .claude/settings.json — diff PreToolUse entries
+- .githooks/ — diff hook scripts
 
 For each file that differs:
 1. Show the diff

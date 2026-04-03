@@ -5,4 +5,4 @@
 4. **Verify before delivering.** Run it, test it, confirm it matches spec. -> `directives/delivery-rules.md`
 5. **Explain simply.** No jargon without context. Trade-offs in terms the user can evaluate.
 6. **One task, one session.** Feature branches, commit per step. -> `directives/building-rules.md`
-7. **Shared-file awareness.** In parallel: check contention on STATE.md, learnings.md, todo.md, CLAUDE.md.
+7. **Shared-file awareness.** In parallel: check contention on STATE.md, learnings.md, todo.md, CLAUDE.md. -> `directives/context-management.md`

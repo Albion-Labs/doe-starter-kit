@@ -3,7 +3,7 @@
 ## Goal
 Keep the universal DOE Claude Code Starter Kit repository in sync with improvements made during project work. When a project improves the DOE system itself (new directives, better rules, new commands, workflow refinements), those improvements should flow back to the starter kit — stripped of all project-specific content.
 
-## When to Sync
+## When to Use
 - After completing an [INFRA] feature that changed DOE files (CLAUDE.md, todo.md format rules, directives, commands, hooks, audit script)
 - After a retro identifies a new universal learning that was added to learnings.md or ~/.claude/CLAUDE.md
 - After creating a new directive or command that would benefit other projects
