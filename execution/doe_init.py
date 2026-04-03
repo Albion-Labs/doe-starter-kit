@@ -10,7 +10,6 @@ and outputs a config dict for subsequent installation steps.
 
 import argparse
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -85,36 +84,35 @@ def ask_yn(prompt, default="n"):
 
 # ── Framework detection ──────────────────────────────────────────────────
 
-# Detection patterns: check for marker files and content.
-# Matches scaffold.json detect fields -- hardcoded here for Step 0,
-# reads from scaffold.json once templates exist (Step 1+).
-DETECT_PATTERNS = {
-    "nextjs": {
-        "files": ["package.json"],
-        "package_contains": "next",
-        "name": "Next.js",
-    },
-    "vite": {
-        "files": ["package.json"],
-        "package_contains": "vite",
-        "name": "Vite/React",
-    },
-    "python": {
-        "files": ["pyproject.toml", "requirements.txt"],
-        "name": "Python",
-    },
-    "go": {
-        "files": ["go.mod"],
-        "name": "Go",
-    },
-    "flutter": {
-        "files": ["pubspec.yaml"],
-        "name": "Flutter",
-    },
-    "static": {
-        "files": ["index.html"],
-        "name": "Static HTML",
-    },
+
+def load_detect_patterns(kit_dir):
+    """Load detection patterns from scaffold.json files in each template directory."""
+    patterns = {}
+    templates_dir = kit_dir / "templates" if kit_dir else None
+    if templates_dir and templates_dir.is_dir():
+        for d in sorted(templates_dir.iterdir()):
+            scaffold = d / "scaffold.json"
+            if scaffold.is_file():
+                try:
+                    data = json.loads(scaffold.read_text())
+                    detect = data.get("detect", {})
+                    entry = {"files": detect.get("files", []), "name": data.get("framework_name", d.name)}
+                    if "package_contains" in detect:
+                        entry["package_contains"] = detect["package_contains"]
+                    patterns[d.name] = entry
+                except (json.JSONDecodeError, KeyError):
+                    continue
+    return patterns
+
+
+# Fallback if scaffold.json files aren't available (e.g. running standalone)
+_FALLBACK_DETECT_PATTERNS = {
+    "nextjs": {"files": ["package.json"], "package_contains": "next", "name": "Next.js"},
+    "vite": {"files": ["package.json"], "package_contains": "vite", "name": "Vite/React"},
+    "python": {"files": ["pyproject.toml", "requirements.txt"], "name": "Python"},
+    "go": {"files": ["go.mod"], "name": "Go"},
+    "flutter": {"files": ["pubspec.yaml"], "name": "Flutter"},
+    "static": {"files": ["index.html"], "name": "Static HTML"},
 }
 
 # Project type → framework options (ordered, first is recommended)
@@ -160,9 +158,9 @@ FRAMEWORK_PROJECT_TYPE = {
 }
 
 
-def detect_framework(project_dir):
+def detect_framework(project_dir, detect_patterns):
     """Detect framework from existing project files. Returns (key, name) or (None, None)."""
-    for key, pattern in DETECT_PATTERNS.items():
+    for key, pattern in detect_patterns.items():
         for f in pattern["files"]:
             fpath = project_dir / f
             if fpath.exists():
@@ -178,11 +176,11 @@ def detect_framework(project_dir):
     return None, None
 
 
-def detect_project_state(project_dir):
+def detect_project_state(project_dir, detect_patterns):
     """Detect what exists in the project directory."""
     has_git = (project_dir / ".git").exists()
     is_empty = not any(project_dir.iterdir()) if project_dir.exists() else True
-    framework_key, framework_name = detect_framework(project_dir)
+    framework_key, framework_name = detect_framework(project_dir, detect_patterns)
     return {
         "has_git": has_git,
         "is_empty": is_empty,
@@ -346,7 +344,7 @@ def card_data():
 
 def card_confirmation(config):
     """Card 5: Confirmation before writing. Returns True to proceed."""
-    framework_name = DETECT_PATTERNS.get(config["framework"], {}).get("name", config["framework"])
+    framework_name = _FALLBACK_DETECT_PATTERNS.get(config["framework"], {}).get("name", config["framework"])
     collab = config["collaboration_mode"]
     parts = [framework_name]
     if config["project_type"]:
@@ -373,11 +371,14 @@ def card_confirmation(config):
     rows.append(sep())
     rows.append(line("Will create:"))
     rows.append(line("  CLAUDE.md          Framework-aware config"))
+    rows.append(line("  ROADMAP.md         Product roadmap"))
     rows.append(line("  directives/        Methodology + security"))
     rows.append(line("  execution/         Verification scripts"))
     rows.append(line("  .github/workflows/ CI + auto-rebase"))
     rows.append(line("  .githooks/         Pre-commit hooks"))
-    rows.append(line("  tasks/todo.md      Empty task list"))
+    rows.append(line("  .claude/settings   Hook configuration"))
+    rows.append(line("  .claude/agents/    Adversarial review agents"))
+    rows.append(line("  tasks/             todo.md + archive.md"))
     rows.append(line("  STATE.md           Session state tracker"))
     rows.append(line("  SECURITY.md        Security policy"))
 
@@ -405,7 +406,7 @@ def card_confirmation(config):
 
 def card_done(kit_version, project_dir, config, file_count):
     """Card 7: Done."""
-    framework_name = DETECT_PATTERNS.get(config["framework"], {}).get("name", config["framework"])
+    framework_name = _FALLBACK_DETECT_PATTERNS.get(config["framework"], {}).get("name", config["framework"])
 
     rows = [top()]
     rows.append(header(f"DONE -- DOE v{kit_version}"))
@@ -610,13 +611,14 @@ def install_layer_files(config, kit_dir, project_dir):
             src = kit_dir / "directives" / name
             if copy_to_project(src, f"directives/{name}"):
                 dir_count += 1
-    # Adversarial review directory (referenced as dir in triggers)
-    adv_src = kit_dir / "directives" / "adversarial-review"
-    if adv_src.is_dir():
-        for f in adv_src.iterdir():
-            if f.is_file():
-                if copy_to_project(f, f"directives/adversarial-review/{f.name}"):
-                    dir_count += 1
+    # Directive directories (referenced as dirs in triggers)
+    for dir_name in ["adversarial-review", "best-practices"]:
+        dir_src = kit_dir / "directives" / dir_name
+        if dir_src.is_dir():
+            for f in dir_src.iterdir():
+                if f.is_file():
+                    if copy_to_project(f, f"directives/{dir_name}/{f.name}"):
+                        dir_count += 1
     rows.append(line(f"directives/ ({dir_count} files) ........... done"))
 
     # 3. Execution scripts (per active layer)
@@ -642,13 +644,65 @@ def install_layer_files(config, kit_dir, project_dir):
     # 5. Claude Code hooks (.claude/hooks/)
     claude_hooks_src = kit_dir / ".claude" / "hooks"
     ch_count = 0
+    # guard_kit_writes.py is kit-contributor-only — skip for user projects
+    skip_hooks = {"guard_kit_writes.py"}
     if claude_hooks_src.is_dir():
         for f in claude_hooks_src.iterdir():
-            if f.is_file():
+            if f.is_file() and f.name not in skip_hooks:
                 if copy_to_project(f, f".claude/hooks/{f.name}"):
                     ch_count += 1
     if ch_count:
         rows.append(line(f".claude/hooks/ ({ch_count} hooks) .......... done"))
+
+    # 5b. Claude Code stats (.claude/stats.json)
+    stats_src = kit_dir / ".claude" / "stats.json"
+    if copy_to_project(stats_src, ".claude/stats.json"):
+        rows.append(line(".claude/stats.json ................. done"))
+
+    # 5c. Claude Code plans (.claude/plans/)
+    plans_src = kit_dir / ".claude" / "plans"
+    plan_count = 0
+    if plans_src.is_dir():
+        for f in plans_src.iterdir():
+            if f.is_file():
+                if copy_to_project(f, f".claude/plans/{f.name}"):
+                    plan_count += 1
+    if plan_count:
+        rows.append(line(f".claude/plans/ ({plan_count} plans) .......... done"))
+
+    # 5d. Claude Code agents (.claude/agents/)
+    agents_src = kit_dir / ".claude" / "agents"
+    agent_count = 0
+    if agents_src.is_dir():
+        for f in agents_src.iterdir():
+            if f.is_file():
+                if copy_to_project(f, f".claude/agents/{f.name}"):
+                    agent_count += 1
+    if agent_count:
+        rows.append(line(f".claude/agents/ ({agent_count} agents) ....... done"))
+
+    # 5e. Claude Code project settings (.claude/settings.json)
+    settings_src = kit_dir / ".claude" / "settings.json"
+    settings_dst = project_dir / ".claude" / "settings.json"
+    if settings_src.exists() and not settings_dst.exists():
+        settings_dst.parent.mkdir(parents=True, exist_ok=True)
+        kit_settings = json.loads(settings_src.read_text())
+        # Copy hooks config only — strip kit-specific keys (enabledPlugins)
+        # and kit-contributor-only hooks (guard_kit_writes.py)
+        project_hooks = {}
+        for event, matchers in kit_settings.get("hooks", {}).items():
+            filtered = []
+            for matcher_block in matchers:
+                hook_list = matcher_block.get("hooks", [])
+                cleaned = [h for h in hook_list if "guard_kit_writes" not in h.get("command", "")]
+                if cleaned:
+                    filtered.append({**matcher_block, "hooks": cleaned})
+            if filtered:
+                project_hooks[event] = filtered
+        project_settings = {"hooks": project_hooks}
+        settings_dst.write_text(json.dumps(project_settings, indent=2) + "\n")
+        total += 1
+        rows.append(line(".claude/settings.json .............. done"))
 
     # 6. Root-level security + layer files (SECURITY.md, etc.)
     root_count = 0
@@ -661,16 +715,17 @@ def install_layer_files(config, kit_dir, project_dir):
     if root_count:
         rows.append(line(f"security files ({root_count}) .............. done"))
 
-    # 7. Base template files (STATE.md, learnings.md, tasks/todo.md)
+    # 7. Base template files (STATE.md, learnings.md, ROADMAP.md, tasks/)
     base_dir = templates_dir / "_base"
     tmpl_count = 0
-    for name in ["STATE.md", "learnings.md"]:
+    for name in ["STATE.md", "learnings.md", "ROADMAP.md"]:
         src = base_dir / name
         if copy_to_project(src, name):
             tmpl_count += 1
-    todo_src = base_dir / "tasks" / "todo.md"
-    if copy_to_project(todo_src, "tasks/todo.md"):
-        tmpl_count += 1
+    for name in ["todo.md", "archive.md"]:
+        src = base_dir / "tasks" / name
+        if copy_to_project(src, f"tasks/{name}"):
+            tmpl_count += 1
     rows.append(line(f"starter files ({tmpl_count}) ............... done"))
 
     # 8. Framework-specific files (.gitignore, .env.example)
@@ -706,6 +761,16 @@ def install_layer_files(config, kit_dir, project_dir):
             script_count += 1
     if script_count:
         rows.append(line(f"~/.claude/scripts/ ({script_count}) .......... done"))
+
+    # 11. Universal CLAUDE.md -> ~/.claude/CLAUDE.md (first-time only)
+    global_claude_md = Path.home() / ".claude" / "CLAUDE.md"
+    if not global_claude_md.exists():
+        src = kit_dir / "universal-claude-md-template.md"
+        if src.exists():
+            global_claude_md.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, global_claude_md)
+            total += 1
+            rows.append(line("~/.claude/CLAUDE.md ................ done"))
 
     rows.append(sep())
     rows.append(line(f"{total} files installed"))
@@ -794,14 +859,13 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
             extra_count += 1
 
     # ── Initialise git if needed
-    has_git = (project_dir / ".git").exists()
-    if not has_git:
+    had_git = (project_dir / ".git").exists()
+    if not had_git:
         result = subprocess.run(
             ["git", "init"], cwd=project_dir, capture_output=True,
         )
         if result.returncode != 0:
             print(f"  Warning: git init failed (exit {result.returncode})")
-            has_git = False
 
     # ── Set git hooks path
     result = subprocess.run(
@@ -814,7 +878,7 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
     rows = [top()]
     rows.append(line("GIT + CI"))
     rows.append(sep())
-    if not has_git:
+    if not had_git:
         rows.append(line("Initialized git repository"))
     if hooks_set:
         rows.append(line("git hooks path -> .githooks/"))
@@ -858,7 +922,8 @@ def get_kit_version(kit_dir):
 def run_wizard(kit_dir, project_dir):
     """Run the full init wizard. Returns config dict."""
     kit_version = get_kit_version(kit_dir)
-    state = detect_project_state(project_dir)
+    detect_patterns = load_detect_patterns(kit_dir) or _FALLBACK_DETECT_PATTERNS
+    state = detect_project_state(project_dir, detect_patterns)
 
     # Card 0: Welcome
     card_welcome(kit_version, project_dir, state)

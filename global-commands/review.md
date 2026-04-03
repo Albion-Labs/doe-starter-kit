@@ -167,3 +167,13 @@ This command is designed to run **per-PR** (per-feature), not per-step:
 - Never modify any files. Read only.
 - Keep findings concrete: file, line, what's wrong, confidence score, impact. No vague warnings.
 - Reference `directives/adversarial-review/` templates for the full review methodology.
+
+### Recording the verdict
+
+After printing the verdict card, record the result for the PR gate:
+
+```bash
+python3 ~/.claude/scripts/record_review_result.py <PASS|PASS_WITH_NOTES|FAIL>
+```
+
+This writes a pass artifact to `.tmp/review-passed-{branch}.json` that `enforce_review_gate.py` checks before allowing `gh pr create`. The artifact requires Finder subagent proof-of-work (`.tmp/review-finder-{branch}.json`) and expires after 30 minutes.
