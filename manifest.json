@@ -32,12 +32,26 @@
         "wrap_stats.py",
         "quality_gate.py",
         "check_contract.py",
-        "lint_todo.py"
+        "lint_todo.py",
+        "bootstrap_invariants.py",
+        "check_plan_freshness.py",
+        "logger.py",
+        "run_test_suite.py",
+        "scan_docs.py",
+        "slack_notify.py",
+        "verify_tests.py"
       ],
       "hooks": ["pre-commit", "commit-msg", "pre-push"],
       "commands": [
         "stand-up.md", "crack-on.md", "wrap.md", "sitrep.md",
-        "review.md", "agent-verify.md", "snagging.md", "audit.md"
+        "review.md", "agent-verify.md", "snagging.md", "audit.md",
+        "agent-launch.md", "agent-status.md", "code-trace.md",
+        "codemap.md", "commands.md", "diff-review.md", "doe-health.md",
+        "eod.md", "fact-check.md", "generate-slides.md",
+        "generate-visual-plan.md", "generate-web-diagram.md", "hq.md",
+        "pitch.md", "plan-review.md", "project-recap.md",
+        "pull-doe.md", "report-doe-bug.md", "request-doe-feature.md",
+        "roast.md", "scope.md", "sync-doe.md", "test-suite.md"
       ],
       "github": [
         "workflows/doe-ci.yml",

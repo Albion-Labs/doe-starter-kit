@@ -735,6 +735,16 @@ def install_layer_files(config, kit_dir, project_dir):
     if script_count:
         rows.append(line(f"~/.claude/scripts/ ({script_count}) .......... done"))
 
+    # 11. Universal CLAUDE.md -> ~/.claude/CLAUDE.md (first-time only)
+    global_claude_md = Path.home() / ".claude" / "CLAUDE.md"
+    if not global_claude_md.exists():
+        src = kit_dir / "universal-claude-md-template.md"
+        if src.exists():
+            global_claude_md.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, global_claude_md)
+            total += 1
+            rows.append(line("~/.claude/CLAUDE.md ................ done"))
+
     rows.append(sep())
     rows.append(line(f"{total} files installed"))
     rows.append(bot())
