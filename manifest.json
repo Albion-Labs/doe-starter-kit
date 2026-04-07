@@ -119,7 +119,6 @@
     {"situation": "[APP] feature", "directive": "chrome-verification.md", "layer": "public_facing"},
     {"situation": "Data safety / handling", "directive": "data-safety.md", "layer": "data_handling"},
     {"situation": "Personal data features", "directive": "data-compliance.md", "layer": "regulated"},
-    {"situation": "Dataset or legal position change", "directive": "documentation-governance.md", "layer": "regulated"},
-    {"situation": "Legal (email, donations, content)", "directive": "documentation-governance.md", "layer": "regulated"}
+    {"situation": "Dataset or legal position change", "directive": "documentation-governance.md", "layer": "regulated"}
   ]
 }

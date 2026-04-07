@@ -95,7 +95,6 @@ When spawning the Finder for a mid-feature gate, pass it:
 
 ## Build-Phase Triggers
 These triggers apply during building (absorbed from the original CLAUDE.md trigger table):
-- Editing `src/` or scripts that write to `src/data/` -> run `python3 execution/build.py` to rebuild HTML
 - Creating a new execution script -> check `execution/` for reusable patterns, review `learnings.md` ## Execution Script Gotchas
 - Completing a data-layer step -> run `/code-trace`. Announce: "Data-layer step -- running code trace."
 - Completing a UI step -> run `npx playwright test` on affected pages. Announce: "Running browser tests."
@@ -107,8 +106,8 @@ For any backend or API code, use structured JSON logging rather than unstructure
 
 ## Data Integrity Testing
 When building features that process or display data, add data integrity checks:
-- Validate data codes (e.g. PCON24 codes are real constituency codes)
-- Check numeric sums (e.g. vote shares sum to ~100%)
+- Validate data codes (e.g. category IDs exist in lookup tables)
+- Check numeric sums (e.g. percentages sum to ~100%)
 - Verify no NaN/null in required numeric fields
 - Check no orphan codes (references to entities that don't exist)
 

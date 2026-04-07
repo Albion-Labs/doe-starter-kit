@@ -7,6 +7,13 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.53.1 (2026-04-07)
+
+### Fixed
+- **building-rules.md: monty-specific content** -- removed `execution/build.py` trigger (project-specific), replaced "PCON24 constituency codes" and "vote shares" examples with generic equivalents.
+- **20_structure.md: phantom CHANGELOG.md** -- removed CHANGELOG.md from directory structure listing since `doe init` doesn't create it.
+- **manifest.json: bad legal trigger** -- removed "Legal (email, donations, content)" trigger that pointed to documentation-governance.md (a document-versioning directive, not legal guidance).
+
 ## v1.53.0 (2026-04-07)
 
 ### Added
