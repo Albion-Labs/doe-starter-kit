@@ -274,16 +274,15 @@ if [ "${SKIP_RETRO_GATE:-0}" != "1" ]; then
 fi
 
 # ─── Pending PRs sync check (blocks stale, warns missing) ───
-# Validates ## Pending PRs in todo.md against `gh pr list`.
+# Validates ## Pending PRs in todo.md against `gh pr list` on EVERY commit.
+# Runs unconditionally because PR state changes externally (gh pr merge)
+# without touching todo.md — gating on TODO_STAGED misses those cases.
 # Skip with: SKIP_PENDING_PR_CHECK=1 git commit ...
 
 if [ "${SKIP_PENDING_PR_CHECK:-0}" != "1" ]; then
-    TODO_STAGED=$(echo "$STAGED_FILES" | grep -c "tasks/todo.md" || true)
-    if [ "$TODO_STAGED" -gt "0" ]; then
-        python3 execution/check_pending_prs.py 2>&1
-        if [ $? -ne 0 ]; then
-            exit 1
-        fi
+    python3 execution/check_pending_prs.py 2>&1
+    if [ $? -ne 0 ]; then
+        exit 1
     fi
 fi
 
