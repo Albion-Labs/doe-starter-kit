@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Structural linter for tasks/todo.md.
 
-Validates four rules in ## Current and ## Queue:
+Validates five rules in ## Current and ## Queue:
 1. Every numbered step has a Contract: block
 2. Every feature's last numbered step is Retro
 3. [APP] features have at least one [manual] criterion
 4. Completed features (all steps [x]) must not remain in ## Current
+5. Completed features with unchecked [manual] must go to Awaiting Sign-off (not Done)
 
 Called by pre-commit hook when todo.md is staged.
 Skip with: SKIP_TODO_LINT=1
@@ -36,6 +37,7 @@ def lint_todo(path="tasks/todo.md"):
     feature_line = 0
     feature_is_app = False
     feature_has_manual = False
+    feature_unchecked_manual = 0
     steps = []  # (line_num, name, has_contract)
     pending_step = None  # (line_num, name) waiting for Contract:
     step_done_count = 0
@@ -65,13 +67,21 @@ def lint_todo(path="tasks/todo.md"):
             short = feature_name[:50]
             errors.append(f"Line {feature_line}: [APP] '{short}' has no [manual] criterion")
 
-        # Rule 4: completed features must not stay in Current
+        # Rule 4+5: completed features must not stay in Current, and must
+        # go to the RIGHT section based on unchecked [manual] items
         if current_section == "Current" and step_total_count > 0 and step_done_count == step_total_count:
             short = feature_name[:50]
-            errors.append(
-                f"Line {feature_line}: '{short}' -- all {step_total_count} steps complete "
-                f"but still in ## Current. Move to ## Awaiting Sign-off or ## Done."
-            )
+            if feature_unchecked_manual > 0:
+                errors.append(
+                    f"Line {feature_line}: '{short}' -- all {step_total_count} steps complete "
+                    f"with {feature_unchecked_manual} unchecked [manual] item(s). "
+                    f"Move to ## Awaiting Sign-off (not ## Done)."
+                )
+            else:
+                errors.append(
+                    f"Line {feature_line}: '{short}' -- all {step_total_count} steps complete "
+                    f"but still in ## Current. Move to ## Done."
+                )
 
     for i, line in enumerate(lines, 1):
         stripped = line.strip()
@@ -103,6 +113,7 @@ def lint_todo(path="tasks/todo.md"):
             feature_line = i
             feature_is_app = "[APP]" in feature_name
             feature_has_manual = False
+            feature_unchecked_manual = 0
             steps = []
             step_done_count = 0
             step_total_count = 0
@@ -128,6 +139,8 @@ def lint_todo(path="tasks/todo.md"):
 
         if "[manual]" in stripped:
             feature_has_manual = True
+            if "[ ] [manual]" in stripped:
+                feature_unchecked_manual += 1
 
     flush_feature()
     return errors
