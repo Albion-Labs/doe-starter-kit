@@ -7,6 +7,11 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.52.11 (2026-04-07)
+
+### Fixed
+- **todo.md template: missing sections** — added `## Awaiting Sign-off` and `## Pending PRs` sections with format rule documentation. These existed in mature projects but were never in the kit template, so fresh inits lacked them.
+
 ## v1.52.10 (2026-04-07)
 
 ### Fixed
