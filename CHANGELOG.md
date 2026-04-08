@@ -93,6 +93,9 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 ---
 
 ## v1.52.0 (2026-04-02)
+<!-- hero -->
+DOE becomes a conversation, not a copy-paste. The init wizard replaces blind setup.sh with an 8-card interactive flow that detects your framework, asks what you're building, and scaffolds a project with exactly the files you need. Composable capability layers (universal, public-facing, data-handling, regulated) mean a static HTML site and a GDPR-regulated SaaS app both start from the same wizard — they just get different files.
+<!-- /hero -->
 
 ### Added
 - **DOE Init Wizard** (`execution/doe_init.py`) — conversational scaffolding tool replacing blind setup.sh copy. 8-card bordered UX, framework auto-detection, composable CLAUDE.md generation, additive capability layers (universal, public-facing, data-handling, regulated). Supports Next.js, Vite, Python, Go, Flutter, static HTML.
@@ -139,6 +142,9 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 - **Wrap mid-feature branch handling** (`wrap.md`) — Step 0 rewritten: mid-feature sessions stay on the feature branch, wrap data commits directly to it. No separate housekeeping branch or PR. Step 1 no longer suggests creating PRs mid-feature.
 
 ## v1.51.4 (2026-04-01)
+<!-- hero -->
+Professional security defaults for every DOE project. Review gates block PR creation without adversarial review proof-of-work. Step-marking enforcement ensures todo.md tracks progress mechanically. Slack notifications, integrations directive, and sync audit self-tests round out the release. The principle: deterministic enforcement beats probabilistic rules.
+<!-- /hero -->
 
 ### Added
 - **Review gate hook** (`enforce_review_gate.py`) — blocks PR creation without Finder subagent proof-of-work
@@ -191,6 +197,9 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
   - Pre-retro gate — blocks retro commit without methodology pass (`SKIP_RETRO_GATE=1`)
 
 ## v1.49.0 (2026-04-01)
+<!-- hero -->
+The biggest structural change in DOE history. CLAUDE.md was rewritten from a 113-line inline rulebook into a 55-line thin router that loads directives on demand. Every token of irrelevant context degrades agent performance — this release operationalises that principle. Six phase-based directives now handle planning, building, delivery, context management, self-annealing, and framework evolution. A DAG executor enables parallel step dispatch, and custom adversarial review agents (Finder, Adversarial, Referee) provide structured multi-agent code review.
+<!-- /hero -->
 
 ### Added
 - **Phase-based directives** — 6 new directives extracted from CLAUDE.md: `planning-rules.md`, `building-rules.md`, `delivery-rules.md`, `context-management.md`, `self-annealing.md`, `framework-evolution.md`
@@ -211,6 +220,9 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 - **test_methodology.py** — `--scenario` flag now accepts multiple values (`action="append"`)
 
 ## v1.48.0 (2026-03-31)
+<!-- hero -->
+Superpowers-inspired discipline enforcement for AI agents. Rationalisation tables map every common excuse for skipping guardrails to reality across 6 domains. Serial dispatch protocol (SDD) provides a structured workflow for sequential step execution. Adversarial review with confidence-scored findings, universal CI pipeline with three tiers, and 9 updated session commands complete the Agent Discipline era.
+<!-- /hero -->
 
 ### Added
 - **Agent Discipline directives** — rationalisation tables (6 domains, excuse-reality format), serial dispatch protocol (SDD workflow with decision tree), subagent status protocol (DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED)
@@ -289,6 +301,9 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 ---
 
 ## [v1.42.0] — 2026-03-18
+<!-- hero -->
+Quality Stack goes universal. Testing infrastructure now auto-detects and supports 16 project types — from Next.js to Flutter to Go. Maestro handles mobile UI testing with YAML flows. Framework-aware orchestration, multi-language health checks, and config-driven portability mean the same /snagging command works regardless of what you're building.
+<!-- /hero -->
 
 ### Added
 - **Multi-framework testing** — Quality Stack now supports 16 project types: static HTML, Next.js, Vite/React, Angular, Nuxt, Vue, SvelteKit, Remix, Astro, React Native, Expo, Flutter, Python, Go, PHP/Laravel, and Ruby/Rails. Auto-detects framework from project files and configures testing accordingly.
