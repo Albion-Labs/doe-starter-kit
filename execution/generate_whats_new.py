@@ -28,6 +28,27 @@ MONTHS = {
 EXPANDED_COUNT = 5
 
 
+def get_kit_version():
+    """Get the current kit version from the latest git tag or first CHANGELOG entry."""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            capture_output=True, text=True, cwd=str(KIT_ROOT),
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except FileNotFoundError:
+        pass
+    # Fallback: parse first version from CHANGELOG
+    if CHANGELOG.exists():
+        for line in CHANGELOG.read_text(encoding="utf-8").split("\n"):
+            m = re.match(r"^##\s+\[?(v[\d.]+)\]?", line)
+            if m:
+                return m.group(1)
+    return "v0.0.0"
+
+
 def parse_changelog(text):
     """Parse CHANGELOG.md into a list of version entries."""
     entries = []
@@ -211,6 +232,8 @@ def render_entries(entries):
 def generate_page(entries):
     """Generate the full HTML page."""
     content = render_entries(entries)
+    kit_version = get_kit_version()
+    total = len(entries)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1007,7 +1030,7 @@ def generate_page(entries):
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.54.2</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">{kit_version}</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -1092,7 +1115,7 @@ def generate_page(entries):
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.54.2</footer>
+        <footer class="site-footer">DOE Starter Kit {kit_version}</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
