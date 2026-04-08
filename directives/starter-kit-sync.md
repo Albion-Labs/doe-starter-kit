@@ -157,8 +157,8 @@ Before committing, update `CHANGELOG.md`:
 ### Step 10: Commit, tag, and push
 ```bash
 cd ~/doe-starter-kit
-python3 ~/doe-starter-kit/execution/stamp_tutorial_version.py v[X.Y.Z]
 python3 ~/doe-starter-kit/execution/generate_whats_new.py
+python3 ~/doe-starter-kit/execution/stamp_tutorial_version.py v[X.Y.Z]
 git add -A
 git diff --staged --stat
 # Show diff, wait for sign-off
