@@ -7,6 +7,17 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.55.4 (2026-04-08)
+<!-- hero -->
+Closes the hook installation gap that left migrating projects without critical safety hooks. setup.sh now installs all 9 project hooks, 4 agent definitions, and plan files when run inside a DOE project. The settings.json merge handles both PreToolUse and PostToolUse entries additively — existing project-specific hooks are preserved. Users running /pull-doe will now get the complete hook set automatically.
+<!-- /hero -->
+
+### Fixed
+- **setup.sh: project hooks** — now copies all 9 `.claude/hooks/*.py` files to the project when run inside a DOE project (was only installing 2 global hooks). Includes block_dangerous_commands, block_secrets_in_code, protect_directives, guard_kit_writes, enforce_review_gate, confirm_pr_merge, check_plan_freshness, copy_plan_to_project, check_completed_feature.
+- **setup.sh: settings.json merge** — now merges ALL hook registrations (PreToolUse + PostToolUse) from kit template into project settings.json additively. Previously only merged 2 PostToolUse entries globally. Preserves project-specific hooks.
+- **setup.sh: agent definitions** — now copies `.claude/agents/` (Finder, Adversarial, Referee, ReadOnly) to projects that don't have them.
+- **setup.sh: plan files** — now copies `.claude/plans/` files (multi-agent-coordination.md) to projects that don't have them.
+
 ## v1.55.3 (2026-04-08)
 
 ### Fixed

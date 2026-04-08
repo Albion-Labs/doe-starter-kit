@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.3</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.4</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -869,6 +869,21 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-55-4">
+          <div class="release-header">
+            <span class="version-badge">v1.55.4</span>
+            <span class="release-date">8 April 2026</span>
+          </div>
+          <p class="release-hero">Closes the hook installation gap that left migrating projects without critical safety hooks. setup.sh now installs all 9 project hooks, 4 agent definitions, and plan files when run inside a DOE project. The settings.json merge handles both PreToolUse and PostToolUse entries additively — existing project-specific hooks are preserved. Users running /pull-doe will now get the complete hook set automatically.</p>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong>setup.sh: project hooks</strong> — now copies all 9 <code>.claude/hooks/*.py</code> files to the project when run inside a DOE project (was only installing 2 global hooks). Includes block_dangerous_commands, block_secrets_in_code, protect_directives, guard_kit_writes, enforce_review_gate, confirm_pr_merge, check_plan_freshness, copy_plan_to_project, check_completed_feature.</li>
+            <li><strong>setup.sh: settings.json merge</strong> — now merges ALL hook registrations (PreToolUse + PostToolUse) from kit template into project settings.json additively. Previously only merged 2 PostToolUse entries globally. Preserves project-specific hooks.</li>
+            <li><strong>setup.sh: agent definitions</strong> — now copies <code>.claude/agents/</code> (Finder, Adversarial, Referee, ReadOnly) to projects that don&#x27;t have them.</li>
+            <li><strong>setup.sh: plan files</strong> — now copies <code>.claude/plans/</code> files (multi-agent-coordination.md) to projects that don&#x27;t have them.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-55-3">
           <div class="release-header">
             <span class="version-badge">v1.55.3</span>
@@ -943,6 +958,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (15 releases)</summary>
+
         <div class="release" id="v1-54-0">
           <div class="release-header">
             <span class="version-badge">v1.54.0</span>
@@ -971,10 +990,6 @@
             <li><strong>Test suite</strong> &mdash; 356 checks (was 142). 6 new tests: _other framework, _other project type, platform targets, new project types, registry regression guard, registry consistency.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (14 releases)</summary>
 
         <div class="release release-compact" id="v1-53-1">
           <div class="release-header">
@@ -3136,7 +3151,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.55.3</footer>
+        <footer class="site-footer">DOE Starter Kit v1.55.4</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

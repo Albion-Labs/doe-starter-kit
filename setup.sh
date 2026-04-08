@@ -53,6 +53,45 @@ for f in "$HOOKS_SRC"/*.py; do
     HOOK_COUNT=$((HOOK_COUNT + 1))
 done
 
+# 2b. Install project hooks (if in a DOE project)
+PROJECT_HOOK_COUNT=0
+if [ -f "CLAUDE.md" ] && [ -d "$SCRIPT_DIR/.claude/hooks" ]; then
+    mkdir -p .claude/hooks
+    for f in "$SCRIPT_DIR"/.claude/hooks/*.py; do
+        [ -f "$f" ] || continue
+        fname=$(basename "$f")
+        # Always update from kit (kit is authoritative for DOE hooks)
+        cp -f "$f" ".claude/hooks/$fname"
+        PROJECT_HOOK_COUNT=$((PROJECT_HOOK_COUNT + 1))
+    done
+fi
+
+# 2c. Install project plans (if in a DOE project, only missing files)
+PROJECT_PLAN_COUNT=0
+if [ -f "CLAUDE.md" ] && [ -d "$SCRIPT_DIR/.claude/plans" ]; then
+    mkdir -p .claude/plans
+    for f in "$SCRIPT_DIR"/.claude/plans/*.md; do
+        [ -f "$f" ] || continue
+        fname=$(basename "$f")
+        if [ ! -f ".claude/plans/$fname" ]; then
+            cp "$f" ".claude/plans/$fname"
+            PROJECT_PLAN_COUNT=$((PROJECT_PLAN_COUNT + 1))
+        fi
+    done
+fi
+
+# 2d. Install project agents (if in a DOE project)
+PROJECT_AGENT_COUNT=0
+if [ -f "CLAUDE.md" ] && [ -d "$SCRIPT_DIR/.claude/agents" ]; then
+    mkdir -p .claude/agents
+    for f in "$SCRIPT_DIR"/.claude/agents/*.md; do
+        [ -f "$f" ] || continue
+        fname=$(basename "$f")
+        cp -f "$f" ".claude/agents/$fname"
+        PROJECT_AGENT_COUNT=$((PROJECT_AGENT_COUNT + 1))
+    done
+fi
+
 # 3. Install global scripts
 mkdir -p "$SCRIPTS_DST"
 SCRIPT_COUNT=0
@@ -62,7 +101,7 @@ for f in "$SCRIPTS_SRC"/*.py; do
     SCRIPT_COUNT=$((SCRIPT_COUNT + 1))
 done
 
-# 4. Merge PostToolUse hooks into ~/.claude/settings.json
+# 4a. Merge global hooks into ~/.claude/settings.json
 python3 -c "
 import json
 from pathlib import Path
@@ -78,44 +117,98 @@ if settings_path.exists():
 hooks = settings.setdefault('hooks', {})
 post_hooks = hooks.get('PostToolUse', [])
 
-# The hooks we want installed (global paths)
 GLOBAL_HOOKS = [
     {
         'hooks': [
-            {
-                'type': 'command',
-                'command': 'python3 ~/.claude/hooks/heartbeat.py',
-                'description': 'Update session heartbeat during active waves',
-            },
-            {
-                'type': 'command',
-                'command': 'python3 ~/.claude/hooks/context_monitor.py',
-                'description': 'Warn at 60% context usage, stop at 80%',
-            },
+            {'type': 'command', 'command': 'python3 ~/.claude/hooks/heartbeat.py',
+             'description': 'Update session heartbeat during active waves'},
+            {'type': 'command', 'command': 'python3 ~/.claude/hooks/context_monitor.py',
+             'description': 'Warn at 60% context usage, stop at 80%'},
         ]
     }
 ]
 
-# Check if our global hooks are already present (by command string)
 global_cmds = {h['command'] for entry in GLOBAL_HOOKS for h in entry.get('hooks', [])}
 existing_cmds = {h.get('command', '') for entry in post_hooks for h in entry.get('hooks', [])}
 
 if not global_cmds.issubset(existing_cmds):
-    # Remove any old entries matching our commands, then append fresh
-    cleaned = []
-    for entry in post_hooks:
-        entry_hooks = [h for h in entry.get('hooks', []) if h.get('command', '') not in global_cmds]
-        if entry_hooks:
-            entry['hooks'] = entry_hooks
-            cleaned.append(entry)
+    cleaned = [e for e in post_hooks if not any(h.get('command', '') in global_cmds for h in e.get('hooks', []))]
     cleaned.extend(GLOBAL_HOOKS)
     hooks['PostToolUse'] = cleaned
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     settings_path.write_text(json.dumps(settings, indent=2) + '\n')
-    print('  ✓ PostToolUse hooks merged into settings.json')
+    print('  ✓ Global hooks merged into ~/.claude/settings.json')
 else:
-    print('  ✓ PostToolUse hooks already present in settings.json')
+    print('  ✓ Global hooks already present in ~/.claude/settings.json')
 "
+
+# 4b. Merge project hooks into PROJECT/.claude/settings.json (if in a DOE project)
+if [ -f "CLAUDE.md" ] && [ -f "$SCRIPT_DIR/.claude/settings.json" ]; then
+    python3 -c "
+import json
+from pathlib import Path
+
+kit_settings = json.loads(Path('$SCRIPT_DIR/.claude/settings.json').read_text())
+project_path = Path('.claude/settings.json')
+project = {}
+if project_path.exists():
+    try:
+        project = json.loads(project_path.read_text())
+    except json.JSONDecodeError:
+        pass
+
+# For each hook type (PreToolUse, PostToolUse), merge kit entries
+# Strategy: collect all unique commands from both kit and project
+kit_hooks = kit_settings.get('hooks', {})
+proj_hooks = project.setdefault('hooks', {})
+changed = False
+
+for hook_type in ('PreToolUse', 'PostToolUse'):
+    kit_entries = kit_hooks.get(hook_type, [])
+    proj_entries = proj_hooks.get(hook_type, [])
+
+    # Collect all commands already in project
+    existing_cmds = set()
+    for entry in proj_entries:
+        for h in entry.get('hooks', []):
+            existing_cmds.add(h.get('command', ''))
+
+    # Add any kit commands that are missing from project
+    for kit_entry in kit_entries:
+        new_hooks = []
+        for h in kit_entry.get('hooks', []):
+            if h.get('command', '') not in existing_cmds:
+                new_hooks.append(h)
+                existing_cmds.add(h['command'])
+        if new_hooks:
+            # Find matching matcher entry or create new one
+            matcher = kit_entry.get('matcher', '')
+            matched_entry = None
+            for pe in proj_entries:
+                if pe.get('matcher', '') == matcher:
+                    matched_entry = pe
+                    break
+            if matched_entry:
+                matched_entry['hooks'].extend(new_hooks)
+            else:
+                proj_entries.append({'matcher': matcher, 'hooks': new_hooks})
+            changed = True
+
+    proj_hooks[hook_type] = proj_entries
+
+# Preserve other settings (plugins, etc)
+for k, v in kit_settings.items():
+    if k != 'hooks' and k not in project:
+        project[k] = v
+
+if changed:
+    project_path.parent.mkdir(parents=True, exist_ok=True)
+    project_path.write_text(json.dumps(project, indent=2) + '\n')
+    print('  ✓ Project hooks merged into .claude/settings.json')
+else:
+    print('  ✓ Project hooks already up to date in .claude/settings.json')
+"
+fi
 
 # 5. Copy universal CLAUDE.md template (only if user doesn't have one)
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
@@ -243,8 +336,17 @@ fi
 # 11. Summary
 echo ""
 echo "✓ $COMMAND_COUNT commands installed to ~/.claude/commands/"
-echo "✓ $HOOK_COUNT hooks installed to ~/.claude/hooks/"
+echo "✓ $HOOK_COUNT global hooks installed to ~/.claude/hooks/"
 echo "✓ $SCRIPT_COUNT scripts installed to ~/.claude/scripts/"
+if [ "$PROJECT_HOOK_COUNT" -gt 0 ]; then
+    echo "✓ $PROJECT_HOOK_COUNT project hooks installed to .claude/hooks/"
+fi
+if [ "$PROJECT_PLAN_COUNT" -gt 0 ]; then
+    echo "✓ $PROJECT_PLAN_COUNT plan files installed to .claude/plans/"
+fi
+if [ "$PROJECT_AGENT_COUNT" -gt 0 ]; then
+    echo "✓ $PROJECT_AGENT_COUNT agent definitions installed to .claude/agents/"
+fi
 echo "✓ DOE Kit $KIT_VERSION installed ($TODAY)"
 echo ""
 echo "Ready — run claude and type /stand-up"
