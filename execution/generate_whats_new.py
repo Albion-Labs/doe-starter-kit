@@ -145,8 +145,12 @@ def render_entry(entry):
     vid = version_to_id(entry["version"])
     date_fmt = format_date(entry["date"])
     v = html.escape(entry["version"])
+    # Count total items across all subsections
+    total_items = sum(len(items) for _, items in entry["subsections"])
+    is_compact = total_items <= 3 and not entry["hero"]
+    css_class = "release release-compact" if is_compact else "release"
     parts = []
-    parts.append(f'        <div class="release" id="{vid}">')
+    parts.append(f'        <div class="{css_class}" id="{vid}">')
     parts.append(f'          <div class="release-header">')
     parts.append(f'            <span class="version-badge">{v}</span>')
     parts.append(f'            <span class="release-date">{date_fmt}</span>')
@@ -241,7 +245,7 @@ def generate_page(entries):
       --accent-rose: #F43F5E;
       --sidebar-w: 260px;
       --toc-w: 220px;
-      --content-max: 720px;
+      --content-max: 840px;
       --radius: 8px;
       --radius-lg: 12px;
       --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
@@ -825,11 +829,11 @@ def generate_page(entries):
     .version-badge {{
       display: inline-block;
       font-family: var(--font-mono);
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 15px;
+      font-weight: 700;
       background: var(--accent-light);
       color: var(--accent);
-      padding: 4px 12px;
+      padding: 5px 14px;
       border-radius: 20px;
       letter-spacing: -0.01em;
     }}
@@ -839,49 +843,83 @@ def generate_page(entries):
       margin-left: 12px;
     }}
     .release-hero {{
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text-secondary);
-      line-height: 1.7;
-      margin: 12px 0 16px;
-      padding: 16px 20px;
+      line-height: 1.65;
+      margin: 10px 0 14px;
+      padding: 14px 18px;
       background: linear-gradient(135deg, var(--accent-light), var(--bg-card));
       border-left: 3px solid var(--accent);
       border-radius: 0 var(--radius) var(--radius) 0;
     }}
     .release {{
-      margin-bottom: 32px;
-      padding-bottom: 24px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
       border-bottom: 1px solid var(--border);
     }}
     .release-header {{
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }}
     .release h4 {{
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
       color: var(--accent-green);
-      margin: 16px 0 8px;
+      margin: 10px 0 4px;
     }}
     .release h4.changed {{ color: var(--accent-blue); }}
     .release h4.fixed {{ color: var(--accent-amber); }}
     .release h4.removed {{ color: var(--accent-rose); }}
+    .release h4.docs {{ color: var(--text-muted); }}
     .release ul {{
-      margin: 0 0 8px 20px;
+      margin: 0 0 4px 18px;
       padding: 0;
     }}
     .release li {{
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text-secondary);
-      margin-bottom: 4px;
-      line-height: 1.6;
+      margin-bottom: 2px;
+      line-height: 1.55;
+    }}
+    .release li strong {{
+      color: var(--text-primary);
+      font-size: 13px;
+    }}
+    /* Description after the bold title is de-emphasised */
+    .release li {{
+      color: var(--text-muted);
+    }}
+    .release li strong {{
+      color: var(--text-primary);
     }}
     .release li code {{
-      font-size: 12px;
-      padding: 1px 5px;
+      font-size: 11px;
+      padding: 1px 4px;
+      color: var(--text-muted);
+      background: var(--border-light);
+      border-color: transparent;
+    }}
+    [data-theme="dark"] .release li code {{
+      background: var(--bg-code);
+      border-color: transparent;
+    }}
+    /* Patch releases (few items) get compact treatment */
+    .release-compact {{
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+    }}
+    .release-compact .release-header {{
+      margin-bottom: 4px;
+    }}
+    .release-compact h4 {{
+      margin: 6px 0 2px;
+    }}
+    .release-compact .version-badge {{
+      font-size: 13px;
+      padding: 3px 10px;
     }}
 
     /* -- Tag badges -- */
@@ -943,10 +981,13 @@ def generate_page(entries):
     .month-group summary:hover {{ background: var(--bg-card-hover); }}
     .month-group .release {{
       margin: 0;
-      padding: 20px 24px;
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border);
     }}
     .month-group .release:last-child {{ border-bottom: none; }}
+    .month-group .release-compact {{
+      padding: 10px 20px;
+    }}
   </style>
 </head>
 <body>
