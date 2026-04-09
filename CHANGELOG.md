@@ -7,6 +7,18 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.55.6 (2026-04-09)
+<!-- hero -->
+Tutorial version now pulls from a single source of truth (`kit-version.js`). All 20 pages load one JS file instead of relying on 20 separate HTML stamps. Stamp script updated to write kit-version.js first, HTML fallback second. Version can never go out of sync across pages again.
+<!-- /hero -->
+
+### Added
+- **docs/tutorial/kit-version.js** — single source of truth for version displayed across all tutorial pages. Updates sidebar, hero badge, and footer via DOM injection.
+- **`<script src="kit-version.js">`** injected into all 20 tutorial HTML pages before `</body>`.
+
+### Changed
+- **stamp_tutorial_version.py** — now updates kit-version.js as primary source, HTML patterns as no-JS fallback. Creates kit-version.js if missing.
+
 ## v1.55.5 (2026-04-09)
 <!-- hero -->
 CLAUDE.md quality scoring rewritten to be framework-agnostic. The rubric now scores DOE methodology compliance (architecture, triggers, commands, gotchas) instead of matching hardcoded tool names. Any tech stack scores fairly. Kit template CLAUDE.md updated with universal Common Commands and Gotchas sections.

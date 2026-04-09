@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.4</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.5</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -869,6 +869,23 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-55-6">
+          <div class="release-header">
+            <span class="version-badge">v1.55.6</span>
+            <span class="release-date">9 April 2026</span>
+          </div>
+          <p class="release-hero">Tutorial version now pulls from a single source of truth (<code>kit-version.js</code>). All 20 pages load one JS file instead of relying on 20 separate HTML stamps. Stamp script updated to write kit-version.js first, HTML fallback second. Version can never go out of sync across pages again.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong>docs/tutorial/kit-version.js</strong> — single source of truth for version displayed across all tutorial pages. Updates sidebar, hero badge, and footer via DOM injection.</li>
+            <li><strong><code>&lt;script src=&quot;kit-version.js&quot;&gt;</code></strong> injected into all 20 tutorial HTML pages before <code>&lt;/body&gt;</code>.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong>stamp_tutorial_version.py</strong> — now updates kit-version.js as primary source, HTML patterns as no-JS fallback. Creates kit-version.js if missing.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-55-5">
           <div class="release-header">
             <span class="version-badge">v1.55.5</span>
@@ -932,6 +949,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (17 releases)</summary>
+
         <div class="release release-compact" id="v1-55-1">
           <div class="release-header">
             <span class="version-badge">v1.55.1</span>
@@ -946,10 +967,6 @@
             <li><strong>Completed-feature warning hook</strong> (<code>check_completed_feature.py</code>) — PostToolUse hook fires after any edit to todo.md. Warns immediately when all steps in ## Current are [x] but feature not moved to Done/Awaiting Sign-off.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (16 releases)</summary>
 
         <div class="release" id="v1-55-0">
           <div class="release-header">
@@ -3168,7 +3185,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.55.4</footer>
+        <footer class="site-footer">DOE Starter Kit v1.55.5</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

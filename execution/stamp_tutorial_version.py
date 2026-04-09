@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Stamp tutorial HTML files with a new DOE Starter Kit version number."""
+"""Stamp tutorial HTML files with a new DOE Starter Kit version number.
+
+Primary source of truth: docs/tutorial/kit-version.js (one file, all pages load it).
+Fallback: also stamps hardcoded version strings in HTML for no-JS environments.
+"""
 
 import argparse
 import re
@@ -8,7 +12,7 @@ from pathlib import Path
 
 
 def stamp_version(version: str, root: Path) -> tuple[int, int]:
-    """Replace version strings in all tutorial HTML files.
+    """Replace version strings in kit-version.js and all tutorial HTML files.
 
     Returns (files_updated, total_replacements).
     """
@@ -17,10 +21,43 @@ def stamp_version(version: str, root: Path) -> tuple[int, int]:
         print(f"Error: tutorial directory not found: {tutorial_dir}", file=sys.stderr)
         sys.exit(1)
 
+    files_updated = 0
+    total_replacements = 0
+
+    # ── Primary: update kit-version.js (single source of truth) ──
+    version_js = tutorial_dir / "kit-version.js"
+    if version_js.exists():
+        original = version_js.read_text(encoding="utf-8")
+        updated = re.sub(r"var VERSION = '[^']+';", f"var VERSION = '{version}';", original)
+        if updated != original:
+            version_js.write_text(updated, encoding="utf-8")
+            files_updated += 1
+            total_replacements += 1
+    else:
+        print(f"Warning: {version_js} not found — creating it", file=sys.stderr)
+        version_js.write_text(
+            f"// Single source of truth for DOE Starter Kit version across all tutorial pages.\n"
+            f"// Updated by: python3 execution/stamp_tutorial_version.py vX.Y.Z\n"
+            f"(function () {{\n"
+            f"  var VERSION = '{version}';\n"
+            f"  document.querySelectorAll('.sidebar-version').forEach(function (el) {{ el.textContent = VERSION; }});\n"
+            f"  document.querySelectorAll('.hero-badge').forEach(function (el) {{\n"
+            f"    el.textContent = el.textContent.replace(/v\\d+\\.\\d+\\.\\d+/, VERSION);\n"
+            f"  }});\n"
+            f"  document.querySelectorAll('.site-footer').forEach(function (el) {{\n"
+            f"    el.textContent = el.textContent.replace(/v\\d+\\.\\d+\\.\\d+/, VERSION);\n"
+            f"  }});\n"
+            f"}})();\n",
+            encoding="utf-8",
+        )
+        files_updated += 1
+        total_replacements += 1
+
+    # ── Fallback: stamp HTML files for no-JS environments ──
     html_files = list(tutorial_dir.glob("*.html"))
     if not html_files:
         print(f"Warning: no HTML files found in {tutorial_dir}")
-        return 0, 0
+        return files_updated, total_replacements
 
     patterns = [
         # Footer and hero badge: "DOE Starter Kit v1.2.3"
@@ -31,16 +68,12 @@ def stamp_version(version: str, root: Path) -> tuple[int, int]:
         (re.compile(r"latest: v\d+\.\d+\.\d+"), f"latest: {version}"),
     ]
 
-    files_updated = 0
-    total_replacements = 0
-
     for html_file in sorted(html_files):
         original = html_file.read_text(encoding="utf-8")
         updated = original
         file_replacements = 0
 
         for pattern, replacement in patterns:
-            # Count only matches whose text will actually change
             for m in pattern.finditer(updated):
                 if m.group() != replacement:
                     file_replacements += 1
