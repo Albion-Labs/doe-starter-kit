@@ -426,7 +426,13 @@ def scenario_status_protocol_compliance(verbose: bool = False):
 # ════════════════════════════════════════════════════════════
 
 def scenario_claude_md_quality(verbose: bool = False):
-    """Score CLAUDE.md against a 6-criteria quality rubric."""
+    """Score CLAUDE.md against a DOE methodology quality rubric.
+
+    Two-tier scoring: DOE Methodology (60 pts) checks structural compliance
+    with DOE principles; Content Quality (40 pts) checks that the content is
+    useful regardless of language or framework.  All checks are structural --
+    no hardcoded tool names -- so any tech stack scores fairly.
+    """
     claude_md = PROJECT_ROOT / "CLAUDE.md"
     vlines = []
 
@@ -437,69 +443,146 @@ def scenario_claude_md_quality(verbose: bool = False):
     lines = text.splitlines()
     total_lines = len(lines)
 
+    # Extract code blocks once for reuse
+    code_blocks = re.findall(r"```[^\n]*\n(.*?)```", text, re.DOTALL)
+
     scores = {}
 
-    # 1. Commands/workflows (20 pts): framework-aware command patterns
-    # Universal DOE commands (every project uses git, python3 for scripts, gh for PRs)
-    cmd_patterns = [r"\bgit\b", r"\bpython3\b", r"gh\s+pr"]
-    # Framework-specific commands from tests/config.json
-    config_path = PROJECT_ROOT / "tests" / "config.json"
-    project_type = "html-app"
-    if config_path.exists():
-        try:
-            import json as _json
-            project_type = _json.loads(config_path.read_text()).get("projectType", "html-app")
-        except (ValueError, OSError):
-            pass
-    _fw_patterns = {
-        "nextjs":  [r"\bnpm\b", r"\bnpx\b"],
-        "vite":    [r"\bnpm\b", r"\bnpx\b"],
-        "html-app": [r"\bpytest\b", r"\bverify\.py\b"],
-        "python":  [r"\bpytest\b", r"\bruff\b"],
-        "go":      [r"\bgo\s+(test|build|vet)\b"],
-        "flutter": [r"\bflutter\b"],
-    }
-    cmd_patterns.extend(_fw_patterns.get(project_type, [r"\bpytest\b"]))
-    cmd_hits = sum(1 for p in cmd_patterns if re.search(p, text))
-    scores["Commands/workflows"] = (cmd_hits / len(cmd_patterns)) * 20
+    # ── Tier 1: DOE Methodology (60 pts) ──────────────────────
 
-    # 2. Architecture clarity (20 pts): directory structure, file path references
-    arch_score = 0
-    if "## Directory Structure" in text or "```" in text:
-        arch_score += 10
-    # File path references using backtick paths
-    path_refs = len(re.findall(r"`[a-zA-Z0-9_./-]+/[a-zA-Z0-9_./-]+`", text))
-    arch_score += min(10, path_refs)
-    scores["Architecture clarity"] = min(20, arch_score)
+    # 1. DOE Architecture (15 pts): explains the DOE layer split
+    arch = 0
+    doe_terms = ["directive", "orchestration", "execution"]
+    doe_hits = sum(1 for t in doe_terms if re.search(rf"\b{t}\b", text, re.IGNORECASE))
+    if doe_hits >= 3:
+        arch += 10
+    elif doe_hits >= 2:
+        arch += 7
+    elif doe_hits >= 1:
+        arch += 3
+    # References to DOE directories (backtick-quoted or in code blocks)
+    doe_dirs = ["directives/", "execution/", "tasks/"]
+    dir_hits = sum(1 for d in doe_dirs if d in text)
+    arch += min(5, dir_hits * 2)
+    scores["DOE Architecture"] = min(15, arch)
 
-    # 3. Non-obvious patterns (15 pts): gotcha, workaround, edge-case docs
-    gotcha_terms = ["gotcha", "workaround", "edge case", "caveat", "warning", "important", "note:"]
-    gotcha_hits = sum(1 for t in gotcha_terms if t.lower() in text.lower())
-    scores["Non-obvious patterns"] = min(15, gotcha_hits * 3)
+    # 2. Directory Structure (10 pts): project layout documented
+    dir_score = 0
+    if re.search(r"##\s+Directory\s+Structure", text, re.IGNORECASE):
+        dir_score += 5
+    elif any(re.search(r"(?:src/|app/|lib/|directives/)", b) for b in code_blocks):
+        dir_score += 3  # structure shown in code blocks but no dedicated section
+    path_refs = len(re.findall(r"`[a-zA-Z0-9_./-]+/[a-zA-Z0-9_./-]*`", text))
+    dir_score += min(5, path_refs // 2)
+    scores["Directory Structure"] = min(10, dir_score)
 
-    # 4. Conciseness (15 pts): penalise very long lines, reward density
+    # 3. Trigger Routing (15 pts): topics route to directive files
+    trigger_score = 0
+    if re.search(r"##\s+Triggers?", text, re.IGNORECASE):
+        trigger_score += 5
+    # Lines with -> pointing to a path (any file, not just directives/)
+    trigger_lines = [l for l in lines if re.search(r"->\s*.*[/.]", l)]
+    trigger_score += min(5, len(trigger_lines) // 2)
+    # Referenced directive files exist on disk
+    directive_refs = re.findall(r"`(directives/[^`]+)`", text)
+    if directive_refs:
+        existing = sum(1 for f in directive_refs if (PROJECT_ROOT / f).exists())
+        trigger_score += int((existing / len(directive_refs)) * 5)
+    elif trigger_lines:
+        trigger_score += 2  # triggers exist but don't use backtick refs
+    scores["Trigger Routing"] = min(15, trigger_score)
+
+    # 4. Commands Section (10 pts): has a commands area with code blocks
+    cmd_score = 0
+    if re.search(r"##\s+(?:Common\s+)?Commands|##\s+Usage|##\s+Getting\s+Started", text, re.IGNORECASE):
+        cmd_score += 5
+    if code_blocks:
+        cmd_score += 3
+    multi_line_blocks = sum(1 for b in code_blocks if len(b.strip().splitlines()) >= 2)
+    if multi_line_blocks:
+        cmd_score += 2
+    scores["Commands Section"] = min(10, cmd_score)
+
+    # 5. Operational Knowledge (10 pts): gotchas, warnings, edge cases
+    ops_score = 0
+    if re.search(r"##\s+(?:Gotchas|Edge\s+Cases|Warnings|Caveats|Troubleshooting)", text, re.IGNORECASE):
+        ops_score += 5
+    # Structured warning markers (bold labels)
+    markers = re.findall(
+        r"\*\*(?:Warning|Caveat|Workaround|Note|Important|Caution)\s*[:*]",
+        text, re.IGNORECASE,
+    )
+    ops_score += min(5, len(markers))
+    scores["Operational Knowledge"] = min(10, ops_score)
+
+    # ── Tier 2: Content Quality (40 pts) ──────────────────────
+
+    # 6. Executable Commands (10 pts): code blocks contain real commands
+    #    Structural: any line with 2+ tokens that isn't a comment counts.
+    #    Catches `cargo test`, `go build`, `python3 -m pytest`, etc.
+    #    Skips directory-listing lines (first token ends with `/`).
+    cmd_lines = []
+    for block in code_blocks:
+        for bline in block.strip().splitlines():
+            stripped = bline.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            first_token = stripped.split()[0]
+            if first_token.endswith("/"):
+                continue  # directory listing, not a command
+            if re.match(r"\S+\s+\S+", stripped):
+                cmd_lines.append(stripped)
+    if len(cmd_lines) >= 6:
+        exec_pts = 10
+    elif len(cmd_lines) >= 3:
+        exec_pts = 7
+    elif len(cmd_lines) >= 1:
+        exec_pts = 4
+    else:
+        exec_pts = 0
+    scores["Executable Commands"] = exec_pts
+
+    # 7. Conciseness (10 pts): density vs bloat
     long_lines = sum(1 for l in lines if len(l) > 200)
-    long_penalty = min(10, long_lines)
+    long_penalty = min(6, long_lines)
     if total_lines > 0:
-        # Density: non-empty lines / total lines
         density = sum(1 for l in lines if l.strip()) / total_lines
-        density_pts = int(density * 10)
+        density_pts = int(density * 6)
     else:
         density_pts = 0
-    scores["Conciseness"] = max(0, density_pts + 5 - long_penalty)
+    scores["Conciseness"] = max(0, min(10, density_pts + 4 - long_penalty))
 
-    # 5. Currency (15 pts): referenced files exist on disk
+    # 8. Currency (10 pts): referenced file paths exist on disk
     referenced_files = re.findall(r"`([a-zA-Z0-9_./-]+\.[a-zA-Z]{2,5})`", text)
-    existing = sum(1 for f in referenced_files if (PROJECT_ROOT / f).exists())
-    total_refs = len(referenced_files)
-    if total_refs > 0:
-        scores["Currency"] = (existing / total_refs) * 15
+    if referenced_files:
+        existing = sum(1 for f in referenced_files if (PROJECT_ROOT / f).exists())
+        scores["Currency"] = int((existing / len(referenced_files)) * 10)
     else:
-        scores["Currency"] = 7  # neutral if no refs
+        scores["Currency"] = 5  # neutral if no file refs
 
-    # 6. Actionability (15 pts): copy-paste ready commands, specific paths
-    action_hits = len(re.findall(r"python3\s+\S+|git\s+\w+|npm\s+\w+|npx\s+\w+", text))
-    scores["Actionability"] = min(15, action_hits * 2)
+    # 9. Actionability (10 pts): commands have specific paths, flags, arguments
+    actionable = 0
+    for block in code_blocks:
+        for bline in block.strip().splitlines():
+            stripped = bline.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            first_token = stripped.split()[0]
+            if first_token.endswith("/"):
+                continue  # directory listing, not a command
+            if re.search(r"[/][\w.]|--\w|-\w|\.\w+\b", stripped):
+                actionable += 1
+    if actionable >= 5:
+        action_pts = 10
+    elif actionable >= 3:
+        action_pts = 7
+    elif actionable >= 1:
+        action_pts = 4
+    else:
+        action_pts = 0
+    scores["Actionability"] = action_pts
+
+    # ── Grade ─────────────────────────────────────────────────
 
     total = sum(scores.values())
     if total >= 90:
@@ -513,37 +596,53 @@ def scenario_claude_md_quality(verbose: bool = False):
     else:
         grade = "F"
 
-    # Always show grade and per-criterion scores (not just verbose)
+    # ── Display ───────────────────────────────────────────────
+
+    max_map = {
+        "DOE Architecture": 15, "Directory Structure": 10, "Trigger Routing": 15,
+        "Commands Section": 10, "Operational Knowledge": 10,
+        "Executable Commands": 10, "Conciseness": 10, "Currency": 10, "Actionability": 10,
+    }
+    tier1 = ["DOE Architecture", "Directory Structure", "Trigger Routing",
+             "Commands Section", "Operational Knowledge"]
+    tier2 = ["Executable Commands", "Conciseness", "Currency", "Actionability"]
+
     vlines.append(f"  Grade {grade} ({total:.0f}/100)")
     vlines.append("")
-    max_limits = {"Commands/workflows": 20, "Architecture clarity": 20}
-    for name, pts in scores.items():
-        limit = max_limits.get(name, 15)
+    vlines.append("  DOE Methodology (60 pts)")
+    for name in tier1:
+        pts = scores[name]
+        limit = max_map[name]
         bar_full = int((pts / limit) * 10)
-        bar_empty = 10 - bar_full
-        bar = "█" * bar_full + "░" * bar_empty
+        bar = "█" * bar_full + "░" * (10 - bar_full)
+        vlines.append(f"  {bar} {name}: {pts:.0f}/{limit} pts")
+    vlines.append("")
+    vlines.append("  Content Quality (40 pts)")
+    for name in tier2:
+        pts = scores[name]
+        limit = max_map[name]
+        bar_full = int((pts / limit) * 10)
+        bar = "█" * bar_full + "░" * (10 - bar_full)
         vlines.append(f"  {bar} {name}: {pts:.0f}/{limit} pts")
 
-    # Suggestions for non-full-marks criteria
+    # DOE-prescriptive suggestions
+    _suggestions = {
+        "DOE Architecture":     "explain the directive/orchestration/execution split and reference DOE directories",
+        "Directory Structure":  "add a directory structure section so Claude can navigate your project",
+        "Trigger Routing":      "add triggers routing topics to directive files -- enables context-first architecture",
+        "Commands Section":     "add a commands section with build/test/deploy code blocks for your stack",
+        "Operational Knowledge": "document gotchas and edge cases that would trip up Claude in your project",
+        "Executable Commands":  "make code blocks copy-paste ready with real commands for your stack",
+        "Conciseness":          "break lines >200 chars, move detail to directives",
+        "Currency":             "fix references to renamed/deleted files",
+        "Actionability":        "add specific paths and flags to commands so they work without modification",
+    }
     suggestions = []
-    max_map = {"Commands/workflows": 20, "Architecture clarity": 20,
-               "Non-obvious patterns": 15, "Conciseness": 15, "Currency": 15, "Actionability": 15}
     for name, pts in scores.items():
-        limit = max_map.get(name, 15)
-        if pts < limit - 0.5:  # only suggest if meaningfully below max
+        limit = max_map[name]
+        if pts < limit - 0.5:
             gap = limit - pts
-            if "Commands" in name:
-                suggestions.append(f"  +{gap:.0f} {name}: add common build/test/deploy commands to CLAUDE.md")
-            elif "Architecture" in name:
-                suggestions.append(f"  +{gap:.0f} {name}: add directory structure section or more file path references")
-            elif "Non-obvious" in name:
-                suggestions.append(f"  +{gap:.0f} {name}: document more gotchas, edge cases, or caveats")
-            elif "Conciseness" in name:
-                suggestions.append(f"  +{gap:.0f} {name}: break lines >200 chars, move detail to directives")
-            elif "Currency" in name:
-                suggestions.append(f"  +{gap:.0f} {name}: fix references to renamed/deleted files")
-            elif "Actionability" in name:
-                suggestions.append(f"  +{gap:.0f} {name}: add copy-paste ready commands with specific paths")
+            suggestions.append(f"  +{gap:.0f} {name}: {_suggestions[name]}")
 
     if suggestions:
         vlines.append("")
@@ -553,8 +652,8 @@ def scenario_claude_md_quality(verbose: bool = False):
     if grade in ("A", "B"):
         return _result("PASS", f"CLAUDE.md quality grade {grade} ({total:.0f}/100)", vlines)
     elif grade == "C":
-        return _result("WARN", f"CLAUDE.md quality grade {grade} ({total:.0f}/100) — below B threshold", vlines)
-    return _result("FAIL", f"CLAUDE.md quality grade {grade} ({total:.0f}/100) — needs attention", vlines)
+        return _result("WARN", f"CLAUDE.md quality grade {grade} ({total:.0f}/100) -- below B threshold", vlines)
+    return _result("FAIL", f"CLAUDE.md quality grade {grade} ({total:.0f}/100) -- needs attention", vlines)
 
 
 # ════════════════════════════════════════════════════════════
@@ -750,14 +849,11 @@ def scenario_scale_consistency(verbose: bool = False):
 
 def scenario_dag_validation(verbose: bool = False):
     """Run dispatch_dag.py --validate and check it passes."""
-    # Check both locations: project execution/ and global ~/.claude/scripts/
     executor = PROJECT_ROOT / "execution" / "dispatch_dag.py"
-    if not executor.exists():
-        executor = Path.home() / ".claude" / "scripts" / "dispatch_dag.py"
     vlines = []
 
     if not executor.exists():
-        return _result("WARN", "dispatch_dag.py not found (checked execution/ and ~/.claude/scripts/)", vlines)
+        return _result("WARN", "execution/dispatch_dag.py not found", vlines)
 
     try:
         result = subprocess.run(
@@ -875,8 +971,8 @@ def scenario_cross_reference_consistency(verbose: bool = False):
         expanded = Path(_os.path.expanduser(ref))
         if expanded.exists():
             return True
-        # Layer-conditional: file exists in the kit but not this project
-        if kit_dir.exists() and (ref.startswith("directives/") or ref.startswith(".claude/")):
+        # Layer-conditional: directive exists in the kit but not this project
+        if ref.startswith("directives/") and kit_dir.exists():
             kit_path = kit_dir / ref
             if kit_path.exists():
                 return True

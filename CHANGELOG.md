@@ -7,6 +7,18 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.55.5 (2026-04-09)
+<!-- hero -->
+CLAUDE.md quality scoring rewritten to be framework-agnostic. The rubric now scores DOE methodology compliance (architecture, triggers, commands, gotchas) instead of matching hardcoded tool names. Any tech stack scores fairly. Kit template CLAUDE.md updated with universal Common Commands and Gotchas sections.
+<!-- /hero -->
+
+### Changed
+- **test_methodology.py: claude_md_quality** — complete rewrite. Two-tier rubric: DOE Methodology (60 pts) checks structural compliance (architecture, directory structure, trigger routing, commands section, operational knowledge). Content Quality (40 pts) checks executable commands, conciseness, currency, and actionability. No hardcoded tool names — Go, Rust, Python, JS projects all score fairly.
+- **CLAUDE.md template** — added `## Common Commands` section with universal DOE commands (test_methodology, health_check, verify, git hooks, gh pr). Added `## Gotchas` section with 4 universal DOE gotchas (env files, context compaction, hook permissions, execution script determinism).
+
+### Fixed
+- **claude_md_quality: false positive** — directory-listing lines in code blocks (e.g. `directives/    # SOPs`) were counted as executable commands. Now skips lines where the first token ends with `/`.
+
 ## v1.55.4 (2026-04-08)
 <!-- hero -->
 Closes the hook installation gap that left migrating projects without critical safety hooks. setup.sh now installs all 9 project hooks, 4 agent definitions, and plan files when run inside a DOE project. The settings.json merge handles both PreToolUse and PostToolUse entries additively — existing project-specific hooks are preserved. Users running /pull-doe will now get the complete hook set automatically.

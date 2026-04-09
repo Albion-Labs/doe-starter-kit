@@ -869,6 +869,23 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-55-5">
+          <div class="release-header">
+            <span class="version-badge">v1.55.5</span>
+            <span class="release-date">9 April 2026</span>
+          </div>
+          <p class="release-hero">CLAUDE.md quality scoring rewritten to be framework-agnostic. The rubric now scores DOE methodology compliance (architecture, triggers, commands, gotchas) instead of matching hardcoded tool names. Any tech stack scores fairly. Kit template CLAUDE.md updated with universal Common Commands and Gotchas sections.</p>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong>test_methodology.py: claude_md_quality</strong> — complete rewrite. Two-tier rubric: DOE Methodology (60 pts) checks structural compliance (architecture, directory structure, trigger routing, commands section, operational knowledge). Content Quality (40 pts) checks executable commands, conciseness, currency, and actionability. No hardcoded tool names — Go, Rust, Python, JS projects all score fairly.</li>
+            <li><strong>CLAUDE.md template</strong> — added <code>## Common Commands</code> section with universal DOE commands (test_methodology, health_check, verify, git hooks, gh pr). Added <code>## Gotchas</code> section with 4 universal DOE gotchas (env files, context compaction, hook permissions, execution script determinism).</li>
+          </ul>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong>claude_md_quality: false positive</strong> — directory-listing lines in code blocks (e.g. <code>directives/    # SOPs</code>) were counted as executable commands. Now skips lines where the first token ends with <code>/</code>.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-55-4">
           <div class="release-header">
             <span class="version-badge">v1.55.4</span>
@@ -930,6 +947,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (16 releases)</summary>
+
         <div class="release" id="v1-55-0">
           <div class="release-header">
             <span class="version-badge">v1.55.0</span>
@@ -957,10 +978,6 @@
             <li><strong>Footer versions</strong> — stamped to v1.55.0 across all 20 pages</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (15 releases)</summary>
 
         <div class="release" id="v1-54-0">
           <div class="release-header">

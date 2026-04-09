@@ -31,6 +31,32 @@ docs/          # Visual documents -- version-controlled
 STATE.md  learnings.md  .env
 ```
 
+## Common Commands
+```bash
+# Run DOE methodology tests
+python3 execution/test_methodology.py
+
+# Run health check (stubs, TODOs, empty functions)
+python3 execution/health_check.py
+
+# Run contract verification
+python3 execution/verify.py
+
+# Activate git hooks
+git config core.hooksPath .githooks
+
+# Create PR from feature branch
+gh pr create --title "..." --body "..."
+```
+<!-- Add project-specific build/test/deploy commands here -->
+
+## Gotchas
+- **Warning:** Never commit `.env` files -- credentials must stay local. The pre-commit hook blocks this, but only works if `git config core.hooksPath .githooks` has been run.
+- **Caveat:** After context compaction, Claude loses all loaded directives. Always re-read the triggers relevant to your current task after a `/clear` or long conversation.
+- **Workaround:** If a pre-commit hook fails with "not executable", run `chmod +x .githooks/*` to fix permissions.
+- **Note:** `execution/` scripts are deterministic -- same input, same output. Never add randomness, API calls, or interactive prompts to them. AI reasoning belongs in orchestration (CLAUDE.md + directives), not execution.
+<!-- Add project-specific gotchas here as you discover them -->
+
 ## Context Rules
 After context compaction, treat ALL directives as unloaded. Re-read triggers for your current task. In wave/DAG mode: also re-read step assignment and ownership list.
 First session on a brand new project: load `directives/planning-rules.md` + `directives/building-rules.md`.
