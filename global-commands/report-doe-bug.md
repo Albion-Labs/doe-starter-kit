@@ -312,7 +312,7 @@ Present the result in a bordered card:
 │  .tmp/doe-bug-report-20260318-134500.md                       │
 │                                                               │
 │  To file manually:                                            │
-│  1. Go to github.com/williamporter/doe-starter-kit/issues/new │
+│  1. Go to github.com/Albion-Labs/doe-starter-kit/issues/new   │
 │  2. Copy the title and body from the saved file               │
 │  3. Add the labels listed in the file                         │
 └──────────────────────────────────────────────────────────────┘

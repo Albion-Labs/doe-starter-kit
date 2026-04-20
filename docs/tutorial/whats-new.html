@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.6</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.7</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -869,6 +869,20 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-55-7">
+          <div class="release-header">
+            <span class="version-badge">v1.55.7</span>
+            <span class="release-date">20 April 2026</span>
+          </div>
+          <p class="release-hero">Fixes the hardcoded upstream repo slug in <code>/request-doe-feature</code> and <code>/report-doe-bug</code>. Scripts previously pointed at a non-existent <code>williamporter/doe-starter-kit</code>, causing every filing attempt to fall back to local-only saves. Both commands now correctly hit <code>Albion-Labs/doe-starter-kit</code> and file issues directly.</p>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong>execution/doe_feature_request.py</strong> — <code>UPSTREAM_REPO</code> constant and help docstring both updated from <code>williamporter/doe-starter-kit</code> to <code>Albion-Labs/doe-starter-kit</code>.</li>
+            <li><strong>execution/doe_bug_report.py</strong> — <code>UPSTREAM_REPO</code> constant updated.</li>
+            <li><strong>global-commands/report-doe-bug.md</strong> — manual-file fallback URL updated.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-55-6">
           <div class="release-header">
             <span class="version-badge">v1.55.6</span>
@@ -932,6 +946,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (18 releases)</summary>
+
         <div class="release" id="v1-55-2">
           <div class="release-header">
             <span class="version-badge">v1.55.2</span>
@@ -948,10 +966,6 @@
             <li><strong>vercel.json reverted</strong> — build command failed (Python3 not available in Vercel static deploy). Serving committed HTML via dashboard config instead</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (17 releases)</summary>
 
         <div class="release release-compact" id="v1-55-1">
           <div class="release-header">
@@ -3185,7 +3199,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.55.6</footer>
+        <footer class="site-footer">DOE Starter Kit v1.55.7</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

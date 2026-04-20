@@ -29,7 +29,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-UPSTREAM_REPO = "williamporter/doe-starter-kit"
+UPSTREAM_REPO = "Albion-Labs/doe-starter-kit"
 DOE_KIT_PATH = Path.home() / "doe-starter-kit"
 DEFAULT_LABELS = ["enhancement", "user-requested"]
 
@@ -535,7 +535,7 @@ def main():
     group.add_argument(
         "--search-duplicates", metavar="QUERY",
         help=(
-            "Search GitHub issues on williamporter/doe-starter-kit with the "
+            "Search GitHub issues on Albion-Labs/doe-starter-kit with the "
             "enhancement label for potential duplicates."
         ),
     )

@@ -32,7 +32,7 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
-UPSTREAM_REPO = "williamporter/doe-starter-kit"
+UPSTREAM_REPO = "Albion-Labs/doe-starter-kit"
 DOE_KIT_PATH = Path.home() / "doe-starter-kit"
 DEFAULT_LABELS = ["bug", "user-reported"]
 

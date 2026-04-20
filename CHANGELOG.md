@@ -7,6 +7,16 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.55.7 (2026-04-20)
+<!-- hero -->
+Fixes the hardcoded upstream repo slug in `/request-doe-feature` and `/report-doe-bug`. Scripts previously pointed at a non-existent `williamporter/doe-starter-kit`, causing every filing attempt to fall back to local-only saves. Both commands now correctly hit `Albion-Labs/doe-starter-kit` and file issues directly.
+<!-- /hero -->
+
+### Fixed
+- **execution/doe_feature_request.py** — `UPSTREAM_REPO` constant and help docstring both updated from `williamporter/doe-starter-kit` to `Albion-Labs/doe-starter-kit`.
+- **execution/doe_bug_report.py** — `UPSTREAM_REPO` constant updated.
+- **global-commands/report-doe-bug.md** — manual-file fallback URL updated.
+
 ## v1.55.6 (2026-04-09)
 <!-- hero -->
 Tutorial version now pulls from a single source of truth (`kit-version.js`). All 20 pages load one JS file instead of relying on 20 separate HTML stamps. Stamp script updated to write kit-version.js first, HTML fallback second. Version can never go out of sync across pages again.
