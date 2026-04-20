@@ -104,6 +104,9 @@ If any of these are true, you need at minimum a privacy notice and a legal basis
 
 ## 1. Environment Isolation
 
+### Convention: `.env` is the single secrets file
+This kit uses `.env` as the canonical secrets file across all frameworks, including Next.js projects (deviating from Next.js's default `.env.local` convention). The `block_secrets_in_code.py` hook enforces this by blocking writes to `.env.local`, `.env.development`, `.env.production`, and `.env.staging` — secrets go only in `.env`, which is gitignored via the kit's `.gitignore`. This deliberate uniform rule simplifies the "where do secrets live?" question across all 7 framework templates and removes ambiguity about which file to edit.
+
 ### The Rule
 Production credentials must ONLY exist in production environment variables. No other environment -- preview, development, local, CI -- may connect to the production database. This is a physical barrier, not a policy one.
 
@@ -113,12 +116,12 @@ Production credentials must ONLY exist in production environment variables. No o
 |-------------|----------|-------------|
 | **Production** | Production Supabase/Neon instance | Production env vars only (Vercel production scope) |
 | **Preview** (PR deploys) | Neon branch OR seed-only database | Preview env vars (auto-provisioned by Vercel) |
-| **Local dev** | Local seed database or Neon branch | `.env.local` with non-production creds only |
+| **Local dev** | Local seed database or Neon branch | `.env` with non-production creds only (gitignored) |
 | **CI/CD** | Seed-only database or no database | GitHub Actions secrets (non-production only) |
 
 ### Non-Negotiable Requirements
-- **Never copy `.env.local` between machines** -- regenerate credentials per environment.
-- **Never use production connection strings in any `.env.local` file** -- even "just for testing." There is no "just for testing" with regulated data.
+- **Never copy `.env` between machines** -- regenerate credentials per environment.
+- **Never use production connection strings in any `.env` file** -- even "just for testing." There is no "just for testing" with regulated data.
 - **Vercel preview deployments MUST use a separate database** -- Neon branching (recommended) creates an isolated copy automatically. If branching is unavailable, use a seed-only database.
 - **AI agents (Claude Code, GitHub Actions, Vercel Agent) physically cannot connect to production.** Their environment variables point to non-production databases only. No exceptions. No "temporary" production access.
 

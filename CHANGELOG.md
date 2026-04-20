@@ -7,6 +7,15 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.55.9 (2026-04-20)
+<!-- hero -->
+Reconciles a pre-existing inconsistency between `directives/data-safety.md` (which recommended `.env.local` for local dev in regulated-data projects) and `.claude/hooks/block_secrets_in_code.py` (which blocks `.env.local` entirely). The kit standardises on `.env` as the single canonical secrets file across all frameworks — including Next.js, deviating from its default `.env.local` convention — and the directive now reflects that rule with a new explanatory note at the top of the Environment Isolation section.
+<!-- /hero -->
+
+### Changed
+- **directives/data-safety.md** — added a "Convention: `.env` is the single secrets file" subsection at the top of section 1 (Environment Isolation) explaining the kit's uniform `.env` rule and noting the deviation from Next.js's `.env.local` default.
+- **directives/data-safety.md** — updated the Local dev row in the environment isolation table and two Non-Negotiable Requirements bullets to reference `.env` instead of `.env.local`, consistent with `block_secrets_in_code.py`'s whitelist.
+
 ## v1.55.8 (2026-04-20)
 <!-- hero -->
 Fixes the Claude PR Review GitHub Actions workflow, which had been failing silently on every trigger. Adds the missing `id-token: write` permission needed for OIDC token fetch, removes an invalid `allowed_tools` input that the v1 action rejects, and narrows the trigger so the workflow only fires when `@claude` is explicitly mentioned (instead of running on every collaborator comment).
