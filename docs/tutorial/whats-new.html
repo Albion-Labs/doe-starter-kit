@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.7</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.8</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -869,6 +869,23 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-55-8">
+          <div class="release-header">
+            <span class="version-badge">v1.55.8</span>
+            <span class="release-date">20 April 2026</span>
+          </div>
+          <p class="release-hero">Fixes the Claude PR Review GitHub Actions workflow, which had been failing silently on every trigger. Adds the missing <code>id-token: write</code> permission needed for OIDC token fetch, removes an invalid <code>allowed_tools</code> input that the v1 action rejects, and narrows the trigger so the workflow only fires when <code>@claude</code> is explicitly mentioned (instead of running on every collaborator comment).</p>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong>.github/workflows/claude.yml</strong> — added <code>id-token: write</code> to the job&#x27;s <code>permissions:</code> block (required by <code>claude-code-action@v1</code> for OIDC; absence caused every run to fail with &quot;Could not fetch an OIDC token&quot;).</li>
+            <li><strong>.github/workflows/claude.yml</strong> — removed <code>allowed_tools: &quot;Bash,Read,Glob,Grep,Edit,Write&quot;</code> input; <code>allowed_tools</code> is not a valid input for <code>claude-code-action@v1</code> (spec lists <code>trigger_phrase</code>, <code>assignee_trigger</code>, <code>label_trigger</code>, <code>base_branch</code>, etc.).</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong>.github/workflows/claude.yml</strong> — tightened trigger filter so the workflow only runs when the comment contains <code>@claude</code> in addition to the existing collaborator-author check. Prevents CI burn on every routine comment from a collaborator.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-55-7">
           <div class="release-header">
             <span class="version-badge">v1.55.7</span>
@@ -932,6 +949,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (19 releases)</summary>
+
         <div class="release" id="v1-55-3">
           <div class="release-header">
             <span class="version-badge">v1.55.3</span>
@@ -945,10 +966,6 @@
             <li><strong>test_methodology.py: cross-reference checker</strong> — <code>.claude/</code> paths now checked against kit directory as fallback (fixes false WARN on <code>.claude/plans/multi-agent-coordination.md</code> for existing projects that haven&#x27;t run init wizard)</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (18 releases)</summary>
 
         <div class="release" id="v1-55-2">
           <div class="release-header">
@@ -3199,7 +3216,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.55.7</footer>
+        <footer class="site-footer">DOE Starter Kit v1.55.8</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

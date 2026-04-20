@@ -7,6 +7,18 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.55.8 (2026-04-20)
+<!-- hero -->
+Fixes the Claude PR Review GitHub Actions workflow, which had been failing silently on every trigger. Adds the missing `id-token: write` permission needed for OIDC token fetch, removes an invalid `allowed_tools` input that the v1 action rejects, and narrows the trigger so the workflow only fires when `@claude` is explicitly mentioned (instead of running on every collaborator comment).
+<!-- /hero -->
+
+### Fixed
+- **.github/workflows/claude.yml** — added `id-token: write` to the job's `permissions:` block (required by `claude-code-action@v1` for OIDC; absence caused every run to fail with "Could not fetch an OIDC token").
+- **.github/workflows/claude.yml** — removed `allowed_tools: "Bash,Read,Glob,Grep,Edit,Write"` input; `allowed_tools` is not a valid input for `claude-code-action@v1` (spec lists `trigger_phrase`, `assignee_trigger`, `label_trigger`, `base_branch`, etc.).
+
+### Changed
+- **.github/workflows/claude.yml** — tightened trigger filter so the workflow only runs when the comment contains `@claude` in addition to the existing collaborator-author check. Prevents CI burn on every routine comment from a collaborator.
+
 ## v1.55.7 (2026-04-20)
 <!-- hero -->
 Fixes the hardcoded upstream repo slug in `/request-doe-feature` and `/report-doe-bug`. Scripts previously pointed at a non-existent `williamporter/doe-starter-kit`, causing every filing attempt to fall back to local-only saves. Both commands now correctly hit `Albion-Labs/doe-starter-kit` and file issues directly.
