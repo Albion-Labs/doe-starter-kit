@@ -2,6 +2,7 @@
 name: Adversarial
 description: Cross-examines Finder's report against actual code. Filters false positives.
 tools: Read, Grep, Glob, Bash
+isolation: worktree
 ---
 
 # Adversarial Agent

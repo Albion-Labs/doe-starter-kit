@@ -88,9 +88,26 @@ When the coordinator dispatches a subagent:
 - If a subagent returns results without a status report, treat it as DONE_WITH_CONCERNS with concern "missing status report — verify results manually"
 - In solo mode (no subagents), the self-review checklist still applies — run it mentally before committing
 
+## Implementation Patterns
+
+Patterns for subagent orchestration that have emerged from retros. Not rules -- patterns to apply when they fit.
+
+### Passing context to subagents
+When delegating documentation, summary, or reference-page work, pass the actual data source (manifest.json, script output, file contents) rather than describing expected content. Subagents confronted with "the trigger table should have N rows" will fabricate rows; subagents handed the manifest will extract real ones. For tutorial or reference pages: generate the real output first, then tell the subagent to embed it verbatim.
+
+### Parallel subagents on overlapping files
+Two or more subagents editing the same files in parallel (without worktree isolation) merge into a single commit -- git stages all changes per-file, not per-agent. If separate commits are required, either use worktree isolation or serialise the agents. If one commit is acceptable, parallel dispatch is fine.
+
+### Monitoring and coordination
+PostToolUse hooks are the right integration point for background monitoring (heartbeats, context tracking, progress signals) -- cheap per-call, invisible to the user, no polling loop needed. Reserve explicit coordination scripts for cross-agent contract verification and merge decisions.
+
+### Worktree root resolution
+`Path.cwd()` breaks inside worktrees because agents cd into `.tmp/worktrees/<taskId>/`. Any script that uses cwd as the project root will fail silently. Resolve the main repo root by walking up from the script file and detecting the `.git` file (worktrees have a `.git` file, not a directory). Centralise this in a shared utility rather than open-coding in each script.
+
 ## Verification
 - [ ] This directive exists at `directives/subagent-protocol.md`
 - [ ] CLAUDE.md Rule 7 references the status protocol
 - [ ] All four statuses are documented with coordinator actions
 - [ ] Report format is specified with all required fields
 - [ ] Self-review checklist is included
+- [ ] Implementation Patterns section covers context passing, parallel file overlap, monitoring, worktree root resolution

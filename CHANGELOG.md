@@ -7,6 +7,23 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.55.10 (2026-04-21)
+<!-- hero -->
+Enables the Adversarial subagent to run with `isolation: worktree` by fixing a silent worktree-safety bug in the review-gate handshake: `persist_review_findings.py` previously wrote its artifact to `Path(".tmp")/...`, which under worktree isolation landed in the worktree's `.tmp/` — invisible to the downstream gate, silently blocking PR creation. Adds four new universal learnings as directive subsections/sections (plan freshness check, contract `Verify:` reality check, subagent implementation patterns). Makes pytest runs venv-aware so they do not break on Homebrew Python's PEP 668 externally-managed guard.
+<!-- /hero -->
+
+### Added
+- **directives/planning-rules.md** — "Plan freshness check" subsection. Plans written 10+ days before building accumulate staleness (version numbers taken, file references renamed, CLAUDE.md restructured). Before Step 0 of an old-plan feature, verify backticked paths, version ranges, and structural assumptions (routing, filenames, hook names).
+- **directives/testing-strategy.md** — "Contract `Verify:` strings are design-phase guesses" subsection. `Verify:` patterns in plans reference class/id/function names that don't exist yet; by Step N the actual code may use different names. Re-verify against the real implementation before marking `[x]`, and fix the contract (not the code). Applies doubly to manual test instructions.
+- **directives/subagent-protocol.md** — new "Implementation Patterns" section with four entries: (1) passing context to subagents (pass data sources, not descriptions), (2) parallel subagents on overlapping files (merge into one commit unless worktree-isolated), (3) monitoring and coordination via PostToolUse hooks, (4) worktree root resolution (`Path.cwd()` breaks in worktrees; use `.git` file detection).
+
+### Changed
+- **.claude/agents/Adversarial.md** — added `isolation: worktree` to frontmatter. Adversarial now runs in its own auto-created git worktree: if it makes no changes the worktree auto-cleans, otherwise the path and branch are returned for review. Unblocks speculative-fix diffs on top of its existing findings cross-examination work.
+
+### Fixed
+- **global-scripts/persist_review_findings.py** — uses `doe_utils.resolve_project_root()` to write the review artifact to the main repo's `.tmp/` regardless of cwd. Previously used `Path(".tmp")/...` which landed in the worktree's `.tmp/` under `isolation: worktree`, silently breaking the review-gate handshake and blocking PR creation with no clear cause. `ImportError` fallback preserves single-Path behaviour for machines without `doe_utils.py` installed.
+- **execution/test_methodology.py** — `scenario_execution_script_tests` prefers `.venv/bin/python3` if present, falls back to `sys.executable` otherwise. Unblocks pytest runs on fresh macOS/Homebrew boxes where PEP 668 blocks system-Python pip installs. `sys.executable` fallback preserves CI and non-venv behaviour.
+
 ## v1.55.9 (2026-04-20)
 <!-- hero -->
 Reconciles a pre-existing inconsistency between `directives/data-safety.md` (which recommended `.env.local` for local dev in regulated-data projects) and `.claude/hooks/block_secrets_in_code.py` (which blocks `.env.local` entirely). The kit standardises on `.env` as the single canonical secrets file across all frameworks — including Next.js, deviating from its default `.env.local` convention — and the directive now reflects that rule with a new explanatory note at the top of the Environment Isolation section.

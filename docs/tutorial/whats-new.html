@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.9</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.10</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -869,6 +869,29 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-55-10">
+          <div class="release-header">
+            <span class="version-badge">v1.55.10</span>
+            <span class="release-date">21 April 2026</span>
+          </div>
+          <p class="release-hero">Enables the Adversarial subagent to run with <code>isolation: worktree</code> by fixing a silent worktree-safety bug in the review-gate handshake: <code>persist_review_findings.py</code> previously wrote its artifact to <code>Path(&quot;.tmp&quot;)/...</code>, which under worktree isolation landed in the worktree&#x27;s <code>.tmp/</code> — invisible to the downstream gate, silently blocking PR creation. Adds four new universal learnings as directive subsections/sections (plan freshness check, contract <code>Verify:</code> reality check, subagent implementation patterns). Makes pytest runs venv-aware so they do not break on Homebrew Python&#x27;s PEP 668 externally-managed guard.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong>directives/planning-rules.md</strong> — &quot;Plan freshness check&quot; subsection. Plans written 10+ days before building accumulate staleness (version numbers taken, file references renamed, CLAUDE.md restructured). Before Step 0 of an old-plan feature, verify backticked paths, version ranges, and structural assumptions (routing, filenames, hook names).</li>
+            <li><strong>directives/testing-strategy.md</strong> — &quot;Contract <code>Verify:</code> strings are design-phase guesses&quot; subsection. <code>Verify:</code> patterns in plans reference class/id/function names that don&#x27;t exist yet; by Step N the actual code may use different names. Re-verify against the real implementation before marking <code>[x]</code>, and fix the contract (not the code). Applies doubly to manual test instructions.</li>
+            <li><strong>directives/subagent-protocol.md</strong> — new &quot;Implementation Patterns&quot; section with four entries: (1) passing context to subagents (pass data sources, not descriptions), (2) parallel subagents on overlapping files (merge into one commit unless worktree-isolated), (3) monitoring and coordination via PostToolUse hooks, (4) worktree root resolution (<code>Path.cwd()</code> breaks in worktrees; use <code>.git</code> file detection).</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong>.claude/agents/Adversarial.md</strong> — added <code>isolation: worktree</code> to frontmatter. Adversarial now runs in its own auto-created git worktree: if it makes no changes the worktree auto-cleans, otherwise the path and branch are returned for review. Unblocks speculative-fix diffs on top of its existing findings cross-examination work.</li>
+          </ul>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong>global-scripts/persist_review_findings.py</strong> — uses <code>doe_utils.resolve_project_root()</code> to write the review artifact to the main repo&#x27;s <code>.tmp/</code> regardless of cwd. Previously used <code>Path(&quot;.tmp&quot;)/...</code> which landed in the worktree&#x27;s <code>.tmp/</code> under <code>isolation: worktree</code>, silently breaking the review-gate handshake and blocking PR creation with no clear cause. <code>ImportError</code> fallback preserves single-Path behaviour for machines without <code>doe_utils.py</code> installed.</li>
+            <li><strong>execution/test_methodology.py</strong> — <code>scenario_execution_script_tests</code> prefers <code>.venv/bin/python3</code> if present, falls back to <code>sys.executable</code> otherwise. Unblocks pytest runs on fresh macOS/Homebrew boxes where PEP 668 blocks system-Python pip installs. <code>sys.executable</code> fallback preserves CI and non-venv behaviour.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-55-9">
           <div class="release-header">
             <span class="version-badge">v1.55.9</span>
@@ -930,6 +953,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (21 releases)</summary>
+
         <div class="release" id="v1-55-5">
           <div class="release-header">
             <span class="version-badge">v1.55.5</span>
@@ -946,10 +973,6 @@
             <li><strong>claude_md_quality: false positive</strong> — directory-listing lines in code blocks (e.g. <code>directives/    # SOPs</code>) were counted as executable commands. Now skips lines where the first token ends with <code>/</code>.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (20 releases)</summary>
 
         <div class="release" id="v1-55-4">
           <div class="release-header">
@@ -3229,7 +3252,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.55.9</footer>
+        <footer class="site-footer">DOE Starter Kit v1.55.10</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

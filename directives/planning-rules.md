@@ -22,6 +22,14 @@ Ambiguous requirement? Ask. Separate research and implementation into different 
 ### Check before spending
 If a script uses paid API calls or credits, confirm with the user before running.
 
+### Plan freshness check
+Plans written 10+ days before building accumulate staleness: version numbers taken by other features, file references renamed, CLAUDE.md structure changed, directive schemas evolved. Before starting Step 0 of a feature whose plan is more than 10 days old, run a freshness check:
+- Compare file references in the plan against current paths (extract backticked paths and verify each exists)
+- Check version ranges are still available (cross-check `ROADMAP.md ## Complete` and `tasks/todo.md ## Queue`)
+- Verify structural assumptions (CLAUDE.md routing table, directive filenames, hook names, command filenames)
+
+30 minutes of pre-build verification beats hours of mid-build debugging. Fix drift in the plan before committing Step 0.
+
 ### Dependency-aware planning
 Think about what actually depends on what, not what order to build. Steps that share no files can run in parallel. Steps that write to the same files must be sequenced. The `Depends:` and `Owns:` metadata in todo.md captures this explicitly.
 

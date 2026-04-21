@@ -111,6 +111,19 @@ Verify: run: grep -rq 'featureInit' src/app.js
 - **Integration steps (cross-module wiring):** Use Level 3 to verify the module is actually connected to the rest of the app.
 - **All [APP] features:** The `[manual]` criteria naturally cover "is it wired?" since the tester sees the UI working.
 
+### Contract Verify: strings are design-phase guesses
+
+When a plan is written, `Verify:` patterns reference class names, function names, and id attributes that don't exist yet -- they're the author's guess at what the implementation will use. By Step N, the actual code may use slightly different names (e.g. plan said `section-group`, code uses `el-section`; plan said `_dimensionBrief('x')`, function takes dimension IDs like `'y'`).
+
+Before marking a step `[x]`:
+1. Re-read the contract's `Verify:` patterns
+2. Check each `contains` string and CSS selector against the actual implementation
+3. If there's a mismatch, fix the contract (not the code) -- the contract is a promise to a future reader and should describe what's true
+
+This applies doubly to manual test instructions: function names, parameter types, and valid inputs in manual steps must reflect the shipped implementation, not the plan. Otherwise the human tester hits errors that weren't real bugs.
+
+Quick fix, not a process problem. Do it reflexively at each step's verify-and-mark moment.
+
 ### Post-Step Testing Protocol
 
 After completing each step, Claude runs the appropriate quality checks based on the step type:

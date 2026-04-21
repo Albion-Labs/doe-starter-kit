@@ -9,6 +9,18 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Worktree-safe: always write to main project root's .tmp/ regardless of cwd.
+# Adversarial runs with isolation: worktree, so cwd would otherwise be the
+# worktree path, causing the downstream review gate to miss the artifact.
+_SCRIPTS_DIR = Path.home() / ".claude" / "scripts"
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+try:
+    from doe_utils import resolve_project_root
+except ImportError:
+    def resolve_project_root():
+        return Path.cwd(), Path.cwd()
+
 
 def main():
     if len(sys.argv) < 3:
@@ -32,7 +44,8 @@ def main():
         ["git", "rev-parse", "HEAD"], text=True
     ).strip()
 
-    artifact = Path(".tmp") / f"review-{role}-{branch}.json"
+    main_root, _ = resolve_project_root()
+    artifact = main_root / ".tmp" / f"review-{role}-{branch}.json"
     artifact.parent.mkdir(parents=True, exist_ok=True)
     artifact.write_text(json.dumps({
         "role": role,

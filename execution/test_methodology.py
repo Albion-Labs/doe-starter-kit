@@ -668,9 +668,14 @@ def scenario_execution_script_tests(verbose: bool = False):
     if not tests_dir.exists():
         return _result("WARN", "tests/execution/ not found — create it to enable this scenario", vlines)
 
+    # Prefer project venv if present (PEP 668 blocks system-Python pip installs on
+    # Homebrew). Falls back to sys.executable so CI and fresh checkouts still work.
+    venv_python = PROJECT_ROOT / ".venv" / "bin" / "python3"
+    python_bin = str(venv_python) if venv_python.exists() else sys.executable
+
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", str(tests_dir), "--tb=short", "-q"],
+            [python_bin, "-m", "pytest", str(tests_dir), "--tb=short", "-q"],
             capture_output=True, text=True, cwd=PROJECT_ROOT, timeout=120,
         )
         output_lines = (result.stdout + result.stderr).splitlines()
