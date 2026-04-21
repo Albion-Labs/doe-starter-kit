@@ -7,6 +7,17 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.55.11 (2026-04-21)
+<!-- hero -->
+Codifies two gotchas surfaced during the v1.55.10 sync: the Bash pipe-exit-code trap (`cmd | tail -N && side_effect` fires the side effect even when `cmd` fails, because `tail` exits 0), and the `SKIP_MAIN_PROTECTION=1` requirement on the kit-sync commit and push. Adds the pipe-exit rule to `universal-claude-md-template.md` ## Shell & Platform so new DOE projects inherit the warning. Patches `directives/starter-kit-sync.md` Step 10 to show the correct command sequence (separate Bash calls, no pipe-trim chains, explicit env var on commit and push).
+<!-- /hero -->
+
+### Added
+- **universal-claude-md-template.md** — new "Bash pipelines return the LAST command's exit code" bullet under `## Shell & Platform`. Warns against `cmd | tail -N && destructive_cmd` patterns, recommends separate Bash tool calls or `set -o pipefail` prefix.
+
+### Changed
+- **directives/starter-kit-sync.md** Step 10 — commit now includes `SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1` and push includes `SKIP_MAIN_PROTECTION=1`. Kit sync commits hit two enforcement hooks by default: the main-branch-protection hook (refuses direct-to-main) and the step-mark hook (requires `tasks/todo.md` staged when the commit message contains a version tag). Neither applies to kit sync commits. The `.tmp/.sync-doe-active` bypass only covers the kit write guard. Added explicit guidance to run each git command as a separate Bash tool call rather than `&&` chain with pipe-trimmed output, to prevent the stray-tag-on-wrong-commit failure that occurred during the v1.55.10 sync.
+
 ## v1.55.10 (2026-04-21)
 <!-- hero -->
 Enables the Adversarial subagent to run with `isolation: worktree` by fixing a silent worktree-safety bug in the review-gate handshake: `persist_review_findings.py` previously wrote its artifact to `Path(".tmp")/...`, which under worktree isolation landed in the worktree's `.tmp/` — invisible to the downstream gate, silently blocking PR creation. Adds four new universal learnings as directive subsections/sections (plan freshness check, contract `Verify:` reality check, subagent implementation patterns). Makes pytest runs venv-aware so they do not break on Homebrew Python's PEP 668 externally-managed guard.

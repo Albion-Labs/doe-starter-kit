@@ -155,6 +155,9 @@ Before committing, update `CHANGELOG.md`:
 4. Present the changelog entry in a bordered box for approval. **Generate programmatically** — compute W from content, use `.ljust(W)` padding, Unicode box-drawing borders. Content inside borders must be ASCII-only. Structure: header row with "CHANGELOG" left-aligned and version + date right-aligned, separator, 2-line plain English summary, then ADDED/CHANGED/FIXED/REMOVED sections with bulleted items. Wait for explicit approval before proceeding.
 
 ### Step 10: Commit, tag, and push
+
+**Run each of these as a SEPARATE Bash tool call** — do not `&&` chain them, and do not pipe-trim their output with `| head/tail -N` when chaining. Bash pipelines return the last command's exit code, so `git commit ... | tail -5 && git tag` fires the tag even if commit was blocked by a hook (`tail` exits 0). Separate calls make each exit code visible. If you must chain, prefix with `set -o pipefail`.
+
 ```bash
 cd ~/doe-starter-kit
 python3 ~/doe-starter-kit/execution/generate_whats_new.py
@@ -162,10 +165,17 @@ python3 ~/doe-starter-kit/execution/stamp_tutorial_version.py v[X.Y.Z]
 git add -A
 git diff --staged --stat
 # Show diff, wait for sign-off
-git commit -m "v[X.Y.Z]: Sync from [project] — [what changed]"
+SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1 git commit -m "v[X.Y.Z]: Sync from [project] — [what changed]"
 git tag v[X.Y.Z]
-git push && git push --tags
+SKIP_MAIN_PROTECTION=1 git push
+git push origin v[X.Y.Z]
 ```
+
+Both env vars on the commit are required:
+- `SKIP_MAIN_PROTECTION=1` — the kit repo's `.githooks/pre-commit` and `.githooks/pre-push` refuse direct-to-main by default. Kit sync is the one procedure where direct-to-main is expected.
+- `SKIP_STEP_MARK_CHECK=1` — the commit message contains a version tag `(vX.Y.Z)` which triggers the step-mark enforcement hook. Kit release commits don't correspond to a todo.md step, so the check doesn't apply.
+
+The `.tmp/.sync-doe-active` bypass file covers the kit-write-guard hook but does **not** disable either of these checks; the env vars are still needed.
 
 Then create a GitHub release:
 ```bash

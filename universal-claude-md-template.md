@@ -19,6 +19,7 @@ Tag source: e.g. "[retro: feature-name vX.Y.Z]"
 - Emojis render as double-width characters in terminal monospace fonts, breaking box-drawing border alignment. Never use emojis inside bordered ASCII boxes — use text-only labels. Emojis are fine in standalone/unbounded contexts. [retro: universal]
 - zsh `for f in glob-*` fails with `no matches found` when no files match (bash silently skips). Guard with `(setopt nullglob 2>/dev/null; for f in ...)` or `ls glob-* 2>/dev/null`. [retro: universal]
 - `$$` in Claude Code Bash tool calls is the subshell PID, not the parent Claude Code process. Each tool call gets a different `$$`. Don't use `$$` for cross-call file naming — use a fixed name instead (worktrees handle multi-session isolation). [retro: universal]
+- Bash pipelines return the LAST command's exit code. `cmd | tail -N && side_effect` fires the side effect even if `cmd` failed -- `tail` exits 0, so `&&` proceeds. Before chaining a destructive command (`&& git tag`, `&& git push`, `&& rm`) after a pipe-trimmed output, split into separate Bash tool calls so exit codes propagate, or prefix with `set -o pipefail`. `pipefail` is OFF by default in zsh and bash. [retro: universal]
 
 ## Dev Servers
 

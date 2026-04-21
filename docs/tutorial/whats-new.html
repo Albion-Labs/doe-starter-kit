@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.10</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.55.11</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -869,6 +869,22 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-55-11">
+          <div class="release-header">
+            <span class="version-badge">v1.55.11</span>
+            <span class="release-date">21 April 2026</span>
+          </div>
+          <p class="release-hero">Codifies two gotchas surfaced during the v1.55.10 sync: the Bash pipe-exit-code trap (<code>cmd | tail -N &amp;&amp; side_effect</code> fires the side effect even when <code>cmd</code> fails, because <code>tail</code> exits 0), and the <code>SKIP_MAIN_PROTECTION=1</code> requirement on the kit-sync commit and push. Adds the pipe-exit rule to <code>universal-claude-md-template.md</code> ## Shell &amp; Platform so new DOE projects inherit the warning. Patches <code>directives/starter-kit-sync.md</code> Step 10 to show the correct command sequence (separate Bash calls, no pipe-trim chains, explicit env var on commit and push).</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong>universal-claude-md-template.md</strong> — new &quot;Bash pipelines return the LAST command&#x27;s exit code&quot; bullet under <code>## Shell &amp; Platform</code>. Warns against <code>cmd | tail -N &amp;&amp; destructive_cmd</code> patterns, recommends separate Bash tool calls or <code>set -o pipefail</code> prefix.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong>directives/starter-kit-sync.md</strong> Step 10 — commit and push commands now include <code>SKIP_MAIN_PROTECTION=1</code> (kit repo&#x27;s main-branch-protection hooks block direct-to-main by default; the <code>.tmp/.sync-doe-active</code> bypass only covers the kit write guard). Added explicit guidance to run each command as a separate Bash tool call and not <code>&amp;&amp;</code> chain with pipe-trimmed output, to prevent the same stray-tag-on-wrong-commit failure that occurred during the v1.55.10 sync.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-55-10">
           <div class="release-header">
             <span class="version-badge">v1.55.10</span>
@@ -936,6 +952,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (22 releases)</summary>
+
         <div class="release" id="v1-55-6">
           <div class="release-header">
             <span class="version-badge">v1.55.6</span>
@@ -952,10 +972,6 @@
             <li><strong>stamp_tutorial_version.py</strong> — now updates kit-version.js as primary source, HTML patterns as no-JS fallback. Creates kit-version.js if missing.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (21 releases)</summary>
 
         <div class="release" id="v1-55-5">
           <div class="release-header">
@@ -3252,7 +3268,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.55.10</footer>
+        <footer class="site-footer">DOE Starter Kit v1.55.11</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
