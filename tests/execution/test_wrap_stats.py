@@ -35,31 +35,27 @@ def test_gather_git_metrics_returns_expected_keys():
 def test_compute_streak_first_session():
     """First-ever session (no lastSessionDate) should return streak of 1."""
     stats = fresh_stats()
-    streak = compute_streak(stats)
+    streak = compute_streak(stats, "2026-04-23")
     assert streak == 1
 
 
 def test_compute_streak_consecutive_day():
     """Session on the day after last session should increment streak."""
-    from datetime import datetime, timedelta
-    yesterday = (datetime.now().date() - timedelta(days=1)).strftime("%Y-%m-%d")
     stats = fresh_stats()
     stats["streak"]["current"] = 5
-    stats["streak"]["lastSessionDate"] = yesterday
+    stats["streak"]["lastSessionDate"] = "2026-04-22"
 
-    streak = compute_streak(stats)
+    streak = compute_streak(stats, "2026-04-23")
     assert streak == 6
 
 
 def test_compute_streak_same_day():
     """Session on same day as last session should keep streak unchanged."""
-    from datetime import datetime
-    today = datetime.now().date().strftime("%Y-%m-%d")
     stats = fresh_stats()
     stats["streak"]["current"] = 3
-    stats["streak"]["lastSessionDate"] = today
+    stats["streak"]["lastSessionDate"] = "2026-04-23"
 
-    streak = compute_streak(stats)
+    streak = compute_streak(stats, "2026-04-23")
     assert streak == 3
 
 
@@ -69,7 +65,7 @@ def test_compute_streak_broken():
     stats["streak"]["current"] = 10
     stats["streak"]["lastSessionDate"] = "2000-01-01"  # long ago
 
-    streak = compute_streak(stats)
+    streak = compute_streak(stats, "2026-04-23")
     assert streak == 1
 
 

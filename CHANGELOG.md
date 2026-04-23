@@ -7,6 +7,24 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.56.0 (2026-04-23)
+<!-- hero -->
+Collapses three manual post-setup steps into opt-in wizard prompts so `bash ~/doe-starter-kit/setup.sh` leaves a fresh project ready for `gh repo create` with no workarounds. Part A: after `git init`, the wizard now offers to create a `chore: initial DOE scaffolding` commit (pre-checks `user.email` and skips with guidance if unset; commit lands *before* `core.hooksPath` is activated so pre-commit checks don't fire on the scaffolding commit). Part B: if `.env.example` was installed, the wizard offers to copy it to `.env` for local dev (never clobbers an existing `.env`). Part C: the pre-commit main-branch protection hook now allows the first-ever commit on main (when HEAD doesn't yet exist); every subsequent commit on main is still blocked. Resolves #19 (supersedes #15, #16, #18).
+<!-- /hero -->
+
+### Added
+- **execution/doe_init.py** — `maybe_auto_commit(project_dir, accept=None)` helper that runs between `git init` and `git config core.hooksPath .githooks`. Pre-checks `user.email`, prompts the user, runs `git add -A && git commit -m "chore: initial DOE scaffolding"`, and surfaces the short SHA in the `GIT + CI` card. Skips cleanly when email is unset or the user declines.
+- **execution/doe_init.py** — `maybe_bootstrap_env(project_dir, accept=None)` helper called at the start of `setup_ci_git_collaboration`. Skips silently if `.env.example` is missing; prints `.env already exists -- not overwriting.` and skips if `.env` already exists; otherwise prompts, copies, and surfaces `.env created from .env.example` in the `GIT + CI` card.
+- **tests/githooks/test_pre_commit.py** — new test module. `test_first_commit_allowed` and `test_second_commit_blocked` copy the real `.githooks/pre-commit` into an isolated tmpdir repo, stub `execution/audit_claims.py` to exit 0, skip downstream hook stages via env vars, and assert the main-protection block's exact before/after behaviour.
+- **tests/execution/test_doe_init.py** — new test module with 5 tests covering both new helpers: `.env` bootstrap creates/preserves/skips paths, auto-commit skips when `user.email` is unset, and a source-level invariant test that asserts `maybe_auto_commit` is called before `core.hooksPath` is activated (guards against future refactors reordering the two).
+
+### Changed
+- **.githooks/pre-commit** — main-branch protection now bypasses when `git rev-parse HEAD` fails (no commits yet). Fresh repo bootstrap lands the initial commit on main without `SKIP_MAIN_PROTECTION=1`; every subsequent commit on main still hits the block-direct-commits branch. Preserves the existing merge-commit exemption and all downstream hook stages.
+- **execution/doe_init.py** `setup_ci_git_collaboration` — wires the two new helpers into the existing flow. Part B (`.env` bootstrap) runs at the top, before `.github/` copy. Part A (auto-commit) runs between `git init` and `git config core.hooksPath`; the GIT + CI card shows `.env created from .env.example` and `Initial scaffolding commit -> <sha>` lines when the user accepts.
+
+### Fixed
+- **tests/execution/test_wrap_stats.py** — the four `test_compute_streak_*` tests called `compute_streak(stats)` with the old signature; `compute_streak` now requires a `session_date_str` argument (added when wrap_stats switched to commit-based session dating). Tests now pass a fixed `2026-04-23` date plus a yesterday fixture, removing dependence on `datetime.now()`.
+
 ## v1.55.11 (2026-04-21)
 <!-- hero -->
 Codifies two gotchas surfaced during the v1.55.10 sync: the Bash pipe-exit-code trap (`cmd | tail -N && side_effect` fires the side effect even when `cmd` fails, because `tail` exits 0), and the `SKIP_MAIN_PROTECTION=1` requirement on the kit-sync commit and push. Adds the pipe-exit rule to `universal-claude-md-template.md` ## Shell & Platform so new DOE projects inherit the warning. Patches `directives/starter-kit-sync.md` Step 10 to show the correct command sequence (separate Bash calls, no pipe-trim chains, explicit env var on commit and push).
