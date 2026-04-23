@@ -1208,6 +1208,45 @@ def install_layer_files(config, kit_dir, project_dir):
     return total
 
 
+# ── Post-install polish (bootstrap prompts) ─────────────────────────────
+
+def maybe_bootstrap_env(project_dir, accept=None):
+    """Offer to copy .env.example -> .env for local dev.
+
+    Returns True if .env was created, False otherwise.
+
+    Behaviour:
+    - If .env.example is missing: skip silently (returns False).
+    - If .env already exists: print a preservation notice and skip (returns False).
+    - Otherwise: prompt the user (unless `accept` overrides). If accepted, copy
+      .env.example -> .env and print confirmation.
+
+    The `accept` parameter exists for tests — pass True/False to bypass the
+    interactive prompt.
+    """
+    env_example = project_dir / ".env.example"
+    env_file = project_dir / ".env"
+
+    if not env_example.exists():
+        return False
+
+    if env_file.exists():
+        print("  .env already exists -- not overwriting.")
+        return False
+
+    if accept is None:
+        answer = ask_yn("  Copy .env.example to .env for local dev?", default="y")
+    else:
+        answer = bool(accept)
+
+    if not answer:
+        return False
+
+    shutil.copy2(env_example, env_file)
+    print("  .env created from .env.example")
+    return True
+
+
 # ── CI + git + collaboration setup ──────────────────────────────────────
 
 def setup_ci_git_collaboration(config, kit_dir, project_dir):
@@ -1225,6 +1264,9 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
     active_layers = get_active_layers(config)
     gh_count = 0
     extra_count = 0
+
+    # ── Part B: offer to bootstrap .env from .env.example (pre-hooks activation)
+    env_created = maybe_bootstrap_env(project_dir)
 
     # ── Copy .github/ files from manifest (skip CODEOWNERS -- generated below)
     for layer_name in active_layers:
@@ -1313,6 +1355,8 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
     else:
         rows.append(line("Warning: could not set git hooks path"))
     rows.append(line(f".github/ -- {gh_count} files installed"))
+    if env_created:
+        rows.append(line(".env created from .env.example"))
     if extra_count:
         rows.append(line(f"CONTRIBUTING.md created"))
     rows.append(line(""))
