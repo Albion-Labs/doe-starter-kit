@@ -23,6 +23,7 @@ Collapses three manual post-setup steps into opt-in wizard prompts so `bash ~/do
 - **execution/doe_init.py** `setup_ci_git_collaboration` — wires the two new helpers into the existing flow. Part B (`.env` bootstrap) runs at the top, before `.github/` copy. Part A (auto-commit) runs between `git init` and `git config core.hooksPath`; the GIT + CI card shows `.env created from .env.example` and `Initial scaffolding commit -> <sha>` lines when the user accepts.
 
 ### Fixed
+- **.githooks/pre-push** — the tutorial-docs version gate now enforces on `main`/`master` only. Previously it fired on every branch, blocking legitimate feature-branch PRs that bump docs ahead of their release tag (the tag is cut post-merge, not pre-PR). The methodology `--quick` check still runs on every push. Covered by `tests/githooks/test_pre_push.py` — `test_docs_gate_blocks_on_main` and `test_docs_gate_skipped_on_feature_branch`.
 - **tests/execution/test_wrap_stats.py** — the four `test_compute_streak_*` tests called `compute_streak(stats)` with the old signature; `compute_streak` now requires a `session_date_str` argument (added when wrap_stats switched to commit-based session dating). Tests now pass a fixed `2026-04-23` date plus a yesterday fixture, removing dependence on `datetime.now()`.
 
 ## v1.55.11 (2026-04-21)
