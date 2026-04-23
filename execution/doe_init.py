@@ -1210,6 +1210,57 @@ def install_layer_files(config, kit_dir, project_dir):
 
 # ── Post-install polish (bootstrap prompts) ─────────────────────────────
 
+def maybe_auto_commit(project_dir, accept=None):
+    """Offer to create the initial DOE scaffolding commit on main.
+
+    Returns the short SHA on success, or None if skipped or failed.
+
+    - Pre-checks git config user.email: if unset, warns and returns None.
+      This avoids the "Please tell me who you are" git error and nudges
+      the user to configure their identity before we create commits.
+    - Prompts the user unless `accept` is provided (tests pass True/False).
+    - Commits with `chore: initial DOE scaffolding` (Conventional Commits
+      chore: prefix; scope intentionally omitted for the first commit).
+
+    Must be called BEFORE core.hooksPath is activated so hooks don't fire
+    on the initial scaffolding commit.
+    """
+    email_check = subprocess.run(
+        ["git", "config", "--get", "user.email"],
+        cwd=project_dir, capture_output=True, text=True,
+    )
+    has_email = email_check.returncode == 0 and bool(email_check.stdout.strip())
+    if not has_email:
+        print("  Skipping auto-commit: git user.email is not set.")
+        print("  Set it with: git config --global user.email 'you@example.com'")
+        return None
+
+    if accept is None:
+        answer = ask_yn("  Create initial scaffolding commit?", default="y")
+    else:
+        answer = bool(accept)
+    if not answer:
+        return None
+
+    subprocess.run(["git", "add", "-A"], cwd=project_dir, capture_output=True)
+    commit = subprocess.run(
+        ["git", "commit", "-m", "chore: initial DOE scaffolding"],
+        cwd=project_dir, capture_output=True, text=True,
+    )
+    if commit.returncode != 0:
+        print(f"  Auto-commit failed: {commit.stderr.strip()}")
+        return None
+
+    sha = subprocess.run(
+        ["git", "rev-parse", "--short", "HEAD"],
+        cwd=project_dir, capture_output=True, text=True,
+    )
+    short = sha.stdout.strip() if sha.returncode == 0 else ""
+    if short:
+        print(f"  Initial scaffolding commit -> {short}")
+    return short or None
+
+
 def maybe_bootstrap_env(project_dir, accept=None):
     """Offer to copy .env.example -> .env for local dev.
 
@@ -1337,6 +1388,11 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
         if result.returncode != 0:
             print(f"  Warning: git init failed (exit {result.returncode})")
 
+    # ── Part A: offer to create scaffolding commit BEFORE core.hooksPath is set
+    # Committing pre-hook activation means the initial commit lands cleanly
+    # without triggering audit_claims / main-protection / contract checks.
+    auto_sha = maybe_auto_commit(project_dir)
+
     # ── Set git hooks path
     result = subprocess.run(
         ["git", "config", "core.hooksPath", ".githooks"],
@@ -1357,6 +1413,8 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
     rows.append(line(f".github/ -- {gh_count} files installed"))
     if env_created:
         rows.append(line(".env created from .env.example"))
+    if auto_sha:
+        rows.append(line(f"Initial scaffolding commit -> {auto_sha}"))
     if extra_count:
         rows.append(line(f"CONTRIBUTING.md created"))
     rows.append(line(""))
