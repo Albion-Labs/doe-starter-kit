@@ -12,14 +12,19 @@ if [ "${SKIP_MAIN_PROTECTION:-0}" != "1" ]; then
     if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
         # Allow merge commits (git merge creates these automatically)
         if [ ! -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]; then
-            echo "" >&2
-            echo "═══ Main branch protection ═══" >&2
-            echo "" >&2
-            echo "  Direct commits to main are not allowed." >&2
-            echo "  Create a feature or housekeeping branch first." >&2
-            echo "" >&2
-            echo "  Skip with: SKIP_MAIN_PROTECTION=1 git commit ..." >&2
-            exit 1
+            # Allow the first-ever commit on main (fresh repo bootstrap).
+            # When HEAD does not yet exist, this is the initial commit and
+            # there is no prior branch to protect from.
+            if git rev-parse HEAD >/dev/null 2>&1; then
+                echo "" >&2
+                echo "═══ Main branch protection ═══" >&2
+                echo "" >&2
+                echo "  Direct commits to main are not allowed." >&2
+                echo "  Create a feature or housekeeping branch first." >&2
+                echo "" >&2
+                echo "  Skip with: SKIP_MAIN_PROTECTION=1 git commit ..." >&2
+                exit 1
+            fi
         fi
     fi
 fi
