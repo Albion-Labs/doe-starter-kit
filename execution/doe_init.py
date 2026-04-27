@@ -1210,7 +1210,7 @@ def install_layer_files(config, kit_dir, project_dir):
 
 # ── Post-install polish (bootstrap prompts) ─────────────────────────────
 
-def maybe_auto_commit(project_dir, accept=None):
+def maybe_auto_commit(project_dir, accept=None, kit_version=None):
     """Offer to create the initial DOE scaffolding commit on main.
 
     Returns the short SHA on success, or None if skipped or failed.
@@ -1219,8 +1219,11 @@ def maybe_auto_commit(project_dir, accept=None):
       This avoids the "Please tell me who you are" git error and nudges
       the user to configure their identity before we create commits.
     - Prompts the user unless `accept` is provided (tests pass True/False).
-    - Commits with `chore: initial DOE scaffolding` (Conventional Commits
-      chore: prefix; scope intentionally omitted for the first commit).
+    - Commits with `chore: initial DOE scaffolding (kit vX.Y.Z)` when
+      `kit_version` is provided, otherwise `chore: initial DOE scaffolding`.
+      Including the kit version stamps the bootstrap commit with the kit
+      release that produced it, so future archaeology of "what shipped
+      this project's scaffolding" has a single source of truth in `git log`.
 
     Must be called BEFORE core.hooksPath is activated so hooks don't fire
     on the initial scaffolding commit.
@@ -1242,9 +1245,14 @@ def maybe_auto_commit(project_dir, accept=None):
     if not answer:
         return None
 
+    if kit_version:
+        commit_msg = f"chore: initial DOE scaffolding (kit v{kit_version})"
+    else:
+        commit_msg = "chore: initial DOE scaffolding"
+
     subprocess.run(["git", "add", "-A"], cwd=project_dir, capture_output=True)
     commit = subprocess.run(
-        ["git", "commit", "-m", "chore: initial DOE scaffolding"],
+        ["git", "commit", "-m", commit_msg],
         cwd=project_dir, capture_output=True, text=True,
     )
     if commit.returncode != 0:
@@ -1323,6 +1331,28 @@ def maybe_normalise_branch(project_dir):
     return "Renamed master -> main"
 
 
+def _gitignore_excludes_env(gitignore_path):
+    """Return True iff `.gitignore` has an active rule that excludes the literal `.env` file.
+
+    Matches: bare `.env`, anchored `/.env`, or the `.env*` glob (which covers
+    `.env`, `.env.local`, etc — the kit's standard pattern).
+    Ignores: blank lines, comments (`#`), negation rules (`!`),
+    `.env.example` itself, framework-specific patterns.
+    """
+    try:
+        for raw in gitignore_path.read_text().splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or line.startswith("!"):
+                continue
+            if line.startswith("/"):
+                line = line[1:]
+            if line in (".env", ".env*"):
+                return True
+        return False
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
 def maybe_bootstrap_env(project_dir, accept=None):
     """Offer to copy .env.example -> .env for local dev.
 
@@ -1331,20 +1361,31 @@ def maybe_bootstrap_env(project_dir, accept=None):
     Behaviour:
     - If .env.example is missing: skip silently (returns False).
     - If .env already exists: print a preservation notice and skip (returns False).
+    - If .gitignore is missing or doesn't exclude `.env`: SKIP with a warning.
+      This is a safety check -- creating `.env` (which by convention contains
+      secrets) without an active gitignore rule risks committing secrets to
+      the repo. The kit's standard `.gitignore` template includes `.env`,
+      so this only fires when a user has stripped that rule out.
     - Otherwise: prompt the user (unless `accept` overrides). If accepted, copy
-      .env.example -> .env and print confirmation.
+      .env.example -> .env and print confirmation with a fill-values hint.
 
     The `accept` parameter exists for tests — pass True/False to bypass the
     interactive prompt.
     """
     env_example = project_dir / ".env.example"
     env_file = project_dir / ".env"
+    gitignore = project_dir / ".gitignore"
 
     if not env_example.exists():
         return False
 
     if env_file.exists():
         print("  .env already exists -- not overwriting.")
+        return False
+
+    if not gitignore.exists() or not _gitignore_excludes_env(gitignore):
+        print("  Skipping .env bootstrap: .gitignore missing or doesn't exclude .env.")
+        print("  Add `.env` (or `.env*`) to .gitignore before bootstrapping secrets.")
         return False
 
     if accept is None:
@@ -1356,7 +1397,7 @@ def maybe_bootstrap_env(project_dir, accept=None):
         return False
 
     shutil.copy2(env_example, env_file)
-    print("  .env created from .env.example")
+    print("  .env created from .env.example (fill in values before running)")
     return True
 
 
@@ -1460,7 +1501,7 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
     # ── Part A: offer to create scaffolding commit BEFORE core.hooksPath is set
     # Committing pre-hook activation means the initial commit lands cleanly
     # without triggering audit_claims / main-protection / contract checks.
-    auto_sha = maybe_auto_commit(project_dir)
+    auto_sha = maybe_auto_commit(project_dir, kit_version=get_kit_version(kit_dir))
 
     # ── Set git hooks path
     result = subprocess.run(
@@ -1484,6 +1525,7 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
     rows.append(line(f".github/ -- {gh_count} files installed"))
     if env_created:
         rows.append(line(".env created from .env.example"))
+        rows.append(line("  fill in values before running"))
     if auto_sha:
         rows.append(line(f"Initial scaffolding commit -> {auto_sha}"))
     if extra_count:
