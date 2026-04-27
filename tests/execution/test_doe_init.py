@@ -1,8 +1,9 @@
 """Tests for execution/doe_init.py post-install polish helpers.
 
 Covers v1.56.0 Parts A (auto-commit), B (.env bootstrap), and D (branch
-normalisation) — all run inside setup_ci_git_collaboration() before
-core.hooksPath is activated.
+normalisation), plus v1.56.1 spec-deviation fixes (kit version stamping
+in commit, .gitignore safety check, fill-values hint) — all run inside
+setup_ci_git_collaboration() before core.hooksPath is activated.
 """
 
 import inspect
@@ -19,19 +20,24 @@ from doe_init import maybe_auto_commit, maybe_bootstrap_env, maybe_normalise_bra
 
 # ── Part B: maybe_bootstrap_env ─────────────────────────────────────────
 
-def test_env_bootstrap_creates(tmp_path):
-    """Fresh dir with .env.example + accept=True -> .env is copied."""
+def test_env_bootstrap_creates(tmp_path, capsys):
+    """Fresh dir with .env.example + .gitignore (.env excluded) + accept=True
+    -> .env is copied and the fill-values hint is printed (v1.56.1)."""
     (tmp_path / ".env.example").write_text("FOO=bar\n")
+    (tmp_path / ".gitignore").write_text(".env\n")
 
     created = maybe_bootstrap_env(tmp_path, accept=True)
 
     assert created is True
     assert (tmp_path / ".env").exists()
     assert (tmp_path / ".env").read_text() == "FOO=bar\n"
+    out = capsys.readouterr().out
+    assert "fill in values" in out, "Confirmation must include fill-values hint"
 
 
 def test_env_bootstrap_preserves_existing(tmp_path, capsys):
-    """Existing .env is preserved, not overwritten, even with accept=True."""
+    """Existing .env is preserved, not overwritten, even with accept=True.
+    Reaches the existing-file check before the .gitignore safety check."""
     (tmp_path / ".env.example").write_text("FOO=new\n")
     (tmp_path / ".env").write_text("FOO=existing\n")
 
@@ -49,6 +55,66 @@ def test_env_bootstrap_no_example(tmp_path):
 
     assert created is False
     assert not (tmp_path / ".env").exists()
+
+
+# ── v1.56.1: .gitignore safety check (issue #16 deviation) ──────────────
+
+def test_env_bootstrap_skips_when_gitignore_missing(tmp_path, capsys):
+    """No .gitignore at all -> skip with warning. Never create ungitignored secrets."""
+    (tmp_path / ".env.example").write_text("FOO=bar\n")
+    # Deliberately no .gitignore created
+
+    created = maybe_bootstrap_env(tmp_path, accept=True)
+
+    assert created is False
+    assert not (tmp_path / ".env").exists()
+    out = capsys.readouterr().out
+    assert ".gitignore" in out and ("missing" in out.lower() or "skip" in out.lower())
+
+
+def test_env_bootstrap_skips_when_gitignore_lacks_env_entry(tmp_path, capsys):
+    """`.gitignore` exists but no `.env` rule -> skip with warning."""
+    (tmp_path / ".env.example").write_text("FOO=bar\n")
+    (tmp_path / ".gitignore").write_text("node_modules/\n*.log\n")  # no .env rule
+
+    created = maybe_bootstrap_env(tmp_path, accept=True)
+
+    assert created is False
+    assert not (tmp_path / ".env").exists()
+    out = capsys.readouterr().out
+    assert "doesn't exclude .env" in out or "doesn't exclude `.env`" in out or "exclude .env" in out
+
+
+def test_env_bootstrap_proceeds_when_gitignore_excludes_env(tmp_path):
+    """Standard kit `.gitignore` (with `.env` line) -> proceed normally."""
+    (tmp_path / ".env.example").write_text("FOO=bar\n")
+    (tmp_path / ".gitignore").write_text(".env\n.env.local\n")
+
+    created = maybe_bootstrap_env(tmp_path, accept=True)
+
+    assert created is True
+    assert (tmp_path / ".env").exists()
+
+
+def test_env_bootstrap_proceeds_when_gitignore_uses_glob(tmp_path):
+    """`.env*` glob in `.gitignore` -> accepted (covers `.env`, `.env.local`, etc)."""
+    (tmp_path / ".env.example").write_text("FOO=bar\n")
+    (tmp_path / ".gitignore").write_text(".env*\n")
+
+    created = maybe_bootstrap_env(tmp_path, accept=True)
+
+    assert created is True
+    assert (tmp_path / ".env").exists()
+
+
+def test_env_bootstrap_treats_negation_as_no_match(tmp_path):
+    """A `!.env` negation rule must NOT count as exclusion. Edge case for the parser."""
+    (tmp_path / ".env.example").write_text("FOO=bar\n")
+    (tmp_path / ".gitignore").write_text("!.env\n")
+
+    created = maybe_bootstrap_env(tmp_path, accept=True)
+
+    assert created is False, "Negation rule re-includes .env; safety check must skip"
 
 
 # ── Part A: maybe_auto_commit ───────────────────────────────────────────
@@ -90,12 +156,12 @@ def test_auto_commit_before_hooks_activation():
     `git config core.hooksPath` subprocess invocation in setup_ci_git_collaboration."""
     src = inspect.getsource(doe_init.setup_ci_git_collaboration)
 
-    # The call site (not a docstring or comment mention) is uniquely identified by
-    # the subprocess.run argv list.
+    # Match the call site by function name alone — kwargs (like kit_version=...)
+    # may have been added without changing the structural invariant.
     hooks_activation = '"core.hooksPath", ".githooks"'
-    auto_call = "maybe_auto_commit(project_dir)"
+    auto_call = "maybe_auto_commit("
 
-    assert auto_call in src, "setup_ci_git_collaboration must call maybe_auto_commit(project_dir)"
+    assert auto_call in src, "setup_ci_git_collaboration must call maybe_auto_commit(...)"
     assert hooks_activation in src, "setup_ci_git_collaboration must run `git config core.hooksPath .githooks`"
 
     auto_idx = src.index(auto_call)
@@ -103,6 +169,64 @@ def test_auto_commit_before_hooks_activation():
     assert auto_idx < hooks_idx, (
         "maybe_auto_commit must be called BEFORE core.hooksPath is activated "
         "so the initial commit does not trigger pre-commit hooks."
+    )
+
+
+# ── v1.56.1: kit version stamping (issue #15 deviation) ─────────────────
+
+def test_auto_commit_includes_kit_version_when_provided(tmp_path, monkeypatch):
+    """kit_version='1.56.1' -> commit subject contains `(kit v1.56.1)`."""
+    _init_isolated_repo(tmp_path, monkeypatch)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.email", "test@example.com"],
+        check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.name", "Test User"],
+        check=True, capture_output=True,
+    )
+    (tmp_path / "file.txt").write_text("hi\n")
+
+    sha = maybe_auto_commit(tmp_path, accept=True, kit_version="1.56.1")
+
+    assert sha is not None
+    log = subprocess.run(
+        ["git", "-C", str(tmp_path), "log", "-1", "--format=%s"],
+        capture_output=True, text=True, check=True,
+    )
+    assert log.stdout.strip() == "chore: initial DOE scaffolding (kit v1.56.1)"
+
+
+def test_auto_commit_omits_kit_version_when_not_provided(tmp_path, monkeypatch):
+    """Backwards compat: kit_version=None -> commit subject is the unadorned form."""
+    _init_isolated_repo(tmp_path, monkeypatch)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.email", "test@example.com"],
+        check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "config", "user.name", "Test User"],
+        check=True, capture_output=True,
+    )
+    (tmp_path / "file.txt").write_text("hi\n")
+
+    sha = maybe_auto_commit(tmp_path, accept=True)
+
+    assert sha is not None
+    log = subprocess.run(
+        ["git", "-C", str(tmp_path), "log", "-1", "--format=%s"],
+        capture_output=True, text=True, check=True,
+    )
+    assert log.stdout.strip() == "chore: initial DOE scaffolding"
+
+
+def test_setup_passes_kit_version_to_auto_commit():
+    """Source-level invariant: setup_ci_git_collaboration must pass kit_version
+    to maybe_auto_commit so the wizard's commit is stamped with the kit release."""
+    src = inspect.getsource(doe_init.setup_ci_git_collaboration)
+    assert "kit_version=" in src and "get_kit_version(kit_dir)" in src, (
+        "setup_ci_git_collaboration must call maybe_auto_commit with "
+        "kit_version=get_kit_version(kit_dir)"
     )
 
 
@@ -223,8 +347,9 @@ def test_normalise_branch_called_before_auto_commit():
     maybe_auto_commit so the scaffolding commit lands on `main`, not `master`."""
     src = inspect.getsource(doe_init.setup_ci_git_collaboration)
 
-    normalise_call = "maybe_normalise_branch(project_dir)"
-    auto_call = "maybe_auto_commit(project_dir)"
+    # Match by function name alone; kwargs may be added without changing the order.
+    normalise_call = "maybe_normalise_branch("
+    auto_call = "maybe_auto_commit("
 
     assert normalise_call in src, "setup_ci_git_collaboration must call maybe_normalise_branch"
     assert auto_call in src
