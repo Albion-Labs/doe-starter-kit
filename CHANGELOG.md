@@ -7,7 +7,7 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
-## v1.56.0 (2026-04-23)
+## v1.56.0 (2026-04-27)
 <!-- hero -->
 Collapses four manual post-setup steps into opt-in wizard prompts so `bash ~/doe-starter-kit/setup.sh` leaves a fresh project ready for `gh repo create` with no workarounds. Part A: after `git init`, the wizard now offers to create a `chore: initial DOE scaffolding` commit (pre-checks `user.email` and skips with guidance if unset; commit lands *before* `core.hooksPath` is activated so pre-commit checks don't fire on the scaffolding commit). Part B: if `.env.example` was installed, the wizard offers to copy it to `.env` for local dev (never clobbers an existing `.env`). Part C: the pre-commit main-branch protection hook now allows the first-ever commit on main (when HEAD doesn't yet exist); every subsequent commit on main is still blocked. Part D: the wizard normalises the project branch to `main` before the scaffolding commit lands — fresh `git init` repos with HEAD on `master` get a `git symbolic-ref` to `refs/heads/main` (no commits to move), existing repos with local-only `master` get renamed via `git branch -m`, and `master` branches with upstream tracking are flagged with a warning row instead of being touched (avoiding remote side-effects). Resolves #19 (supersedes #15, #16, #18).
 <!-- /hero -->
