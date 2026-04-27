@@ -302,3 +302,34 @@ if [ "${SKIP_CONTRACT_CHECK:-0}" != "1" ]; then
         exit 1
     fi
 fi
+
+# ─── Test freshness check (warnings only — never blocks commit) ───
+# Warns when staged source has a sibling test that's not also staged.
+# Covered surfaces: execution/*.py with tests/execution/*, .githooks/*
+# with tests/githooks/*. Each warning names the missing test path so the
+# fix is one ack-and-add away.
+# Skip with: SKIP_TEST_FRESHNESS=1 git commit ...
+
+if [ "${SKIP_TEST_FRESHNESS:-0}" != "1" ]; then
+    if [ -n "$STAGED_FILES" ]; then
+        check_pair() {
+            src_path="$1"
+            test_path="$2"
+            label="$3"
+            src_staged=$(echo "$STAGED_FILES" | grep -cF -- "$src_path" || true)
+            test_staged=$(echo "$STAGED_FILES" | grep -cF -- "$test_path" || true)
+            if [ "$src_staged" -gt "0" ] && [ "$test_staged" = "0" ]; then
+                echo "⚠ Tested file staged without its test: $src_path → $test_path ($label)" >&2
+            fi
+        }
+
+        # execution/doe_init.py → tests/execution/test_doe_init.py
+        check_pair "execution/doe_init.py" "tests/execution/test_doe_init.py" "doe_init"
+        # .githooks/pre-commit → tests/githooks/test_pre_commit.py
+        check_pair ".githooks/pre-commit" "tests/githooks/test_pre_commit.py" "pre-commit hook"
+        # .githooks/commit-msg → tests/githooks/test_commit_msg.py
+        check_pair ".githooks/commit-msg" "tests/githooks/test_commit_msg.py" "commit-msg hook"
+    fi
+fi
+
+# ---
