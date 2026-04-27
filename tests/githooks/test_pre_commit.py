@@ -91,3 +91,202 @@ def test_second_commit_blocked(tmp_path):
     assert "Main branch protection" in second.stderr, (
         f"Expected 'Main branch protection' in stderr, got:\n{second.stderr}"
     )
+
+
+# ── v1.58.0: Test freshness check ────────────────────────────────────────
+
+
+def _init_repo_on_feature_branch(tmpdir: Path) -> None:
+    """Init repo, commit once on main, switch to a feature branch.
+
+    Lets later commits run the full hook chain without tripping main-branch
+    protection (which only allows the first commit on main)."""
+    _init_repo(tmpdir)
+    subprocess.run(
+        ["git", "-C", str(tmpdir), "commit", "--allow-empty", "-m", "Initial commit"],
+        env=_make_env(), check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(tmpdir), "checkout", "-b", "feature/freshness-test"],
+        check=True, capture_output=True,
+    )
+
+
+def test_test_freshness_warn(tmp_path):
+    """Staging execution/doe_init.py without its test emits a stderr warning
+    but commit still succeeds (warning-only, exit 0)."""
+    _init_repo_on_feature_branch(tmp_path)
+
+    src = tmp_path / "execution" / "doe_init.py"
+    src.write_text("# tested change\n")
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add", "execution/doe_init.py"],
+        check=True, capture_output=True,
+    )
+
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", "feat(init): adjust tested code"],
+        env=_make_env(), capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, (
+        f"Freshness check must not block (warning-only).\n"
+        f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    )
+    assert "Tested file staged without" in result.stderr, (
+        f"Expected freshness warning in stderr, got:\n{result.stderr}"
+    )
+    assert "tests/execution/test_doe_init.py" in result.stderr, (
+        "Warning must name the missing test path so the fix is obvious"
+    )
+
+
+def test_test_freshness_silent_when_test_staged(tmp_path):
+    """Staging the source AND its test together emits no warning."""
+    _init_repo_on_feature_branch(tmp_path)
+
+    src = tmp_path / "execution" / "doe_init.py"
+    src.write_text("# tested change\n")
+    test = tmp_path / "tests" / "execution" / "test_doe_init.py"
+    test.parent.mkdir(parents=True)
+    test.write_text("# updated test\n")
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add",
+         "execution/doe_init.py", "tests/execution/test_doe_init.py"],
+        check=True, capture_output=True,
+    )
+
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", "feat(init): paired change"],
+        env=_make_env(), capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, f"Commit failed: {result.stderr}"
+    assert "Tested file staged without" not in result.stderr, (
+        f"Expected silence when test was staged, got:\n{result.stderr}"
+    )
+
+
+def test_test_freshness_silent_for_unrelated(tmp_path):
+    """Staging an unrelated file (no test mapping) emits no warning."""
+    _init_repo_on_feature_branch(tmp_path)
+
+    readme = tmp_path / "README.md"
+    readme.write_text("# unrelated change\n")
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add", "README.md"],
+        check=True, capture_output=True,
+    )
+
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", "docs: tweak readme"],
+        env=_make_env(), capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, f"Commit failed: {result.stderr}"
+    assert "Tested file staged without" not in result.stderr, (
+        f"Expected silence for unrelated file, got:\n{result.stderr}"
+    )
+
+
+# ── v1.58.0: Doc freshness check ─────────────────────────────────────────
+
+
+def test_doc_freshness_commands_warn(tmp_path):
+    """Staging global-commands/*.md without docs/tutorial/commands.html
+    emits a Doc freshness warning on stderr; commit still succeeds."""
+    _init_repo_on_feature_branch(tmp_path)
+
+    cmd = tmp_path / "global-commands" / "wrap.md"
+    cmd.parent.mkdir()
+    cmd.write_text("# wrap command\n")
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add", "global-commands/wrap.md"],
+        check=True, capture_output=True,
+    )
+
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", "feat(commands): tweak wrap"],
+        env=_make_env(), capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, f"Doc freshness must not block: {result.stderr}"
+    assert "Doc freshness" in result.stderr, (
+        f"Expected Doc freshness warning, got:\n{result.stderr}"
+    )
+    assert "commands.html" in result.stderr, (
+        "Warning must name the missing doc path"
+    )
+
+
+def test_doc_freshness_hooks_warn(tmp_path):
+    """Staging .githooks/* without docs/tutorial/hooks.md emits a warning."""
+    _init_repo_on_feature_branch(tmp_path)
+
+    hook = tmp_path / ".githooks" / "post-commit"
+    hook.write_text("#!/bin/sh\necho hi\n")
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add", ".githooks/post-commit"],
+        check=True, capture_output=True,
+    )
+
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", "feat(githooks): add post-commit"],
+        env=_make_env(), capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, f"Doc freshness must not block: {result.stderr}"
+    assert "Doc freshness" in result.stderr, (
+        f"Expected Doc freshness warning, got:\n{result.stderr}"
+    )
+    assert "hooks.md" in result.stderr, "Warning must name the missing doc path"
+
+
+def test_doc_freshness_silent_when_doc_staged(tmp_path):
+    """Staging the source AND its tutorial doc together emits no warning."""
+    _init_repo_on_feature_branch(tmp_path)
+
+    cmd = tmp_path / "global-commands" / "wrap.md"
+    cmd.parent.mkdir()
+    cmd.write_text("# wrap\n")
+    doc = tmp_path / "docs" / "tutorial" / "commands.html"
+    doc.parent.mkdir(parents=True)
+    doc.write_text("<html>updated</html>\n")
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add",
+         "global-commands/wrap.md", "docs/tutorial/commands.html"],
+        check=True, capture_output=True,
+    )
+
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", "feat(commands): wrap + doc"],
+        env=_make_env(), capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, f"Commit failed: {result.stderr}"
+    assert "Doc freshness" not in result.stderr, (
+        f"Expected silence when doc was staged, got:\n{result.stderr}"
+    )
+
+
+def test_doc_freshness_silent_for_unrelated(tmp_path):
+    """Staging a file with no doc mapping emits no warning."""
+    _init_repo_on_feature_branch(tmp_path)
+
+    f = tmp_path / "src" / "feature.js"
+    f.parent.mkdir()
+    f.write_text("// unrelated\n")
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add", "src/feature.js"],
+        check=True, capture_output=True,
+    )
+
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", "feat(src): unrelated"],
+        env=_make_env(), capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, f"Commit failed: {result.stderr}"
+    assert "Doc freshness" not in result.stderr, (
+        f"Expected silence for unrelated file, got:\n{result.stderr}"
+    )

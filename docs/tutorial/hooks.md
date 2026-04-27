@@ -10,6 +10,8 @@ Fires on `git commit`. Runs a series of fast structural checks; any failure bloc
 - **Audit sweep.** Runs `python3 execution/audit_claims.py --hook` to catch staleness in tracked docs. Blocks on any FAIL finding.
 - **Step-mark + version-tag enforcement.** If a commit references a step number or version tag, `tasks/todo.md` must be staged. Skip with `SKIP_STEP_MARK_CHECK=1`.
 - **Pending-PR sync, contract verification, quality-gate checkpoints.** Bigger checks that fire when the relevant files are staged.
+- **Test freshness** (added in v1.58.0). Warns when a tested source file (`execution/doe_init.py`, `.githooks/pre-commit`, `.githooks/commit-msg`) is staged without its sibling test under `tests/`. Warning-only — the commit still goes through. The directive `directives/testing-strategy.md` ## Maintenance is the source of truth that says tests are required; this hook is the forgetful-human nudge. Skip with `SKIP_TEST_FRESHNESS=1`.
+- **Doc freshness** (added in v1.58.0). Warns when source files ship without their tutorial-doc counterpart: `global-commands/*.md` paired with `docs/tutorial/commands.html`, `.githooks/*` paired with `docs/tutorial/hooks.md`. Warning-only. Skip with `SKIP_DOC_FRESHNESS=1`.
 
 Skip the entire pre-commit hook with `git commit --no-verify`. Avoid this except in genuine emergencies — most failures are caught for a reason.
 

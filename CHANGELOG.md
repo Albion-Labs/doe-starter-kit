@@ -7,6 +7,29 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.58.0 (2026-04-27)
+<!-- hero -->
+Tested code and tutorial docs now have freshness guardrails. Two warning-only blocks added to `.githooks/pre-commit` flag commits where a tested source file is staged without its sibling test (`execution/doe_init.py`, `.githooks/pre-commit`, `.githooks/commit-msg`) and where source files ship without their tutorial-doc counterpart (`global-commands/*.md` -> `docs/tutorial/commands.html`, `.githooks/*` -> `docs/tutorial/hooks.md`). Both warnings name the missing path so the fix is one ack-and-add away. Neither blocks the commit -- they're nudges, not gates. The directive layer (`directives/testing-strategy.md` ## Maintenance, new in this release) is the source of truth that says tests are required when modifying tested code; the hook is a forgetful-human safety net. The companion manifest trigger broadens from "Testing setup / strategy" to "Testing setup / strategy / Modifying tested code" so the directive loads on edits to tested code, not just initial setup. Skip with `SKIP_TEST_FRESHNESS=1` or `SKIP_DOC_FRESHNESS=1`. Reference-section regeneration (auto-rewriting tutorial prose) is explicitly out of scope -- staleness is now visible; closing the gap stays a human decision.
+<!-- /hero -->
+
+### Added
+- **directives/testing-strategy.md** -- new `## Maintenance` section covering the freshness loop for tested code. Names the kit's tested surfaces (`execution/*.py`, `.githooks/*`), the update-vs-add-test choice when modifying covered code, the rule for reviewing existing `[manual]` contracts by hand when a new auto tool ships (review and promote, don't build a generic auto-promotion engine), and a doc-freshness counterpart that mirrors the new pre-commit warnings.
+- **.githooks/pre-commit** -- two warning-only blocks at end of the hook. Test freshness: warns when staged `execution/doe_init.py`, `.githooks/pre-commit`, or `.githooks/commit-msg` ships without its sibling test under `tests/`. Doc freshness: warns when staged `global-commands/*.md` ships without `docs/tutorial/commands.html`, or `.githooks/*` ships without `docs/tutorial/hooks.md`. Both blocks bound by `# ---` markers so contract verify-patterns can isolate them.
+- **manifest.json** -- `testing-strategy.md` trigger broadened from "Testing setup / strategy" to "Testing setup / strategy / Modifying tested code" so generated CLAUDE.md trigger tables surface the directive on edits, not just initial test setup.
+- **tests/githooks/test_pre_commit.py** -- seven new pytest tests exercising the freshness blocks against fresh tmpdir repos: `test_test_freshness_warn`, `test_test_freshness_silent_when_test_staged`, `test_test_freshness_silent_for_unrelated`, `test_doc_freshness_commands_warn`, `test_doc_freshness_hooks_warn`, `test_doc_freshness_silent_when_doc_staged`, `test_doc_freshness_silent_for_unrelated`. Each inits a repo on main, takes the allowed first commit, switches to a feature branch, then asserts the warn-and-still-pass behaviour. Reusable `_init_repo_on_feature_branch` helper.
+- **tests/execution/test_doe_init.py** -- `test_trigger_phrase_in_claude_md` covers the trigger-phrase flow through `generate_claude_md` so a future narrowing of the manifest entry fails loudly.
+- **docs/tutorial/hooks.md** -- pre-commit section updated to document the two new freshness blocks and the `SKIP_TEST_FRESHNESS` / `SKIP_DOC_FRESHNESS` env vars.
+
+### Changed
+- Pytest suite grows from 89 (v1.57.0) to 97. Seven new freshness tests sit alongside the four commit-msg tests and the original two main-branch-protection tests.
+- `manifest.json` trigger row for `testing-strategy.md` now reads "Testing setup / strategy / Modifying tested code" -- strictly broader, no removed coverage.
+
+### Out of scope (not shipped, intentional)
+- LLM-based or scripted tutorial-doc regeneration. The kit's position: surface staleness, leave the rewrite to humans. A reference-section regeneration script can land as a separate FR if the manual approach proves insufficient.
+- Hook block-mode flip. Both new checks are `warn`-only with no env var to escalate; the kit-development directive's hook design rule (under ~1s, warn when uncertain) keeps these advisory.
+
+---
+
 ## v1.57.0 (2026-04-27)
 <!-- hero -->
 Phase 1 of adopting Conventional Commits across the DOE kit. Two new directives, one extended commit-msg hook, a CLAUDE.md template section, five command/directive migrations, and four tutorial doc updates — bundled so that downstream projects bootstrap with the convention from session zero. The new `commit-msg` validator runs in `warn` mode by default during the v1.57.0 -> v1.58.x transition window: non-compliant subjects print a one-line warning to stderr but the commit still succeeds. Set `DOE_COMMIT_HOOK_MODE=block` once your team is fully on the convention. Allowlisted bypass patterns (`Merge`, `Revert "`, `Initial commit`, `fixup!`, `squash!`, legacy `vX.Y.Z:`) keep merge commits, reverts, and pre-v1.57.0 release history flowing untouched. Phase 2 (auto-changelog generator, hook block-mode default, PR-title GitHub Action) is deferred to a future session. Resolves Phase 1 of #17 and closes #13 (stale `.claude/commands/README.md` reference in `starter-kit-sync.md`).
