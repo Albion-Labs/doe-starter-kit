@@ -21,6 +21,8 @@
         "integrations.md",
         "starter-kit-sync.md",
         "starter-kit-pull.md",
+        "git-conventions.md",
+        "kit-development.md",
         "_TEMPLATE.md"
       ],
       "execution": [
@@ -113,6 +115,8 @@
     {"situation": "Slack / GitHub integrations / notifications", "directive": "integrations.md", "layer": "universal"},
     {"situation": "DOE kit sync", "directive": "starter-kit-sync.md", "layer": "universal"},
     {"situation": "Pulling DOE kit updates", "directive": "starter-kit-pull.md", "layer": "universal"},
+    {"situation": "Writing a commit message", "directive": "git-conventions.md", "layer": "universal"},
+    {"situation": "Contributing to the DOE kit", "directive": "kit-development.md", "layer": "universal"},
     {"situation": "New functions / debugging", "directive": "best-practices/tdd-and-debugging.md", "layer": "universal"},
     {"situation": "Parallel sessions / wave setup", "directive": ".claude/plans/multi-agent-coordination.md", "layer": "universal"},
     {"situation": "Security incident", "directive": "incident-response.md", "layer": "universal"},
