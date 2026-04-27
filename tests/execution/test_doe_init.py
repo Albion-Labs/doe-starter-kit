@@ -393,3 +393,34 @@ def test_claude_md_has_git_conventions():
     # Sanity: every type prefix is mentioned
     for t in ("feat", "fix", "chore", "docs", "refactor", "test", "perf", "build", "ci", "style"):
         assert t in md, f"Git Conventions section missing type {t!r}"
+
+
+# ── v1.58.0: Maintenance trigger -- testing-strategy loads on tested-code edits
+
+def test_trigger_phrase_in_claude_md():
+    """Generated CLAUDE.md must surface the broadened testing-strategy trigger
+    phrase so the directive loads when modifying tested code, not only when
+    first setting up tests. The manifest entry was widened in v1.58.0 from
+    'Testing setup / strategy' to include 'Modifying tested code'."""
+    kit_dir = PROJECT_ROOT
+    config = {
+        "project_type": "static_site",
+        "project_type_custom": "",
+        "framework": "static",
+        "framework_custom": "",
+        "collaboration_mode": "solo",
+        "has_database": False,
+        "has_personal_data": False,
+        "platform_targets": [],
+    }
+
+    md = generate_claude_md(config, kit_dir)
+
+    assert "tested code" in md, (
+        "generated CLAUDE.md must include the broadened testing-strategy trigger "
+        "phrase ('tested code') so the directive loads on edits, not only on "
+        "initial test setup"
+    )
+    assert "testing-strategy.md" in md, (
+        "trigger row must still resolve to directives/testing-strategy.md"
+    )

@@ -175,6 +175,34 @@ This reduces the manual sign-off burden and catches regressions automatically.
 - `file:` paths are relative to project root unless absolute
 - If `tests/config.json` is missing, verify.py uses defaults (30s timeout, no build step)
 
+## Maintenance
+
+This section governs ongoing changes to code that already has test coverage -- the freshness loop that keeps a passing suite from rotting into a hollow one. Loaded by the manifest trigger "Testing setup / strategy / Modifying tested code", so it fires on edits, not only on initial setup.
+
+### When you modify tested code, tests are required (not optional)
+
+Tested surfaces in this kit:
+- `execution/*.py` -- `doe_init.py`, `verify.py`, `test_methodology.py`, `audit_claims.py`, `health_check.py`, generators
+- `.githooks/*` -- `pre-commit`, `pre-push`, `commit-msg`, `post-commit`
+- Any source file that has a sibling test under `tests/`
+
+For these surfaces, every commit that changes behaviour must either:
+
+1. **Update an existing test** -- if your change adjusts the contract of a function that already has coverage, update the assertions in the matching test file. Don't delete the test "because it's broken now" -- the test was the spec.
+2. **Add a new test** -- if your change introduces a new code path, prompt, branch, or flag, add a test that exercises it. The pre-commit warning hook will flag tested-file changes that ship without staged tests, but the warning is a nudge, not a substitute for thinking.
+
+If a change is genuinely test-irrelevant (a comment fix, a docstring tweak, a rename with no behavioural impact), say so in the commit body and move on. The default is "tests come with the change."
+
+### Reviewing `[manual]` contracts when new auto tools ship
+
+When a new auto tool ships (e.g. Playwright MCP, a new linter, a new methodology scenario), don't build an auto-promotion engine -- review existing `[manual]` contracts by hand and promote the ones the new tool can verify. Replace each promotable item's free-text description with a `Verify: run:` (or `Verify: html:`, `Verify: file:`) pattern that drives the new tool deterministically.
+
+The signpost: a new auto tool that overlaps with criteria currently sitting under `[manual]` should trigger a one-pass sweep of open contracts, not a generic "convert everything" script. Keep the genuinely subjective items (visual quality, interaction feel, content judgment) as `[manual]`. See "Playwright MCP: Converting [manual] to [auto] Criteria" above for the conversion checklist.
+
+### Doc freshness counterpart
+
+Code changes that ship without doc updates rot the tutorial. Pre-commit warns when `global-commands/*.md` change without `docs/tutorial/commands.html`, or `.githooks/*` change without `docs/tutorial/hooks.md`. Same rule as tests: the warning is a nudge, the change still ships, but `kit-development.md` expects the doc to land in the same PR where reasonable.
+
 ## Verification
 - [ ] This directive exists and is referenced from CLAUDE.md triggers
 - [ ] tests/config.json exists alongside this directive

@@ -108,7 +108,7 @@
     {"situation": "Something went seriously wrong", "directive": "break-glass.md", "layer": "universal"},
     {"situation": "Security-sensitive code", "directive": "security-rules.md", "layer": "universal"},
     {"situation": "Auditing claims", "directive": "claim-auditing.md", "layer": "universal"},
-    {"situation": "Testing setup / strategy", "directive": "testing-strategy.md", "layer": "universal"},
+    {"situation": "Testing setup / strategy / Modifying tested code", "directive": "testing-strategy.md", "layer": "universal"},
     {"situation": "Refactoring / architecture", "directive": "architectural-invariants.md", "layer": "universal"},
     {"situation": "Writing code", "directive": "best-practices/", "layer": "universal"},
     {"situation": "Manual testing", "directive": "manual-testing.md", "layer": "universal"},
