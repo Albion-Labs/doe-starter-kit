@@ -1261,6 +1261,68 @@ def maybe_auto_commit(project_dir, accept=None):
     return short or None
 
 
+def maybe_normalise_branch(project_dir):
+    """Normalise the project's branch to `main` if it's currently `master`.
+
+    Returns a one-line message for the GIT + CI card, or None if no action
+    was taken (already on `main`, or branch is something else the user picked).
+
+    Three safe states are handled; a fourth is flagged for the user:
+      - Unborn HEAD pointing at refs/heads/master (fresh `git init` on a
+        machine where init.defaultBranch is unset) -> `git symbolic-ref HEAD
+        refs/heads/main`. No commits to move; truly safe.
+      - `master` branch with commits, no upstream -> `git branch -m master main`.
+        Local-only, no remote side-effects.
+      - Already on `main` (or any non-master branch) -> no-op.
+      - `master` branch WITH an upstream -> warn only. Renaming would orphan
+        the upstream tracking and require a force-push or branch recreation
+        on the remote, which needs a human decision.
+
+    Must run after `git init` and before `maybe_auto_commit` so the initial
+    scaffolding commit lands on `main`.
+    """
+    current = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=project_dir, capture_output=True, text=True,
+    )
+    branch = current.stdout.strip()
+
+    if branch and branch != "master":
+        return None
+
+    if not branch:
+        # Empty -> unborn or detached HEAD. Only act when symbolic-ref points at master.
+        head = subprocess.run(
+            ["git", "symbolic-ref", "HEAD"],
+            cwd=project_dir, capture_output=True, text=True,
+        )
+        if head.returncode != 0 or not head.stdout.strip().endswith("/master"):
+            return None
+        result = subprocess.run(
+            ["git", "symbolic-ref", "HEAD", "refs/heads/main"],
+            cwd=project_dir, capture_output=True,
+        )
+        if result.returncode != 0:
+            return None
+        return "Renamed master -> main (unborn HEAD)"
+
+    # branch == "master" with at least one commit. Check for upstream tracking.
+    upstream = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "master@{upstream}"],
+        cwd=project_dir, capture_output=True,
+    )
+    if upstream.returncode == 0:
+        return "! branch 'master' has upstream -- rename manually"
+
+    rename = subprocess.run(
+        ["git", "branch", "-m", "master", "main"],
+        cwd=project_dir, capture_output=True,
+    )
+    if rename.returncode != 0:
+        return None
+    return "Renamed master -> main"
+
+
 def maybe_bootstrap_env(project_dir, accept=None):
     """Offer to copy .env.example -> .env for local dev.
 
@@ -1388,6 +1450,13 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
         if result.returncode != 0:
             print(f"  Warning: git init failed (exit {result.returncode})")
 
+    # ── Part D: normalise branch to main BEFORE auto-commit
+    # Catches both fresh `git init` (where init.defaultBranch may give us
+    # 'master') and existing repos that were init'd before DOE was applied.
+    # Renaming first means maybe_auto_commit lands the scaffolding commit
+    # on `main`, not `master`.
+    branch_msg = maybe_normalise_branch(project_dir)
+
     # ── Part A: offer to create scaffolding commit BEFORE core.hooksPath is set
     # Committing pre-hook activation means the initial commit lands cleanly
     # without triggering audit_claims / main-protection / contract checks.
@@ -1406,6 +1475,8 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
     rows.append(sep())
     if not had_git:
         rows.append(line("Initialized git repository"))
+    if branch_msg:
+        rows.append(line(branch_msg))
     if hooks_set:
         rows.append(line("git hooks path -> .githooks/"))
     else:
