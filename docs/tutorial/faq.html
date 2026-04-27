@@ -531,6 +531,15 @@
           </details>
 
           <details>
+            <summary>What's the deal with the Conventional Commits warning?</summary>
+            <div class="acc-body">
+              <p>From kit v1.57.0, the <code>commit-msg</code> hook validates that every commit subject matches the Conventional Commits format: <code>&lt;type&gt;[(scope)][!]: &lt;description&gt;</code>. Types are <code>feat</code>, <code>fix</code>, <code>chore</code>, <code>docs</code>, <code>refactor</code>, <code>test</code>, <code>perf</code>, <code>build</code>, <code>ci</code>, <code>style</code>.</p>
+              <p>The default mode is <strong>warn</strong> &mdash; non-compliant subjects print a warning to stderr but the commit still goes through. Once your team is fully on the convention, set <code>DOE_COMMIT_HOOK_MODE=block</code> to make non-compliance a hard error.</p>
+              <p>Read more &rarr; <a href="hooks.md">Git hooks</a> and the <code>directives/git-conventions.md</code> directive for the full spec, allowlist, and worked examples.</p>
+            </div>
+          </details>
+
+          <details>
             <summary>Git errors during setup</summary>
             <div class="acc-body">
               <p>Make sure git is installed (<code>git --version</code>). If you see "not a git repository", run <code>git init</code> in your project folder first.</p>
