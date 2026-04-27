@@ -333,3 +333,28 @@ if [ "${SKIP_TEST_FRESHNESS:-0}" != "1" ]; then
 fi
 
 # ---
+
+# ─── Doc freshness check (warnings only — never blocks commit) ───
+# Warns when staged source has a tutorial doc that's not also staged.
+# Mappings:
+#   global-commands/*.md → docs/tutorial/commands.html
+#   .githooks/*          → docs/tutorial/hooks.md
+# Skip with: SKIP_DOC_FRESHNESS=1 git commit ...
+
+if [ "${SKIP_DOC_FRESHNESS:-0}" != "1" ]; then
+    if [ -n "$STAGED_FILES" ]; then
+        cmd_changed=$(echo "$STAGED_FILES" | grep -cE "^global-commands/.*\.md$" || true)
+        cmd_doc_staged=$(echo "$STAGED_FILES" | grep -cF "docs/tutorial/commands.html" || true)
+        if [ "$cmd_changed" -gt "0" ] && [ "$cmd_doc_staged" = "0" ]; then
+            echo "⚠ Doc freshness: global-commands/*.md changed without docs/tutorial/commands.html update" >&2
+        fi
+
+        hook_changed=$(echo "$STAGED_FILES" | grep -cE "^\.githooks/" || true)
+        hook_doc_staged=$(echo "$STAGED_FILES" | grep -cF "docs/tutorial/hooks.md" || true)
+        if [ "$hook_changed" -gt "0" ] && [ "$hook_doc_staged" = "0" ]; then
+            echo "⚠ Doc freshness: .githooks/* changed without docs/tutorial/hooks.md update" >&2
+        fi
+    fi
+fi
+
+# ---
