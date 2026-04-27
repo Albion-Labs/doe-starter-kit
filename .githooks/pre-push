@@ -11,24 +11,29 @@ HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$HOOK_DIR/.." && pwd)"
 
 # ─── Tutorial docs version gate ───
-# Block push if the latest commit has a version tag but tutorial docs
-# are stamped with an older version. Run the stamp script first.
-if [ -f "$PROJECT_ROOT/docs/tutorial/index.html" ] && [ -f "$PROJECT_ROOT/execution/stamp_tutorial_version.py" ]; then
-    LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
-    if [ -n "$LATEST_TAG" ]; then
-        DOC_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' "$PROJECT_ROOT/docs/tutorial/index.html" 2>/dev/null | head -1)
-        if [ "$DOC_VERSION" != "$LATEST_TAG" ]; then
-            echo ""
-            echo "═══ Tutorial docs version mismatch ═══"
-            echo ""
-            echo "  Latest tag: $LATEST_TAG"
-            echo "  Docs show:  $DOC_VERSION"
-            echo ""
-            echo "  Run: python3 execution/stamp_tutorial_version.py $LATEST_TAG"
-            echo "  Then: git add docs/tutorial/*.html && git commit -m 'Stamp docs $LATEST_TAG'"
-            echo ""
-            echo "  Skip with: git push --no-verify"
-            exit 1
+# Enforced on main/master only: release-ready docs must match the latest tag.
+# On feature/housekeeping branches we expect the docs to be stamped AHEAD of
+# the tag (PR bumps docs, tag gets cut post-merge), so this gate would fire
+# incorrectly. Skip the gate off main; the methodology check below still runs.
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
+    if [ -f "$PROJECT_ROOT/docs/tutorial/index.html" ] && [ -f "$PROJECT_ROOT/execution/stamp_tutorial_version.py" ]; then
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
+        if [ -n "$LATEST_TAG" ]; then
+            DOC_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' "$PROJECT_ROOT/docs/tutorial/index.html" 2>/dev/null | head -1)
+            if [ "$DOC_VERSION" != "$LATEST_TAG" ]; then
+                echo ""
+                echo "═══ Tutorial docs version mismatch ═══"
+                echo ""
+                echo "  Latest tag: $LATEST_TAG"
+                echo "  Docs show:  $DOC_VERSION"
+                echo ""
+                echo "  Run: python3 execution/stamp_tutorial_version.py $LATEST_TAG"
+                echo "  Then: git add docs/tutorial/*.html && git commit -m 'Stamp docs $LATEST_TAG'"
+                echo ""
+                echo "  Skip with: git push --no-verify"
+                exit 1
+            fi
         fi
     fi
 fi

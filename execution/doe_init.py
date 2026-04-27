@@ -1208,6 +1208,158 @@ def install_layer_files(config, kit_dir, project_dir):
     return total
 
 
+# ── Post-install polish (bootstrap prompts) ─────────────────────────────
+
+def maybe_auto_commit(project_dir, accept=None):
+    """Offer to create the initial DOE scaffolding commit on main.
+
+    Returns the short SHA on success, or None if skipped or failed.
+
+    - Pre-checks git config user.email: if unset, warns and returns None.
+      This avoids the "Please tell me who you are" git error and nudges
+      the user to configure their identity before we create commits.
+    - Prompts the user unless `accept` is provided (tests pass True/False).
+    - Commits with `chore: initial DOE scaffolding` (Conventional Commits
+      chore: prefix; scope intentionally omitted for the first commit).
+
+    Must be called BEFORE core.hooksPath is activated so hooks don't fire
+    on the initial scaffolding commit.
+    """
+    email_check = subprocess.run(
+        ["git", "config", "--get", "user.email"],
+        cwd=project_dir, capture_output=True, text=True,
+    )
+    has_email = email_check.returncode == 0 and bool(email_check.stdout.strip())
+    if not has_email:
+        print("  Skipping auto-commit: git user.email is not set.")
+        print("  Set it with: git config --global user.email 'you@example.com'")
+        return None
+
+    if accept is None:
+        answer = ask_yn("  Create initial scaffolding commit?", default="y")
+    else:
+        answer = bool(accept)
+    if not answer:
+        return None
+
+    subprocess.run(["git", "add", "-A"], cwd=project_dir, capture_output=True)
+    commit = subprocess.run(
+        ["git", "commit", "-m", "chore: initial DOE scaffolding"],
+        cwd=project_dir, capture_output=True, text=True,
+    )
+    if commit.returncode != 0:
+        print(f"  Auto-commit failed: {commit.stderr.strip()}")
+        return None
+
+    sha = subprocess.run(
+        ["git", "rev-parse", "--short", "HEAD"],
+        cwd=project_dir, capture_output=True, text=True,
+    )
+    short = sha.stdout.strip() if sha.returncode == 0 else ""
+    if short:
+        print(f"  Initial scaffolding commit -> {short}")
+    return short or None
+
+
+def maybe_normalise_branch(project_dir):
+    """Normalise the project's branch to `main` if it's currently `master`.
+
+    Returns a one-line message for the GIT + CI card, or None if no action
+    was taken (already on `main`, or branch is something else the user picked).
+
+    Three safe states are handled; a fourth is flagged for the user:
+      - Unborn HEAD pointing at refs/heads/master (fresh `git init` on a
+        machine where init.defaultBranch is unset) -> `git symbolic-ref HEAD
+        refs/heads/main`. No commits to move; truly safe.
+      - `master` branch with commits, no upstream -> `git branch -m master main`.
+        Local-only, no remote side-effects.
+      - Already on `main` (or any non-master branch) -> no-op.
+      - `master` branch WITH an upstream -> warn only. Renaming would orphan
+        the upstream tracking and require a force-push or branch recreation
+        on the remote, which needs a human decision.
+
+    Must run after `git init` and before `maybe_auto_commit` so the initial
+    scaffolding commit lands on `main`.
+    """
+    current = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=project_dir, capture_output=True, text=True,
+    )
+    branch = current.stdout.strip()
+
+    if branch and branch != "master":
+        return None
+
+    if not branch:
+        # Empty -> unborn or detached HEAD. Only act when symbolic-ref points at master.
+        head = subprocess.run(
+            ["git", "symbolic-ref", "HEAD"],
+            cwd=project_dir, capture_output=True, text=True,
+        )
+        if head.returncode != 0 or not head.stdout.strip().endswith("/master"):
+            return None
+        result = subprocess.run(
+            ["git", "symbolic-ref", "HEAD", "refs/heads/main"],
+            cwd=project_dir, capture_output=True,
+        )
+        if result.returncode != 0:
+            return None
+        return "Renamed master -> main (unborn HEAD)"
+
+    # branch == "master" with at least one commit. Check for upstream tracking.
+    upstream = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", "master@{upstream}"],
+        cwd=project_dir, capture_output=True,
+    )
+    if upstream.returncode == 0:
+        return "! branch 'master' has upstream -- rename manually"
+
+    rename = subprocess.run(
+        ["git", "branch", "-m", "master", "main"],
+        cwd=project_dir, capture_output=True,
+    )
+    if rename.returncode != 0:
+        return None
+    return "Renamed master -> main"
+
+
+def maybe_bootstrap_env(project_dir, accept=None):
+    """Offer to copy .env.example -> .env for local dev.
+
+    Returns True if .env was created, False otherwise.
+
+    Behaviour:
+    - If .env.example is missing: skip silently (returns False).
+    - If .env already exists: print a preservation notice and skip (returns False).
+    - Otherwise: prompt the user (unless `accept` overrides). If accepted, copy
+      .env.example -> .env and print confirmation.
+
+    The `accept` parameter exists for tests — pass True/False to bypass the
+    interactive prompt.
+    """
+    env_example = project_dir / ".env.example"
+    env_file = project_dir / ".env"
+
+    if not env_example.exists():
+        return False
+
+    if env_file.exists():
+        print("  .env already exists -- not overwriting.")
+        return False
+
+    if accept is None:
+        answer = ask_yn("  Copy .env.example to .env for local dev?", default="y")
+    else:
+        answer = bool(accept)
+
+    if not answer:
+        return False
+
+    shutil.copy2(env_example, env_file)
+    print("  .env created from .env.example")
+    return True
+
+
 # ── CI + git + collaboration setup ──────────────────────────────────────
 
 def setup_ci_git_collaboration(config, kit_dir, project_dir):
@@ -1225,6 +1377,9 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
     active_layers = get_active_layers(config)
     gh_count = 0
     extra_count = 0
+
+    # ── Part B: offer to bootstrap .env from .env.example (pre-hooks activation)
+    env_created = maybe_bootstrap_env(project_dir)
 
     # ── Copy .github/ files from manifest (skip CODEOWNERS -- generated below)
     for layer_name in active_layers:
@@ -1295,6 +1450,18 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
         if result.returncode != 0:
             print(f"  Warning: git init failed (exit {result.returncode})")
 
+    # ── Part D: normalise branch to main BEFORE auto-commit
+    # Catches both fresh `git init` (where init.defaultBranch may give us
+    # 'master') and existing repos that were init'd before DOE was applied.
+    # Renaming first means maybe_auto_commit lands the scaffolding commit
+    # on `main`, not `master`.
+    branch_msg = maybe_normalise_branch(project_dir)
+
+    # ── Part A: offer to create scaffolding commit BEFORE core.hooksPath is set
+    # Committing pre-hook activation means the initial commit lands cleanly
+    # without triggering audit_claims / main-protection / contract checks.
+    auto_sha = maybe_auto_commit(project_dir)
+
     # ── Set git hooks path
     result = subprocess.run(
         ["git", "config", "core.hooksPath", ".githooks"],
@@ -1308,11 +1475,17 @@ def setup_ci_git_collaboration(config, kit_dir, project_dir):
     rows.append(sep())
     if not had_git:
         rows.append(line("Initialized git repository"))
+    if branch_msg:
+        rows.append(line(branch_msg))
     if hooks_set:
         rows.append(line("git hooks path -> .githooks/"))
     else:
         rows.append(line("Warning: could not set git hooks path"))
     rows.append(line(f".github/ -- {gh_count} files installed"))
+    if env_created:
+        rows.append(line(".env created from .env.example"))
+    if auto_sha:
+        rows.append(line(f"Initial scaffolding commit -> {auto_sha}"))
     if extra_count:
         rows.append(line(f"CONTRIBUTING.md created"))
     rows.append(line(""))
