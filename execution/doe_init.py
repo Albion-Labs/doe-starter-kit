@@ -903,6 +903,11 @@ def generate_claude_md(config, kit_dir):
     if commands_section.exists():
         parts.append(commands_section.read_text())
 
+    # 2c. Git conventions (Conventional Commits + allowlist + DOE_COMMIT_HOOK_MODE)
+    git_section = claude_sections / "17_git_conventions.md"
+    if git_section.exists():
+        parts.append(git_section.read_text())
+
     # 3. Framework section (Tier 1 from template, Tier 2 generated dynamically)
     fw_section = templates_dir / framework / "claude_section.md"
     if fw_section.exists():
