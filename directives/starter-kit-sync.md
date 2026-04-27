@@ -60,7 +60,7 @@ Files to compare:
 - SYSTEM-MAP.md (structure documentation)
 - .claude/claude-chat-sync-prompt.md
 
-**Commands README check:** Both `~/doe-starter-kit/global-commands/README.md` and the local `.claude/commands/README.md` must be checked. For every command file that differs across layers, re-read its content and compare against the README description. If the command's behaviour or features changed meaningfully (new card rows, new modes, renamed sections), update the README description. If the change is purely internal (wording tweaks, border fixes, reordering), leave the README as-is. Present README updates alongside other diffs for approval.
+**Commands README check:** Check `~/doe-starter-kit/global-commands/README.md` (the kit's authoritative command index — projects no longer carry their own copy). For every command file that differs across layers, re-read its content and compare against the README description. If the command's behaviour or features changed meaningfully (new card rows, new modes, renamed sections), update the README description. If the change is purely internal (wording tweaks, border fixes, reordering), leave the README as-is. Present README updates alongside other diffs for approval.
 
 If all syncable files are identical across all layers, say "Starter kit is up to date — nothing to sync" and stop.
 
@@ -165,7 +165,7 @@ python3 ~/doe-starter-kit/execution/stamp_tutorial_version.py v[X.Y.Z]
 git add -A
 git diff --staged --stat
 # Show diff, wait for sign-off
-SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1 git commit -m "v[X.Y.Z]: Sync from [project] — [what changed]"
+SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1 git commit -m "chore(release): v[X.Y.Z] — sync from [project] ([what changed])"
 git tag v[X.Y.Z]
 SKIP_MAIN_PROTECTION=1 git push
 git push origin v[X.Y.Z]

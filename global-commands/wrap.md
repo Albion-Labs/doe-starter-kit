@@ -198,10 +198,15 @@ Build the timeline from `result.metrics.commitLog`:
 
 ### 3d: Commit classification
 
-For each commit in commitLog, set the type:
-- "test" if the message contains "test" and it's clearly a test artifact (not a test framework)
-- "fix" if the message starts with "Fix" or "fix:"
-- "normal" for everything else
+For each commit in commitLog, set the type by reading its Conventional Commits prefix (see `directives/git-conventions.md`):
+- "test" if the subject starts with `test:` or `test(...)`
+- "fix" if the subject starts with `fix:` or `fix(...)` (also `fix!:` / `fix(...)!:` for breaking fixes)
+- "feat" if the subject starts with `feat:` or `feat(...)` (also `feat!:` / `feat(...)!:`)
+- "chore" if the subject starts with `chore:` or `chore(...)` — covers releases (`chore(release): vX.Y.Z`), dependency bumps, internal cleanup
+- "docs" if the subject starts with `docs:` or `docs(...)`
+- "normal" for everything else (legacy `vX.Y.Z:` releases, allowlisted Merge/Revert commits, anything pre-Conventional-Commits)
+
+Fallback: if the prefix is unrecognised but the subject literally starts with "Fix " (capital F), classify as "fix" — this preserves classification for legacy commits before the kit adopted Conventional Commits in v1.57.0.
 
 ### 3e: Generate and open
 
