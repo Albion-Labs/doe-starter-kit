@@ -11,6 +11,7 @@ Loaded when building, coding, or implementing features. Also loaded on first ses
 Work on feature branches, commit per step. `/crack-on` creates `feature/<name>` from main.
 - Commit after every completed step. Push immediately. Never batch multiple steps.
 - **Mark the step [x] in todo.md before committing step work.** The commit-msg hook blocks commits that reference "Step N" or contain a version tag `(vX.Y.Z)` unless `tasks/todo.md` is staged. This is deterministic — you cannot commit step work without updating progress. Skip: `SKIP_STEP_MARK_CHECK=1`.
+- **Use Conventional Commits format.** Subjects follow `<type>[(scope)][!]: <description>` — see `directives/git-conventions.md` for the full spec, the allowlist for legacy/automated patterns (`Merge `, `Revert "`, `Initial commit`, `fixup!`, `squash!`, legacy `vX.Y.Z:`), and the `DOE_COMMIT_HOOK_MODE` env var (default `warn`, switch to `block` once the team is fully on CC). The commit-msg hook validates every subject in warn mode by default during the v1.57.0 -> v1.58.x transition.
 - Do not commit directly to main. No "Co-authored-by" trailers.
 - At retro: `gh pr create` with PR template auto-filled from contracts. CI must pass before merge.
 - **No mid-feature PRs.** Push to the feature branch to save work between sessions -- the branch is on GitHub, nothing is lost. PRs are created at retro only (the final step). Mid-feature PRs create merge/rebase overhead with no benefit. If a session ends mid-feature, wrap commits directly to the feature branch.

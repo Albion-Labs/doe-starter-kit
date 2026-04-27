@@ -15,7 +15,7 @@ Then read directives/starter-kit-sync.md and follow it precisely. The directive 
 11. Before writing ANY files to ~/doe-starter-kit, run `touch .tmp/.sync-doe-active` in Bash. This disables the kit write guard hook for this session. Remove it when done: `rm -f .tmp/.sync-doe-active`.
 12. Stamp, commit, tag, push, and release directly on main:
     - `cd ~/doe-starter-kit && python3 execution/stamp_tutorial_version.py v[X.Y.Z]`
-    - `git add -A && git commit -m "v[X.Y.Z]: Sync from [project] — [summary]"`
+    - `git add -A && git commit -m "chore(release): v[X.Y.Z] — sync from [project] ([summary])"` (Conventional Commits — see `directives/git-conventions.md`)
     - `git tag v[X.Y.Z] && git push && git push --tags`
     - `gh release create v[X.Y.Z] --title "v[X.Y.Z] — [short description]" --notes "[changelog entry]"`
 12. Update STATE.md's "DOE Starter Kit" line to the new version (e.g. `v1.24.1 · ~/doe-starter-kit · synced`)

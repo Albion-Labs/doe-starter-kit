@@ -1001,7 +1001,7 @@
 
     <!-- ── Sidebar ── -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.56.1</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.57.0</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -1119,6 +1119,11 @@
             <div class="card-marker">Do</div>
             <h4>Commit after every completed piece of work</h4>
             <p>Each completed task gets its own git commit. This makes rollback surgical &mdash; if something breaks, you revert one commit, not an entire session.</p>
+          </div>
+          <div class="m-card do-card" style="cursor: default;">
+            <div class="card-marker">Do</div>
+            <h4>Use Conventional Commits for subjects</h4>
+            <p>Subjects follow <code>&lt;type&gt;[(scope)][!]: &lt;description&gt;</code> &mdash; e.g. <code>feat(map): add overlay toggle</code>, <code>fix(auth): expire stale sessions</code>, <code>chore(release): v1.57.0</code>. The <code>commit-msg</code> hook validates this in warn mode by default; switch to block once your team is fully on the convention. See the Git Conventions directive for the full spec.</p>
           </div>
           <div class="m-card do-card" style="cursor: default;">
             <div class="card-marker">Do</div>
@@ -1427,7 +1432,7 @@
               </div>
               <pre><span class="t-comment"># Getting updates from the starter kit:</span>
 <span class="t-prompt">$</span> <span class="t-cmd">/pull-doe</span>
-<span class="t-out">  Checking version... your project: v1.50.0, latest: v1.56.1</span>
+<span class="t-out">  Checking version... your project: v1.50.0, latest: v1.57.0</span>
 <span class="t-out">  Changelog: new /scope command, improved /wrap output, hook fix</span>
 <span class="t-out">  Apply update? [y/n]</span></pre>
             </div>
@@ -1488,7 +1493,7 @@
                     <div class="vscode-terminal-body">
                       <pre><span class="t-comment"># Getting updates from the starter kit:</span>
 <span class="t-prompt">$</span> <span class="t-cmd">/pull-doe</span>
-<span class="t-out">  Checking version... your project: v1.50.0, latest: v1.56.1</span>
+<span class="t-out">  Checking version... your project: v1.50.0, latest: v1.57.0</span>
 <span class="t-out">  Changelog: new /scope command, improved /wrap output, hook fix</span>
 <span class="t-out">  Apply update? [y/n]</span></pre>
                     </div>
@@ -1824,7 +1829,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.56.1</footer>
+        <footer class="site-footer">DOE Starter Kit v1.57.0</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

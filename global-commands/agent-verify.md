@@ -73,7 +73,7 @@ If any `[auto]` criterion fails:
 
 If all criteria pass after a fix, commit the fix:
 ```
-git add <changed-files> && git commit -m "fix: verification failure in [criterion]"
+git add <changed-files> && git commit -m "fix(verify): [criterion] — [what was wrong]"
 ```
 
 If after 3 attempts criteria still fail, stop and report:

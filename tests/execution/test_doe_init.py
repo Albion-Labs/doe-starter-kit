@@ -15,7 +15,12 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "execution"))
 
 import doe_init
-from doe_init import maybe_auto_commit, maybe_bootstrap_env, maybe_normalise_branch
+from doe_init import (
+    generate_claude_md,
+    maybe_auto_commit,
+    maybe_bootstrap_env,
+    maybe_normalise_branch,
+)
 
 
 # ── Part B: maybe_bootstrap_env ─────────────────────────────────────────
@@ -357,3 +362,34 @@ def test_normalise_branch_called_before_auto_commit():
         "maybe_normalise_branch must run before maybe_auto_commit so the "
         "scaffolding commit lands on main, not master."
     )
+
+
+# ── v1.57.0: Git Conventions section in generated CLAUDE.md ─────────────
+
+def test_claude_md_has_git_conventions():
+    """Generated CLAUDE.md must include the Git Conventions section -- list of
+    Conventional Commits types, the DOE_COMMIT_HOOK_MODE env var, and a
+    reference to directives/git-conventions.md."""
+    kit_dir = PROJECT_ROOT
+    config = {
+        "project_type": "static_site",
+        "project_type_custom": "",
+        "framework": "static",
+        "framework_custom": "",
+        "collaboration_mode": "solo",
+        "has_database": False,
+        "has_personal_data": False,
+        "platform_targets": [],
+    }
+
+    md = generate_claude_md(config, kit_dir)
+
+    assert "Git Conventions" in md, "generated CLAUDE.md missing the Git Conventions header"
+    assert "Conventional Commits" in md, "generated CLAUDE.md missing Conventional Commits reference"
+    assert "DOE_COMMIT_HOOK_MODE" in md, "generated CLAUDE.md missing the DOE_COMMIT_HOOK_MODE env var"
+    assert "directives/git-conventions.md" in md, (
+        "generated CLAUDE.md must point readers at the full directive"
+    )
+    # Sanity: every type prefix is mentioned
+    for t in ("feat", "fix", "chore", "docs", "refactor", "test", "perf", "build", "ci", "style"):
+        assert t in md, f"Git Conventions section missing type {t!r}"

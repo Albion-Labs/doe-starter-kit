@@ -8,6 +8,52 @@ sed '/^[Cc]o-[Aa]uthored-[Bb]y:.*[Cc]laude/d' "$1" | sed '/^[Cc]o-[Aa]uthored-[B
 sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$TMPFILE" > "$1"
 rm -f "$TMPFILE"
 
+# ─── Conventional Commits validation (v1.57.0) ───
+# Subject must match `<type>[(scope)][!]: <description>` where type is one of
+# feat|fix|chore|docs|refactor|test|perf|build|ci|style. Allowlisted prefixes
+# bypass: Merge, Revert ", Initial commit, fixup!, squash!, and the legacy
+# vX.Y.Z: format used in pre-v1.57.0 kit history.
+#
+# Mode is controlled by DOE_COMMIT_HOOK_MODE:
+#   warn (default) — print warning to stderr, exit 0 (commit succeeds)
+#   block          — print warning and exit 1 (commit blocked)
+#
+# Skip the entire commit-msg hook with: git commit --no-verify
+# See: directives/git-conventions.md
+
+MODE="${DOE_COMMIT_HOOK_MODE:-warn}"
+SUBJECT=$(head -n 1 "$1")
+
+# Allowlist — these patterns bypass the CC validator entirely
+case "$SUBJECT" in
+    "Merge "*) ;;
+    'Revert "'*) ;;
+    "Initial commit"*) ;;
+    "fixup!"*) ;;
+    "squash!"*) ;;
+    v[0-9]*[.][0-9]*[.][0-9]*:*) ;;  # legacy vX.Y.Z: format
+    *)
+        # Validate Conventional Commits format
+        if ! echo "$SUBJECT" | grep -qE "^(feat|fix|chore|docs|refactor|test|perf|build|ci|style)(\([^)]+\))?!?: .+"; then
+            echo "" >&2
+            echo "═══ Conventional Commits ═══" >&2
+            echo "" >&2
+            echo "  Subject does not match: <type>[(scope)][!]: <description>" >&2
+            echo "  Got: $SUBJECT" >&2
+            echo "" >&2
+            echo "  Types: feat, fix, chore, docs, refactor, test, perf, build, ci, style" >&2
+            echo "  See: directives/git-conventions.md" >&2
+            echo "" >&2
+            echo "  Skip with: git commit --no-verify" >&2
+            echo "" >&2
+            if [ "$MODE" = "block" ]; then
+                exit 1
+            fi
+            # warn mode: fall through, commit succeeds
+        fi
+        ;;
+esac
+
 # ─── Changelog enforcement ───
 # If commit message contains a version tag (vX.Y.Z), changelog.html must be staged.
 # This prevents shipping versioned steps without a changelog entry.
