@@ -2,6 +2,15 @@
   "enabledPlugins": {
     "vercel@claude-plugins-official": false
   },
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(./.env)",
+      "Read(./**/.env)",
+      "Read(.env.*)",
+      "Read(./**/.env.*)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
