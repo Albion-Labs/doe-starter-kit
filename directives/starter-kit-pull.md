@@ -63,13 +63,16 @@ cd ~/doe-starter-kit && \
 For each manifest in the range, run the **pull-impact pre-flight**:
 
 1. Read the manifest's "Pull impact summary" (a one-paragraph overview at the top -- typical content: phrase rewrites preserve meaning, behavioural changes listed at end).
-2. Extract every `OLD: "..."` line. The manifest's populator escapes inner double quotes as `\"` and newlines as `\n`, so an awk-on-`"` extractor would split mid-phrase on entries like `Reform UK ... sending false \"no record\" replies ...`. Use the Python extractor below — it captures the phrase between the leading `"` and the trailing `"$` greedily, then decodes the escapes back to plain text:
+2. Extract every `OLD: "..."` line. The manifest's populator escapes inner double quotes as `\"` and newlines as `\n`, so an awk-on-`"` extractor would split mid-phrase on entries like `Reform UK ... sending false \"no record\" replies ...`. Use the Python extractor below — it strips the manifest's documentation code fences first (so the format-block placeholder `<exact phrase removed from the file>` doesn't leak through as a phantom phrase), then captures from the leading `"` to the trailing `"$` greedily, then decodes the escapes back to plain text:
    ```bash
    cd <project-root>
    python3 - <<'PY' > /tmp/pull-impact-old-phrases.txt
    import re, os
    manifest = os.path.expanduser("~/doe-starter-kit/migrations/vX.Y.Z.md")
    text = open(manifest, encoding="utf-8").read()
+   # Strip fenced code blocks so OLD: lines inside the manifest's own
+   # documentation example (the Format section) don't extract.
+   text = re.sub(r'^```[\s\S]*?^```\s*$', '', text, flags=re.MULTILINE)
    # Capture from first " to last " on each OLD: line (greedy .* handles inner \").
    for phrase in re.findall(r'^OLD: "(.*)"$', text, re.MULTILINE):
        decoded = phrase.replace('\\"', '"').replace('\\n', '\n')
