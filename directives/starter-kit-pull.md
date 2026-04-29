@@ -63,18 +63,26 @@ cd ~/doe-starter-kit && \
 For each manifest in the range, run the **pull-impact pre-flight**:
 
 1. Read the manifest's "Pull impact summary" (a one-paragraph overview at the top -- typical content: phrase rewrites preserve meaning, behavioural changes listed at end).
-2. Extract every `OLD: "..."` line. Many OLD phrases contain literal apostrophes (`Don't`, `'as you go'`, `implementer's`), so single-quoted shell strings would break -- pass the phrases via a temp file fed to `grep -F -f`:
+2. Extract every `OLD: "..."` line. The manifest's populator escapes inner double quotes as `\"` and newlines as `\n`, so an awk-on-`"` extractor would split mid-phrase on entries like `Reform UK ... sending false \"no record\" replies ...`. Use the Python extractor below — it captures the phrase between the leading `"` and the trailing `"$` greedily, then decodes the escapes back to plain text:
    ```bash
    cd <project-root>
-   # Write each OLD phrase, one per line, into a temp file.
-   awk -F'"' '/^OLD: "/ {print $2}' ~/doe-starter-kit/migrations/vX.Y.Z.md \
-     > /tmp/pull-impact-old-phrases.txt
+   python3 - <<'PY' > /tmp/pull-impact-old-phrases.txt
+   import re, os
+   manifest = os.path.expanduser("~/doe-starter-kit/migrations/vX.Y.Z.md")
+   text = open(manifest, encoding="utf-8").read()
+   # Capture from first " to last " on each OLD: line (greedy .* handles inner \").
+   for phrase in re.findall(r'^OLD: "(.*)"$', text, re.MULTILINE):
+       decoded = phrase.replace('\\"', '"').replace('\\n', '\n')
+       # grep -F -f reads patterns line by line, so a phrase that originally
+       # spanned multiple lines is emitted with its embedded newlines preserved.
+       print(decoded)
+   PY
    grep -rnF -f /tmp/pull-impact-old-phrases.txt \
      --include="*.md" --include="*.py" --include="*.json" \
      CLAUDE.md directives/ tasks/ execution/ .claude/ 2>/dev/null
    rm /tmp/pull-impact-old-phrases.txt
    ```
-   The `-f file` form reads patterns from a file, one per line, so apostrophes and double quotes in the phrases pass through unmolested (no shell quoting required). `awk -F'"'` extracts the phrase between the first pair of double quotes on each `OLD:` line, which matches the manifest format. Any hit is a "PULL IMPACT" warning -- the project is using a phrase the kit has retired. Cross-reference the hit's matched line to its `NEW:` replacement and report all three (file:line, retired phrase, replacement).
+   The `-f file` form reads patterns from a file, one per line, so apostrophes and (decoded) double quotes in the phrases pass through unmolested (no shell quoting required). Any hit is a "PULL IMPACT" warning -- the project is using a phrase the kit has retired. Cross-reference the hit's matched line to its `NEW:` replacement and report all three (file:line, retired phrase, replacement).
 3. Read the manifest's "Behavioural changes" section. For each entry, run the documented `Pull-impact grep:` command against the project. Hits indicate workflows that may newly trip blocks, fire hooks, or behave differently after the pull.
 4. Read the "Customised-directive check" snippet (typically near the end of the manifest) and run it against the project. Any flagged file needs a 3-way merge: project-edits + kit-edits-since-last-pin + kit's new content.
 
