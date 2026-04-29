@@ -1,7 +1,9 @@
 # Directive: Architectural Invariants
 
 ## Goal
-Define truths that must survive any refactor, migration, or feature addition. These are non-negotiable constraints -- if a change would violate one, stop and flag it before proceeding.
+Define truths that must survive any refactor, migration, or feature addition. These are constitutional constraints -- when a change would violate one, surface the conflict to the user before any edit.
+
+Tradeoff: Invariants protect long-term integrity at the cost of optionality during fast iteration. Apply on changes that affect data flow, persistence, public API, or the DOE layer split. Skip when: the change is a behaviour-preserving refactor that touches no shared interface.
 
 ## When to Use
 - Before any refactor or architectural change -- read this first
@@ -17,7 +19,7 @@ Define truths that must survive any refactor, migration, or feature addition. Th
 3. **Progressive Disclosure is the context management strategy.** CLAUDE.md stays compact (under 150 lines). Detailed instructions live in directives, learnings, and plans -- loaded on demand via triggers.
 
 ### Session Integrity
-4. **STATE.md reflects current position, not history.** Replace stale info, don't accumulate. History lives in git log and archive.md.
+4. **STATE.md reflects current position, not history.** Replace stale info as it changes; history lives in git log and archive.md.
 5. **learnings.md captures reusable patterns, not session notes.** Each entry must be actionable by a future session that has no context about the current one.
 6. **One task, one commit.** Every commit is independently revertable. No batching.
 
@@ -27,11 +29,11 @@ Define truths that must survive any refactor, migration, or feature addition. Th
 9. **/wrap runs before ending a session.** Session state must be persisted so the next session can pick up cleanly.
 
 ### Extensibility
-10. **New invariants require user approval.** Claude can propose additions to this list but must not add them unilaterally. These are constitutional constraints, not suggestions.
+10. **New invariants require user approval.** Claude proposes additions; the user merges them. These are constitutional constraints, not suggestions.
 
 ## Process
 When a proposed change would violate an invariant:
-1. Stop before making the change
+1. Surface the conflict before any edit
 2. Name the invariant that would be violated (by number)
 3. Explain why the change conflicts
 4. Propose an alternative that preserves the invariant

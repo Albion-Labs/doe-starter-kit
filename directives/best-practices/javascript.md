@@ -9,23 +9,23 @@ Read before writing or modifying any JavaScript file.
 ## Process
 
 ### Security
-- Never use `innerHTML` with untrusted data — use `textContent` or DOM APIs (XSS risk)
-- Never build HTML with string concatenation — use template literals with proper escaping or DOM creation
-- Never use `eval()` or `new Function()` with dynamic input
+- For untrusted data, use `textContent` or DOM creation APIs (`document.createElement`); reserve `innerHTML` for known-safe HTML you generated yourself (XSS risk)
+- Build HTML via DOM creation APIs or template literals with explicit escaping -- string concatenation hides escape boundaries and invites XSS
+- For dynamic execution, use pre-registered, statically-analysable code paths (`eval()` and `new Function()` are off-limits, including via `setTimeout`/`setInterval` with string arguments)
 
 ### Correctness
 - Always use `===` and `!==` — never `==` or `!=` (type coercion bugs)
 - Always handle null/undefined returns from `.find()`, `.find()` on arrays, `Map.get()` — check before using
 - Always wrap `await` calls in try/catch — unhandled rejections crash Node and silently fail in browsers
 - Always add `.catch()` to standalone promises not awaited
-- Never mutate function parameters — return new values instead
+- Treat function parameters as read-only; return new values to convey changes
 - Always clean up event listeners, timers, and subscriptions when done (memory leaks)
-- Always use `const` by default, `let` when reassignment is needed — never `var`
+- Use `const` by default, `let` when reassignment is needed; `var` is reserved for legacy code you cannot edit
 
 ### Maintainability
-- Never hardcode magic numbers or strings — extract to named constants or config
+- Extract magic numbers and strings to named constants or config -- a name documents intent that the literal value can't
 - Remove all `console.log` debugging statements before committing
-- Never use `async` on a function that doesn't `await` anything
+- Mark a function `async` only when it awaits something -- otherwise the wrapped Promise is overhead with no caller benefit
 - Always handle all Promise states — don't ignore rejections or assume success
 
 ## Verification

@@ -28,7 +28,7 @@ These patterns from `learnings.md` define the project's established conventions.
 
 ## Your Task
 
-Evaluate the implementation across the categories below. For each issue, cite the exact file path and line number. Do not raise issues without evidence.
+Evaluate the implementation across the categories below. Every issue cites the exact file path and line number -- evidence is the price of raising the issue.
 
 ### Evaluation Categories
 
@@ -71,7 +71,7 @@ Label every issue with one of the following:
 - **Important** — Should be fixed before merge. The code works but introduces meaningful technical debt or a real risk.
 - **Minor** — Optional improvement. Low stakes. Can be deferred or skipped.
 
-Do not use any other severity labels.
+Severity labels are exactly: Critical / Important / Minor.
 
 ---
 

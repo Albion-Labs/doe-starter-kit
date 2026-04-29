@@ -3,6 +3,8 @@
 ## Goal
 Connect GitHub activity and session wraps to Slack for real-time project visibility. Not required, but recommended for the best experience.
 
+Tradeoff: Slack + GitHub integration costs a webhook setup per project in exchange for real-time PR/CI/wrap visibility to the team. Apply when the project has more than one stakeholder watching activity. Skip when: it's a solo experiment with no audience for notifications.
+
 ## When to Use
 - Setting up a new DOE project and want notifications
 - Onboarding Slack or GitHub integrations
@@ -31,7 +33,7 @@ Invite the GitHub bot to the channel first (`/invite @GitHub`) or it won't respo
 
 Create a Slack app at api.slack.com/apps (From scratch). Enable Incoming Webhooks. Add one webhook per channel -- each webhook URL maps to a specific channel.
 
-Add the URLs to `.env` (gitignored, never committed):
+Add the URLs to `.env` -- gitignored, with the pre-commit secret-detection hook as a backstop against accidental commits:
 
 ```
 SLACK_WEBHOOK_URL_MYPROJECT=https://hooks.slack.com/services/T.../B.../xxx
@@ -59,7 +61,7 @@ Rename channels freely -- subscriptions and webhooks are tied to internal IDs, n
 - Free Slack plan: 90-day message history, 10 app integrations max. Webhooks count as 1 integration (the app), not per-webhook.
 - GitHub for Slack needs to be invited to each channel before `/github subscribe` works.
 - Bot comments from claude-code-action will appear if you subscribe to `comments`. Leave `comments` off unless you want them.
-- Webhook URLs are secrets. Store in `.env`, never in committed files. Pre-commit hooks with secret detection will catch accidental commits.
+- Webhook URLs are secrets and live in `.env`. The pre-commit secret-detection hook gates accidental commits to other files.
 
 ## Verification
 - [ ] `/github subscribe` responds in the channel (not silently ignored)

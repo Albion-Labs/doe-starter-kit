@@ -9,8 +9,8 @@ Read before writing or modifying any HTML or CSS file.
 ## Process
 
 ### Security
-- Never use `innerHTML` with untrusted or dynamic data — use `textContent` or DOM APIs (XSS risk)
-- Never include inline event handlers (`onclick="..."`) with dynamic values
+- For untrusted or dynamic data, use `textContent` or DOM creation APIs (`document.createElement`); reserve `innerHTML` for known-safe HTML you generated yourself (XSS risk)
+- Wire event handlers via `addEventListener` in JS rather than inline `onclick="..."` attributes -- inline handlers with dynamic values are a code-injection vector
 
 ### Accessibility
 - Always add `alt` attributes to `<img>` tags — use descriptive text or `alt=""` for decorative images
@@ -19,15 +19,15 @@ Read before writing or modifying any HTML or CSS file.
 - Always include `lang` attribute on `<html>` element
 
 ### Correctness
-- Never reuse `id` values on a page — IDs must be unique (JS selectors and anchors break)
+- Each `id` is unique per page; reach for classes when you need a repeated marker (JS selectors and anchor links rely on uniqueness)
 - Always include `<meta name="viewport" content="width=device-width, initial-scale=1">` for responsive pages
 - Always include `<meta charset="utf-8">` as the first element in `<head>`
-- Never use inline styles — use CSS classes (maintenance, caching, consistency)
+- Style via CSS classes -- the cascade lives in stylesheets where it can be maintained, cached, and kept consistent
 
 ### CSS Maintainability
-- Never use `!important` unless overriding third-party CSS — fix specificity instead
-- Use CSS custom properties (`--color-primary`) for repeated values — never hardcode colors/sizes in multiple places
-- Never use fixed pixel widths for layout containers — use relative units, flexbox, or grid
+- Resolve specificity issues by tightening selectors or restructuring the cascade; reserve `!important` for overriding third-party CSS
+- Use CSS custom properties (`--color-primary`) for repeated values -- a single source of truth for colours and sizes
+- Layout containers use relative units (`%`, `rem`, `vw`), flexbox, or grid -- fixed pixel widths break responsive layouts
 - Prefer classes over element selectors for styling — element selectors are fragile to markup changes
 
 ## Verification

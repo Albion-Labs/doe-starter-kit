@@ -38,3 +38,8 @@ Significant failures (cost >30 min, broke production, or recurred): use structur
 
 ## Common Mistakes
 <!-- Recurring errors to watch for. Failure-driven learnings from Self-Annealing. -->
+
+## Considered & Rejected
+<!-- Patterns evaluated and deliberately set aside. Records the *why* so future sessions can act on the prior decision rather than re-running the analysis. -->
+
+- Considered and deferred indefinitely (research session 215, Apr 2026): Skills-standard hybrid migration (DOE's value is orchestration, not per-directive content; portable Skills omit the orchestration layer; two-system overhead exceeds the theoretical portability gain), disposable-worktree validation in /review (existing hooks already gate at commit/push -- no validation gap to close), auto-fix mode for /review findings (contradicts the Surgical Changes principle -- silent AI edits violate "every changed line traces to the user's request"), structured contract format with linter (`/agent-launch` already validates Verify: patterns -- speculative for the one drift instance we have), kit-as-submodule for DOE-using projects (UX cost > benefit; setup.sh "just works" model is the right primitive for non-technical users), DOE Lite single-file curl-installable distribution (decision is "stay with the full kit unless tooling ecosystem forces a change"; viral surface is a marketing question, not engineering, and competing with the full kit at the install gate would dilute adoption). See the 5 v2.0 GH issues that survived the cull (Kit-bloat audit, Persistent memory layer, Cross-project asset sharing, Performance engineering directive, Output evals).

@@ -2,10 +2,19 @@
   "enabledPlugins": {
     "vercel@claude-plugins-official": false
   },
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(./.env)",
+      "Read(./**/.env)",
+      "Read(.env.*)",
+      "Read(./**/.env.*)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "write|edit",
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
@@ -20,7 +29,7 @@
         ]
       },
       {
-        "matcher": "read",
+        "matcher": "Read",
         "hooks": [
           {
             "type": "command",
@@ -32,7 +41,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "write|create|edit",
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
@@ -52,7 +61,7 @@
         ]
       },
       {
-        "matcher": "bash",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
@@ -63,6 +72,16 @@
             "type": "command",
             "command": "python3 .claude/hooks/guard_kit_writes.py",
             "description": "Block direct kit writes via Bash (cp, git commit, etc.)"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/protect_directives.py",
+            "description": "Block Bash redirections that write to directives/"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/block_secrets_in_code.py",
+            "description": "Block Bash redirections that write secret-shaped values"
           },
           {
             "type": "command",

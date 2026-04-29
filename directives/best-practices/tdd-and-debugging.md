@@ -16,7 +16,7 @@ Prevent Claude from skipping tests or guessing at bug causes. Enforce discipline
 2. **Green:** Write the minimum code to make the test pass. Nothing more.
 3. **Refactor:** Clean up the implementation without changing behaviour. Tests must still pass.
 
-One cycle per behaviour. Don't batch. Don't write three tests then implement all three — that's batch-and-pray, not TDD.
+One cycle per behaviour. Implement after the test fails -- batching three tests then implementing all three is batch-and-pray, not TDD.
 
 ### What to Test
 
@@ -42,7 +42,7 @@ Claude will find plausible reasons to skip tests. These are the common excuses a
 | "Testing this would require mocking half the system" | That's a design problem, not a testing problem. | Refactor to reduce coupling, then test the isolated unit. |
 | "The contract criteria already verify this" | Contract criteria check existence and wiring. They don't check logic. | Contract = Level 1-3. TDD = logic correctness. Both needed. |
 
-**Rule:** If you catch yourself using any of these excuses, stop and write the test. The excuse is the signal that a test is needed.
+**Rule:** When you notice an excuse from the table above, the excuse is the signal -- write the test now.
 
 ### When TDD Applies in DOE
 
@@ -60,7 +60,7 @@ For [APP] features with UI:
 
 ## Systematic Debugging
 
-When something fails, follow these four phases in order. Do not skip phases.
+When something fails, run the four phases in order: investigate -> pattern analysis -> hypothesis testing -> implementation. Each phase produces evidence that the next one needs.
 
 ### Phase 1: Investigate (gather evidence)
 
@@ -69,7 +69,7 @@ When something fails, follow these four phases in order. Do not skip phases.
 - Reproduce the failure. If you can't reproduce it, you can't verify a fix.
 - Check what changed recently: `git log --oneline -10`, `git diff HEAD~1`.
 - Check the environment: Node version, Python version, OS, dependencies.
-- Read the relevant source code. Don't guess what a function does — read it.
+- Read the relevant source code. Read the function before forming a hypothesis -- the source is the ground truth.
 
 **Output:** A factual summary of what fails, when, and what the error says. No theories yet.
 
@@ -95,10 +95,10 @@ Result: [confirmed/rejected]
 ```
 
 **Rules:**
-- One hypothesis at a time. Don't change three things and see if it works.
+- One hypothesis at a time -- change one thing, test it, revert if rejected, then try the next.
 - If a hypothesis is rejected, revert the test change before trying the next one.
 - If three hypotheses fail, return to Phase 1 — you're missing evidence.
-- Never say "I think the problem might be..." without immediately stating how to test that theory.
+- Each hypothesis pairs with a test that distinguishes it from the alternatives -- "I think the problem might be..." is incomplete without the test plan that follows.
 
 ### Phase 4: Implementation (fix and prevent)
 

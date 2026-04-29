@@ -1,7 +1,9 @@
 # Directive: Kit Development
 
 ## Goal
-The conventions specific to contributing changes back to the DOE Starter Kit itself — versioning model, branch naming, CHANGELOG structure, release mechanics, CC self-dogfood, the tests-included-by-default expectation, and the hook-design rule. These are kit-only rules; they don't apply to projects that consume the kit.
+The conventions specific to contributing changes back to the DOE Starter Kit itself — versioning model, branch naming, CHANGELOG structure, release mechanics, CC self-dogfood, the tests-included-by-default expectation, and the hook-design rule. These rules apply to kit work only; projects that consume the kit are governed by their own CLAUDE.md.
+
+Tradeoff: Kit-dev rules add a pytest run and CHANGELOG edit to every kit feature in exchange for safe upgrades for every project that pulls the kit. Apply on every PR against `~/doe-starter-kit`. Skip when: the work is a project-only edit (CLAUDE.md, project directives) with no kit sync planned.
 
 ## When to Use
 - Working in `~/doe-starter-kit` directly
@@ -68,7 +70,7 @@ gh release create vX.Y.Z --title "vX.Y.Z — <short-name>" \
   --notes "$(sed -n '/^## vX\.Y\.Z/,/^## vX\.Y\./p' CHANGELOG.md | sed '$d')"
 ```
 
-The release notes come from the CHANGELOG hero + sections of the release being shipped. Don't hand-write release notes; the CHANGELOG is the source of truth.
+The release notes come from the CHANGELOG hero + sections of the release being shipped. The CHANGELOG is the source of truth -- write the entry there first; `gh release create` lifts it.
 
 ## CC self-dogfood
 

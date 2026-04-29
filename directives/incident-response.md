@@ -3,6 +3,8 @@
 ## Goal
 Provide a structured procedure for handling security incidents, data breaches, team member departures, and bulk data subject requests so that nothing is missed under pressure.
 
+Tradeoff: Incident procedures cost rehearsal time upfront in exchange for a structured response when the 72-hour ICO clock is running. Apply when a breach is suspected, a team member departs, a bulk DSAR arrives, or a secret is exposed. Skip when: the event is a routine error (failed test, unhandled exception in dev) with no compromise of personal data.
+
 ## When to Use
 - A data breach or suspected data breach is discovered
 - A security vulnerability is reported or detected
@@ -27,7 +29,7 @@ When personal data may have been compromised, accessed without authorisation, lo
 **Immediate (Hour 0):**
 1. Confirm the breach is real. Check logs, access records, error reports.
 2. If the breach is ongoing, stop it. Revoke credentials, restrict access, take the affected service offline if necessary.
-3. Do NOT destroy evidence. Preserve logs and database state.
+3. Preserve all logs and database state. Snapshot the affected systems before any remediation -- the snapshot is the evidence record.
 
 **Triage (Hour 0-1):**
 4. Classify the data involved using `THREAT_MODEL.md` data classification.
@@ -85,7 +87,7 @@ A bulk Subject Access Request occurs when multiple individuals (or an organisati
 **For bulk requests specifically:**
 - Prioritise by receipt date (FIFO).
 - Track progress in a spreadsheet or task list -- each request must have: requestor name, receipt date, deadline, status, response date.
-- Do NOT send a blanket "no records found" response without actually checking. This is what Reform UK did and it is now evidence against them.
+- Verify the database for the data subject before responding. A "no records" reply requires evidence -- Reform UK sent blanket replies and those replies are now evidence against them.
 - If the system genuinely holds no data about a requestor, confirm this after checking ALL data stores (database, backups, logs, email, paper files, third-party processors).
 
 ### 4. Bulk Erasure Response
@@ -120,11 +122,11 @@ When a secret (API key, database password, auth token) is found in version contr
 - Updated security controls and directives
 
 ## Edge Cases
-- **Electoral register breach** is both a GDPR matter (ICO) and a criminal matter (police). Take legal advice before responding. Do not self-incriminate.
+- **Electoral register breach** is both a GDPR matter (ICO) and a criminal matter (police). Take legal advice before any external statement; the lawyer drafts the wording.
 - **AI-caused breach** (e.g. AI agent sent personal data to a third-party API) -- the data controller is still liable. Document the AI tool as a sub-processor and restrict its data access.
 - **Breach discovered outside business hours** -- the 72-hour clock does not pause for weekends. Have ICO notification details accessible at all times.
 - **Former team member refuses to confirm credential deletion** -- assume all credentials they had access to are compromised. Rotate everything.
-- **DSAR from a hostile party** (e.g. political opponent fishing for internal data) -- you must still comply. DSARs cannot be refused based on the requestor's motives, but you can refuse if the request is "manifestly unfounded or excessive" (Article 12(5)). Document the reasoning carefully.
+- **DSAR from a hostile party** (e.g. political opponent fishing for internal data) -- you still comply. DSARs are processed regardless of the requestor's motives, except where "manifestly unfounded or excessive" applies (Article 12(5)). Document the reasoning carefully when invoking the exception.
 
 ## Verification
 - [ ] Breach response procedure documented and accessible to all team members

@@ -44,36 +44,34 @@ The following patterns from `learnings.md` are relevant to this task. Apply them
 
 ## Before You Begin
 
-**Stop. Read this gate before touching any file.**
+**Begin implementation only after this gate is satisfied.**
 
-1. Re-read the contract criteria above. Do you understand what "done" looks like for each criterion?
-2. Check `execution/` for existing scripts that cover this task. Do not duplicate logic that already exists.
+1. Re-read the contract criteria above. Confirm you understand what "done" looks like for each criterion.
+2. Check `execution/` for existing scripts that cover this task. Reuse what's there before writing new logic.
 3. Read `learnings.md` for any additional patterns relevant to the files or APIs you will touch.
-4. If anything is ambiguous — a criterion you cannot interpret, a file dependency you cannot resolve, a behaviour that is underspecified — **raise it now, before starting work**. List each question clearly. Do not proceed until you have answers or can make a safe assumption you state explicitly.
-
-Do not begin implementation until this gate is satisfied.
+4. When anything is ambiguous — a criterion you cannot interpret, a file dependency you cannot resolve, a behaviour that is underspecified — **raise it now, before starting work**. List each question clearly. Wait for answers, or make a safe assumption you state explicitly, before any code change.
 
 ---
 
 ## Escalation Protocol
 
-If at any point you hit a blocker — a missing dependency, an architectural constraint you cannot resolve, a test that cannot be made to pass — stop immediately and report it.
+When you hit a blocker — a missing dependency, an architectural constraint you cannot resolve, a test that cannot be made to pass — pause and report it.
 
-**It is always OK to stop and say "this is too hard for me." Bad work is worse than no work.**
+**Reporting "this is too hard for me" is a legitimate output. A flagged failure is more useful than a hidden one.**
 
-Do not work around a blocker silently. Do not produce half-complete output without flagging it. A blocked report with a clear explanation is more useful than a completed report that hides problems.
+Report blockers and partial output explicitly. A blocked report with a clear explanation is more useful than a completed report that hides problems.
 
 ---
 
 ## Implementation Rules
 
-- **Surgical edits only.** Edit only the code that needs to change. Do not rewrite entire files to fix small problems.
-- **Check before creating.** Before creating any new file, verify no similar file exists. Never create `filename-v2`, `filename-new`, or any variant. Edit the existing file.
+- **Surgical edits only.** Edit only the lines that change; surgical diffs only. Wholesale rewrites require user approval first.
+- **Check before creating.** Before creating any new file, verify a similar file does not already exist; if one does, edit it. New variants (`filename-v2`, `filename-new`) require explicit user approval.
 - **Reuse before writing.** Check `execution/` and existing project files for similar logic before writing new functions.
 - **No orphan files.** If you replace a file, delete the old one.
-- **Follow the directory structure.** Execution scripts go in `execution/`. Do not place files in the project root or invent new directories.
-- **No secrets in code.** Credentials go in `.env` only — never in source files, comments, or logs.
-- **Verify after editing.** After creating or editing files, run `ls` or read the file back to confirm the change landed. Do not report success without checking.
+- **Follow the directory structure.** Execution scripts go in `execution/`, plans in `.claude/plans/`, visual docs in `docs/`. New directories or root-level files require explicit user approval.
+- **No secrets in code.** Credentials live in `.env` only -- source files, comments, and logs reference them via the documented loader, not as literals.
+- **Verify after editing.** After creating or editing files, run `ls` or read the file back to confirm the change landed. Reporting success requires the verification output.
 
 ---
 

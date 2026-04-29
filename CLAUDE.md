@@ -5,17 +5,17 @@ The human defines intent, constraints, and verification criteria. Claude recomme
 
 ## Architecture: DOE (Directive -> Orchestration -> Execution)
 Probabilistic AI handles reasoning. Deterministic code handles execution. Non-negotiable.
-- **Directive** (`directives/`): Markdown SOPs -- goals, inputs, tools, outputs, edge cases. No code.
+- **Directive** (`directives/`): Markdown SOPs -- goals, inputs, tools, outputs, edge cases. Pure prose.
 - **Orchestration** (you): Read directives, call execution scripts, handle errors, ask for clarification.
 - **Execution** (`execution/`): Deterministic Python scripts. Credentials in `.env`. Same result every time.
-IMPORTANT: Never do execution inline when a script exists. Check `execution/` first.
+IMPORTANT: Check `execution/` first; reuse existing scripts whenever they cover the task.
 
 ## Core Behaviour
 1. **Plan before building.** Check `tasks/todo.md` + `STATE.md`. -> `directives/planning-rules.md`
-2. **Ask, don't assume.** Ambiguous? Ask. Separate research and implementation sessions.
+2. **Ask when ambiguous.** Match the question to the smallest decision that unblocks you. Separate research from implementation sessions.
 3. **Check before spending.** Confirm with the user before running paid API calls.
 4. **Verify before delivering.** Run it, test it, confirm it matches spec. -> `directives/delivery-rules.md`
-5. **Explain simply.** No jargon without context. Trade-offs in terms the user can evaluate.
+5. **Explain simply.** Use plain language; introduce jargon after defining it. Frame trade-offs in terms the user can evaluate.
 6. **One task, one session.** Feature branches, commit per step. -> `directives/building-rules.md`
 7. **Shared-file awareness.** In parallel: check contention on STATE.md, learnings.md, todo.md, CLAUDE.md. -> `directives/context-management.md`
 
@@ -51,10 +51,10 @@ gh pr create --title "..." --body "..."
 <!-- Add project-specific build/test/deploy commands here -->
 
 ## Gotchas
-- **Warning:** Never commit `.env` files -- credentials must stay local. The pre-commit hook blocks this, but only works if `git config core.hooksPath .githooks` has been run.
-- **Caveat:** After context compaction, Claude loses all loaded directives. Always re-read the triggers relevant to your current task after a `/clear` or long conversation.
+- **Warning:** `.env` files stay local; the pre-commit hook gates accidental commits, provided `git config core.hooksPath .githooks` has been run on this clone.
+- **Caveat:** After context compaction, Claude loses all loaded directives. Re-read the triggers relevant to your current task after a `/clear` or long conversation.
 - **Workaround:** If a pre-commit hook fails with "not executable", run `chmod +x .githooks/*` to fix permissions.
-- **Note:** `execution/` scripts are deterministic -- same input, same output. Never add randomness, API calls, or interactive prompts to them. AI reasoning belongs in orchestration (CLAUDE.md + directives), not execution.
+- **Note:** `execution/` scripts are deterministic: same input, same output. Keep randomness, API calls, and interactive prompts out of `execution/` -- AI reasoning lives in orchestration (CLAUDE.md + directives).
 <!-- Add project-specific gotchas here as you discover them -->
 
 ## Context Rules

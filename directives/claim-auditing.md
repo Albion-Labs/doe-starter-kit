@@ -3,6 +3,8 @@
 ## Goal
 Catch false positives — things claimed as done without proof — before they reach stakeholders.
 
+Tradeoff: Auditing trades a few minutes of run-time for stakeholder trust by catching false-positive claims before they reach demos or roadmaps. Apply before demos, sign-off, and `ROADMAP.md` COMPLETE moves. Skip when: the work is internal scaffolding with no user-visible claim attached.
+
 ## When to Use
 - Before any external demo or stakeholder presentation
 - Before marking a phase as COMPLETE in the roadmap
@@ -20,8 +22,8 @@ Catch false positives — things claimed as done without proof — before they r
 ## Process
 1. Run `python3 execution/audit_claims.py` for a full audit, or `--hook` for fast checks only.
 2. Review findings: PASS (clean), WARN (advisory), FAIL (must fix before proceeding).
-3. For each FAIL: fix the underlying issue, not the symptom. If a doc is stale, update the doc — don't just bump the version.
-4. For each WARN: assess whether action is needed. WARNs don't block commits but may indicate drift.
+3. For each FAIL: fix the underlying issue. A stale doc gets its content updated before any version bump -- the version follows the truth, not the other way round.
+4. For each WARN: assess whether action is needed. WARNs are advisory (commits still pass) and often signal drift worth investigating.
 5. If a FAIL was caught by the pre-commit hook, follow the hook feedback format (CLAUDE.md guardrail):
    ```
    Hook flagged: [what]

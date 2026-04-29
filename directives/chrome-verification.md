@@ -3,6 +3,8 @@
 ## Goal
 Use Claude Code's Chrome integration (MCP tools via the Chrome extension) to automate visual verification, converting `[manual]` checks into machine-verified results wherever possible.
 
+Tradeoff: Chrome verification adds a setup step (extension + `/chrome`) and a session-context cost in exchange for converting `[manual]` UI checks to machine-verified results. Apply on `[APP]` features with visible UI. Skip when: the work is `[INFRA]`, API-only, or the assertion is subjective (aesthetic quality).
+
 ## When to Use
 - Running `/snagging` on an [APP] feature with `[manual]` visual items
 - Starting an [APP] feature session (prompt Chrome enablement at `/crack-on`)
@@ -64,7 +66,7 @@ Chrome verification is **interactive** — Claude uses the MCP tools during the 
   This is an [APP] feature -- enable Chrome for visual verification?
   Run /chrome to enable, or skip to use manual checks only.
   ```
-- Do NOT auto-enable Chrome (it increases context usage). Just prompt.
+- Prompt the user to enable Chrome rather than auto-enabling -- auto-enable would inflate context usage even on sessions that won't use it.
 - If the feature is `[INFRA]`, skip the prompt.
 
 ### 3. Per-Step Verification (opportunistic)
@@ -74,7 +76,7 @@ Chrome verification is **interactive** — Claude uses the MCP tools during the 
 **Flow:**
 - If Chrome is already enabled AND the app is being served locally, Claude can navigate to the relevant page and screenshot the result
 - This gives the user immediate visual feedback in the conversation
-- Do NOT start a server just for this — only use if one is already running
+- Use an already-running server. When none is running, ask the user before starting one (no auto-start for opportunistic verification).
 
 ### 4. Sign-Off Acceleration
 
@@ -106,7 +108,7 @@ Chrome verification is **interactive** — Claude uses the MCP tools during the 
 - "Data visualisation tells the right story" → Analytical judgment
 
 ### Grey area (use Chrome + describe findings, let user judge):
-- "Layout looks correct" → Screenshot and describe what's visible, but don't judge aesthetic quality
+- "Layout looks correct" → Screenshot and describe what's visible; aesthetic judgement is the user's call
 - "Colours are consistent" → Can check CSS values, but can't judge if they "feel right"
 - "Mobile layout works" → Can resize and screenshot, but "works" is subjective
 
@@ -122,7 +124,7 @@ When Chrome verifies a `[manual]` item, tag it `[auto-chrome]` in the exported r
 
 ## Edge Cases
 - **Chrome extension disconnects mid-session:** The extension service worker can go idle during long sessions. If tools fail, tell the user to refresh Chrome and re-run `/chrome`.
-- **Port conflict:** If port 8080 is occupied by something else, snagging orchestrator will detect this. Don't try to start a second server.
+- **Port conflict:** When port 8080 is occupied, the snagging orchestrator surfaces the conflict -- stop and ask the user to free the port.
 - **Login-gated pages:** Chrome shares the user's browser session, so authenticated pages work. But if a login page appears, pause and ask the user to log in manually.
 - **JavaScript dialogs:** `alert()`/`confirm()` block Chrome automation. If encountered, ask the user to dismiss manually.
 

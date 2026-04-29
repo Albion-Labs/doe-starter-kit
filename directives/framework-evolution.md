@@ -3,6 +3,8 @@
 ## Goal
 Track Claude Code platform capabilities and prefer native features over custom DOE systems when they reach parity. Prevent DOE from becoming bloated by reimplementing what the platform provides.
 
+Tradeoff: Tracking native feature parity costs a check against Claude Code's changelog when planning new infrastructure in exchange for catching DOE bloat (reimplementing what the platform now provides). Apply when planning a new custom system. Skip when: the work is a project-only edit with no kit-infrastructure component.
+
 ## When to Use
 Loaded when evaluating new Claude Code features, planning infrastructure changes, or deciding whether to build custom tooling.
 

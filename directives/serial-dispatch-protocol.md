@@ -3,6 +3,8 @@
 ## Goal
 Define when and how to use serial dispatch (coordinator → implementer → reviewer) for complex features, as an alternative to parallel dispatch for tasks with shared state or integration concerns.
 
+Tradeoff: Serial dispatch adds review-gate ceremony in exchange for catching cross-step drift in features whose steps share files or build on each other's output. Apply on complex features (3+ interdependent steps). Skip when: the tasks are truly independent (parallel dispatch fits) or the task is a one-step quick fix (solo mode fits).
+
 ## When to Use
 - Building a complex feature (3+ steps with shared files or output dependencies)
 - Using the decision tree below to choose between serial and parallel dispatch
@@ -124,12 +126,12 @@ For large features (5+ steps), dispatch a final **integration reviewer** (Opus):
 - **Quick features (1-2 steps):** Solo mode is faster. Just build, verify, commit.
 - **Truly independent tasks:** Use parallel dispatch (Rule 10). Serial dispatch adds overhead for no benefit when tasks don't interact.
 - **Research/exploration:** Serial dispatch is for building, not exploring. Use research subagents without the review gates.
-- **Hotfixes:** If something is broken in production, fix it directly. Don't ceremony a one-line fix.
+- **Hotfixes:** When something is broken in production, fix it directly -- skip the dispatch ceremony for one-line fixes.
 
 ## Edge Cases
 - If the coordinator session is running low on context, dispatch a fresh coordinator subagent with the plan + progress summary
 - If a step's contract criteria are invalid (flagged by `/agent-verify`), fix the contract before dispatching the implementer
-- If mid-feature you discover the plan is wrong, stop dispatch and update the plan first -- don't let implementers build on a broken foundation
+- When mid-feature you discover the plan is wrong, halt dispatch and update the plan before re-dispatching -- implementers build on the corrected foundation
 
 ## Verification
 - [ ] This directive exists at `directives/serial-dispatch-protocol.md`
