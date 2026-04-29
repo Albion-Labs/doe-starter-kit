@@ -42,8 +42,10 @@ def main():
         print(json.dumps({"decision": "block", "reason": BLOCK_MSG}))
         return
 
-    # Check Bash commands for kit write patterns
-    if tool_name == "bash":
+    # Check Bash commands for kit write patterns. Tool name is case-sensitive
+    # ("Bash") -- the lowercase form does not match Claude Code's actual Tool
+    # name string.
+    if tool_name == "Bash":
         command = tool_input.get("command", "")
         for pattern in KIT_BASH_PATTERNS:
             if re.search(pattern, command):

@@ -16,16 +16,20 @@ WRITE_TOOLS = ("Write", "Edit", "MultiEdit")
 # Bash patterns that write to or edit files under directives/. The patterns
 # are deliberately broad — false positives are easier to override than missed
 # bypasses. sed/awk in-place edits scan up to the next pipe/semicolon so
-# macOS-style empty backup args (`sed -i ''`) don't slip through.
+# macOS-style empty backup args (`sed -i ''`) don't slip through. The
+# `>` redirect pattern allows an optional `|` immediately after the angle
+# bracket so `>|` (noclobber-override) is also caught. mv/cp accept either
+# whitespace OR `/` before `directives/` so `mv x ./directives/y.md` and
+# absolute paths (`mv x /Users/foo/proj/directives/y.md`) are not bypasses.
 BASH_DIRECTIVE_PATTERNS = [
-    r'>\s*[\'"]?[^\s\'"|;&<>]*directives/',         # cat ... > directives/x.md
+    r'>\|?\s*[\'"]?[^\s\'"|;&<>]*directives/',      # cat ... > directives/x.md (and >| variant)
     r'>>\s*[\'"]?[^\s\'"|;&<>]*directives/',        # echo ... >> directives/x.md
     r'\btee\s+(?:-a\s+)?[^\s|;&]*directives/',      # tee [-a] directives/x.md
     r'\bsed\s+-i\b[^|;&]*directives/',              # sed -i [args] directives/x.md
     r'\bawk\s+-i\s+inplace\b[^|;&]*directives/',    # awk -i inplace ... directives/x.md
     r'\brm\s+[^|;&]*directives/',                   # rm directives/x.md
-    r'\bmv\s+[^|;&]*\sdirectives/',                 # mv X directives/x.md
-    r'\bcp\s+[^|;&]*\sdirectives/',                 # cp X directives/x.md
+    r'\bmv\s+[^|;&]*[\s/]directives/',              # mv X directives/x.md (incl. ./directives/)
+    r'\bcp\s+[^|;&]*[\s/]directives/',              # cp X directives/x.md (incl. ./directives/)
     r'\bpython3?\s+-c\s+[\'"][^\'"]*directives/',   # python -c "...directives/..."
 ]
 
