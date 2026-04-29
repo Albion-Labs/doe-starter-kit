@@ -3,6 +3,8 @@
 ## Goal
 Standardise how subagents report results back to the coordinator, replacing ad-hoc success/failure with structured status reporting that enables informed decisions.
 
+Tradeoff: Structured status reporting costs the subagent a few lines of report ceremony in exchange for letting the coordinator make informed merge/re-dispatch/escalate decisions. Apply on every dispatched subagent. Skip when: the work happens entirely in the main thread (no subagent involved).
+
 ## When to Use
 - Dispatching any subagent (implementation, review, research, or utility)
 - Receiving results from a subagent
@@ -26,7 +28,7 @@ Task complete, but the agent noticed issues it chose not to block on. Concerns a
 
 ### NEEDS_CONTEXT
 Agent cannot proceed without information not provided in the task description. Specific questions are listed.
-- **Coordinator action:** Provide the missing context and re-dispatch the same agent. Do NOT guess the answers — if the coordinator doesn't know either, escalate to the user.
+- **Coordinator action:** Provide the missing context and re-dispatch the same agent. When the coordinator lacks the answer, escalate to the user -- the user holds the ground truth.
 
 ### BLOCKED
 Task cannot be completed. The agent explains why and suggests alternatives.
@@ -74,7 +76,7 @@ When the coordinator dispatches a subagent:
 
 - Maximum 2 re-dispatch cycles per step (implementer → reviewer → fix → reviewer → done OR escalate)
 - If a subagent reports NEEDS_CONTEXT twice on the same question, escalate to the user
-- If a subagent reports BLOCKED, do not blindly re-dispatch — the blocker must be resolved first
+- When a subagent reports BLOCKED, resolve the blocker before re-dispatching -- the same dispatch on the same blocker produces the same BLOCKED
 
 ## Integration with Existing Rules
 

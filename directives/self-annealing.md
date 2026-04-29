@@ -3,6 +3,8 @@
 ## Goal
 Turn every failure into a system improvement. Classify, log, and prevent recurrence through learnings, directives, and hooks.
 
+Tradeoff: Self-annealing rituals (retro logging, learnings curation, performance monitoring) cost session time at the end of every feature in exchange for the kit getting smarter with every failure. Apply at every retro and at every 100-session curation tick. Skip when: nothing surprising happened during the feature -- a `[quick: nothing to log]` retro is the legitimate output.
+
 ## When to Use
 Loaded when something fails, during learnings curation, or when performance degradation is suspected.
 

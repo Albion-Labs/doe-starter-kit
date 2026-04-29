@@ -3,6 +3,8 @@
 ## Goal
 Enforce defence in depth across all code — input handling, output rendering, data transport, and deployment configuration. Security is not a feature; it is a property of every line of code.
 
+Tradeoff: Defence-in-depth costs review time on every input, output, and dependency change in exchange for resilience to single-layer compromises. Apply when writing code that handles user input, renders dynamic content, talks to APIs or databases, or configures deployment infrastructure. Skip when: the change is provably scope-limited (a rename inside a pure function, a comment-only edit) and the diff confirms no boundary surface changed.
+
 ## When to Use
 Loaded when writing code that handles user input, renders dynamic content, communicates with APIs or databases, or configures deployment infrastructure. If in doubt, load it.
 
@@ -10,17 +12,17 @@ Loaded when writing code that handles user input, renders dynamic content, commu
 
 1. **Defence in depth.** No single layer is trusted. Every boundary validates, sanitises, and constrains independently.
 2. **client-side access control is zero security.** Hiding a button or checking a role in the browser provides no protection. All access control must be enforced server-side. Client-side checks are UX only.
-3. **Fail closed.** If a security check errors, deny access. Never default to permissive.
+3. **Fail closed.** Security checks deny access on error -- the default response is denial, not permission.
 
 ## Input Handling
 
-- **no eval.** Never use `eval()`, `Function()`, `setTimeout(string)`, or any dynamic code execution. There are no exceptions.
+- **No dynamic execution.** Dynamic code execution lives in pre-registered, statically-analysable code paths. JavaScript: avoid the three string-execution APIs (`eval()`, `Function()` constructor, string form of `setTimeout`/`setInterval`) -- pass functions instead.
 - **Validate and constrain.** Validate type, length, range, and format at the boundary. Reject anything outside the expected shape.
-- **Use parameterised queries.** Never concatenate user input into SQL, NoSQL, or ORM queries. Use parameterised / prepared statements exclusively.
+- **Use parameterised queries.** All SQL, NoSQL, and ORM queries take user input via parameter bindings -- the query string is a static template, the values pass separately.
 
 ## Output & Rendering
 
-- **Sanitise all dynamic content.** Use `escapeHTML` or the framework's built-in escaping for every value inserted into the DOM. Never insert untrusted content via `innerHTML`, `dangerouslySetInnerHTML`, `v-html`, or `[innerHTML]` without sanitisation.
+- **Sanitise all dynamic content.** DOM insertion of untrusted values goes through `textContent` or framework escaping (Vue/React/Angular built-ins). `innerHTML`, `dangerouslySetInnerHTML`, `v-html`, and `[innerHTML]` are reserved for known-safe HTML you generated yourself.
 - **Subresource integrity.** Every externally-loaded script or stylesheet must include an `integrity` attribute (SRI hash). Pin the version. If the CDN is compromised, the browser will refuse the tampered resource.
 
 ## Transport & Headers
@@ -35,13 +37,13 @@ Loaded when writing code that handles user input, renders dynamic content, commu
 
 ## Secrets & Data Classification
 
-- **Never log secrets.** API keys, tokens, passwords, and session identifiers must never appear in logs, error messages, or client-side output.
-- **Classify data in logging.** Mark sensitive fields as `CONFIDENTIAL` or `RESTRICTED` in log schemas. Never log fields at a classification level higher than the log sink's clearance.
-- **Environment variables for secrets.** Store credentials in `.env` or a secrets manager. Never commit secrets to version control.
+- **Redact secrets at the log boundary.** A logging redactor strips secret-shaped tokens (API keys, tokens, passwords, session identifiers) before any sink receives the log line.
+- **Classify data in logging.** Mark sensitive fields as `CONFIDENTIAL` or `RESTRICTED` in log schemas. Routing matches sink clearance to field classification -- a CONFIDENTIAL field only flows to a CONFIDENTIAL-cleared sink.
+- **Environment variables for secrets.** Credentials live in `.env` or a secrets manager. The pre-commit secret-detection hook gates accidental commits to other files.
 
 ## Authentication & Sessions
 
-- **Use established libraries.** Do not implement authentication, hashing, or token generation from scratch.
+- **Use established libraries.** Authentication, password hashing, and token generation come from established libraries -- Argon2 / libsodium / the framework's auth module -- never a from-scratch implementation.
 - **Short-lived tokens.** Prefer short expiry with refresh over long-lived tokens. Rotate secrets on schedule.
 - **Secure cookie flags.** `HttpOnly`, `Secure`, `SameSite=Strict` (or `Lax` with justification).
 

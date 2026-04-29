@@ -3,6 +3,8 @@
 ## Goal
 Ensure quality, compliance, and completeness when shipping features -- verification, retros, guardrails, and governance.
 
+Tradeoff: Delivery discipline costs retro time at the end of every feature in exchange for shipping work that holds up under reviewer scrutiny and stakeholder questions. Apply on every feature retro and PR. Skip when: the change is a single-line hotfix that bypass-flags the relevant gate (e.g., `SKIP_REVIEW_GATE=1`) with the bypass reason in the commit body.
+
 ## When to Use
 Loaded when delivering: retros, PR creation, sign-off, wrap, version bumps, merging, or any pre-ship activity.
 
@@ -50,14 +52,14 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 
 ## IMPORTANT: Guardrails
 
-- **YOU MUST NOT overwrite or delete existing directives without explicit permission.** Propose changes, don't make them. New directives: also add a trigger to CLAUDE.md Progressive Disclosure.
-- **YOU MUST NOT store secrets outside `.env`.** No API keys in code, comments, or logs.
+- **Directive changes go through `/sync-doe` with user approval.** Propose; the user merges. New directives also add a trigger to CLAUDE.md Progressive Disclosure.
+- **Secrets live in `.env` only.** Code reads them via the documented loader; nothing else (commit messages, comments, logs) holds a live secret.
 - Deliverables go to cloud services (Google Sheets, Slides, etc.) where the user can access them directly.
 - Clean up `.tmp/` after tasks complete. Intermediate files are disposable.
-- **YOU MUST NOT edit `~/doe-starter-kit` directly.** All changes go through `/sync-doe` (versioning, tagging, releases).
-- **YOU MUST NOT force-push, revert commits, or delete branches without explicit permission.** If something needs rolling back, show what you want to revert and why first.
-- **When a hook blocks an action, fix it immediately.** Show what was flagged, what you fixed, and proof. Don't just say "I updated the file."
-- **Wave agents MUST NOT edit shared files on main** (`todo.md`, `CLAUDE.md`, `learnings.md`, `STATE.md`). Coordinator fixes after `--merge`.
+- **Kit edits go through `/sync-doe`.** Versioning, tagging, and release happen automatically; the `guard_kit_writes` PreToolUse hook blocks direct writes.
+- **Destructive git operations require explicit user approval.** Force-push, revert, branch delete: show the diff and ask before acting.
+- **When a hook blocks an action, fix the underlying issue and report back with evidence.** Show what was flagged, what changed, and the verification (re-run, grep, test pass).
+- **Wave agents edit only files in their `Owns:` declaration.** Shared files (`todo.md`, `CLAUDE.md`, `learnings.md`, `STATE.md`) are written by the coordinator after `--merge`.
 
 ## Performance Budget
 

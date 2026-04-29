@@ -3,6 +3,8 @@
 ## Goal
 Define what, when, and how to test in this project -- so verification is consistent, fast, and never skipped.
 
+Tradeoff: Contract-first testing costs a few lines of `Verify:` patterns per step in exchange for catching regressions before merge and giving every step an automatic definition of done. Apply on every step in todo.md. Skip when: the change is a comment or whitespace edit with no behavioural impact (state so in the commit body).
+
 ## When to Use
 - Setting up testing for a new project or configuring test tools
 - Writing contract criteria for a new task
@@ -188,14 +190,14 @@ Tested surfaces in this kit:
 
 For these surfaces, every commit that changes behaviour must either:
 
-1. **Update an existing test** -- if your change adjusts the contract of a function that already has coverage, update the assertions in the matching test file. Don't delete the test "because it's broken now" -- the test was the spec.
+1. **Update an existing test** -- when your change adjusts the contract of a function that already has coverage, update the assertions in the matching test file. The test stays as the spec; deleting it because it failed makes the spec disappear.
 2. **Add a new test** -- if your change introduces a new code path, prompt, branch, or flag, add a test that exercises it. The pre-commit warning hook will flag tested-file changes that ship without staged tests, but the warning is a nudge, not a substitute for thinking.
 
 If a change is genuinely test-irrelevant (a comment fix, a docstring tweak, a rename with no behavioural impact), say so in the commit body and move on. The default is "tests come with the change."
 
 ### Reviewing `[manual]` contracts when new auto tools ship
 
-When a new auto tool ships (e.g. Playwright MCP, a new linter, a new methodology scenario), don't build an auto-promotion engine -- review existing `[manual]` contracts by hand and promote the ones the new tool can verify. Replace each promotable item's free-text description with a `Verify: run:` (or `Verify: html:`, `Verify: file:`) pattern that drives the new tool deterministically.
+When a new auto tool ships (e.g., Playwright MCP, a new linter, a new methodology scenario), review existing `[manual]` contracts by hand and promote the ones the new tool can verify -- the human-curated promotion catches edge cases an auto-promotion engine would miss. Replace each promotable item's free-text description with a `Verify: run:` (or `Verify: html:`, `Verify: file:`) pattern that drives the new tool deterministically.
 
 The signpost: a new auto tool that overlaps with criteria currently sitting under `[manual]` should trigger a one-pass sweep of open contracts, not a generic "convert everything" script. Keep the genuinely subjective items (visual quality, interaction feel, content judgment) as `[manual]`. See "Playwright MCP: Converting [manual] to [auto] Criteria" above for the conversion checklist.
 

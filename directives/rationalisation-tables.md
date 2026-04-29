@@ -3,6 +3,8 @@
 ## Goal
 Map every common excuse for skipping a DOE guardrail to the reality of why it matters. When you catch yourself rationalising, find your excuse here and do what the table says.
 
+Tradeoff: The rationalisation tables cost a few seconds of self-check before any guardrail bypass in exchange for catching the bypass before it costs hours of rework or a shipped bug. Apply when about to skip a guardrail, override a rule, or rationalise a process shortcut. Skip when: the rule you would skip has an explicit, reasoned justification stated before the action (the Iron Law).
+
 ## When to Use
 - When about to skip a guardrail, override a rule, or rationalise not following a process
 - When a thought starts with "this probably doesn't need...", "just this once...", or "I already know..."
@@ -13,7 +15,7 @@ Map every common excuse for skipping a DOE guardrail to the reality of why it ma
 
 Every guardrail in DOE exists because something went wrong without it. These tables map the internal excuse an agent constructs to bypass a rule to the reality of what happens when you do. The format is consistent: recognise the excuse, understand why it fails, do the right thing instead.
 
-**If your current thought matches any excuse in any table below: stop. Do what the "What to do instead" column says. No exceptions.**
+**When your current thought matches any excuse in any table below, follow the "What to do instead" column. The Iron Law (below) defines the only legitimate skip path.**
 
 ---
 

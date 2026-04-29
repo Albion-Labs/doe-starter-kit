@@ -3,6 +3,8 @@
 ## Goal
 Prevent accidental or AI-caused destruction, exposure, or corruption of data across all environments. This directive protects regulated political data that cannot legally be lost once collected.
 
+Tradeoff: Defensive practices around production data add friction to every database-touching change in exchange for preventing irrecoverable loss or criminal exposure of regulated data. Apply on every commit that touches SQL, migrations, `.env*`, storage buckets, or production credentials. Skip when: the change is a UI-only edit with no data-layer impact (and verify by reading the diff before skipping).
+
 ## When to Use
 - Writing or modifying SQL, database migrations, or schema changes
 - Configuring Supabase, Neon, or any database service
@@ -120,8 +122,8 @@ Production credentials must ONLY exist in production environment variables. No o
 | **CI/CD** | Seed-only database or no database | GitHub Actions secrets (non-production only) |
 
 ### Non-Negotiable Requirements
-- **Never copy `.env` between machines** -- regenerate credentials per environment.
-- **Never use production connection strings in any `.env` file** -- even "just for testing." There is no "just for testing" with regulated data.
+- **Each machine generates its own `.env`** -- regenerate credentials per environment rather than copying between hosts.
+- **Production connection strings live only on production hosts.** Local `.env` files point at non-prod databases. There is no "just for testing" with regulated data.
 - **Vercel preview deployments MUST use a separate database** -- Neon branching (recommended) creates an isolated copy automatically. If branching is unavailable, use a seed-only database.
 - **AI agents (Claude Code, GitHub Actions, Vercel Agent) physically cannot connect to production.** Their environment variables point to non-production databases only. No exceptions. No "temporary" production access.
 
@@ -137,7 +139,7 @@ The following SQL operations are blocked by the Bash hook and must also be block
 | Operation | Why Blocked | Safe Alternative |
 |-----------|-------------|------------------|
 | `DROP TABLE` | Irrecoverable data loss | Rename table, keep for retention period, then drop with explicit approval |
-| `DROP DATABASE` | Irrecoverable total loss | Never. There is no safe alternative to dropping a production database. |
+| `DROP DATABASE` | Irrecoverable total loss | Halt and escalate to user. There is no safe alternative -- dropping a production database is never an automated action. |
 | `TRUNCATE` | Instant irrecoverable loss | `DELETE FROM ... WHERE ...` with conditions, or soft-delete |
 | `DELETE FROM table` (no WHERE) | Unconditional wipe | Always require a WHERE clause. Soft-delete preferred. |
 | `ALTER TABLE ... DROP COLUMN` | Silent data loss | Create a new table without the column, migrate data, rename |
@@ -160,7 +162,7 @@ These CLI commands are as dangerous as raw SQL and must be treated with the same
 
 | Command | What It Does | Safe Alternative |
 |---------|-------------|------------------|
-| `supabase db reset` | Wipes entire database, replays migrations from scratch | Never run against production. Use only on local/branch databases. |
+| `supabase db reset` | Wipes entire database, replays migrations from scratch | Use only on local or branch databases. Confirm `supabase status` shows a non-production link before running. |
 | `supabase db push --linked` | Pushes schema diff to the linked database | Verify which database is linked first (`supabase status`). Never link to production from a dev machine. |
 | `supabase db dump` | Dumps schema/data -- output may contain secrets | Review output before storing. Never commit dumps to git. |
 | `vercel env pull` then edit production vars | Could expose or corrupt production env vars | Use Vercel dashboard for production env changes. CLI for preview/dev only. |
@@ -192,7 +194,7 @@ Every schema migration must follow this sequence:
 1. **Backup first.** Before running any migration, create a database backup. No exceptions.
 2. **Write a rollback script.** Every migration gets a paired rollback. If the migration adds a column, the rollback removes it. If the migration transforms data, the rollback reverses it.
 3. **Test on non-production first.** Run the migration against the preview/branch database. Verify the result. Only then run against production.
-4. **One migration at a time.** Never batch multiple migrations. If one fails, you need to know which one.
+4. **One migration at a time.** Run each migration on its own; on failure, the offending migration is the most recent run. Batching obscures which migration broke.
 5. **Keep the old schema compatible.** For at least one deployment cycle, both old and new code must work. This means: add columns before requiring them, stop writing to columns before removing them.
 
 ### Soft-Delete Policy

@@ -46,7 +46,7 @@ These are the files touched by the implementation. Read them to verify the claim
 
 ## Your Task
 
-Check the implementation against the contract criteria and plan. Do not trust the implementer's self-assessment — verify independently.
+Check the implementation against the contract criteria and plan. Verify each contract criterion independently against the code and the `Verify:` output -- the implementer's self-assessment is one input among many, not the truth.
 
 ### Verification Categories
 
@@ -71,10 +71,9 @@ Work through each category in order. For each finding, cite exact file paths and
 
 ## Rules
 
-- **DO NOT praise.** Do not comment on code quality, style, or elegance. That is not your job.
-- **DO NOT suggest improvements.** Do not recommend refactors, better patterns, or enhancements. Only verify spec compliance.
-- **DO NOT speculate.** If you cannot determine whether a criterion is satisfied from the code and verify output, say so — do not guess.
-- Cite evidence for every finding. Unsupported assertions are not useful.
+- **Job:** verify each contract criterion as PASS / FAIL / UNVERIFIABLE. Out of scope: code quality commentary, refactor suggestions, enhancement ideas.
+- **When a criterion cannot be determined** from the code and `Verify:` output, mark it UNVERIFIABLE with the specific reason -- guessing is worse than naming the gap.
+- **Cite evidence for every finding.** Unsupported assertions are not useful.
 
 ---
 
@@ -111,4 +110,4 @@ Misunderstandings:
   Evidence: [file:line]
 ```
 
-If a category has no findings, omit it entirely. Do not write "None" under a category heading — just skip the section.
+If a category has no findings, omit the category heading entirely.

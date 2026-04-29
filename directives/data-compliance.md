@@ -3,6 +3,8 @@
 ## Goal
 Ensure every feature that handles personal data meets UK GDPR, DPA 2018, and PPERA requirements before any data is collected, stored, or processed.
 
+Tradeoff: Compliance work costs upfront design time in exchange for legal cover and stakeholder trust when personal data flows. Apply on any feature touching names, emails, addresses, political opinions, or canvass responses. Skip when: the feature operates only on aggregated, anonymised, or synthetic data with no identifiable individual.
+
 ## When to Use
 - Building any feature that collects, stores, or processes personal data (names, emails, addresses, political opinions, canvass responses)
 - Adding user accounts, authentication, or membership features
@@ -20,7 +22,7 @@ Ensure every feature that handles personal data meets UK GDPR, DPA 2018, and PPE
 
 ### Before building (hard blockers)
 
-1. **DPIA check.** If the feature handles personal data and no DPIA (Article 35) has been completed, STOP. A DPIA must be completed and approved before any personal data enters the system. This is non-negotiable. The DPIA documents: what data is collected, why, the legal basis, risks, and mitigations.
+1. **DPIA check.** Complete and approve a DPIA (Article 35) before any personal data enters the system. The DPIA documents: what data is collected, why, the legal basis, risks, and mitigations. This is the gate -- no DPIA, no data.
 
 2. **Legal basis check.** For each category of personal data the feature handles, confirm the legal basis:
    - Standard personal data (name, email, address): Legitimate interest (Article 6(1)(f)) with documented balancing test, or explicit consent (Article 6(1)(a))
@@ -38,9 +40,9 @@ Ensure every feature that handles personal data meets UK GDPR, DPA 2018, and PPE
 
 6. **Retention policy.** Every personal data table must have a documented retention period. Soft-deleted records must be hard-deleted after the retention period via a scheduled function. No personal data should persist indefinitely without review.
 
-7. **Audit trail.** All access to and modifications of personal data must be logged (who, what, when). This log itself is retained for compliance purposes but must not contain the personal data it references (use IDs, not names).
+7. **Audit trail.** Log all access to and modifications of personal data (who, what, when). The audit log references personal data by ID only -- the log row holds operation metadata, the data lives in its own table.
 
-8. **Data minimisation.** Only collect what is needed for the stated purpose. If a feature can work without a field, don't collect it. If a field is only needed temporarily, delete it after use.
+8. **Data minimisation.** Collect only what is needed for the stated purpose. When a feature can work without a field, omit it. When a field is needed only temporarily, delete it after use.
 
 ### After building (verification)
 
@@ -50,7 +52,7 @@ Ensure every feature that handles personal data meets UK GDPR, DPA 2018, and PPE
 
 11. **Update legal-framework.md.** Update the relevant section to reflect the new legal position. If the feature changes the GDPR or PPERA position, bump the version and update the "Applies to" field.
 
-12. **Update privacy notice.** If a privacy notice exists, update it to accurately describe the new data processing. Reform UK's problem was that their privacy notice described data merging but they denied doing it. Never let the privacy notice diverge from reality.
+12. **Update privacy notice.** Update the privacy notice in the same PR that introduces the data processing it describes. Reform UK's problem was a privacy notice that described data merging while the company denied doing it -- the cure is co-located edits, not parallel docs.
 
 ## Outputs
 - Updated `legal-framework.md` with new legal position
@@ -77,4 +79,8 @@ Ensure every feature that handles personal data meets UK GDPR, DPA 2018, and PPE
 - [ ] legal-framework.md updated with new position
 
 ## Reference: Reform UK v Good Law Project (2026)
-Reform UK is being sued by 51 voters (High Court, Article 80(1) UK GDPR) for: (a) failing to respond to 96% of DSARs within the legal 30-day deadline, (b) sending false "no record" replies, (c) processing political opinion data without clear legal basis, (d) merging electoral register with third-party data without transparency. This is the first Article 80(1) case in the UK. Projects must not repeat these failures. Every feature that touches personal data must have automated SAR handling, transparent privacy notices, and documented legal bases.
+Reform UK is being sued by 51 voters (High Court, Article 80(1) UK GDPR) for: (a) failing to respond to 96% of DSARs within the legal 30-day deadline, (b) sending false "no record" replies, (c) processing political opinion data without clear legal basis, (d) merging electoral register with third-party data without transparency. This is the first Article 80(1) case in the UK. Every feature that touches personal data ships with automated SAR handling, a transparent privacy notice, and documented legal bases for each data category.
+
+## Placeholder Pattern for Shared Secrets
+
+When sharing example secrets in code, docs, tickets, or commit messages, use placeholder tokens (`<API_KEY>`, `<DB_URL>`, `<SUPABASE_SERVICE_ROLE>`). The placeholder makes the shape of the value clear without leaking a live credential. The `block_secrets_in_code.py` PreToolUse hook scans for secret-shaped values; placeholders pass the scan because they do not match any real-credential pattern.

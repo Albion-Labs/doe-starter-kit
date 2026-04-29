@@ -3,16 +3,18 @@
 ## Goal
 Enforce code quality, branch discipline, and collaboration patterns during implementation.
 
+Tradeoff: Branch and code-hygiene rules cost a few seconds per commit; they preserve revertability and reviewer trust. Apply on every feature commit. Skip when: the commit is a tooling fixup that bypass-flags the relevant gate (e.g., `SKIP_STEP_MARK_CHECK=1`) and the bypass reason is in the commit body.
+
 ## When to Use
 Loaded when building, coding, or implementing features. Also loaded on first session for a brand new project.
 
 ## Branch & Commit Discipline
 
 Work on feature branches, commit per step. `/crack-on` creates `feature/<name>` from main.
-- Commit after every completed step. Push immediately. Never batch multiple steps.
+- Commit after every completed step. Push immediately. One commit per step keeps each change independently revertable.
 - **Mark the step [x] in todo.md before committing step work.** The commit-msg hook blocks commits that reference "Step N" or contain a version tag `(vX.Y.Z)` unless `tasks/todo.md` is staged. This is deterministic — you cannot commit step work without updating progress. Skip: `SKIP_STEP_MARK_CHECK=1`.
 - **Use Conventional Commits format.** Subjects follow `<type>[(scope)][!]: <description>` — see `directives/git-conventions.md` for the full spec, the allowlist for legacy/automated patterns (`Merge `, `Revert "`, `Initial commit`, `fixup!`, `squash!`, legacy `vX.Y.Z:`), and the `DOE_COMMIT_HOOK_MODE` env var (default `warn`, switch to `block` once the team is fully on CC). The commit-msg hook validates every subject in warn mode by default during the v1.57.0 -> v1.58.x transition.
-- Do not commit directly to main. No "Co-authored-by" trailers.
+- Commit on feature branches; merge to main via PR. Commit messages omit "Co-authored-by" trailers (the commit-msg hook strips them).
 - At retro: `gh pr create` with PR template auto-filled from contracts. CI must pass before merge.
 - **No mid-feature PRs.** Push to the feature branch to save work between sessions -- the branch is on GitHub, nothing is lost. PRs are created at retro only (the final step). Mid-feature PRs create merge/rebase overhead with no benefit. If a session ends mid-feature, wrap commits directly to the feature branch.
 
@@ -30,16 +32,16 @@ Delegate to subagents to preserve context. Spawn when: 3+ files, doc research, 5
 
 ## Code Hygiene
 
-- **Check before creating.** Check if a similar file exists. Never create `filename-new`, `_v2`, `-copy` variants. Edit the existing file.
-- **Surgical edits only.** When fixing a bug, edit only the affected code. Never rewrite an entire file to fix a small problem. If a rewrite is genuinely needed, say so and get approval first.
+- **Check before creating.** Check if a similar file exists and edit it. New variants (`filename-new`, `_v2`, `-copy`) require explicit user approval.
+- **Surgical edits only.** Edit only the lines that change. Wholesale rewrites require user approval first -- say so and wait.
 - **Pre-refactor cleanup.** Before any structural refactor on a file >300 LOC, first commit a dead-code removal pass (unused imports, dead props, orphaned exports). Separate commit -- cleanup and logic changes must be distinct in the diff.
 - **Reuse before writing.** Check `execution/` and project files for existing logic before writing new. Flag duplication.
-- **One task, one session.** If the conversation drifts, recommend `/clear`. Do not let unrelated context accumulate.
-- **Refactor is not rewrite.** Change structure only. Do not change behaviour. If behaviour must change, say so explicitly.
+- **One task, one session.** When the conversation drifts, recommend `/clear` -- keep context scoped to the active task.
+- **Refactor is not rewrite.** Refactor preserves behaviour. Behaviour changes are tracked as feature work -- say so explicitly when a refactor will alter observable behaviour.
 - **No orphan files.** If you replace a file, delete the old one.
-- **Plans go in `.claude/plans/`, not global.** Never write to `~/.claude/plans/`.
-- **Visual docs go in `docs/`, not global.** Never write to `~/.agent/diagrams/`.
-- **Files in designated directories.** Follow the directory structure in CLAUDE.md. Do not create files in the project root or invent new directories without approval.
+- **Plans go in `.claude/plans/`.** Project plans live in the project repo; `~/.claude/plans/` is the personal sandbox and stays out of project commits.
+- **Visual docs go in `docs/`.** Project diagrams live in the project repo; `~/.agent/diagrams/` is the personal sandbox.
+- **Files in designated directories.** Follow the directory structure in CLAUDE.md. New directories or root-level files require explicit approval.
 - **Rename safety protocol.** When renaming or changing a function/type/variable signature, run separate searches for: direct calls, type references, string literals containing the name, dynamic imports, re-exports, barrel files, test mocks. Never assume a single grep caught everything.
 
 ## Search & Tool-Use Discipline

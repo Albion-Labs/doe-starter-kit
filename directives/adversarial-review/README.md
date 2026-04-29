@@ -23,7 +23,7 @@ Choose the review level based on blast radius. Default is FULL -- opt DOWN only 
 
 | Blast Radius | Review Level | Criteria to Opt Down |
 |---|---|---|
-| High: shared files, API changes, data model, security | **FULL** (3-agent: Finder + Adversarial + Referee) | Cannot opt down |
+| High: shared files, API changes, data model, security | **FULL** (3-agent: Finder + Adversarial + Referee) | MANDATORY at this severity |
 | Medium: single feature, no shared interfaces | **STANDARD** (2-agent: Finder + Adversarial) | ALL: no shared files, no API changes, no data model changes |
 | Low: docs, comments, config, typo fixes | **SKIP** (no review) | ALL: no logic changes, no test changes, no user-visible changes |
 
@@ -35,7 +35,7 @@ When in doubt, use FULL. The cost of over-reviewing is time. The cost of under-r
 `/review` and serial dispatch spawn subagents within the session. The agent files (`.claude/agents/Finder.md`, etc.) provide the prompt content. Tool restrictions are **prompt-based** -- the subagent is told "you are read-only" but inherits parent tool access. Practical enforcement is high (subagents follow review prompts reliably), but not mechanical.
 
 ### Manual (mechanical + prompt enforcement)
-Run `claude --agent=Finder` in a separate terminal. Tool restrictions are **partially mechanical** -- `tools: Read, Grep, Glob, Bash` in the agent file means the agent cannot call Edit or Write (mechanically blocked by Claude Code). Bash is included (agents need `git log`, `ls`, etc.) but is **prompt-restricted** -- agents are instructed "you are read-only" and "you must NOT edit or write any files". This is high-confidence but not a hard platform guarantee for Bash specifically.
+Run `claude --agent=Finder` in a separate terminal. Tool restrictions are **partially mechanical** -- `tools: Read, Grep, Glob, Bash` in the agent file means only those four tools are available (Edit and Write are mechanically absent from the agent's toolbox). Bash is included (agents need `git log`, `ls`, etc.) but is **prompt-restricted** -- agents are instructed to operate read-only: their job is to inspect code and report findings, with no file writes via Bash redirections. This is high-confidence but not a hard platform guarantee for Bash specifically.
 
 Same agent files serve both paths. Same scoring incentives, same role definition. The difference: automated gets prompt-based restriction (works in practice), manual gets mechanical restriction (guaranteed by platform).
 

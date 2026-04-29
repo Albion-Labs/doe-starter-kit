@@ -3,6 +3,8 @@
 ## Goal
 Ensure every feature is properly scoped, contracted, and sequenced before building begins.
 
+Tradeoff: Planning rules cost upfront scoping time in exchange for catching scope drift, missing dependencies, and ambiguous contracts before they cost build time. Apply at session start and when starting any feature with 3+ steps. Skip when: the work is a one-step ad-hoc fix that has its Verify: criteria stated in conversation.
+
 ## When to Use
 Loaded when planning, scoping, or starting a new feature. Also loaded on first session for a brand new project.
 
@@ -16,8 +18,8 @@ Check `tasks/todo.md` and `STATE.md` at session start.
 - Each plan step includes a recommended model + thinking level (e.g. `Opus + high`, `Sonnet + medium`)
 - **Ad-hoc work** (not in todo.md): state 1-3 `Verify:` criteria in conversation before starting. Confirm pass before committing. Mechanical changes just state what and why.
 
-### Ask, don't assume
-Ambiguous requirement? Ask. Separate research and implementation into different sessions -- context pollution hurts both. If you're not sure what the user means, clarify before spending tokens on the wrong path.
+### Ask when ambiguous
+Match the question to the smallest decision that unblocks you. Separate research from implementation sessions -- context pollution hurts both. When the user's meaning is unclear, clarify before spending tokens on the wrong path.
 
 ### Check before spending
 If a script uses paid API calls or credits, confirm with the user before running.
@@ -56,7 +58,7 @@ Before marking a criterion `[manual]`, ask: could a machine determine pass/fail?
 
 ### Verification flow
 - Run `Verify:` patterns after each step. Mark `[x]` as they pass. 3 fix attempts before escalating.
-- Continue building autonomously -- do NOT stop per-step for manual approval.
+- Continue building autonomously. Manual approval batches at feature end (or at the mid-feature gate for 5+ step features).
 - `[manual]` criteria are batched and presented at feature completion (or mid-feature for 5+ step features).
 - When last step's `[auto]` pass: run retro, move to `## Awaiting Sign-off`, present manual checklist.
 
@@ -66,7 +68,7 @@ Before marking a criterion `[manual]`, ask: could a machine determine pass/fail?
 One terminal, one feature. Standard context discipline. For large features (5+ steps), consider session blocking: plan which steps to tackle in one session to avoid context limit.
 
 ### Informal Parallel
-2-3 terminals on independent tasks. Shared-file awareness: don't edit STATE.md, learnings.md, todo.md, or CLAUDE.md from multiple terminals simultaneously.
+2-3 terminals on independent tasks. Shared-file awareness: edit shared files (STATE.md, learnings.md, todo.md, CLAUDE.md) from one terminal at a time. Check before writing in multi-terminal mode.
 
 ### Formal Parallel
 DAG executor or serial dispatch. Step ownership via `Owns:`. Automatic parallel dispatch with contract-gated chaining. Integration contracts after wave merge. See `directives/serial-dispatch-protocol.md` for the established protocol and `~/.claude/scripts/dispatch_dag.py` for automated dispatch.

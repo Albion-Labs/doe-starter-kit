@@ -3,6 +3,8 @@
 ## Goal
 Generate interactive HTML test checklists from todo.md contracts so manual testing is structured, trackable, and feeds results back efficiently.
 
+Tradeoff: Generated checklists cost a script run per feature in exchange for structured manual sign-off and a paper trail of which `[manual]` items passed. Apply when a feature has any unchecked `[manual]` items. Skip when: the feature is fully `[auto]` (the script exits cleanly with `nothing to generate`).
+
 ## When to Use
 - A feature's final code step completes (all `[auto]` criteria pass) and unchecked `[manual]` items remain
 - User runs `/snagging` to generate or regenerate a checklist

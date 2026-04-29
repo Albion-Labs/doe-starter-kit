@@ -3,6 +3,8 @@
 ## Goal
 A single source of truth for commit message formatting across DOE-Claude Code projects: the Conventional Commits 1.0 spec, the kit's allowlist for legacy/automated patterns, and the `DOE_COMMIT_HOOK_MODE` env var that controls how strictly the validator enforces the rules.
 
+Tradeoff: Conventional Commits cost a few seconds per commit subject in exchange for machine-parseable history that drives release notes, retro contracts, and version bumps. Apply on every commit in a DOE project. Skip when: the commit subject matches the allowlist (Merge, Revert, Initial commit, fixup!, squash!, legacy `vX.Y.Z:`).
+
 ## When to Use
 - Writing or editing a commit message in a DOE-bootstrapped project
 - Designing a slash command or workflow that produces commits (e.g. `/wrap`, `/sync-doe`, `/agent-verify`)
@@ -111,7 +113,7 @@ only runs when CURRENT_BRANCH is main or master.
 
 ## Migration from legacy `vX.Y.Z:` format
 
-Pre-v1.57.0 kit history used `vX.Y.Z: <description>` for release commits. The allowlist preserves these unchanged in `git log`. New commits should use `chore(release): vX.Y.Z`. Don't rewrite history to backfill — the `git log` is an honest record of how the convention evolved, and rewriting would invalidate every downstream clone.
+Pre-v1.57.0 kit history used `vX.Y.Z: <description>` for release commits. The allowlist preserves these unchanged in `git log`. New commits use `chore(release): vX.Y.Z`. Old commits stay in their original format -- the `git log` is the audit record of how the convention evolved, and rewriting would invalidate every downstream clone.
 
 ## See also
 

@@ -3,6 +3,8 @@
 ## Goal
 Ensure governed project documents stay current, versioned, and traceable as the product evolves.
 
+Tradeoff: Front-matter and registry maintenance cost a few lines per governed doc edit in exchange for traceability when a stakeholder asks "is this still current?". Apply on edits to documents in the registry below. Skip when: the change is to a non-governed doc (commit messages, plans, tmp files).
+
 ## When to Use
 Before any commit that:
 - Adds or removes a dataset or external dependency
@@ -63,7 +65,7 @@ Updated by: [session summary of what changed]
 - **Creating a new governed doc:** Use the front-matter template above. Add it to the registry table in this directive. Add its path to the Directory Structure in CLAUDE.md.
 - **Deleting a governed doc:** Requires explicit user permission. Remove from registry. Update CLAUDE.md Directory Structure.
 - **Staleness discovered mid-session:** Flag to user. They decide whether to update now or defer. If deferred, note it in STATE.md as a known gap.
-- **learnings.md:** Already has its own update rules via Rule 8. The front-matter addition is new — add it on next edit, don't force a separate commit just for front-matter.
+- **learnings.md:** Already has its own update rules via Rule 8. The front-matter addition is new — add it on the next edit to learnings.md so the front-matter and content land in the same commit.
 
 ## Verification
 - [ ] Every governed doc has a valid front-matter block
