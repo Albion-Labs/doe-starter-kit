@@ -16,6 +16,8 @@ Read CLAUDE.md, tasks/todo.md, STATE.md, learnings.md, and ROADMAP.md.
 
 **DOE Kit check:** If `~/doe-starter-kit` exists, run `cd ~/doe-starter-kit && git describe --tags --abbrev=0 2>/dev/null` to get the current kit version. Read STATE.md's "DOE Starter Kit" version. Compare: (1) If versions match → show `synced`. Done. No file diffs needed — if you've already synced, any remaining file differences are project-specific customisations. (2) If kit tag is newer than STATE.md version → show `* pull`. This means the kit has updates you haven't pulled yet. (3) If the directory doesn't exist, skip the DOE Kit line entirely. **No outbound push detection.** The user knows when they've built something kit-worthy and runs `/sync-doe` explicitly. The `/wrap` command handles session-specific reminders for modified kit-syncable files.
 
+**Kit dirty-tree check (v1.60.0+):** If `~/doe-starter-kit` exists, run `cd ~/doe-starter-kit && git status --porcelain 2>/dev/null` to check for uncommitted changes in the kit working tree. If non-empty, surface in the morning briefing as a `KIT DIRTY` row showing the count plus the first 3 paths. The dirty state could be intentional (active kit feature branch) or accidental (cross-project edits that the v1.60.0 PR-only model no longer blocks at PreToolUse time). Advisory only — do not block.
+
 Show a bordered kick-off card, then present a plan and wait for sign-off:
 
 ```
@@ -28,6 +30,7 @@ Show a bordered kick-off card, then present a plan and wait for sign-off:
 │  BLOCKERS   [from STATE.md blockers section]       │
 │    !! [each blocker on its own line]               │
 │  DOE KIT    vX.Y.Z [synced / * pull]                │
+│  KIT DIRTY  N path(s) -- path1, ... (only if dirty)│
 │  OPEN PRS   N open (list titles briefly)           │
 │  TEST HEALTH [regression N/N, health N pass M warn] │
 │  PIPELINE   N in Up Next, M in Queue              │
@@ -55,6 +58,7 @@ Card rules:
 - BRANCH: Run `git branch --show-current`. Show the current branch name (e.g. `feature/pr-workflow-migration` or `main`).
 - PROGRESS: count [x] and [ ] steps for the current feature in todo.md ## Current. Bar uses █ for done, ░ for remaining, scaled to 10 characters. If no current feature, omit this line.
 - DOE KIT: `vX.Y.Z synced` if kit version matches STATE.md version. `vX.Y.Z * pull` if the kit has a newer version than STATE.md (run `/pull-doe` to update). Omit entirely if `~/doe-starter-kit` doesn't exist.
+- KIT DIRTY: only shown when the kit working tree has uncommitted changes. Format: `N path(s) -- path1, path2, ...` (truncate to first 3 paths + `+M more` if N > 3). Omit row entirely when kit is clean. This is the morning-briefing detection point for the v1.60.0 PR-only model's residual exposure (cross-project AI edits to the kit working tree).
 - OPEN PRS: Run `gh pr list --state open --json number,title --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null`. Count open PRs. If none, show "None". If 1-3, show count and titles. If 4+, show count only. **Conflict detection:** If 2+ PRs are open, check for file overlaps: run `gh pr view N --json files --jq '.files[].path'` for each PR. If any files appear in multiple PRs, add a warning line after the PR list: `  !! Conflict risk: [overlapping files] -- merge [ready PR] first, then rebase the other`. If no overlaps, no warning needed. **Branch staleness:** If on a feature branch, run `git rev-list --count HEAD..origin/main`. If > 0, add: `  !! Branch is N commits behind main -- rebase before merging`.
 - TEST HEALTH: If `tests/suite.json` exists and is non-empty, run `python3 execution/verify.py --regression` silently and count pass/fail. If `execution/health_check.py` exists, run `python3 execution/health_check.py --quick --json` and count results. Show `TEST HEALTH   Regression N/N, Health N pass M warn`. If the regression suite is empty, show `TEST HEALTH   No regression tests yet`. If neither exists, omit entirely. This surfaces test infrastructure status at session start.
 - SIGN-OFF: Parse `## Awaiting Sign-off` in todo.md. Count `###` headings (features) and `[ ] [manual]` lines (pending manual items). Show `SIGN-OFF   N features (M manual items pending)`. If the section is empty or has no features, omit entirely.
