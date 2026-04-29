@@ -56,7 +56,7 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 - **Secrets live in `.env` only.** Code reads them via the documented loader; nothing else (commit messages, comments, logs) holds a live secret.
 - Deliverables go to cloud services (Google Sheets, Slides, etc.) where the user can access them directly.
 - Clean up `.tmp/` after tasks complete. Intermediate files are disposable.
-- **Kit edits go through `/sync-doe`.** Versioning, tagging, and release happen automatically; the `guard_kit_writes` PreToolUse hook blocks direct writes.
+- **Kit edits go through branches and PRs.** The kit's `.githooks/pre-commit` 'no direct-to-main' hook plus PR review are the canonical gate; the `guard_kit_writes` PreToolUse hook backs that up by blocking only irreversible Bash operations (recursive removal, force-push to kit main). For project-originated changes, `/sync-doe` is the translation tooling that strips project content, opens a kit branch, and opens the PR.
 - **Destructive git operations require explicit user approval.** Force-push, revert, branch delete: show the diff and ask before acting.
 - **When a hook blocks an action, fix the underlying issue and report back with evidence.** Show what was flagged, what changed, and the verification (re-run, grep, test pass).
 - **Wave agents edit only files in their `Owns:` declaration.** Shared files (`todo.md`, `CLAUDE.md`, `learnings.md`, `STATE.md`) are written by the coordinator after `--merge`.

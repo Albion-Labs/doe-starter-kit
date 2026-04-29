@@ -11,6 +11,16 @@ Tradeoff: Kit-dev rules add a pytest run and CHANGELOG edit to every kit feature
 - Reviewing or merging a kit PR
 - Designing a new kit feature that will ship across multiple steps
 
+## Kit-write model: PR-only
+
+Kit changes flow through a feature branch and PR. The canonical gate is the kit's `.githooks/pre-commit` 'no direct-to-main' hook (active when `git config core.hooksPath .githooks` has been run on the clone) plus human PR review. The `guard_kit_writes` PreToolUse hook is a defence-in-depth layer that blocks only irreversible operations -- recursive removal of kit paths and force-push to kit main; it does not gate ordinary edits.
+
+Empirical basis: 8 minor kit releases (v1.51 - v1.58) shipped with `guard_kit_writes` matchers in lowercase form that never fired on real Tool calls. During that window, multiple consuming projects pulled the kit and edited kit working trees freely. Zero corruption incidents documented. v1.59.0 fixed the matchers; the dominant effect was a long tail of false positives on legitimate Bash commands whose source bytes happened to contain a kit-path token (heredoc bodies, JSON payloads, `python3 -c` quoted code, `cd kit && git describe`). v1.60.0 retired the file-edit branch and the redirect/tee/cd-and-commit Bash patterns; PR review is the canonical gate.
+
+Last-resort override for the destructive Bash patterns: `SKIP_KIT_GUARD=1`. Set only when an operator genuinely needs to perform a destructive action (emergency rollback). The flag file `.tmp/.sync-doe-active` from v1.59.x is no longer read by the hook; `/sync-doe` may still touch it for backwards compatibility with v1.59.x clients.
+
+Cross-project exposure: in v1.60.0, an AI working in a consuming project (monty, cortex, etc.) can edit the kit working tree directly. The dominant detection point is the `/sync-doe` Step 0.5 dirty-tree pre-flight, which surfaces any uncommitted kit changes for user acknowledgement before applying a sync. See `directives/starter-kit-sync.md` ## Step 0.5.
+
 ## Versioning model: one release per PR
 
 The kit uses a single shared release version per PR — **all steps of a feature ship together in one minor or patch release**, not one patch per step (which is monty's per-step-versioning model). For example, v1.57.0's seven steps all land in `v1.57.0`; there is no `v1.57.1` for Step 1, `v1.57.2` for Step 2, etc.
