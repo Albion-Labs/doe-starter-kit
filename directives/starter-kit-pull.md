@@ -3,6 +3,8 @@
 ## Goal
 Safely pull DOE starter kit updates INTO a project. The reverse of `/sync-doe` (which pushes project improvements out to the kit). Version-aware diffing ensures only new changes are applied, and project-specific content is never overwritten.
 
+Tradeoff: Pulling kit updates costs a careful diff review per file in exchange for keeping a project current with kit-wide improvements (commands, hooks, directives) without losing local customisations. Apply when the kit version on disk is newer than the project's `.doe-kit-version`. Skip when: the versions match (kit and project are in sync).
+
 ## When to Use
 - When the kit has been updated (new commands, directives, hooks, CLAUDE.md rules) and a project needs those improvements
 - After another project synced improvements to the kit via `/sync-doe`
@@ -27,7 +29,7 @@ Before comparing anything, make sure the local kit is up to date.
 ```bash
 cd ~/doe-starter-kit && git pull
 ```
-If there are local uncommitted changes, stop and ask the user how to handle them before proceeding.
+When there are local uncommitted changes, pause and ask the user how to handle them before proceeding.
 
 ### Step 3: Read versions
 Read the project's last-synced version:
@@ -41,9 +43,37 @@ cd ~/doe-starter-kit && git describe --tags --abbrev=0
 
 ### Step 4: Compare versions
 - **Versions match** → "Already up to date — project is on kit vX.Y.Z" → show UP TO DATE result box → stop.
-- **Kit is newer** → continue to Step 5.
+- **Kit is newer** → continue to Step 4.5.
 - **Kit is older than project's recorded version** → warn: "Kit version vX.Y.Z is older than project's recorded vX.Y.Z. This is unusual — the project may have been manually updated. Proceed with caution?" Wait for confirmation.
 - **`.doe-kit-version` not found** → this is the project's first pull. Warn: "No .doe-kit-version found — treating as first pull. Will show all changes for review." Be extra cautious — show everything, apply nothing without approval.
+
+### Step 4.5: Pull-impact pre-flight (migration manifests)
+
+Before showing the user what changed, scan the kit's `migrations/` directory for manifests covering the version range being pulled. Each manifest (e.g. `migrations/v1.59.0.md`) documents phrase rewrites and behavioural changes that affect projects pulling that release.
+
+```bash
+# Find every manifest landing in the pull range
+cd ~/doe-starter-kit && \
+  ls migrations/ | sort -V | awk -v old="$OLD_VERSION" -v new="$NEW_VERSION" '
+    {ver = substr($0, 1, length($0) - 3)}
+    ver > old && ver <= new {print}
+  '
+```
+
+For each manifest in the range, run the **pull-impact pre-flight**:
+
+1. Read the manifest's "Pull impact summary" (a one-paragraph overview at the top -- typical content: phrase rewrites preserve meaning, behavioural changes listed at end).
+2. Extract every `OLD: "..."` line. For each `OLD:` phrase, grep the project for matches:
+   ```bash
+   cd <project-root>
+   grep -rnF '<OLD phrase>' --include="*.md" --include="*.py" --include="*.json" \
+     CLAUDE.md directives/ tasks/ execution/ .claude/ 2>/dev/null
+   ```
+   Any hit is a "PULL IMPACT" warning -- the project is using a phrase the kit has retired. Flag with the file path, line number, and the corresponding `NEW:` replacement.
+3. Read the manifest's "Behavioural changes" section. For each entry, run the documented `Pull-impact grep:` command against the project. Hits indicate workflows that may newly trip blocks, fire hooks, or behave differently after the pull.
+4. Read the "Customised-directive check" snippet (typically near the end of the manifest) and run it against the project. Any flagged file needs a 3-way merge: project-edits + kit-edits-since-last-pin + kit's new content.
+
+Aggregate the findings into a "Pull-impact" panel in the Analysis Box (Step 12) so the user sees the full picture before approving anything. The pre-flight does **not** block the pull -- it surfaces what the user is about to inherit so they can plan the follow-up edits in their own files.
 
 ### Step 5: Show what changed
 Show the kit CHANGELOG entries between the project's version and the current kit version:
@@ -78,7 +108,7 @@ For each file that differs:
 2. Identify what's new in the kit vs what's project-specific
 3. Propose the update — add new kit content, preserve project-specific additions
 
-IMPORTANT: Projects may have added their own hooks or settings entries. Never remove project-specific additions — only add/update kit-provided content.
+IMPORTANT: Projects may have added their own hooks or settings entries. Project-specific additions are preserved; the merge is additive -- only kit-provided content is added or updated.
 
 ### Step 8: CLAUDE.md
 This is the most sensitive file — it contains both universal DOE rules and project-specific customizations.
@@ -103,10 +133,10 @@ Flag and SKIP anything that would conflict with project-specific content:
 Present all proposed CLAUDE.md changes in a single diff view before applying.
 
 ### Step 9: Templates (learnings.md, todo.md)
-Compare format rules only — never touch content.
+Compare format rules only -- content is read-only during pull.
 
-- **learnings.md** — if the kit added new section headings or format rules in the template, propose adding them to the project's learnings.md. Never modify existing learnings content.
-- **todo.md** — if the kit changed format rules (e.g. new step format, new status tags), propose the rule change. Never modify existing tasks.
+- **learnings.md** — when the kit added new section headings or format rules in the template, propose adding them to the project's learnings.md. Existing learnings content is read-only during pull.
+- **todo.md** — when the kit changed format rules (e.g., new step format, new status tags), propose the rule change. Existing tasks are read-only during pull.
 
 ### Step 10: Directives
 List directives in both the kit and the project:
@@ -123,7 +153,7 @@ For each kit directive:
 ### Step 11: Execution scripts
 Compare `execution/audit_claims.py` between kit and project:
 - If the kit added new `@register("universal")` checks, propose adding them to the project's copy
-- Never touch `@register("project-specific")` checks — these are project customizations
+- `@register("project-specific")` checks are preserved as-is during pull -- they are project customizations
 - Preserve the extension point comment if present
 
 ### Step 12: Show full summary and get approval
@@ -132,7 +162,7 @@ Present the Analysis Box (as defined in the /pull-doe command) with all proposed
 ### Step 13: Apply approved changes
 Apply only the changes the user approved. For each file:
 - Make surgical edits (add/update specific sections)
-- Never replace files wholesale
+- Pull merges additively, line-by-line; wholesale replacement is reserved for files the project doesn't yet have
 - After applying, show a brief confirmation of what was changed
 
 ### Step 14: Update project version

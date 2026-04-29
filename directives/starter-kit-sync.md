@@ -3,6 +3,8 @@
 ## Goal
 Keep the universal DOE Claude Code Starter Kit repository in sync with improvements made during project work. When a project improves the DOE system itself (new directives, better rules, new commands, workflow refinements), those improvements should flow back to the starter kit — stripped of all project-specific content.
 
+Tradeoff: Sync ceremony costs a CHANGELOG entry, version bump, tag, and release per push in exchange for keeping the kit's history honest -- every project that pulls from the kit gets a clean version landing line. Apply when an [INFRA] feature changed kit-syncable files (CLAUDE.md rules, directives, commands, hooks, audit checks). Skip when: the feature is project-only (CLAUDE.md project sections, project-specific hooks, project content).
+
 ## When to Use
 - After completing an [INFRA] feature that changed DOE files (CLAUDE.md, todo.md format rules, directives, commands, hooks, audit script)
 - After a retro identifies a new universal learning that was added to learnings.md or ~/.claude/CLAUDE.md
@@ -22,7 +24,7 @@ This compares all syncable directories and flags:
 - **DIVERGED** — files in both repos that differ (examine each)
 - **KIT ONLY** — files in kit that the project doesn't have (may need pulling)
 
-**Decision rule for "universal vs project-specific":** A file is universal if the SCRIPT is generic, even if the DATA it processes is project-specific. Examples: `run_snagging.py` reads todo.md (project data) but the script itself works for any DOE project. `build_session_archive.py` is structurally universal but contains hardcoded feature names — it needs stripping. `build.py` is always project-specific. When in doubt, flag it for the user — don't silently skip.
+**Decision rule for "universal vs project-specific":** A file is universal if the SCRIPT is generic, even if the DATA it processes is project-specific. Examples: `run_snagging.py` reads todo.md (project data) but the script itself works for any DOE project. `build_session_archive.py` is structurally universal but contains hardcoded feature names — it needs stripping. `build.py` is always project-specific. When in doubt, flag it for the user -- the universal/project-specific call is theirs to make.
 
 Review the audit output before proceeding. If MISSING FROM KIT has items, include them in this sync.
 
@@ -36,7 +38,7 @@ Before comparing anything, make sure the local starter kit is up to date. Anothe
 ```bash
 cd ~/doe-starter-kit && git pull
 ```
-If there are local uncommitted changes, stop and ask the user how to handle them before proceeding.
+When there are local uncommitted changes, pause and ask the user how to handle them before proceeding.
 
 ### Step 3: Check all layers
 Compare files across ALL layers — not just two. Every sync must check:
@@ -73,7 +75,7 @@ For each file that differs, show THREE things:
 This prevents silently overwriting improvements synced from other projects. If the starter kit has content that this project doesn't, flag it explicitly:
 > "The starter kit has [X] that this project doesn't — this was likely synced from another project. I'll preserve it."
 
-IMPORTANT: Never replace a file wholesale. Merge improvements additively — add new rules, update changed rules, but keep existing starter kit content that isn't present in the current project.
+IMPORTANT: Merge improvements additively -- add new rules, update changed rules, and keep existing starter-kit content that the current project doesn't have. Wholesale replacement is reserved for files the kit doesn't yet have.
 
 ### Step 5: Strip project-specific content
 Before copying anything to the starter kit, remove ALL project-specific references:
@@ -154,9 +156,86 @@ Before committing, update `CHANGELOG.md`:
    Only include subsections that have entries.
 4. Present the changelog entry in a bordered box for approval. **Generate programmatically** — compute W from content, use `.ljust(W)` padding, Unicode box-drawing borders. Content inside borders must be ASCII-only. Structure: header row with "CHANGELOG" left-aligned and version + date right-aligned, separator, 2-line plain English summary, then ADDED/CHANGED/FIXED/REMOVED sections with bulleted items. Wait for explicit approval before proceeding.
 
+### Step 9.5: Author a migration manifest (when the release rewrites prompts or rules)
+
+When the release changes phrasing in CLAUDE.md, directives, or templates that downstream projects may have copied verbatim — or changes the **behaviour** of a hook, permission rule, or matcher — author a migration manifest at `migrations/v<version>.md`. The manifest is consumed by `/pull-doe` pre-flight (Step 4.5 of `directives/starter-kit-pull.md`) so projects pulling the release see exactly which of their files reference retired phrases or workflows.
+
+**Manifest format:**
+
+```
+# Migration Manifest — kit vX.Y.Z
+
+**Pull impact summary.** <one paragraph: scope of phrase rewrites, scope
+of behavioural changes, what the pre-flight greps for>.
+
+## Format
+
+OLD: "<exact phrase removed from the file>"
+NEW: "<phrase that replaced it>"
+WHY: <one-line reason — usually positive form name, or load-bearing -> decoration deletion>
+
+## Tier 1 — universal templates + Core Behaviours
+
+### CLAUDE.md (kit's own — also the project-CLAUDE.md template)
+
+OLD: "<old phrase>"
+NEW: "<new phrase>"
+WHY: <one-line reason>
+
+(repeat per phrase, then per file under Tier 1)
+
+## Tier 2 — directives/
+
+(per-directive blocks; same OLD/NEW/WHY shape; one block per file is
+expected even if the file had no rewrites -- mark such files "(No
+load-bearing rewrites this pass.)" so the audit trail is complete)
+
+## Tier 3 — kit's learnings.md + remaining files
+
+(per-file blocks)
+
+## Behavioural changes
+
+### <subject> -- <one-line summary>
+
+Scope: <where the change lives -- `.claude/settings.json`, hook script, etc.>
+Old behaviour: <what happened before>
+New behaviour: <what happens now>
+Pull-impact for projects on v<previous>: <what they will newly observe>
+Pull-impact grep: `<command for /pull-doe to run against the project>`
+
+(repeat per behavioural change)
+
+## Customised-directive check
+
+Run from the project root before pulling:
+
+```bash
+PINNED_TAG=$(grep -oE 'kit v?[0-9]+\.[0-9]+\.[0-9]+' STATE.md | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+KIT_DIR=~/doe-starter-kit
+for f in directives/*.md; do
+    diff -q "$f" "$KIT_DIR/$f" 2>/dev/null \
+        || echo "PROJECT-CUSTOMISED (3-way merge needed): $f"
+done
+```
+```
+
+**Authoring rules:**
+- One manifest per release (`migrations/v1.59.0.md`, `migrations/v1.60.0.md`).
+- `OLD:` / `NEW:` lines start at column 0 so the pre-flight grep can extract them line-by-line.
+- Long multi-line OLD/NEW phrases get summarised in the OLD: line (truncated to ~200 chars with `\n` escapes) so the line stays greppable; the full text can live in a fenced block underneath when needed.
+- `Pull-impact grep:` for behavioural changes is the exact command the pre-flight will run -- write it so a project can paste it as-is.
+- "Files with no load-bearing rewrites" still get a stub heading so the audit trail covers every file the audit examined.
+
+**When NOT to author a manifest:**
+- The release adds new files only (no phrase changes to existing files, no behavioural changes to hooks/matchers/permissions).
+- The release is a pure bug-fix patch (e.g. fixing a typo in a directive that doesn't change meaning).
+
+In those cases, note "No migration manifest needed (additive release)" in the CHANGELOG hero so the absence is documented.
+
 ### Step 10: Commit, tag, and push
 
-**Run each of these as a SEPARATE Bash tool call** — do not `&&` chain them, and do not pipe-trim their output with `| head/tail -N` when chaining. Bash pipelines return the last command's exit code, so `git commit ... | tail -5 && git tag` fires the tag even if commit was blocked by a hook (`tail` exits 0). Separate calls make each exit code visible. If you must chain, prefix with `set -o pipefail`.
+**Run each of these as a SEPARATE Bash tool call** -- one command per call so each exit code propagates independently. Bash pipelines return the last command's exit code: `git commit ... | tail -5 && git tag` fires the tag even when commit was blocked by a hook (`tail` exits 0). Separate calls keep each exit code visible. When chaining is unavoidable, prefix with `set -o pipefail`.
 
 ```bash
 cd ~/doe-starter-kit
@@ -203,7 +282,7 @@ git stash drop
 - If a new command references project-specific files, either genericize it or don't sync it
 - If audit_claims.py gained new universal checks, sync those but leave the extension point comment intact
 - If the starter kit has content this project doesn't have, ALWAYS preserve it — it came from another project's sync
-- If git pull in Step 2 reveals conflicts, stop and show the user — do not auto-resolve
+- When git pull in Step 2 reveals conflicts, surface the conflict to the user before any merge action -- conflicts are the user's call to resolve
 
 ## Post-Sync Checklist
 - [ ] Tutorial footers auto-stamped by `stamp_tutorial_version.py` (verify in diff)
