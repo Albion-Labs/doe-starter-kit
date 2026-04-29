@@ -3,13 +3,18 @@
 Covers Edit/Write/MultiEdit (file_path check) AND Bash commands that
 redirect into or rewrite a file under directives/ (command string check).
 New directives are still allowed (e.g., during retros) -- only edits to
-existing files in directives/ trigger the guard via the file_path branch.
+existing files in directives/ (or .githooks/) trigger the guard via the
+file_path branch. Existence is checked at hook time, so a Write that
+creates a brand-new directive passes through.
 The Bash branch is conservative: it blocks any redirected write or
-in-place edit that mentions a directives/ path.
+in-place edit that mentions a directives/ path. New-vs-existing detection
+on Bash arguments is a heuristic loss, so the Bash branch defaults to
+block-all on directives/ paths.
 """
 import json
 import re
 import sys
+from pathlib import Path
 
 WRITE_TOOLS = ("Write", "Edit", "MultiEdit")
 
@@ -47,10 +52,16 @@ def main():
     tool_name = event.get("tool_name", "")
     tool_input = event.get("tool_input", {})
 
-    # File-path branch: Edit/Write/MultiEdit on a path under directives/ or .githooks/
+    # File-path branch: Edit/Write/MultiEdit on an EXISTING path under
+    # directives/ or .githooks/. Writes that create a new file pass through
+    # so retros can add fresh directives without ceremony; only edits to
+    # already-tracked files trigger the guard.
     if tool_name in WRITE_TOOLS:
         path = tool_input.get("file_path", "") or tool_input.get("path", "")
-        if "directives/" in path or ".githooks" in path:
+        if (
+            ("directives/" in path or ".githooks" in path)
+            and Path(path).exists()
+        ):
             _block(
                 "GUARDRAIL: Editing existing directives requires explicit "
                 "permission. Show the proposed changes to the user and get "
