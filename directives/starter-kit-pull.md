@@ -52,12 +52,31 @@ cd ~/doe-starter-kit && git describe --tags --abbrev=0
 Before showing the user what changed, scan the kit's `migrations/` directory for manifests covering the version range being pulled. Each manifest (e.g. `migrations/v1.59.0.md`) documents phrase rewrites and behavioural changes that affect projects pulling that release.
 
 ```bash
-# Find every manifest landing in the pull range
+# Find every manifest landing in the (OLD_VERSION, NEW_VERSION] range.
+# Use a Python tuple-of-ints comparison rather than shell lexicographic --
+# string compare orders "v1.10.0" before "v1.9.0", which would silently
+# drop manifests in the gap once the kit crosses a 2-digit minor or patch.
 cd ~/doe-starter-kit && \
-  ls migrations/ | sort -V | awk -v old="$OLD_VERSION" -v new="$NEW_VERSION" '
-    {ver = substr($0, 1, length($0) - 3)}
-    ver > old && ver <= new {print}
-  '
+  ls migrations/ | python3 - "$OLD_VERSION" "$NEW_VERSION" <<'PY'
+import sys, re
+old, new = sys.argv[1], sys.argv[2]
+def parse(s):
+    """Tuple-of-ints from 'v1.59.0' or '1.59.0'. Returns None on parse failure."""
+    m = re.match(r'^v?(\d+(?:\.\d+)*)$', s.strip())
+    return tuple(int(x) for x in m.group(1).split('.')) if m else None
+old_t, new_t = parse(old), parse(new)
+if old_t is None or new_t is None:
+    sys.exit(f"could not parse OLD_VERSION={old!r} or NEW_VERSION={new!r}")
+for line in sys.stdin:
+    name = line.strip()
+    if not name.endswith('.md'):
+        continue
+    ver_t = parse(name[:-3])  # strip .md
+    if ver_t is None:
+        continue
+    if old_t < ver_t <= new_t:
+        print(name)
+PY
 ```
 
 For each manifest in the range, run the **pull-impact pre-flight**:
