@@ -14,13 +14,21 @@ BLOCK_MSG = (
     "Override with SKIP_KIT_GUARD=1 (you must tag/release manually)."
 )
 
-# Bash patterns that indicate writing to kit
+# Bash patterns that indicate writing to kit. Redirect (`>`, `>>`) and tee
+# patterns require the kit path to follow the operator with no whitespace or
+# Bash word-boundary chars in between -- otherwise heredoc bodies, JSON
+# payloads, or downstream string mentions of the kit path on the same line
+# trip a false positive (e.g. `cat > /tmp/foo.json <<EOF { "p": "~/doe-...
+# starter-kit" } EOF`). cp/mv stay broad because their first kit-path
+# argument is the destination -- broadness there is the safe default.
+# cd-and-then-write keeps its `&& git commit|sed|tee|>` suffix gate.
 KIT_BASH_PATTERNS = [
     r'cp\s.*doe-starter-kit',
     r'mv\s.*doe-starter-kit',
     r'cd\s.*doe-starter-kit.*&&.*(?:git\s+(?:commit|add|tag|push)|sed|tee|>)',
-    r'>\s*.*doe-starter-kit',
-    r'tee\s.*doe-starter-kit',
+    r'>\|?\s*[\'"]?[^\s\'"|;&<>]*doe-starter-kit',  # > path (and >| noclobber-override)
+    r'>>\s*[\'"]?[^\s\'"|;&<>]*doe-starter-kit',    # >> path
+    r'\btee\s+(?:-a\s+)?[^\s|;&]*doe-starter-kit',  # tee [-a] path
 ]
 
 def main():
@@ -29,6 +37,18 @@ def main():
         print(json.dumps({"decision": "allow"}))
         return
     if FLAG_FILE.exists():
+        print(json.dumps({"decision": "allow"}))
+        return
+    # Cwd-aware early-return: when working from inside the kit (e.g. on a
+    # kit feature branch), the file-level guard is performative -- the kit's
+    # `.githooks/pre-commit` 'no direct-to-main' hook plus PR review are the
+    # canonical gate. From outside the kit (cwd in monty/cortex/etc.) the
+    # guard's full behaviour is preserved.
+    try:
+        cwd = os.path.realpath(os.getcwd())
+    except (FileNotFoundError, OSError):
+        cwd = ""
+    if cwd and (cwd == KIT_DIR or cwd.startswith(KIT_DIR + os.sep)):
         print(json.dumps({"decision": "allow"}))
         return
 
