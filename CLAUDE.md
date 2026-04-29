@@ -54,6 +54,7 @@ gh pr create --title "..." --body "..."
 - **Warning:** `.env` files stay local; the pre-commit hook gates accidental commits, provided `git config core.hooksPath .githooks` has been run on this clone.
 - **Caveat:** After context compaction, Claude loses all loaded directives. Re-read the triggers relevant to your current task after a `/clear` or long conversation.
 - **Workaround:** If a pre-commit hook fails with "not executable", run `chmod +x .githooks/*` to fix permissions.
+- **Kit-write model:** kit edits flow through branches and PRs. The `.githooks/pre-commit` 'no direct-to-main' hook plus PR review are the canonical gate; `guard_kit_writes` blocks only irreversible Bash operations (recursive removal, force-push to kit main). See `directives/kit-development.md` ## Kit-write model: PR-only.
 - **Note:** `execution/` scripts are deterministic: same input, same output. Keep randomness, API calls, and interactive prompts out of `execution/` -- AI reasoning lives in orchestration (CLAUDE.md + directives).
 <!-- Add project-specific gotchas here as you discover them -->
 

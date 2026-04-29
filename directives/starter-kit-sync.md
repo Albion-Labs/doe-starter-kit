@@ -13,6 +13,8 @@ Tradeoff: Sync ceremony costs a CHANGELOG entry, version bump, tag, and release 
 
 ## How to Sync
 
+`/sync-doe` is the project-to-kit translation tooling: it diffs, strips project-specific content, applies surgically, and opens the kit PR. It is not the canonical gate -- that role is held by the kit's `.githooks/pre-commit` 'no direct-to-main' hook plus PR review (see `directives/kit-development.md` ## Kit-write model: PR-only). `/sync-doe` automates the project-side translation step so syncs land cleanly.
+
 ### Step 0: Run sync audit (mandatory pre-flight)
 Before comparing individual files, run the automated audit to catch universal files that might be missing from the kit:
 ```bash
@@ -27,6 +29,16 @@ This compares all syncable directories and flags:
 **Decision rule for "universal vs project-specific":** A file is universal if the SCRIPT is generic, even if the DATA it processes is project-specific. Examples: `run_snagging.py` reads todo.md (project data) but the script itself works for any DOE project. `build_session_archive.py` is structurally universal but contains hardcoded feature names — it needs stripping. `build.py` is always project-specific. When in doubt, flag it for the user -- the universal/project-specific call is theirs to make.
 
 Review the audit output before proceeding. If MISSING FROM KIT has items, include them in this sync.
+
+### Step 0.5: Verify kit working tree is clean (mandatory pre-flight)
+
+`/sync-doe` translates from project to kit. If the kit working tree has uncommitted changes that did not come from this session, surface them in the Analysis Box and require user acknowledgement before applying anything.
+
+```bash
+cd ~/doe-starter-kit && git status --porcelain
+```
+
+If the output is non-empty, the sync MUST stop and surface every dirty path with its diff. The user decides whether the changes are intended (continue) or accidental (revert + retry). This is the canonical detection point for the v1.60.0 model's residual exposure: cross-project AI edits to the kit working tree that go silent until the next sync (since `guard_kit_writes` no longer blocks them at PreToolUse time).
 
 ### Step 1: Add the starter kit directory
 ```

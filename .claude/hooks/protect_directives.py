@@ -18,14 +18,24 @@ from pathlib import Path
 
 WRITE_TOOLS = ("Write", "Edit", "MultiEdit")
 
-# Bash patterns that write to or edit files under directives/. The patterns
-# are deliberately broad — false positives are easier to override than missed
-# bypasses. sed/awk in-place edits scan up to the next pipe/semicolon so
-# macOS-style empty backup args (`sed -i ''`) don't slip through. The
+# Bash patterns that write to or edit files under directives/. Each entry
+# names an unambiguous write operation -- redirect, in-place edit, remove,
+# move, copy. sed/awk in-place edits scan up to the next pipe/semicolon
+# so macOS-style empty backup args (`sed -i ''`) don't slip through. The
 # `>` redirect pattern allows an optional `|` immediately after the angle
 # bracket so `>|` (noclobber-override) is also caught. mv/cp accept either
 # whitespace OR `/` before `directives/` so `mv x ./directives/y.md` and
 # absolute paths (`mv x /Users/foo/proj/directives/y.md`) are not bypasses.
+#
+# The `python3 -c "...directives/..."` pattern was retired in v1.60.0 --
+# it matched ANY Python one-liner that referenced `directives/`, including
+# read-only (`os.listdir`), data-only (JSON payloads in test scaffolding),
+# and string-literal mentions. The false-positive rate during legitimate
+# scripting work was high enough to make `python3 -c` near-unusable from
+# Claude Code. The narrow bypass route it closed (a Python one-liner that
+# `open()`s a directive in write mode) is theoretical; in practice writes
+# go through Edit/Write/MultiEdit (file-path branch) or Bash redirects
+# (covered above), and PR review is the canonical gate for kit work.
 BASH_DIRECTIVE_PATTERNS = [
     r'>\|?\s*[\'"]?[^\s\'"|;&<>]*directives/',      # cat ... > directives/x.md (and >| variant)
     r'>>\s*[\'"]?[^\s\'"|;&<>]*directives/',        # echo ... >> directives/x.md
@@ -35,7 +45,6 @@ BASH_DIRECTIVE_PATTERNS = [
     r'\brm\s+[^|;&]*directives/',                   # rm directives/x.md
     r'\bmv\s+[^|;&]*[\s/]directives/',              # mv X directives/x.md (incl. ./directives/)
     r'\bcp\s+[^|;&]*[\s/]directives/',              # cp X directives/x.md (incl. ./directives/)
-    r'\bpython3?\s+-c\s+[\'"][^\'"]*directives/',   # python -c "...directives/..."
 ]
 
 

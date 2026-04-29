@@ -10,6 +10,8 @@ Read CLAUDE.md, tasks/todo.md, STATE.md, and learnings.md.
 
 **DOE Kit check:** If `~/doe-starter-kit` exists, run `cd ~/doe-starter-kit && git describe --tags --abbrev=0 2>/dev/null` to get the current kit version. Compare against STATE.md's "DOE Starter Kit" version. If versions match → `synced`. If kit tag is newer → `* pull`. No outbound push detection — `/wrap` handles session-specific reminders for modified kit-syncable files. If the directory doesn't exist, skip the DOE Kit line entirely.
 
+**Kit dirty-tree check (v1.60.0+):** If `~/doe-starter-kit` exists, run `cd ~/doe-starter-kit && git status --porcelain 2>/dev/null` to check for uncommitted changes in the kit working tree. If non-empty, surface in the kick-off card as a `KIT DIRTY` row showing the count plus the first 3 paths. The dirty state could be intentional (active kit feature branch) or accidental (cross-project edits that the v1.60.0 PR-only model no longer blocks at PreToolUse time). Don't block — the user decides whether to investigate or proceed. If the kit dir doesn't exist or git is unavailable, skip silently.
+
 **Dependency analysis:** Parse `Depends:` and `Owns:` metadata from steps in todo.md ## Current. If `~/.claude/scripts/dispatch_dag.py` exists, run `python3 ~/.claude/scripts/dispatch_dag.py --graph 2>&1` to see the wave structure. Show the next wave in the card. If the next wave has 2+ steps (parallel opportunity), add a line after PICKING UP: `PARALLEL   Wave has N steps -- run sequential or parallel? (parallel uses dispatch_dag.py)`. Wait for the user's response. If "parallel", run `python3 ~/.claude/scripts/dispatch_dag.py --dispatch`. If "sequential" or no response after showing the card, proceed with the first step as usual.
 
 **Session blocking (session block):** For large features (5+ remaining steps), suggest which steps to tackle this session based on context budget. A session can typically handle 3-4 steps before context degrades. Show: `SESSION BLOCK   Suggest Steps N-M this session (N steps remaining, ~K context budget)`. This is advisory -- the user can override.
@@ -24,6 +26,7 @@ Show a bordered kick-off card, then immediately pick up the next incomplete step
 │  PROGRESS   ██████░░░░ N/M steps                  │
 │  BRANCH     feature/xxx (or main)                  │
 │  DOE KIT    vX.Y.Z [synced / * pull]                │
+│  KIT DIRTY  N path(s) -- path1, path2, ... (only if dirty)│
 │  OPEN PRS   N open (list titles briefly)           │
 │                                                   │
 │  PICKING UP Step N -- [step description]          │
@@ -42,6 +45,7 @@ Card rules:
 - PROGRESS: count [x] and [ ] steps for the current feature in todo.md ## Current. Bar uses `█` for done, `░` for remaining, scaled to 10 characters. If no current feature, omit this line.
 - BRANCH: Run `git branch --show-current`. Show the current branch name (e.g. `feature/pr-workflow-migration` or `main`).
 - DOE KIT: `vX.Y.Z synced` if kit version matches STATE.md version. `vX.Y.Z * pull` if the kit has a newer version. Omit entirely if `~/doe-starter-kit` doesn't exist.
+- KIT DIRTY: only shown when the kit working tree has uncommitted changes. Format: `N path(s) -- path1, path2, ...` (truncate to first 3 paths + `+M more` if N > 3). Omit row entirely when kit is clean. This is the canonical session-boundary detection point for the v1.60.0 PR-only model's residual exposure (cross-project AI edits to the kit working tree).
 - OPEN PRS: Run `gh pr list --state open --json number,title --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null`. If none, show "None". If 1-3, show count and titles. If 4+, show count only. Omit entirely if none. **Conflict detection:** If 2+ PRs are open, check for file overlaps: run `gh pr view N --json files --jq '.files[].path'` for each PR. If any files appear in multiple PRs, add a warning line after the PR list: `  !! Conflict risk: [overlapping files] -- merge [ready PR] first, then rebase the other`. If no overlaps, no warning needed. **Branch staleness:** If on a feature branch, run `git rev-list --count HEAD..origin/main`. If > 0, add: `  !! Branch is N commits behind main -- rebase before merging`.
 - PICKING UP: the next incomplete step (first `[ ]` line) from todo.md ## Current. Show step number and short description. If all steps complete, show "All steps complete -- ready for retro". If no current feature, omit this line.
 - SUMMARY: Immediately after PICKING UP, add 1-2 lines of plain English explaining what you are about to do for this step. Read the step's plan file if one is referenced, or use the step description and todo.md context. Keep it concrete and jargon-free -- e.g. "Creating the reverse sync command so kit updates can flow into projects safely." Not a restatement of the step name -- explain the actual work.
