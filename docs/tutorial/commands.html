@@ -1512,6 +1512,7 @@
               <li><strong>CONTRACT</strong> &mdash; Whether the next step's contract is valid and how many auto vs manual checks it has.</li>
               <li><strong>BLOCKERS</strong> &mdash; Active issues from STATE.md that might affect work. Only appears if there are blockers.</li>
               <li><strong>DOE KIT</strong> &mdash; Framework version. "synced" means up to date. "* push" or "* pull" means updates are pending.</li>
+              <li><strong>KIT DIRTY</strong> (v1.60.0+) &mdash; only shown when the kit working tree has uncommitted changes. Lists the count plus first 3 paths. Could be intentional (active kit feature branch) or accidental (cross-project edits that the v1.60.0 PR-only model no longer blocks at PreToolUse time). Advisory; review and decide whether to investigate. The same row appears in <code>/stand-up</code> and the end-of-session <code>/wrap</code> output, plus <code>/sync-doe</code> Step 0.5 refuses to apply a sync if it fires &mdash; together they form three detection points for the residual exposure of the new model.</li>
               <li><strong>SIGN-OFF</strong> &mdash; How many features are in Awaiting Sign-off and how many manual items still need your testing. Only appears when items are pending.</li>
               <li><strong>PIPELINE</strong> &mdash; How many features are queued in ROADMAP.md vs todo.md. Nudges you to promote or scope new work.</li>
               <li><strong>Last session summary</strong> &mdash; What happened last time, pulled from STATE.md so you don't have to remember.</li>
