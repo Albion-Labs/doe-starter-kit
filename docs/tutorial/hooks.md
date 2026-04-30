@@ -2,6 +2,21 @@
 
 The DOE kit ships three git hooks under `.githooks/` that run automatically on every commit and push. They're activated when a project runs `git config core.hooksPath .githooks` (the wizard does this for you on first setup).
 
+## Kit-write model: PR-only (v1.60.0)
+
+As of v1.60.0, the kit-write discipline is committed to a PR-only model. The canonical gate for kit changes is the kit's own `.githooks/pre-commit` 'no direct-to-main' hook plus PR review. The `.claude/hooks/guard_kit_writes.py` PreToolUse hook is now a defence-in-depth layer that blocks only **irreversible** Bash operations — recursive removal of kit paths (`rm -r*`) and force-push to kit main (`git push --force` mentioning the kit OR from inside the kit cwd). It does **not** gate ordinary edits, redirects, or `cd kit && git commit`.
+
+The parallel `.claude/hooks/protect_directives.py` hook also tightened in v1.60.0: the overbroad `python3 -c "...directives/..."` Bash pattern was retired (it matched any Python one-liner that referenced the directives token, including read-only). The eight unambiguous Bash write patterns (`>`, `>>`, `tee`, `sed -i`, `awk -i inplace`, `rm`, `mv`, `cp`) and the existence-aware file-path branch are unchanged.
+
+Cross-project AI sessions can now edit the kit working tree without a PreToolUse block. The detection points for unintended drift are:
+
+1. `/sync-doe` Step 0.5 (mandatory pre-flight): refuses to apply a sync if `git status --porcelain` in the kit returns non-empty.
+2. `KIT DIRTY` row in `/crack-on`, `/stand-up`, and `/wrap`: surfaces uncommitted kit working-tree changes at session boundaries.
+
+Last-resort override for the destructive Bash patterns: `SKIP_KIT_GUARD=1`. Set only when an operator genuinely needs a destructive action (emergency rollback). The flag file `.tmp/.sync-doe-active` from v1.59.x is no longer read; `/sync-doe` may still touch it for backwards compatibility with v1.59.x clients.
+
+Empirical basis: 8 minor releases (v1.51 - v1.58) shipped with `guard_kit_writes` matchers in lowercase form that never fired on real Tool calls. During that window, multiple consuming projects pulled the kit and edited working trees freely with zero corruption incidents documented. v1.59.0 fixed the matchers; the dominant effect was a long false-positive tail. v1.60.0 commits to the PR-only model PR review was already enforcing.
+
 ## pre-commit
 
 Fires on `git commit`. Runs a series of fast structural checks; any failure blocks the commit.
