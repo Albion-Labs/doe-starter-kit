@@ -74,11 +74,18 @@ After PR merge:
 ```bash
 cd ~/doe-starter-kit
 git checkout main && git pull
+# Regenerate whats-new.html so the deployed docs reflect the new CHANGELOG entry.
+python3 execution/generate_whats_new.py
+git add docs/tutorial/whats-new.html
+git commit -m "docs(tutorial): regen whats-new for vX.Y.Z"
+git push
 git tag vX.Y.Z
 git push origin vX.Y.Z
 gh release create vX.Y.Z --title "vX.Y.Z — <short-name>" \
   --notes "$(sed -n '/^## vX\.Y\.Z/,/^## vX\.Y\./p' CHANGELOG.md | sed '$d')"
 ```
+
+The `generate_whats_new.py` step is enforced by the pre-push hook on tag push (added in v1.60.1): pushing `vX.Y.Z` fails if `docs/tutorial/whats-new.html` has no matching section. Skip with `SKIP_WHATSNEW_CHECK=1` for emergency releases.
 
 The release notes come from the CHANGELOG hero + sections of the release being shipped. The CHANGELOG is the source of truth -- write the entry there first; `gh release create` lifts it.
 
