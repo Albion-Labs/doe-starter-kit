@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.60.0</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.60.1</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -868,6 +868,26 @@
 
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
+
+        <div class="release" id="v1-60-1">
+          <div class="release-header">
+            <span class="version-badge">v1.60.1</span>
+            <span class="release-date">30 April 2026</span>
+          </div>
+          <p class="release-hero">Three precursor patches for the v2.0 auto-doc-sync issue (#35). The <code>block_dangerous_commands</code> hook splits its match logic into substring vs assignment classes &mdash; env-var bypass names (<code>SKIP_REVIEW_GATE</code>, <code>SKIP_CONTRACT_CHECK</code>, <code>SKIP_SIGNOFF_CHECK</code>) now block only on actual assignment, not when mentioned in grep, docs, or quoted strings. <code>setup.sh</code> gains a self-copy guard so re-running it on the kit no longer crashes on <code>cp identical</code>. Pre-push grows a whats-new freshness gate on tag pushes; pre-commit doc-freshness extends to <code>.claude/hooks/*.py</code>, <code>migrations/*.md</code>, and <code>CHANGELOG.md</code>. New <code>tests/claude_hooks/test_block_dangerous_commands.py</code> (20 tests) locks the split.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>tests/claude_hooks/test_block_dangerous_commands.py</code></strong> &mdash; 20 tests covering the substring/assignment split, the quote-context heuristic, and regression coverage for <code>rm -rf /</code>, <code>DROP TABLE</code>, fork-bomb, <code>dd if=</code>. Kit pytest suite grows from 129 to 149.</li>
+            <li><strong><code>.githooks/pre-push</code> whats-new freshness gate</strong> &mdash; when pushing a tag matching <code>v*.*.*</code>, fail-fast unless <code>docs/tutorial/whats-new.html</code> contains a matching release section (or <code>CHANGELOG.md</code> has a corresponding <code>## vX.Y.Z</code> heading). Skip with <code>SKIP_WHATSNEW_CHECK=1</code>. Catches the failure where release tags went out without <code>generate_whats_new.py</code> having been run.</li>
+            <li><strong><code>.githooks/pre-commit</code> doc-freshness extensions</strong> &mdash; three new mappings: <code>.claude/hooks/*.py</code> -&gt; <code>docs/tutorial/hooks.md</code>, <code>migrations/*.md</code> -&gt; <code>docs/tutorial/migration-guide.html</code>, <code>CHANGELOG.md</code> -&gt; <code>docs/tutorial/whats-new.html</code>. Warning-only.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>.claude/hooks/block_dangerous_commands.py</code></strong> &mdash; substring patterns (<code>rm -rf /</code>, <code>DROP TABLE</code>, fork bombs, etc.) keep substring-match semantics; env-var bypass names move to a regex-based assignment match. A quote-context heuristic skips the match when it sits inside a quoted string. Fixes the false-positive class where reading docs, running <code>grep</code>, or echoing the flag name would block.</li>
+            <li><strong><code>setup.sh</code> Sections 2b/2d</strong> &mdash; self-copy guard via <code>[ &quot;$f&quot; -ef &quot;$dest&quot; ] || cp -f ...</code> so byte-identical source/dest skips cp instead of returning non-zero (which <code>set -e</code> was treating as fatal when setup.sh ran on the kit itself).</li>
+            <li><strong><code>directives/kit-development.md</code> release mechanics</strong> &mdash; adds <code>python3 execution/generate_whats_new.py</code> between <code>git pull</code> and <code>git tag</code>, with a note explaining the v1.60.1 pre-push gate as enforcement.</li>
+          </ul>
+        </div>
 
         <div class="release" id="v1-60-0">
           <div class="release-header">
@@ -971,6 +991,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (30 releases)</summary>
+
         <div class="release" id="v1-57-0">
           <div class="release-header">
             <span class="version-badge">v1.57.0</span>
@@ -1001,10 +1025,6 @@
             <li><strong>docs/tutorial/faq.html</strong> — new &quot;What&#x27;s the deal with the Conventional Commits warning?&quot; accordion entry explaining warn-vs-block mode.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (29 releases)</summary>
 
         <div class="release" id="v1-56-1">
           <div class="release-header">
@@ -3447,7 +3467,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.60.0</footer>
+        <footer class="site-footer">DOE Starter Kit v1.60.1</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

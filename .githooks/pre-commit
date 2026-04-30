@@ -354,6 +354,27 @@ if [ "${SKIP_DOC_FRESHNESS:-0}" != "1" ]; then
         if [ "$hook_changed" -gt "0" ] && [ "$hook_doc_staged" = "0" ]; then
             echo "⚠ Doc freshness: .githooks/* changed without docs/tutorial/hooks.md update" >&2
         fi
+
+        # v1.60.1: extended mappings.
+        # .claude/hooks/*.py -> docs/tutorial/hooks.md (PreToolUse hook docs)
+        claude_hook_changed=$(echo "$STAGED_FILES" | grep -cE "^\.claude/hooks/.*\.py$" || true)
+        if [ "$claude_hook_changed" -gt "0" ] && [ "$hook_doc_staged" = "0" ]; then
+            echo "⚠ Doc freshness: .claude/hooks/*.py changed without docs/tutorial/hooks.md update" >&2
+        fi
+
+        # migrations/*.md -> docs/tutorial/migration-guide.html
+        mig_changed=$(echo "$STAGED_FILES" | grep -cE "^migrations/.*\.md$" || true)
+        mig_doc_staged=$(echo "$STAGED_FILES" | grep -cF "docs/tutorial/migration-guide.html" || true)
+        if [ "$mig_changed" -gt "0" ] && [ "$mig_doc_staged" = "0" ]; then
+            echo "⚠ Doc freshness: migrations/*.md changed without docs/tutorial/migration-guide.html update" >&2
+        fi
+
+        # CHANGELOG.md -> docs/tutorial/whats-new.html (auto-regenerable)
+        cl_changed=$(echo "$STAGED_FILES" | grep -cF "CHANGELOG.md" || true)
+        wn_doc_staged=$(echo "$STAGED_FILES" | grep -cF "docs/tutorial/whats-new.html" || true)
+        if [ "$cl_changed" -gt "0" ] && [ "$wn_doc_staged" = "0" ]; then
+            echo "⚠ Doc freshness: CHANGELOG.md changed without docs/tutorial/whats-new.html update -- run python3 execution/generate_whats_new.py" >&2
+        fi
     fi
 fi
 

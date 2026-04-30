@@ -7,6 +7,26 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.60.1 (2026-04-30)
+<!-- hero -->
+Three precursor patches for the v2.0 auto-doc-sync issue (#35). The `block_dangerous_commands` hook splits its match logic into substring vs assignment classes -- env-var bypass names (`SKIP_REVIEW_GATE`, `SKIP_CONTRACT_CHECK`, `SKIP_SIGNOFF_CHECK`) now block only on actual assignment, not when mentioned in grep, docs, or quoted strings. `setup.sh` gains a self-copy guard so re-running it on the kit no longer crashes on `cp identical`. Pre-push grows a whats-new freshness gate on tag pushes; pre-commit doc-freshness extends to `.claude/hooks/*.py`, `migrations/*.md`, and `CHANGELOG.md`. New `tests/claude_hooks/test_block_dangerous_commands.py` (20 tests) locks the split.
+<!-- /hero -->
+
+### Added
+- **`tests/claude_hooks/test_block_dangerous_commands.py`** -- 20 tests covering the substring/assignment split, the quote-context heuristic, and regression coverage for `rm -rf /`, `DROP TABLE`, fork-bomb, `dd if=`. Kit pytest suite grows from 129 to 149.
+- **`.githooks/pre-push` whats-new freshness gate** -- when pushing a tag matching `v*.*.*`, fail-fast unless `docs/tutorial/whats-new.html` contains a matching release section (or `CHANGELOG.md` has a corresponding `## vX.Y.Z` heading). Skip with `SKIP_WHATSNEW_CHECK=1`. Catches the failure where release tags went out without `generate_whats_new.py` having been run.
+- **`.githooks/pre-commit` doc-freshness extensions** -- three new mappings: `.claude/hooks/*.py` -> `docs/tutorial/hooks.md`, `migrations/*.md` -> `docs/tutorial/migration-guide.html`, `CHANGELOG.md` -> `docs/tutorial/whats-new.html`. Warning-only.
+
+### Changed
+- **`.claude/hooks/block_dangerous_commands.py`** -- substring patterns (`rm -rf /`, `DROP TABLE`, fork bombs, etc.) keep substring-match semantics; env-var bypass names move to a regex-based assignment match. A quote-context heuristic skips the match when it sits inside a quoted string. Fixes the false-positive class where reading docs, running `grep`, or echoing the flag name would block.
+- **`setup.sh` Sections 2b/2d** -- self-copy guard via `[ "$f" -ef "$dest" ] || cp -f ...` so byte-identical source/dest skips cp instead of returning non-zero (which `set -e` was treating as fatal when setup.sh ran on the kit itself).
+- **`directives/kit-development.md` release mechanics** -- adds `python3 execution/generate_whats_new.py` between `git pull` and `git tag`, with a note explaining the v1.60.1 pre-push gate as enforcement.
+
+### Pull impact
+None for runtime behaviour beyond fewer false-positive blocks. Projects pulling v1.60.1 from v1.60.0 see slightly tighter freshness warnings and a hard tag-push gate -- both additions, not removals.
+
+---
+
 ## v1.60.0 (2026-04-29)
 <!-- hero -->
 Kit-write discipline committed to a PR-only model. The `guard_kit_writes` PreToolUse hook is refactored from a broad write-block into a narrow destructive-only check (recursive removal of kit paths, force-push to kit main), and `protect_directives` retires its overbroad `python3 -c` Bash pattern. New `### Step 0.5` dirty-tree pre-flight in `/sync-doe` plus parallel `KIT DIRTY` rows in `/crack-on`, `/stand-up`, and `/wrap` form three detection points for cross-project drift. Locked with 32 new pytest tests in `tests/claude_hooks/` -- first coverage of the kit's `.claude/hooks/` surface.

@@ -60,8 +60,12 @@ if [ -f "CLAUDE.md" ] && [ -d "$SCRIPT_DIR/.claude/hooks" ]; then
     for f in "$SCRIPT_DIR"/.claude/hooks/*.py; do
         [ -f "$f" ] || continue
         fname=$(basename "$f")
-        # Always update from kit (kit is authoritative for DOE hooks)
-        cp -f "$f" ".claude/hooks/$fname"
+        # Always update from kit (kit is authoritative for DOE hooks).
+        # Guard against self-copy when setup.sh is run on the kit itself
+        # (`cp` returns non-zero on byte-identical files, crashing under
+        # `set -e`). The `-ef` test compares inodes; cp is skipped only
+        # when source and dest are literally the same file.
+        [ "$f" -ef ".claude/hooks/$fname" ] || cp -f "$f" ".claude/hooks/$fname"
         PROJECT_HOOK_COUNT=$((PROJECT_HOOK_COUNT + 1))
     done
 fi
@@ -87,7 +91,8 @@ if [ -f "CLAUDE.md" ] && [ -d "$SCRIPT_DIR/.claude/agents" ]; then
     for f in "$SCRIPT_DIR"/.claude/agents/*.md; do
         [ -f "$f" ] || continue
         fname=$(basename "$f")
-        cp -f "$f" ".claude/agents/$fname"
+        # Self-copy guard (see Section 2b for rationale).
+        [ "$f" -ef ".claude/agents/$fname" ] || cp -f "$f" ".claude/agents/$fname"
         PROJECT_AGENT_COUNT=$((PROJECT_AGENT_COUNT + 1))
     done
 fi
