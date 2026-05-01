@@ -7,6 +7,22 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.60.3 (2026-05-01)
+<!-- hero -->
+Two prose-discipline additions to existing directives. `claim-auditing.md` gains a "Claim Discipline" principle covering decorative specificity (synthetic quotes, fake-precise metrics, made-up milestone names) -- the script catches structural drift, this principle catches prose drift. `delivery-rules.md` retro Step 6 gains a one-line causal-discipline clause: write 'coincided with' or 'was followed by' rather than 'caused' or 'drove' unless the verified link supports it. Both target a real failure mode (post-hoc causation in retros, fake exactness in pitches and PR bodies) without changing any procedure. Sourced from Anbeeld/WRITING.md after a comparison pass; the rest of that ruleset was scoped out as too prose-oriented for DOE.
+<!-- /hero -->
+
+### Added
+- **`directives/claim-auditing.md` "Claim Discipline" section** -- inserted between Goal and When to Use. Three sentences. Explicit delineation: audit script handles structural drift (versions, completeness markers); the new principle handles prose drift in retros, STATE.md, and PR bodies.
+- **`directives/delivery-rules.md` Step 6 causal-discipline clause** -- one-line addition to the existing brief-retro step. Procedure unchanged; surfaces causal-claim language guidance at the moment retro prose is written.
+
+### Pull impact
+None for runtime behaviour. Pure additive wording -- no procedure changes, no hook changes, no behavioural changes. Projects pulling v1.60.3 inherit two new principle blocks; nothing existing is modified beyond Step 6's one-line extension.
+
+No migration manifest needed (additive release).
+
+---
+
 ## v1.60.2 (2026-05-01)
 <!-- hero -->
 Plan-refresh retro gate. New Step 7 in `directives/delivery-rules.md` retro procedure scans `## Current` + `## Queue` in `tasks/todo.md` for staleness against the just-shipped change. Triggers any of: new directive grammar (positive form), new workflow gates (PR-only, freshness, dirty-tree), new directives added, retired hooks/patterns. Result records inline as a third bracketed field on the retro line: `[refresh: <next-feature-id> <one-line finding>]` for substantive updates, `[refresh: <id> no-op]` when the scan confirms no change is needed. Same scan also runs at Queue -> Current promotion. Catches the conceptual-collision class that grep cannot -- e.g. a feature named "anti-patterns artefact" planned before Pink Elephant grammar shipped.
