@@ -37,6 +37,7 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 - **Quick** (default): `[x] Retro [quick: nothing to log]` or `[quick: logged to learnings.md]`
 - **Full** (escalate when: failure, approach change, workaround, repeatable pattern, time exceeded, prevented past failure): `[x] Retro [full: logged to learnings.md + prevention added]`
 - Wave agents defer: `[quick: deferred to merge]` or `[full: deferred to merge]`
+- **Refresh** (always present, third bracketed field): `[refresh: <next-feature-id> <one-line finding>]` for substantive updates, `[refresh: <next-feature-id> no-op]` when the scan confirms no change is needed. The field documents that Step 7 (Plan refresh) ran and what it produced. Skip the field only when there is genuinely no `## Current` or `## Queue` to scan.
 
 ### Retro Procedure
 1. Rename HTML to final patch version, update nav badge
@@ -45,10 +46,13 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 4. If [APP] feature, add to showcase entries array
 5. Update feature heading from (vX.Y.x) to (vX.Y.N)
 6. Run brief retro: what worked, what was slow, what to do differently
-7. Promote lasting contracts to `tests/invariants.txt`. Auto-promote: any `[auto]` contract whose `Verify:` pattern references files in `CLAUDE.md`, `directives/`, `.claude/agents/`, `execution/`, `.github/workflows/`, `.githooks/`, `SYSTEM-MAP.md`, `CUSTOMIZATION.md`, or `tests/`. Skip version-specific patterns (containing `vX.Y.Z` or HTML filenames). If the feature intentionally changed something an existing invariant tests, update that invariant to reflect the new state.
-8. Run `/review` -- adversarial review of the full feature diff. This records a review artifact that the PR creation hook checks. If the review FAILs, fix issues and re-run before proceeding.
-9. PR creation: `gh pr create` from feature branch to main (blocked by `enforce_review_gate.py` hook unless step 8 passed for current HEAD)
-10. Move the whole block to ## Done
+7. **Plan refresh.** Scan `## Current` + `## Queue` in `tasks/todo.md` for staleness against the just-shipped change. Triggers any of: new directive grammar (e.g. positive-form requirements), new workflow gates (PR-only, freshness, dirty-tree), new directives added, retired hooks/patterns/scripts. Update affected steps or contracts in place. Record the result inline as a third bracketed field on the retro line: `[refresh: <next-feature-id> <one-line finding>]` for substantive updates, `[refresh: <next-feature-id> no-op]` when the scan confirms no change is needed. Include the next feature even when nothing changed -- the no-op log is the audit trail. The same scan also runs at Queue -> Current promotion, so the next author starts fresh against current reality. Examples:
+   - `[x] Retro [quick: nothing to log] [refresh: v1.62.0 Step 3 reframed for positive-form grammar]`
+   - `[x] Retro [full: logged to learnings.md + prevention added] [refresh: v1.61.0 no-op]`
+8. Promote lasting contracts to `tests/invariants.txt`. Auto-promote: any `[auto]` contract whose `Verify:` pattern references files in `CLAUDE.md`, `directives/`, `.claude/agents/`, `execution/`, `.github/workflows/`, `.githooks/`, `SYSTEM-MAP.md`, `CUSTOMIZATION.md`, or `tests/`. Skip version-specific patterns (containing `vX.Y.Z` or HTML filenames). If the feature intentionally changed something an existing invariant tests, update that invariant to reflect the new state.
+9. Run `/review` -- adversarial review of the full feature diff. This records a review artifact that the PR creation hook checks. If the review FAILs, fix issues and re-run before proceeding.
+10. PR creation: `gh pr create` from feature branch to main (blocked by `enforce_review_gate.py` hook unless step 9 passed for current HEAD)
+11. Move the whole block to ## Done
 
 ## IMPORTANT: Guardrails
 
