@@ -7,6 +7,23 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.60.2 (2026-05-01)
+<!-- hero -->
+Plan-refresh retro gate. New Step 7 in `directives/delivery-rules.md` retro procedure scans `## Current` + `## Queue` in `tasks/todo.md` for staleness against the just-shipped change. Triggers any of: new directive grammar (positive form), new workflow gates (PR-only, freshness, dirty-tree), new directives added, retired hooks/patterns. Result records inline as a third bracketed field on the retro line: `[refresh: <next-feature-id> <one-line finding>]` for substantive updates, `[refresh: <id> no-op]` when the scan confirms no change is needed. Same scan also runs at Queue -> Current promotion. Catches the conceptual-collision class that grep cannot -- e.g. a feature named "anti-patterns artefact" planned before Pink Elephant grammar shipped.
+<!-- /hero -->
+
+### Added
+- **`directives/delivery-rules.md` Step 7 "Plan refresh"** -- new Retro Procedure step between the brief retro reflection (Step 6) and the invariants promotion (now Step 8). Documents the scan triggers, the output format, and the dual trigger moments (retro + promotion). Two example retro-log lines included (one update, one no-op).
+- **`directives/delivery-rules.md` retro log convention extension** -- adds a Refresh field bullet to the existing Quick/Full/Wave list. The field is always present (no-op when nothing changed) so the scan's audit trail is visible from the retro line itself.
+
+### Changed
+- **`directives/delivery-rules.md` Retro Procedure renumbered** -- old Steps 7-10 become 8-11 to make room for Step 7. Step 10's cross-reference to "step 8" updated to "step 9" (the `/review` gate's new index).
+
+### Pull impact
+None for runtime behaviour. Projects pulling v1.60.2 from v1.60.1 inherit the new retro step; the next retro a project runs after pulling will execute Plan refresh as a normal part of the procedure. The existing Quick/Full retro modes are unchanged.
+
+---
+
 ## v1.60.1 (2026-04-30)
 <!-- hero -->
 Three precursor patches for the v2.0 auto-doc-sync issue (#35). The `block_dangerous_commands` hook splits its match logic into substring vs assignment classes -- env-var bypass names (`SKIP_REVIEW_GATE`, `SKIP_CONTRACT_CHECK`, `SKIP_SIGNOFF_CHECK`) now block only on actual assignment, not when mentioned in grep, docs, or quoted strings. `setup.sh` gains a self-copy guard so re-running it on the kit no longer crashes on `cp identical`. Pre-push grows a whats-new freshness gate on tag pushes; pre-commit doc-freshness extends to `.claude/hooks/*.py`, `migrations/*.md`, and `CHANGELOG.md`. New `tests/claude_hooks/test_block_dangerous_commands.py` (20 tests) locks the split.
