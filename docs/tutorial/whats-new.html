@@ -869,6 +869,23 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-60-2">
+          <div class="release-header">
+            <span class="version-badge">v1.60.2</span>
+            <span class="release-date">1 May 2026</span>
+          </div>
+          <p class="release-hero">Plan-refresh retro gate. New Step 7 in <code>directives/delivery-rules.md</code> retro procedure scans <code>## Current</code> + <code>## Queue</code> in <code>tasks/todo.md</code> for staleness against the just-shipped change. Triggers any of: new directive grammar (positive form), new workflow gates (PR-only, freshness, dirty-tree), new directives added, retired hooks/patterns. Result records inline as a third bracketed field on the retro line: <code>[refresh: &lt;next-feature-id&gt; &lt;one-line finding&gt;]</code> for substantive updates, <code>[refresh: &lt;id&gt; no-op]</code> when the scan confirms no change is needed. Same scan also runs at Queue -&gt; Current promotion. Catches the conceptual-collision class that grep cannot &mdash; e.g. a feature named &quot;anti-patterns artefact&quot; planned before Pink Elephant grammar shipped.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>directives/delivery-rules.md</code> Step 7 &quot;Plan refresh&quot;</strong> &mdash; new Retro Procedure step between the brief retro reflection (Step 6) and the invariants promotion (now Step 8). Documents the scan triggers, the output format, and the dual trigger moments (retro + promotion). Two example retro-log lines included (one update, one no-op).</li>
+            <li><strong><code>directives/delivery-rules.md</code> retro log convention extension</strong> &mdash; adds a Refresh field bullet to the existing Quick/Full/Wave list. The field is always present (no-op when nothing changed) so the scan&#x27;s audit trail is visible from the retro line itself.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>directives/delivery-rules.md</code> Retro Procedure renumbered</strong> &mdash; old Steps 7-10 become 8-11 to make room for Step 7. Step 10&#x27;s cross-reference to &quot;step 8&quot; updated to &quot;step 9&quot; (the <code>/review</code> gate&#x27;s new index).</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-60-1">
           <div class="release-header">
             <span class="version-badge">v1.60.1</span>
@@ -964,6 +981,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (31 releases)</summary>
+
         <div class="release" id="v1-58-0">
           <div class="release-header">
             <span class="version-badge">v1.58.0</span>
@@ -990,10 +1011,6 @@
             <li>Hook block-mode flip. Both new checks are <code>warn</code>-only with no env var to escalate; the kit-development directive&#x27;s hook design rule (under ~1s, warn when uncertain) keeps these advisory.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (30 releases)</summary>
 
         <div class="release" id="v1-57-0">
           <div class="release-header">
