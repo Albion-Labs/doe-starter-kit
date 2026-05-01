@@ -45,7 +45,7 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 3. Update ROADMAP.md: move feature from Up Next to Complete
 4. If [APP] feature, add to showcase entries array
 5. Update feature heading from (vX.Y.x) to (vX.Y.N)
-6. Run brief retro: what worked, what was slow, what to do differently
+6. Run brief retro: what worked, what was slow, what to do differently. Causal discipline: write 'coincided with' or 'was followed by' rather than 'caused' or 'drove' unless the causal link is verified.
 7. **Plan refresh.** Scan `## Current` + `## Queue` in `tasks/todo.md` for staleness against the just-shipped change. Triggers any of: new directive grammar (e.g. positive-form requirements), new workflow gates (PR-only, freshness, dirty-tree), new directives added, retired hooks/patterns/scripts. Update affected steps or contracts in place. Record the result inline as a third bracketed field on the retro line: `[refresh: <next-feature-id> <one-line finding>]` for substantive updates, `[refresh: <next-feature-id> no-op]` when the scan confirms no change is needed. Include the next feature even when nothing changed -- the no-op log is the audit trail. The same scan also runs at Queue -> Current promotion, so the next author starts fresh against current reality. Examples:
    - `[x] Retro [quick: nothing to log] [refresh: v1.62.0 Step 3 reframed for positive-form grammar]`
    - `[x] Retro [full: logged to learnings.md + prevention added] [refresh: v1.61.0 no-op]`

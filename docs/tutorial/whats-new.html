@@ -869,6 +869,19 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-60-3">
+          <div class="release-header">
+            <span class="version-badge">v1.60.3</span>
+            <span class="release-date">1 May 2026</span>
+          </div>
+          <p class="release-hero">Two prose-discipline additions to existing directives. <code>claim-auditing.md</code> gains a &quot;Claim Discipline&quot; principle covering decorative specificity (synthetic quotes, fake-precise metrics, made-up milestone names) &mdash; the script catches structural drift, this principle catches prose drift. <code>delivery-rules.md</code> retro Step 6 gains a one-line causal-discipline clause: write &#x27;coincided with&#x27; or &#x27;was followed by&#x27; rather than &#x27;caused&#x27; or &#x27;drove&#x27; unless the verified link supports it. Both target a real failure mode (post-hoc causation in retros, fake exactness in pitches and PR bodies) without changing any procedure. Sourced from Anbeeld/WRITING.md after a comparison pass; the rest of that ruleset was scoped out as too prose-oriented for DOE.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>directives/claim-auditing.md</code> &quot;Claim Discipline&quot; section</strong> &mdash; inserted between Goal and When to Use. Three sentences. Explicit delineation: audit script handles structural drift (versions, completeness markers); the new principle handles prose drift in retros, STATE.md, and PR bodies.</li>
+            <li><strong><code>directives/delivery-rules.md</code> Step 6 causal-discipline clause</strong> &mdash; one-line addition to the existing brief-retro step. Procedure unchanged; surfaces causal-claim language guidance at the moment retro prose is written.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-60-2">
           <div class="release-header">
             <span class="version-badge">v1.60.2</span>
@@ -947,6 +960,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (32 releases)</summary>
+
         <div class="release" id="v1-59-0">
           <div class="release-header">
             <span class="version-badge">v1.59.0</span>
@@ -980,10 +997,6 @@
             <li><strong>Hook tool-name comparisons in <code>protect_directives.py</code> and <code>block_secrets_in_code.py</code></strong> &mdash; previously compared <code>tool_name</code> to lowercase strings (<code>&quot;write&quot;</code>, <code>&quot;edit&quot;</code>), which would have failed even after the matcher casing fix. Now case-sensitive (<code>&quot;Write&quot;</code>, <code>&quot;Edit&quot;</code>, <code>&quot;MultiEdit&quot;</code>, <code>&quot;Bash&quot;</code>).</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (31 releases)</summary>
 
         <div class="release" id="v1-58-0">
           <div class="release-header">

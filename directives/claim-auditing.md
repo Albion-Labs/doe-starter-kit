@@ -5,6 +5,10 @@ Catch false positives — things claimed as done without proof — before they r
 
 Tradeoff: Auditing trades a few minutes of run-time for stakeholder trust by catching false-positive claims before they reach demos or roadmaps. Apply before demos, sign-off, and `ROADMAP.md` COMPLETE moves. Skip when: the work is internal scaffolding with no user-visible claim attached.
 
+## Claim Discipline
+
+Prefer fewer verified facts to many guessed ones. Do not invent decorative specificity -- synthetic quotes, fake-precise metrics, or made-up milestone names. If a number, name, or date is not verifiable: attribute it, soften it, or cut it. The audit script catches structural drift (versions, completeness markers); this principle catches prose drift in retros, STATE.md, and PR bodies.
+
 ## When to Use
 - Before any external demo or stakeholder presentation
 - Before marking a phase as COMPLETE in the roadmap
