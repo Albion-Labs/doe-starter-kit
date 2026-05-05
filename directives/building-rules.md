@@ -36,6 +36,11 @@ Delegate to subagents to preserve context. Spawn when: 3+ files, doc research, 5
 - **Surgical edits only.** Edit only the lines that change. Wholesale rewrites require user approval first -- say so and wait.
 - **Pre-refactor cleanup.** Before any structural refactor on a file >300 LOC, first commit a dead-code removal pass (unused imports, dead props, orphaned exports). Separate commit -- cleanup and logic changes must be distinct in the diff.
 - **Reuse before writing.** Check `execution/` and project files for existing logic before writing new. Flag duplication.
+  - **Three layers of knowledge.** Pick the right layer for the task.
+    - Layer 1 (tried-and-true: Postgres, Linux, bash, the standard library) is the default -- battle-tested for decades, well-known failure modes, abundant docs.
+    - Layer 2 (new-and-popular: Tailwind, Next.js, the framework of the moment) earns its place when it closes a Layer 1 gap; name the gap before promoting to Layer 2.
+    - Layer 3 (first-principles: TCP, HTTP, Unix pipes, file descriptors) is the substrate every layer above stands on -- understanding it lets you debug across abstractions.
+    - Layer 2 mania (reaching for the latest framework when Layer 1 covers the case) is the most common search-failure mode. Source: gstack ETHOS.
 - **One task, one session.** When the conversation drifts, recommend `/clear` -- keep context scoped to the active task.
 - **Refactor is not rewrite.** Refactor preserves behaviour. Behaviour changes are tracked as feature work -- say so explicitly when a refactor will alter observable behaviour.
 - **No orphan files.** If you replace a file, delete the old one.
