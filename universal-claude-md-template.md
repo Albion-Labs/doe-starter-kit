@@ -16,7 +16,7 @@ When you add a new learning, write the rule as the action you want, with the ver
 
 ## Core Behaviours
 
-Four engineering defaults credited to Andrej Karpathy via [forrestchang/andrej-karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) (MIT). Written in positive form per the Grammar section above.
+Four engineering defaults credited to Andrej Karpathy via forrestchang/andrej-karpathy-skills (MIT). Written in positive form per the Grammar section above.
 
 **Tradeoff:** these defaults bias toward caution over speed. For trivial tasks, use judgement.
 

@@ -14,7 +14,7 @@ Loaded when planning, scoping, or starting a new feature. Also loaded on first s
 
 Before any scoping, write the user intent as one declarative sentence: "The user wants X so they can Y." If the sentence comes out fuzzy ("the user wants to improve the dashboard"), the request is fuzzy -- pull a sharper version from the user before scoping. The intent sentence is the test the eventual plan answers; when you cannot write it, you cannot plan.
 
-Source: octolane "Taste" framing (x.com/coffeewithone/status/2047092079705399299) -- naming what is being executed toward, before execution.
+Source: octolane "Taste" framing -- naming what is being executed toward, before execution.
 
 ### Plan before building
 Check `tasks/todo.md` and `STATE.md` at session start.
@@ -64,7 +64,7 @@ A vague request becomes a verifiable contract by naming the criterion that disti
 
 The transform reveals scope: a vague request that resists transform is not yet ready to build. Surface the transform attempt to the user and ask which criterion fits.
 
-Source: octolane "Taste" piece (x.com/coffeewithone/status/2047092079705399299) -- naming the verifiable bar before scoping.
+Source: octolane "Taste" piece -- naming the verifiable bar before scoping.
 
 ### Verify: pattern types
 `[auto]` criteria must use one of these executable patterns:
@@ -106,7 +106,7 @@ Use cases:
 - Recurring pattern: existing /sync-doe and /pull-doe skills are the long-running version of this pattern.
 - One-off but heavy (e.g. a complex migration): write a one-page skill outline first, then start the main session.
 
-Source: Dhravya supermemory landing-page article (x.com/DhravyaShah/status/2044249709326573594) -- prepare framework-specific skills before main session.
+Source: Dhravya supermemory landing-page article -- prepare framework-specific skills before main session.
 
 ## Scoping Tools
 - `/scope` -- interactive scoping partner for turning ideas into plans

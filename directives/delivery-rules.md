@@ -62,7 +62,7 @@ Run: `gh pr list --state merged --limit 10 --json number,title --jq '.[] | "#\(.
 
 The check is cheap: 5 minutes of reading saves a round-trip review cycle. New repos with fewer than 5 merged PRs use the documented PR template instead.
 
-Source: Junghwan Na harness pipeline article (x.com/JunghwanNa8355/status/2046224197672984824) -- recent merged PRs are the production-grade prompt for the next PR.
+Source: Junghwan Na harness pipeline article -- recent merged PRs are the production-grade prompt for the next PR.
 
 ## IMPORTANT: Guardrails
 
