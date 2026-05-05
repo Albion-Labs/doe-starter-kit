@@ -10,6 +10,12 @@ Loaded when planning, scoping, or starting a new feature. Also loaded on first s
 
 ## Planning Process
 
+### Name user intent in one sentence
+
+Before any scoping, write the user intent as one declarative sentence: "The user wants X so they can Y." If the sentence comes out fuzzy ("the user wants to improve the dashboard"), the request is fuzzy -- pull a sharper version from the user before scoping. The intent sentence is the test the eventual plan answers; when you cannot write it, you cannot plan.
+
+Source: octolane "Taste" framing (x.com/coffeewithone/status/2047092079705399299) -- naming what is being executed toward, before execution.
+
 ### Plan before building
 Check `tasks/todo.md` and `STATE.md` at session start.
 
@@ -44,6 +50,22 @@ No jargon without context. If you recommend a framework, tell the user why in te
 
 Every task added to todo.md gets a `Contract:` block with at least one `[auto]` criterion. No exceptions. See `directives/testing-strategy.md` for the full contract system (patterns, levels, verification flow).
 
+### Transform vague requests into verifiable contracts
+
+A vague request becomes a verifiable contract by naming the criterion that distinguishes done from not-done. The transform usually swaps a wish for a check:
+
+| Vague request                | Verifiable contract                                                       |
+| ---------------------------- | ------------------------------------------------------------------------- |
+| "Add validation"             | `[auto]` Tests for invalid inputs return 400; valid inputs return 200      |
+| "Improve performance"        | `[auto]` p95 latency for endpoint X drops from Yms to under Zms            |
+| "Fix the bug"                | `[auto]` Reproduction test from issue #N passes                            |
+| "Make the dashboard cleaner" | `[manual]` Visual review confirms agreed wireframe v2.1 layout shipped     |
+| "Refactor module X"          | `[auto]` Existing tests pass before AND after; line count drops by N%      |
+
+The transform reveals scope: a vague request that resists transform is not yet ready to build. Surface the transform attempt to the user and ask which criterion fits.
+
+Source: octolane "Taste" piece (x.com/coffeewithone/status/2047092079705399299) -- naming the verifiable bar before scoping.
+
 ### Verify: pattern types
 `[auto]` criteria must use one of these executable patterns:
 - `Verify: run: <shell command>` -- execute, check exit code 0
@@ -72,6 +94,19 @@ One terminal, one feature. Standard context discipline. For large features (5+ s
 
 ### Formal Parallel
 DAG executor or serial dispatch. Step ownership via `Owns:`. Automatic parallel dispatch with contract-gated chaining. Integration contracts after wave merge. See `directives/serial-dispatch-protocol.md` for the established protocol and `~/.claude/scripts/dispatch_dag.py` for automated dispatch.
+
+## Session Preparation
+
+### Skill-prep before main session
+
+Before a session that will lean on a specific framework or pattern (e.g. Next.js App Router, Postgres migrations, Stripe webhooks), prepare a framework-specific skill or load the relevant directive in advance. The main session then opens with that context already paged in, instead of paying the load tax mid-flow.
+
+Use cases:
+- New framework on the project: load the official skill or write a project-local one before the first real feature.
+- Recurring pattern: existing /sync-doe and /pull-doe skills are the long-running version of this pattern.
+- One-off but heavy (e.g. a complex migration): write a one-page skill outline first, then start the main session.
+
+Source: Dhravya supermemory landing-page article (x.com/DhravyaShah/status/2044249709326573594) -- prepare framework-specific skills before main session.
 
 ## Scoping Tools
 - `/scope` -- interactive scoping partner for turning ideas into plans
