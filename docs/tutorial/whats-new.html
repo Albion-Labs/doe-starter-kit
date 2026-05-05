@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.60.3</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.61.0</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -869,6 +869,23 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-61-0">
+          <div class="release-header">
+            <span class="version-badge">v1.61.0</span>
+            <span class="release-date">5 May 2026</span>
+          </div>
+          <p class="release-hero">Karpathy four engineering principles in positive form (Think Before Coding / Simplicity First / Surgical Changes / Goal-Driven Execution) added to the universal CLAUDE.md template, with three companion enrichments to existing directives: contract-authoring transform table + intent-test + skill-prep in <code>planning-rules.md</code>; mini-plan format + evidence-gate generalisation in <code>building-rules.md</code>; merge-pattern matching in <code>delivery-rules.md</code>. All content additive, all in positive form per the Pink Elephant grammar. Karpathy attribution to forrestchang/andrej-karpathy-skills (MIT).</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>universal-claude-md-template.md</code> ## Core Behaviours section</strong> &mdash; four Karpathy principles credited to forrestchang/andrej-karpathy-skills (MIT), rewritten in positive form. Includes the 200/50-line test, senior-engineer overcomplication check, push-back permission, the trace-test for surgical edits, and the loop-until-verified framing.</li>
+            <li><strong><code>directives/planning-rules.md</code> Name user intent in one sentence</strong> &mdash; new ### subsection at the top of ## Planning Process. The intent sentence is the test the eventual plan answers; when you cannot write it, you cannot plan.</li>
+            <li><strong><code>directives/planning-rules.md</code> Transform vague requests into verifiable contracts</strong> &mdash; new ### subsection in ## Contract System with a 5-row example table (Add validation, Improve performance, Fix the bug, Make X cleaner, Refactor module X).</li>
+            <li><strong><code>directives/planning-rules.md</code> ## Session Preparation -&gt; Skill-prep before main session</strong> &mdash; new section between ## Scale-Aware Session Planning and ## Scoping Tools. Use cases: new framework on the project, recurring patterns, one-off-but-heavy migrations.</li>
+            <li><strong><code>directives/building-rules.md</code> ## Build Discipline: Mini-Plans &amp; Evidence Gates</strong> &mdash; new section between ## Code Hygiene and ## Search &amp; Tool-Use Discipline. Mini-plan format ties each sub-action to its own check; evidence gates generalise three known build-phase rules (no reproduction -&gt; no fix; no contract -&gt; no merge; no hotspot list -&gt; no perf change) to the broader principle &quot;no evidence -&gt; no action&quot;.</li>
+            <li><strong><code>directives/delivery-rules.md</code> Match merge patterns before authoring</strong> &mdash; new ### subsection under ## Retro Discipline (after the 11-step Retro Procedure list). Read 5-10 recently merged PRs before authoring the next one; concrete <code>gh</code> recipe; new-repo fallback.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-60-3">
           <div class="release-header">
             <span class="version-badge">v1.60.3</span>
@@ -943,6 +960,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (33 releases)</summary>
+
         <div class="release" id="v1-59-1">
           <div class="release-header">
             <span class="version-badge">v1.59.1</span>
@@ -959,10 +980,6 @@
             <li><strong><code>.claude/hooks/guard_kit_writes.py</code></strong> &mdash; third early-return added after <code>SKIP_KIT_GUARD</code> and <code>FLAG_FILE</code>. When <code>os.getcwd()</code> (resolved via <code>realpath</code>) sits at or below <code>KIT_DIR</code>, the hook allows immediately. From outside the kit, the guard&#x27;s full behaviour is preserved. Removes the friction of working ON kit features (e.g. on a kit feature branch) where the kit&#x27;s <code>.githooks/pre-commit</code> &#x27;no direct-to-main&#x27; hook plus PR review are the canonical gate; the file-level guard becomes performative when cwd is the kit. Paves the way for the v1.60.0 PR-only refactor of <code>guard_kit_writes</code>.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (32 releases)</summary>
 
         <div class="release" id="v1-59-0">
           <div class="release-header">
@@ -3497,7 +3514,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.60.3</footer>
+        <footer class="site-footer">DOE Starter Kit v1.61.0</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
