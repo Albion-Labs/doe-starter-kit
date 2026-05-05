@@ -54,6 +54,16 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 10. PR creation: `gh pr create` from feature branch to main (blocked by `enforce_review_gate.py` hook unless step 9 passed for current HEAD)
 11. Move the whole block to ## Done
 
+### Match merge patterns before authoring
+
+Before running `gh pr create` (step 10 of the retro procedure), read 5-10 recently merged PRs to match the project's tone, structure, and review expectations. The recent merged corpus is the strongest signal of what reviewers accept; documented conventions are the second-best signal.
+
+Run: `gh pr list --state merged --limit 10 --json number,title --jq '.[] | "#\(.number) \(.title)"'` then read 2-3 in full with `gh pr view <N>`. Look for: subject-line conventions, body structure (Summary / Why / Test plan), test-plan depth, screenshot expectations, contract-tagging style.
+
+The check is cheap: 5 minutes of reading saves a round-trip review cycle. New repos with fewer than 5 merged PRs use the documented PR template instead.
+
+Source: Junghwan Na harness pipeline article (x.com/JunghwanNa8355/status/2046224197672984824) -- recent merged PRs are the production-grade prompt for the next PR.
+
 ## IMPORTANT: Guardrails
 
 - **Directive changes go through `/sync-doe` with user approval.** Propose; the user merges. New directives also add a trigger to CLAUDE.md Progressive Disclosure.
