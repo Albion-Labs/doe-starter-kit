@@ -44,6 +44,38 @@ Delegate to subagents to preserve context. Spawn when: 3+ files, doc research, 5
 - **Files in designated directories.** Follow the directory structure in CLAUDE.md. New directories or root-level files require explicit approval.
 - **Rename safety protocol.** When renaming or changing a function/type/variable signature, run separate searches for: direct calls, type references, string literals containing the name, dynamic imports, re-exports, barrel files, test mocks. Never assume a single grep caught everything.
 
+## Build Discipline: Mini-Plans & Evidence Gates
+
+For multi-step build work inside a single session, use the inline mini-plan format. For the trigger to start work at all, use the evidence gates.
+
+### Mini-plan format
+
+When a step contains 2+ sub-actions, write the mini-plan inline before starting:
+
+```
+1. [Step] -> verify: [check]
+2. [Step] -> verify: [check]
+3. [Step] -> verify: [check]
+```
+
+Each line names one sub-action and the binary check that confirms it landed. The mini-plan is the smallest useful pre-write before the work begins; the verify lines become the test you loop against.
+
+Same format as Goal-Driven Execution in `universal-claude-md-template.md`; replicated here as the build-time application of that principle.
+
+Source: Doodlestein -- inline plan format that ties each action to its own check.
+
+### Evidence gates
+
+A handful of build-phase actions require a piece of evidence before the action begins. Generalise the rule: no evidence -> no action.
+
+- **No reproduction -> no fix.** Before fixing a bug, write the test that reproduces it. The test is the evidence the bug exists; the test passing is the evidence the fix landed.
+- **No contract -> no merge.** Before merging step work, the step's `[auto]` contract must pass. The contract is the evidence the step is done.
+- **No hotspot list -> no perf change.** Before changing code in the name of performance, profile and produce a ranked hotspot list. The hotspots are the evidence the change targets the right code.
+
+The pattern generalises: name the evidence the action depends on, and produce that evidence before acting. Action without evidence is speculation; action with evidence is iteration.
+
+Source: Doodlestein -- "no reproduction -> no fix" / "no contract -> no merge" / "no hotspot list -> no perf change" as the same evidence-gate principle in three domains.
+
 ## Search & Tool-Use Discipline
 
 - **Search truncation awareness.** When grep/search results look suspiciously small, re-run with narrower scope (single directory, stricter glob). State explicitly when truncation is suspected rather than working from incomplete results.

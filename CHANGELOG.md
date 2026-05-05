@@ -7,6 +7,26 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.61.0 (2026-05-05)
+<!-- hero -->
+Karpathy four engineering principles in positive form (Think Before Coding / Simplicity First / Surgical Changes / Goal-Driven Execution) added to the universal CLAUDE.md template, with three companion enrichments to existing directives: contract-authoring transform table + intent-test + skill-prep in `planning-rules.md`; mini-plan format + evidence-gate generalisation in `building-rules.md`; merge-pattern matching in `delivery-rules.md`. All content additive, all in positive form per the Pink Elephant grammar. Karpathy attribution to forrestchang/andrej-karpathy-skills (MIT).
+<!-- /hero -->
+
+### Added
+- **`universal-claude-md-template.md` ## Core Behaviours section** -- four Karpathy principles credited to forrestchang/andrej-karpathy-skills (MIT), rewritten in positive form. Includes the 200/50-line test, senior-engineer overcomplication check, push-back permission, the trace-test for surgical edits, and the loop-until-verified framing.
+- **`directives/planning-rules.md` Name user intent in one sentence** -- new ### subsection at the top of ## Planning Process. The intent sentence is the test the eventual plan answers; when you cannot write it, you cannot plan.
+- **`directives/planning-rules.md` Transform vague requests into verifiable contracts** -- new ### subsection in ## Contract System with a 5-row example table (Add validation, Improve performance, Fix the bug, Make X cleaner, Refactor module X).
+- **`directives/planning-rules.md` ## Session Preparation -> Skill-prep before main session** -- new section between ## Scale-Aware Session Planning and ## Scoping Tools. Use cases: new framework on the project, recurring patterns, one-off-but-heavy migrations.
+- **`directives/building-rules.md` ## Build Discipline: Mini-Plans & Evidence Gates** -- new section between ## Code Hygiene and ## Search & Tool-Use Discipline. Mini-plan format ties each sub-action to its own check; evidence gates generalise three known build-phase rules (no reproduction -> no fix; no contract -> no merge; no hotspot list -> no perf change) to the broader principle "no evidence -> no action".
+- **`directives/delivery-rules.md` Match merge patterns before authoring** -- new ### subsection under ## Retro Discipline (after the 11-step Retro Procedure list). Read 5-10 recently merged PRs before authoring the next one; concrete `gh` recipe; new-repo fallback.
+
+### Pull impact
+None for runtime behaviour. Pure additive directive content -- no procedure changes, no hook changes, no behavioural changes. Projects pulling v1.61.0 inherit a new top-level Core Behaviours section in their global CLAUDE.md template (from `universal-claude-md-template.md`), and four directive files get new ### subsections that read alongside existing material. The Retro Procedure remains an 11-step list (the v1.60.2 invariant); the merge-pattern check is documented as a peer subsection, not a new procedure step.
+
+No migration manifest needed (additive release).
+
+---
+
 ## v1.60.3 (2026-05-01)
 <!-- hero -->
 Two prose-discipline additions to existing directives. `claim-auditing.md` gains a "Claim Discipline" principle covering decorative specificity (synthetic quotes, fake-precise metrics, made-up milestone names) -- the script catches structural drift, this principle catches prose drift. `delivery-rules.md` retro Step 6 gains a one-line causal-discipline clause: write 'coincided with' or 'was followed by' rather than 'caused' or 'drove' unless the verified link supports it. Both target a real failure mode (post-hoc causation in retros, fake exactness in pitches and PR bodies) without changing any procedure. Sourced from Anbeeld/WRITING.md after a comparison pass; the rest of that ruleset was scoped out as too prose-oriented for DOE.

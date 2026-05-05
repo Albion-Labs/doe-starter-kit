@@ -1,10 +1,10 @@
-# Universal Learnings
+# Universal CLAUDE.md
 
-Cross-project patterns that apply to any codebase. Auto-loaded by Claude Code at every session start.
+Cross-project patterns and engineering defaults that apply to any codebase. Auto-loaded by Claude Code at every session start. Three layers: **Canary** (red flags signalling context drift), **Core Behaviours** (engineering defaults that apply to every session), and **Learnings** (specific patterns and gotchas captured retroactively).
 
 ## Grammar
 
-These learnings are written in positive "When X, do Y" form. The grammar matters: prohibition-style rules have a documented failure mode where the model re-activates the forbidden concept and fills the un-named gap with training-baked defaults (arxiv 2503.22395, "Pink Elephants in Your CLAUDE.md"). Positive specs name the action; binary YES/NO sub-criteria make compliance auditable.
+These rules are written in positive "When X, do Y" form. The grammar matters: prohibition-style rules have a documented failure mode where the model re-activates the forbidden concept and fills the un-named gap with training-baked defaults (arxiv 2503.22395, "Pink Elephants in Your CLAUDE.md"). Positive specs name the action; binary YES/NO sub-criteria make compliance auditable.
 
 When you add a new learning, write the rule as the action you want, with the verifiable check inline. The Canary section below is the leading indicator: if you find yourself violating any canary rule, treat it as a signal that context has drifted -- re-read the directive triggers relevant to the current task before continuing.
 
@@ -13,6 +13,71 @@ When you add a new learning, write the rule as the action you want, with the ver
 - **British English throughout.** Use colour, behaviour, organisation, optimise, recognise. Verify: `! grep -rE '\b(color|behavior|organize|optimize|recognize)\b' directives/` returns no matches.
 - **Cite directives by file path when applying them.** Write "per `directives/X.md`" so the reader can navigate to the source.
 - **Bordered output uses Unicode box-drawing characters** (`┌─┐├─┤└─┘│`); content inside borders stays ASCII (no emojis, no `·`, no `…`) so terminal monospace alignment holds.
+
+## Core Behaviours
+
+Four engineering defaults credited to Andrej Karpathy via forrestchang/andrej-karpathy-skills (MIT). Written in positive form per the Grammar section above.
+
+**Tradeoff:** these defaults bias toward caution over speed. For trivial tasks, use judgement.
+
+### Think Before Coding
+
+**State assumptions, surface confusion, surface tradeoffs.**
+
+Before implementing:
+- Name your assumptions explicitly. Ask when uncertain.
+- When multiple interpretations exist, present them and ask which one fits.
+- When a simpler approach exists, name it. Push back when warranted.
+- When something is unclear, pause, name what is confusing, and ask.
+
+### Simplicity First
+
+**Minimum code that solves the problem. Build only what was asked.**
+
+- Build only what was asked. Defer features beyond the request.
+- Reserve abstractions for the second use.
+- Add flexibility only when the user requests it.
+- Handle errors that can actually occur; trust internal guarantees.
+- If you write 200 lines and 50 would do, rewrite it.
+
+Ask yourself: would a senior engineer say this is overcomplicated? If yes, simplify.
+
+### Surgical Changes
+
+**Touch only what the request requires. Clean up your own changes only.**
+
+When editing existing code:
+- Leave adjacent code, comments, and formatting alone.
+- Refactor only what the request requires.
+- Match the existing style; consistency beats personal preference.
+- When you notice unrelated dead code, mention it; leave deletion to a separate request.
+
+When your changes create orphans:
+- Remove imports, variables, and functions that your changes orphaned.
+- Leave pre-existing dead code in place unless asked.
+
+The test: every changed line should trace directly to the user's request.
+
+### Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" -> "Write tests for invalid inputs, then make them pass."
+- "Fix the bug" -> "Write a test that reproduces it, then make it pass."
+- "Refactor X" -> "Ensure tests pass before and after."
+
+For multi-step tasks, state a brief plan inline:
+
+```
+1. [Step] -> verify: [check]
+2. [Step] -> verify: [check]
+3. [Step] -> verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") force constant clarification.
+
+These behaviours are working if: fewer unnecessary changes in diffs, fewer rewrites from overcomplication, and clarifying questions arrive before implementation rather than after mistakes.
 
 <!--
 Claude: short bullet points under descriptive ## headings. One learning per line.
