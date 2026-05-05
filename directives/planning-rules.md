@@ -60,7 +60,7 @@ A vague request becomes a verifiable contract by naming the criterion that disti
 | "Improve performance"        | `[auto]` p95 latency for endpoint X drops from Yms to under Zms            |
 | "Fix the bug"                | `[auto]` Reproduction test from issue #N passes                            |
 | "Make the dashboard cleaner" | `[manual]` Visual review confirms agreed wireframe v2.1 layout shipped     |
-| "Refactor module X"          | `[auto]` Existing tests pass before AND after; line count drops by N%      |
+| "Refactor module X"          | `[auto]` Existing tests pass before AND after; behaviour preserved (e.g. golden-file diff stays empty) |
 
 The transform reveals scope: a vague request that resists transform is not yet ready to build. Surface the transform attempt to the user and ask which criterion fits.
 
@@ -103,7 +103,7 @@ Before a session that will lean on a specific framework or pattern (e.g. Next.js
 
 Use cases:
 - New framework on the project: load the official skill or write a project-local one before the first real feature.
-- Recurring pattern: existing /sync-doe and /pull-doe skills are the long-running version of this pattern.
+- Recurring task with known steps (e.g. a deployment runbook, a release-candidate sweep): condense the steps into a project-local skill before the next session that needs it, so the main session loads the procedure pre-formed instead of reconstructing it.
 - One-off but heavy (e.g. a complex migration): write a one-page skill outline first, then start the main session.
 
 Source: Dhravya supermemory landing-page article -- prepare framework-specific skills before main session.

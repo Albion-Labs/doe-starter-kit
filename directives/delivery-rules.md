@@ -39,6 +39,16 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 - Wave agents defer: `[quick: deferred to merge]` or `[full: deferred to merge]`
 - **Refresh** (always present, third bracketed field): `[refresh: <next-feature-id> <one-line finding>]` for substantive updates, `[refresh: <next-feature-id> no-op]` when the scan confirms no change is needed. The field documents that Step 7 (Plan refresh) ran and what it produced. Skip the field only when there is genuinely no `## Current` or `## Queue` to scan.
 
+### Match merge patterns before authoring
+
+Before running `gh pr create` (step 10 of the retro procedure below), read 5-10 recently merged PRs to match the project's tone, structure, and review expectations. The recent merged corpus is the strongest signal of what reviewers accept; documented conventions are the second-best signal.
+
+Run: `gh pr list --state merged --limit 10 --json number,title --jq '.[] | "#\(.number) \(.title)"'` then read 2-3 in full with `gh pr view <N>`. Look for: subject-line conventions, body structure (Summary / Why / Test plan), test-plan depth, screenshot expectations, contract-tagging style.
+
+The check is cheap: 5 minutes of reading saves a round-trip review cycle. New repos with fewer than 5 merged PRs use the documented PR template instead.
+
+Source: Junghwan Na harness pipeline article -- recent merged PRs are the production-grade prompt for the next PR.
+
 ### Retro Procedure
 1. Rename HTML to final patch version, update nav badge
 2. Update changelog -- add final entry to grouped card
@@ -53,16 +63,6 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 9. Run `/review` -- adversarial review of the full feature diff. This records a review artifact that the PR creation hook checks. If the review FAILs, fix issues and re-run before proceeding.
 10. PR creation: `gh pr create` from feature branch to main (blocked by `enforce_review_gate.py` hook unless step 9 passed for current HEAD)
 11. Move the whole block to ## Done
-
-### Match merge patterns before authoring
-
-Before running `gh pr create` (step 10 of the retro procedure), read 5-10 recently merged PRs to match the project's tone, structure, and review expectations. The recent merged corpus is the strongest signal of what reviewers accept; documented conventions are the second-best signal.
-
-Run: `gh pr list --state merged --limit 10 --json number,title --jq '.[] | "#\(.number) \(.title)"'` then read 2-3 in full with `gh pr view <N>`. Look for: subject-line conventions, body structure (Summary / Why / Test plan), test-plan depth, screenshot expectations, contract-tagging style.
-
-The check is cheap: 5 minutes of reading saves a round-trip review cycle. New repos with fewer than 5 merged PRs use the documented PR template instead.
-
-Source: Junghwan Na harness pipeline article -- recent merged PRs are the production-grade prompt for the next PR.
 
 ## IMPORTANT: Guardrails
 

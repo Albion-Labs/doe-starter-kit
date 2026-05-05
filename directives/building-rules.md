@@ -60,7 +60,9 @@ When a step contains 2+ sub-actions, write the mini-plan inline before starting:
 
 Each line names one sub-action and the binary check that confirms it landed. The mini-plan is the smallest useful pre-write before the work begins; the verify lines become the test you loop against.
 
-Source: Doodlestein /profiling-software-performance -- the inline plan format that ties each action to its own check.
+Same format as Goal-Driven Execution in `universal-claude-md-template.md`; replicated here as the build-time application of that principle.
+
+Source: Doodlestein -- inline plan format that ties each action to its own check.
 
 ### Evidence gates
 
@@ -72,7 +74,7 @@ A handful of build-phase actions require a piece of evidence before the action b
 
 The pattern generalises: name the evidence the action depends on, and produce that evidence before acting. Action without evidence is speculation; action with evidence is iteration.
 
-Source: Doodlestein /profiling-software-performance -- "no reproduction -> no fix" / "no contract -> no merge" / "no hotspot list -> no perf change" as the same evidence-gate principle in three domains.
+Source: Doodlestein -- "no reproduction -> no fix" / "no contract -> no merge" / "no hotspot list -> no perf change" as the same evidence-gate principle in three domains.
 
 ## Search & Tool-Use Discipline
 

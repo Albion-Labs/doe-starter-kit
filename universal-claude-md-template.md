@@ -1,10 +1,10 @@
-# Universal Learnings
+# Universal CLAUDE.md
 
-Cross-project patterns that apply to any codebase. Auto-loaded by Claude Code at every session start.
+Cross-project patterns and engineering defaults that apply to any codebase. Auto-loaded by Claude Code at every session start. Three layers: **Canary** (red flags signalling context drift), **Core Behaviours** (engineering defaults that apply to every session), and **Learnings** (specific patterns and gotchas captured retroactively).
 
 ## Grammar
 
-These learnings are written in positive "When X, do Y" form. The grammar matters: prohibition-style rules have a documented failure mode where the model re-activates the forbidden concept and fills the un-named gap with training-baked defaults (arxiv 2503.22395, "Pink Elephants in Your CLAUDE.md"). Positive specs name the action; binary YES/NO sub-criteria make compliance auditable.
+These rules are written in positive "When X, do Y" form. The grammar matters: prohibition-style rules have a documented failure mode where the model re-activates the forbidden concept and fills the un-named gap with training-baked defaults (arxiv 2503.22395, "Pink Elephants in Your CLAUDE.md"). Positive specs name the action; binary YES/NO sub-criteria make compliance auditable.
 
 When you add a new learning, write the rule as the action you want, with the verifiable check inline. The Canary section below is the leading indicator: if you find yourself violating any canary rule, treat it as a signal that context has drifted -- re-read the directive triggers relevant to the current task before continuing.
 
@@ -28,7 +28,7 @@ Before implementing:
 - Name your assumptions explicitly. Ask when uncertain.
 - When multiple interpretations exist, present them and ask which one fits.
 - When a simpler approach exists, name it. Push back when warranted.
-- When something is unclear, stop, name what is confusing, and ask.
+- When something is unclear, pause, name what is confusing, and ask.
 
 ### Simplicity First
 
