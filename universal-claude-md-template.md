@@ -56,7 +56,7 @@ When your changes create orphans:
 - Remove imports, variables, and functions that your changes orphaned.
 - Leave pre-existing dead code in place unless asked.
 
-The test: every changed line should trace directly to the user's request.
+The test: every changed line should trace directly to the user's request. This keeps human reviewers in the loop: small, traceable diffs are checkable at a glance.
 
 ### Goal-Driven Execution
 

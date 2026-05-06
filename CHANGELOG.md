@@ -7,6 +7,23 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.61.1 (2026-05-06)
+<!-- hero -->
+Three additive enrichments cherry-picked from a gstack ETHOS.md comparison pass and a completeness check on the just-shipped Karpathy v1.61.0 principles. `directives/building-rules.md` Reuse-before-writing bullet gains a Three Layers of Knowledge sub-block (Layer 1 tried-and-true / Layer 2 new-and-popular / Layer 3 first-principles) and names Layer 2 mania as the most common search-failure mode. `directives/_TEMPLATE.md` gains an optional Anti-patterns bullet convention as a meta-block at template end -- a bullet pattern authors sprinkle inside any section where a rule has a recognisable failure mode worth showing. `universal-claude-md-template.md` Surgical Changes principle pairs the existing trace test with the load-bearing purpose it serves (small, traceable diffs keep human reviewers in the loop), defending against Willison's "merchants of complexity" failure mode. All in positive form per Pink Elephant grammar; companion to v1.60.3's Anbeeld/WRITING.md prose-discipline patch -- same pattern of cherry-pick small, reject big.
+<!-- /hero -->
+
+### Added
+- **`directives/building-rules.md` Three layers of knowledge sub-bullet** -- nested under "Reuse before writing" in ## Code Hygiene. Five sub-bullets: top-level "Pick the right layer for the task", then Layer 1 (Postgres, Linux, bash, the standard library), Layer 2 (Tailwind, Next.js, the framework of the moment), Layer 3 (TCP, HTTP, Unix pipes, file descriptors), and Layer 2 mania as the named search-failure mode. Source: gstack ETHOS.md (Garry Tan / YC, 87.6k stars, MIT).
+- **`directives/_TEMPLATE.md` Optional: Anti-patterns bullet convention** -- new meta-block at template end, separated by `---`, documenting a bold-labelled bullet pattern (`**Anti-patterns:** ... Before / After`) that authors insert inside whichever directive section has a recognisable failure mode worth showing. Marked optional with explicit "existing directives are not required to retrofit" language; placement at template end clarifies it is a writing convention rather than a parallel section to Process / Edge Cases. Source: gstack ETHOS.md anti-pattern convention.
+- **`universal-claude-md-template.md` Surgical Changes trace-test rationale** -- one sentence appended to the existing trace test ("every changed line should trace directly to the user's request"). The new sentence names the failure mode the rule defends against: small, traceable diffs keep human reviewers in the loop. Original Karpathy/Forrest Chang phrasing intact; the addition pairs rule with rationale per the kit's own ## Grammar precedent. Defends against Willison's "merchants of complexity" framing (the negative form of human-in-the-loop).
+
+### Pull impact
+None for runtime behaviour. Pure additive directive content -- no procedure changes, no hook changes, no behavioural changes. Projects pulling v1.61.1 from v1.61.0 inherit one new sub-bullet block in `building-rules.md` (Three Layers of Knowledge), one new optional meta-block in `_TEMPLATE.md` (Anti-patterns bullet convention), and one rationale sentence in `universal-claude-md-template.md` (which flows into the user's global `~/.claude/CLAUDE.md` via setup.sh, subject to the same "skipped if exists" merge behaviour as v1.61.0).
+
+No migration manifest needed (additive release).
+
+---
+
 ## v1.61.0 (2026-05-05)
 <!-- hero -->
 Karpathy four engineering principles in positive form (Think Before Coding / Simplicity First / Surgical Changes / Goal-Driven Execution) added to the universal CLAUDE.md template, with three companion enrichments to existing directives: contract-authoring transform table + intent-test + skill-prep in `planning-rules.md`; mini-plan format + evidence-gate generalisation in `building-rules.md`; merge-pattern matching in `delivery-rules.md`. All content additive, all in positive form per the Pink Elephant grammar. Karpathy attribution to forrestchang/andrej-karpathy-skills (MIT).
