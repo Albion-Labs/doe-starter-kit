@@ -26,3 +26,13 @@ Trigger conditions — when should Claude load and follow this directive?
 - [ ] No errors in execution logs
 - [ ] Credentials not exposed in output
 - [ ] Results accessible where specified
+
+---
+
+### Optional: Anti-patterns bullet
+When a rule in this directive has a recognisable failure mode worth showing, add a bold-labelled bullet inside the relevant section (Process, Edge Cases, wherever it fits). Use when the directive is corrective and the failure modes are easy to spot at a glance. Skip when the directive is descriptive (a routine or process). Existing directives are not required to retrofit.
+
+Format:
+- **Anti-patterns:** concrete failure modes this directive prevents.
+  - Before: <one-line example of the failure mode>
+  - After: <one-line example of the correction>
