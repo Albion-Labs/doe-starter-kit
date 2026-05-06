@@ -40,7 +40,7 @@ Delegate to subagents to preserve context. Spawn when: 3+ files, doc research, 5
     - Layer 1 (tried-and-true: Postgres, Linux, bash, the standard library) is the default -- battle-tested for decades, well-known failure modes, abundant docs.
     - Layer 2 (new-and-popular: Tailwind, Next.js, the framework of the moment) earns its place when it closes a Layer 1 gap; name the gap before promoting to Layer 2.
     - Layer 3 (first-principles: TCP, HTTP, Unix pipes, file descriptors) is the substrate every layer above stands on -- understanding it lets you debug across abstractions.
-    - Layer 2 mania (reaching for the latest framework when Layer 1 covers the case) is the most common search-failure mode. Source: gstack ETHOS.
+    - Layer 2 mania (reaching for the latest framework when Layer 1 covers the case) is the most common search-failure mode. Source: gstack ETHOS -- naming the layer before reaching for it.
 - **One task, one session.** When the conversation drifts, recommend `/clear` -- keep context scoped to the active task.
 - **Refactor is not rewrite.** Refactor preserves behaviour. Behaviour changes are tracked as feature work -- say so explicitly when a refactor will alter observable behaviour.
 - **No orphan files.** If you replace a file, delete the old one.
