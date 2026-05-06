@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.61.0</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.61.1</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -869,6 +869,20 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-61-1">
+          <div class="release-header">
+            <span class="version-badge">v1.61.1</span>
+            <span class="release-date">6 May 2026</span>
+          </div>
+          <p class="release-hero">Three additive enrichments cherry-picked from a gstack ETHOS.md comparison pass and a completeness check on the just-shipped Karpathy v1.61.0 principles. <code>directives/building-rules.md</code> Reuse-before-writing bullet gains a Three Layers of Knowledge sub-block (Layer 1 tried-and-true / Layer 2 new-and-popular / Layer 3 first-principles) and names Layer 2 mania as the most common search-failure mode. <code>directives/_TEMPLATE.md</code> gains an optional Anti-patterns bullet convention as a meta-block at template end &mdash; a bullet pattern authors sprinkle inside any section where a rule has a recognisable failure mode worth showing. <code>universal-claude-md-template.md</code> Surgical Changes principle pairs the existing trace test with the load-bearing purpose it serves (small, traceable diffs keep human reviewers in the loop), defending against Willison&#x27;s &quot;merchants of complexity&quot; failure mode. All in positive form per Pink Elephant grammar; companion to v1.60.3&#x27;s Anbeeld/WRITING.md prose-discipline patch &mdash; same pattern of cherry-pick small, reject big.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>directives/building-rules.md</code> Three layers of knowledge sub-bullet</strong> &mdash; nested under &quot;Reuse before writing&quot; in ## Code Hygiene. Five sub-bullets: top-level &quot;Pick the right layer for the task&quot;, then Layer 1 (Postgres, Linux, bash, the standard library), Layer 2 (Tailwind, Next.js, the framework of the moment), Layer 3 (TCP, HTTP, Unix pipes, file descriptors), and Layer 2 mania as the named search-failure mode. Source: gstack ETHOS.md (Garry Tan / YC, 87.6k stars, MIT).</li>
+            <li><strong><code>directives/_TEMPLATE.md</code> Optional: Anti-patterns bullet convention</strong> &mdash; new meta-block at template end, separated by <code>---</code>, documenting a bold-labelled bullet pattern (<code><strong>Anti-patterns:</strong> ... Before / After</code>) that authors insert inside whichever directive section has a recognisable failure mode worth showing. Marked optional with explicit &quot;existing directives are not required to retrofit&quot; language; placement at template end clarifies it is a writing convention rather than a parallel section to Process / Edge Cases. Source: gstack ETHOS.md anti-pattern convention.</li>
+            <li><strong><code>universal-claude-md-template.md</code> Surgical Changes trace-test rationale</strong> &mdash; one sentence appended to the existing trace test (&quot;every changed line should trace directly to the user&#x27;s request&quot;). The new sentence names the failure mode the rule defends against: small, traceable diffs keep human reviewers in the loop. Original Karpathy/Forrest Chang phrasing intact; the addition pairs rule with rationale per the kit&#x27;s own ## Grammar precedent. Defends against Willison&#x27;s &quot;merchants of complexity&quot; framing (the negative form of human-in-the-loop).</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-61-0">
           <div class="release-header">
             <span class="version-badge">v1.61.0</span>
@@ -936,6 +950,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (34 releases)</summary>
+
         <div class="release" id="v1-60-0">
           <div class="release-header">
             <span class="version-badge">v1.60.0</span>
@@ -959,10 +977,6 @@
             <li><strong><code>directives/delivery-rules.md</code></strong> &mdash; <code>## Guardrails</code> <code>Kit edits go through ...</code> bullet rewritten to name <code>.githooks/pre-commit</code> + PR review as the canonical gate and <code>/sync-doe</code> as the translation tooling.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (33 releases)</summary>
 
         <div class="release" id="v1-59-1">
           <div class="release-header">
@@ -3514,7 +3528,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.61.0</footer>
+        <footer class="site-footer">DOE Starter Kit v1.61.1</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
