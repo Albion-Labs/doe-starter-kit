@@ -869,6 +869,18 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-61-2">
+          <div class="release-header">
+            <span class="version-badge">v1.61.2</span>
+            <span class="release-date">8 May 2026</span>
+          </div>
+          <p class="release-hero">Documents the canonical Pink Elephant compliance check pattern in <code>directives/testing-strategy.md</code> ## Pattern Reference, replacing the brittle <code>grep -A N</code> form that captured pre-existing surrounding content within the fixed line buffer. The new pattern has three load-bearing components: a <code>git rev-parse origin/main</code> precondition that fails loudly when the ref is not fetched (closing a silent-pass mode caught during adversarial review of this PR), a <code>grep &quot;^+&quot; | grep -v &quot;^+++ &quot;</code> two-grep filter that includes added lines while excluding only the diff file header (and keeps legitimately-added markdown <code>+</code> bullets in scope, which a single <code>^+[^+]</code> filter would falsely drop), and the case-insensitive word-boundary scan for prohibition grammar. The old <code>grep -A N</code> form is named in-place as an anti-pattern using the v1.61.1 anti-pattern bullet convention, with attribution to the v1.61.1 Step 1 incident that surfaced the issue. Closes kit issue #42.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>directives/testing-strategy.md</code> Pink Elephant compliance checks subsection</strong> &mdash; new <code>### Pink Elephant compliance checks (positive-form contracts)</code> heading under <code>## Pattern Reference</code>, sitting between the pattern-type table and <code>## Three-Level Verification</code>. Documents the canonical diff-bounded contract pattern with rev-parse precondition + two-grep additions filter + word-boundary prohibition scan, walks each component&#x27;s load-bearing role, and names the old <code>grep -A N</code> form as a Before/After anti-pattern via the v1.61.1 convention.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-61-1">
           <div class="release-header">
             <span class="version-badge">v1.61.1</span>
@@ -930,6 +942,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>April 2026 (35 releases)</summary>
+
         <div class="release" id="v1-60-1">
           <div class="release-header">
             <span class="version-badge">v1.60.1</span>
@@ -949,10 +965,6 @@
             <li><strong><code>directives/kit-development.md</code> release mechanics</strong> &mdash; adds <code>python3 execution/generate_whats_new.py</code> between <code>git pull</code> and <code>git tag</code>, with a note explaining the v1.60.1 pre-push gate as enforcement.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>April 2026 (34 releases)</summary>
 
         <div class="release" id="v1-60-0">
           <div class="release-header">

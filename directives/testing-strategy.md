@@ -82,13 +82,16 @@ Same as solo mode per-terminal. Each terminal works on a different step. The use
 When a feature adds positive-form content -- a heading, sub-block, or paragraph that names what to do rather than what to avoid -- the contract often includes a check that the new content avoids prohibition grammar (`don't`, `never`, `avoid`). The canonical pattern bounds the scan to the feature branch's *additions* via `git diff`, so pre-existing surrounding content (which may legitimately use those words) cannot trip the contract:
 
 ```
-Verify: run: cd <repo> && ! git diff origin/main...HEAD -- <file> | grep "^+[^+]" | grep -iE "\b(don't|never|avoid)\b"
+Verify: run: cd <repo> && git rev-parse origin/main >/dev/null && ! git diff origin/main...HEAD -- <file> | grep "^+" | grep -v "^+++ " | grep -iE "\b(don't|never|avoid)\b"
 ```
 
-The `^+[^+]` filter limits the scan to added lines (line starts with `+` followed by a non-`+` character), excluding `git diff` headers like `+++ b/<file>` and capturing only real additions. Removed lines (`^-`) are excluded so subtracting a prohibition from existing content does not register as new prohibition content.
+Three components in order:
+- `git rev-parse origin/main >/dev/null` -- precondition that fails loudly when `origin/main` is not fetched (shallow clone, fresh CI worktree). Without it, a missing ref makes the inverted pipeline pass silently because the final grep finds nothing in empty input and `!` flips the exit to zero.
+- `grep "^+" | grep -v "^+++ "` -- include all added lines (`+`-prefixed in unified diff), exclude only the diff file header (`+++ b/<file>`, with its trailing space). The two-grep form keeps legitimately-added markdown lines whose first content character is `+` (markdown `+` bullets) in scope; a single `^+[^+]` filter would falsely exclude them.
+- `grep -iE "\b(...)\b"` -- case-insensitive word-boundary scan for prohibition grammar.
 
 - **Anti-patterns:** fixed-buffer scans that overspill into surrounding content.
-  - Before: `! grep -A 8 -i "<heading>" <file> | grep -iE "\b(don't|never|avoid)\b"` -- the `-A N` line buffer extends past the new content into pre-existing bullets, falsely failing on words the new feature did not author. Hit during kit v1.61.1 Step 1.
+  - Before: `! grep -A 8 -i "<heading>" <file> | grep -iE "..."` -- `-A N` buffer captures pre-existing bullets near the heading, failing the new feature on words it did not author.
   - After: the `git diff` form above -- bounded to actual additions, isolated from surrounding content.
 
 ## Three-Level Verification
