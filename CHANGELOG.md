@@ -7,6 +7,21 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.61.2 (2026-05-08)
+<!-- hero -->
+Documents the canonical Pink Elephant compliance check pattern in `directives/testing-strategy.md` ## Pattern Reference, replacing the brittle `grep -A N` form that captured pre-existing surrounding content within the fixed line buffer. The new pattern has three load-bearing components: a `git rev-parse origin/main` precondition that fails loudly when the ref is not fetched (closing a silent-pass mode caught during adversarial review of this PR), a `grep "^+" | grep -v "^+++ "` two-grep filter that includes added lines while excluding only the diff file header (and keeps legitimately-added markdown `+` bullets in scope, which a single `^+[^+]` filter would falsely drop), and the case-insensitive word-boundary scan for prohibition grammar. The old `grep -A N` form is named in-place as an anti-pattern using the v1.61.1 anti-pattern bullet convention, with attribution to the v1.61.1 Step 1 incident that surfaced the issue. Closes kit issue #42.
+<!-- /hero -->
+
+### Added
+- **`directives/testing-strategy.md` Pink Elephant compliance checks subsection** -- new `### Pink Elephant compliance checks (positive-form contracts)` heading under `## Pattern Reference`, sitting between the pattern-type table and `## Three-Level Verification`. Documents the canonical diff-bounded contract pattern with rev-parse precondition + two-grep additions filter + word-boundary prohibition scan, walks each component's load-bearing role, and names the old `grep -A N` form as a Before/After anti-pattern via the v1.61.1 convention.
+
+### Pull impact
+None for runtime behaviour. Single-file directive addition plus a follow-up note in `learnings.md` pointing to the canonical pattern. No procedure changes, no hook changes, no behavioural changes. Projects pulling v1.61.2 from v1.61.1 inherit one new subsection in `directives/testing-strategy.md`. No retroactive contract verification needed -- the in-flight workaround applied in v1.61.1 (artificial multi-line content expansion) was correct, just less clean than the new canonical pattern. Future kit features authoring Pink Elephant compliance contracts use the diff-bounded form going forward.
+
+No migration manifest needed (additive release).
+
+---
+
 ## v1.61.1 (2026-05-06)
 <!-- hero -->
 Three additive enrichments cherry-picked from a gstack ETHOS.md comparison pass and a completeness check on the just-shipped Karpathy v1.61.0 principles. `directives/building-rules.md` Reuse-before-writing bullet gains a Three Layers of Knowledge sub-block (Layer 1 tried-and-true / Layer 2 new-and-popular / Layer 3 first-principles) and names Layer 2 mania as the most common search-failure mode. `directives/_TEMPLATE.md` gains an optional Anti-patterns bullet convention as a meta-block at template end -- a bullet pattern authors sprinkle inside any section where a rule has a recognisable failure mode worth showing. `universal-claude-md-template.md` Surgical Changes principle pairs the existing trace test with the load-bearing purpose it serves (small, traceable diffs keep human reviewers in the loop), defending against Willison's "merchants of complexity" failure mode. All in positive form per Pink Elephant grammar; companion to v1.60.3's Anbeeld/WRITING.md prose-discipline patch -- same pattern of cherry-pick small, reject big.

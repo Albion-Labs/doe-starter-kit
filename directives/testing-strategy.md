@@ -77,6 +77,23 @@ Same as solo mode per-terminal. Each terminal works on a different step. The use
 | `run: <cmd>` | `run: python3 execution/verify.py --self-test` | Exit code 0 |
 | `html: <path> has <sel>` | `html: index.html has .main-content` | CSS selector match |
 
+### Pink Elephant compliance checks (positive-form contracts)
+
+When a feature adds positive-form content -- a heading, sub-block, or paragraph that names what to do rather than what to avoid -- the contract often includes a check that the new content avoids prohibition grammar (`don't`, `never`, `avoid`). The canonical pattern bounds the scan to the feature branch's *additions* via `git diff`, so pre-existing surrounding content (which may legitimately use those words) cannot trip the contract:
+
+```
+Verify: run: cd <repo> && git rev-parse origin/main >/dev/null && ! git diff origin/main...HEAD -- <file> | grep "^+" | grep -v "^+++ " | grep -iE "\b(don't|never|avoid)\b"
+```
+
+Three components in order:
+- `git rev-parse origin/main >/dev/null` -- precondition that fails loudly when `origin/main` is not fetched (shallow clone, fresh CI worktree). Without it, a missing ref makes the inverted pipeline pass silently because the final grep finds nothing in empty input and `!` flips the exit to zero.
+- `grep "^+" | grep -v "^+++ "` -- include all added lines (`+`-prefixed in unified diff), exclude only the diff file header (`+++ b/<file>`, with its trailing space). The two-grep form keeps legitimately-added markdown lines whose first content character is `+` (markdown `+` bullets) in scope; a single `^+[^+]` filter would falsely exclude them.
+- `grep -iE "\b(...)\b"` -- case-insensitive word-boundary scan for prohibition grammar.
+
+- **Anti-patterns:** fixed-buffer scans that overspill into surrounding content.
+  - Before: `! grep -A 8 -i "<heading>" <file> | grep -iE "..."` -- `-A N` buffer captures pre-existing bullets near the heading, failing the new feature on words it did not author.
+  - After: the `git diff` form above -- bounded to actual additions, isolated from surrounding content.
+
 ## Three-Level Verification
 
 When writing `[auto]` contract criteria, aim for depth -- not just existence. Three levels of verification catch progressively more bugs:
