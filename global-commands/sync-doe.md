@@ -33,11 +33,13 @@ For a fresh sync (no state file):
 9. Verify: `grep` for project-specific references — must return zero results
 10. Update CHANGELOG.md with what changed, bump the version (patch/minor/major). Author a migration manifest at `migrations/v[X.Y.Z].md` if the release rewrites prompts/rules or changes hook/permission behaviour (see directive Step 9.5).
 11. **Open the PR (Phase 1 commit + push):**
-    - Branch: `cd ~/doe-starter-kit && git checkout -b sync-from-[project]-[YYYY-MM-DD-HHMM]`
-    - Commit: `SKIP_STEP_MARK_CHECK=1 git commit -m "sync: from [project] — [summary]"`
-    - Push: `git push -u origin sync-from-[project]-[YYYY-MM-DD-HHMM]`
-    - PR: `gh pr create --repo Albion-Labs/doe-starter-kit --title "sync: from [project] — [summary]" --body-file <body>`
-    - Write state file: `~/doe-starter-kit/.tmp/.sync-doe-pending-release.json` with `{version, prNumber, prUrl, branch, project, timestamp, phase: "awaiting-merge"}`
+    - Sanitize project slug + branch: `PROJECT_SLUG=$(echo "$PROJECT_NAME" | tr '[:upper:] /' '[:lower:]--' | tr -cd 'a-z0-9-')` → `BRANCH="sync-from-${PROJECT_SLUG}-$(date +%Y-%m-%d-%H%M)"`
+    - Branch: `cd ~/doe-starter-kit && git checkout -b "$BRANCH"`
+    - Commit (no `SKIP_STEP_MARK_CHECK` — the `sync:` prefix doesn't trigger the step-mark hook): `git commit -m "sync: from [project] — [summary]"`
+    - Push: `git push -u origin "$BRANCH"`
+    - PR: `gh pr create --repo Albion-Labs/doe-starter-kit --title "sync: from [project] — [summary]" --body "$(cat <<'PRBODY' ... PRBODY)"` (single-quoted heredoc; substitute placeholders before invoking)
+    - Capture: `PR_URL=$(gh pr view --repo Albion-Labs/doe-starter-kit --json url --jq .url)` → `PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')`
+    - Write state file: `~/doe-starter-kit/.tmp/.sync-doe-pending-release.json` with `{version, prNumber, prUrl, branch, project, timestamp, phase: "awaiting-merge"}` (use a pure-Bash `cat > ... <<EOF` un-quoted heredoc — variables interpolate inline; no Python needed)
     - `git checkout main` (clean working tree)
     - Show user: "PR #N opened: <URL>. Review and merge it on GitHub. Reply 'merged' (or re-run `/sync-doe`) to release."
     - **STOP here.** No tag, no stamp, no release in Phase 1.
@@ -47,17 +49,16 @@ For a fresh sync (no state file):
 Routed here from Step 0.7 when the state file is present and `gh pr view` reports `MERGED`.
 
 12. **Verify PR merged**, pull main, stamp + commit + tag + push + release:
+    - **Verify with `gh` exit-code guard** (don't conflate transient `gh` failures with "not merged"): `PR_STATE=$(gh pr view "$PR_NUMBER" --repo Albion-Labs/doe-starter-kit --json state --jq .state) || abort "gh pr view failed"`; then `[ "$PR_STATE" = "MERGED" ] || abort`
     - `cd ~/doe-starter-kit && git checkout main && git pull origin main`
-    - `python3 execution/generate_whats_new.py`
-    - `python3 execution/stamp_tutorial_version.py v[X.Y.Z]`
-    - `SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1 git commit -am "chore(stamp): v[X.Y.Z]"`
-    - `git tag v[X.Y.Z]`
-    - `git push origin v[X.Y.Z]` (tag first — pre-push docs-version gate gotcha; see directive)
-    - `SKIP_MAIN_PROTECTION=1 git push` (then commit — gate now sees matching tag + docs)
-    - `gh release create v[X.Y.Z] --repo Albion-Labs/doe-starter-kit --title "..." --notes "..."`
+    - **Idempotency check** (Phase 2 may resume after a partial failure): `TAG_EXISTS=$(git rev-parse "$VERSION" 2>/dev/null && echo 1 || echo 0)` and `RELEASE_EXISTS=$(gh release view "$VERSION" --repo Albion-Labs/doe-starter-kit >/dev/null 2>&1 && echo 1 || echo 0)`
+    - If `TAG_EXISTS=0`: `python3 execution/generate_whats_new.py` → `python3 execution/stamp_tutorial_version.py "$VERSION"` → `SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1 git commit -am "chore(stamp): $VERSION"` → `git tag "$VERSION"` → `git push origin "$VERSION"` (tag first) → `SKIP_MAIN_PROTECTION=1 git push` (then commit)
+    - If `RELEASE_EXISTS=0`: `gh release create "$VERSION" --repo Albion-Labs/doe-starter-kit --title "..." --notes "..."`
+    - Drop the Step 6 safety stash (if any): `git stash list | grep -q "Pre-sync backup" && git stash drop`
     - `rm ~/doe-starter-kit/.tmp/.sync-doe-pending-release.json`
-    - Update STATE.md's "DOE Starter Kit" line to the new version
-    - Show user: "Released v[X.Y.Z]."
+    - Show user: "Released $VERSION."
+
+`/sync-doe` does NOT update any project's STATE.md in Phase 2 — Phase 2 may run from a different cwd than the originating project, and stamping the wrong project's STATE.md is silently misleading. Each project picks up the new kit version on its next `/pull-doe`.
 
 `SKIP_MAIN_PROTECTION=1` is required only on the **post-merge stamp commit**, not the editorial PR (which goes through normal review). The bypass scope is narrower than the pre-Phase-2 design.
 
