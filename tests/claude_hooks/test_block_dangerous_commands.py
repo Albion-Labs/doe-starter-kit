@@ -32,7 +32,13 @@ def _run(command):
     out = result.stdout.strip()
     if not out:
         return {"decision": "allow"}
-    return json.loads(out)
+    decoded = json.loads(out)
+    assert decoded.get("decision") != "allow", (
+        "regression: hook emitted legacy {'decision': 'allow'} JSON. "
+        "PreToolUse no-opinion path must use sys.exit(0); 'allow' is not a "
+        "valid root-level decision value (only approve/block are accepted)."
+    )
+    return decoded
 
 
 # --- SUBSTRING patterns: still block as before ---

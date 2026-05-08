@@ -32,7 +32,13 @@ def _run(payload, cwd=None, env_extra=None):
     out = result.stdout.strip()
     if not out:
         return {"decision": "allow"}
-    return json.loads(out)
+    decoded = json.loads(out)
+    assert decoded.get("decision") != "allow", (
+        "regression: hook emitted legacy {'decision': 'allow'} JSON. "
+        "PreToolUse no-opinion path must use sys.exit(0); 'allow' is not a "
+        "valid root-level decision value (only approve/block are accepted)."
+    )
+    return decoded
 
 
 # --- Edits + ordinary Bash redirects: ALLOW (file-edit branch retired) ---
