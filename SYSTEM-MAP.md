@@ -55,7 +55,7 @@ CLAUDE.md tells Claude to check these before starting work:
 | protect_directives.py | `./.claude/hooks/` | Blocks editing existing SOPs. Allows creating new ones. |
 | block_secrets_in_code.py | `./.claude/hooks/` | Blocks API keys outside .env |
 | block_dangerous_commands.py | `./.claude/hooks/` | Blocks force-push, rm -rf, etc |
-| guard_kit_writes.py | `./.claude/hooks/` | Blocks direct writes to ~/doe-starter-kit (kit contributors only) |
+| guard_kit_writes.py | `./.claude/hooks/` | Defence-in-depth: blocks irreversible Bash ops on kit paths (recursive removal, force-push to kit main). Not a file-edit gate — PR review + the kit's `.githooks/pre-commit` 'no direct-to-main' hook are the canonical write gate (v1.60.0+) |
 | enforce_review_gate.py | `./.claude/hooks/` | Blocks PR creation without passing adversarial review |
 | confirm_pr_merge.py | `./.claude/hooks/` | Blocks gh pr merge unless user approves |
 | copy_plan_to_project.py | `./.claude/hooks/` | Auto-copies plans from ~/.claude/plans/ to project .claude/plans/ |
