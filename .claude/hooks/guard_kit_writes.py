@@ -50,8 +50,7 @@ def main():
     # Single escape valve. Set when an operator genuinely needs to perform
     # a destructive action (e.g. emergency rollback).
     if os.environ.get("SKIP_KIT_GUARD") == "1":
-        print(json.dumps({"decision": "allow"}))
-        return
+        sys.exit(0)
 
     event = json.load(sys.stdin)
     tool_name = event.get("tool_name", "")
@@ -73,7 +72,7 @@ def main():
                 print(json.dumps({"decision": "block", "reason": BLOCK_MSG}))
                 return
 
-    print(json.dumps({"decision": "allow"}))
+    sys.exit(0)
 
 
 def _cwd_inside_kit():

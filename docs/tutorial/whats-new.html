@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.61.2</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.61.3</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -868,6 +868,23 @@
 
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
+
+        <div class="release" id="v1-61-3">
+          <div class="release-header">
+            <span class="version-badge">v1.61.3</span>
+            <span class="release-date">8 May 2026</span>
+          </div>
+          <p class="release-hero">Fixes invalid PreToolUse hook output across all six guardrail hooks. Each hook&#x27;s no-opinion path emitted <code>{&quot;decision&quot;: &quot;allow&quot;}</code>, which is not a valid value for the root-level <code>decision</code> field in Claude Code&#x27;s hook schema (only <code>approve</code> and <code>block</code> are accepted there). The harness rejected each output and surfaced &quot;Hook JSON output validation failed &mdash; (root): Invalid input&quot; warnings on every Bash, Edit, Write, and MultiEdit tool call. Block paths were unaffected (they use the valid <code>{&quot;decision&quot;: &quot;block&quot;, ...}</code> shape), so the bug was cosmetic in behaviour but generated roughly 80 wasted tokens per Bash call across every project on the kit. Each hook&#x27;s no-opinion path now uses <code>sys.exit(0)</code> &mdash; silent exit is the canonical &quot;no opinion&quot; signal under the current schema. The <code>tests/claude_hooks/</code> <code>_run</code> helper translates an empty stdout to <code>{&quot;decision&quot;: &quot;allow&quot;}</code> so existing assertions are preserved.</p>
+          <h4>Fixed</h4>
+          <ul>
+            <li><strong><code>.claude/hooks/block_dangerous_commands.py</code></strong> &mdash; no-opinion path now exits silently via <code>sys.exit(0)</code> instead of printing invalid <code>{&quot;decision&quot;: &quot;allow&quot;}</code> JSON.</li>
+            <li><strong><code>.claude/hooks/block_secrets_in_code.py</code></strong> &mdash; <code>_allow()</code> helper switched to <code>sys.exit(0)</code>.</li>
+            <li><strong><code>.claude/hooks/confirm_pr_merge.py</code></strong> &mdash; both early-return allow paths (<code>gh pr merge</code> not present, <code>ALLOW_MERGE=1</code> set) switched to <code>sys.exit(0)</code>.</li>
+            <li><strong><code>.claude/hooks/enforce_review_gate.py</code></strong> &mdash; four allow paths (non-<code>gh pr create</code>, <code>SKIP_REVIEW_GATE=1</code>, non-feature branch, all-gates-passed) switched to <code>sys.exit(0)</code>.</li>
+            <li><strong><code>.claude/hooks/guard_kit_writes.py</code></strong> &mdash; <code>SKIP_KIT_GUARD=1</code> early-return and end-of-main allow path switched to <code>sys.exit(0)</code>.</li>
+            <li><strong><code>.claude/hooks/protect_directives.py</code></strong> &mdash; <code>_allow()</code> helper switched to <code>sys.exit(0)</code>.</li>
+          </ul>
+        </div>
 
         <div class="release" id="v1-61-2">
           <div class="release-header">
@@ -3540,7 +3557,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.61.2</footer>
+        <footer class="site-footer">DOE Starter Kit v1.61.3</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

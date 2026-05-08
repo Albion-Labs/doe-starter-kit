@@ -17,12 +17,10 @@ def main():
     command = tool_input.get("command", "")
 
     if "gh pr merge" not in command:
-        print(json.dumps({"decision": "allow"}))
-        return
+        sys.exit(0)
 
     if "ALLOW_MERGE=1" in command:
-        print(json.dumps({"decision": "allow"}))
-        return
+        sys.exit(0)
 
     print(json.dumps({
         "decision": "block",

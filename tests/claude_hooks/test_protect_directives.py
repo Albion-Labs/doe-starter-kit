@@ -26,7 +26,16 @@ def _run(payload):
         cwd="/tmp",
     )
     assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout.strip())
+    out = result.stdout.strip()
+    if not out:
+        return {"decision": "allow"}
+    decoded = json.loads(out)
+    assert decoded.get("decision") != "allow", (
+        "regression: hook emitted legacy {'decision': 'allow'} JSON. "
+        "PreToolUse no-opinion path must use sys.exit(0); 'allow' is not a "
+        "valid root-level decision value (only approve/block are accepted)."
+    )
+    return decoded
 
 
 # --- File-path branch ---
