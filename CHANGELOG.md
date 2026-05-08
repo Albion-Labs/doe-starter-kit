@@ -7,6 +7,26 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.61.4 (2026-05-08)
+<!-- hero -->
+Two follow-on fixes from v1.61.3 surfaced during the wrap of the same session: the `commit-msg` hook's changelog-enforcement check looked for `changelog.html` (a path that no longer exists; superseded by `whats-new.html` in earlier kit versions) and would block any version-tagged commit, requiring `SKIP_CHANGELOG_CHECK=1` as a workaround. The `enforce_review_gate` hook misfired on cross-project `gh pr create` -- when one project's harness opened a PR against a different repo (e.g. monty editing the kit), the hook still gated against the parent project's branch and todo state, blocking the operation despite the PR target being elsewhere. Both are now fixed: `commit-msg` greps for `whats-new.html`, and `enforce_review_gate` detects an inline `cd <other-dir> &&` prefix that resolves outside the hook's cwd tree and passes through silently. Three new tests in `test_enforce_review_gate.py` cover the cross-project guard.
+<!-- /hero -->
+
+### Fixed
+- **`.githooks/commit-msg`** -- Changelog-enforcement check now greps for `whats-new.html` (the current tutorial release page) instead of the long-since-removed `changelog.html`. User-facing message updated from "Add a changelog entry" to "Add a release entry" for clarity.
+- **`.claude/hooks/enforce_review_gate.py`** -- Added cross-project guard: if the Bash command starts with `cd <path> &&` and `<path>` resolves outside the hook's cwd tree (different project root), the hook exits silently. The release-readiness checks belong to the harness's project, not whichever repo the gh command is targeting.
+
+### Changed
+- **`docs/tutorial/hooks.md`** -- Updated the `commit-msg` hook description to match the new check (`whats-new.html` instead of `changelog.html`).
+- **`tests/claude_hooks/test_enforce_review_gate.py`** -- Added three tests for the cross-project guard: `cd <outside>` exempts, `cd ~/` (tilde-expanded outside) exempts, `cd <subdir-of-cwd>` does NOT exempt (still gates within-project work).
+
+### Pull impact
+Eliminates two false-positive friction points in the hook layer. No behaviour change for legitimate within-project commits or PR creation. Anyone who'd been bypassing the commit-msg check with `SKIP_CHANGELOG_CHECK=1` no longer needs to. Anyone opening cross-project PRs from one project's harness no longer gets blocked by the wrong project's release-readiness gate.
+
+No migration manifest needed.
+
+---
+
 ## v1.61.3 (2026-05-08)
 <!-- hero -->
 Fixes invalid PreToolUse hook output across all six guardrail hooks. Each hook's no-opinion path emitted `{"decision": "allow"}`, which is not a valid value for the root-level `decision` field in Claude Code's hook schema (only `approve` and `block` are accepted; `allow` belongs inside `hookSpecificOutput.permissionDecision`). The harness rejected each output and surfaced "Hook JSON output validation failed -- (root): Invalid input" warnings on every Bash, Edit, Write, and MultiEdit tool call. Block paths were unaffected (they use the valid `{"decision": "block", ...}` shape), so the bug was cosmetic in behaviour but generated roughly 80 wasted tokens per Bash call across every project consuming the kit. Each hook's no-opinion path now uses `sys.exit(0)` -- silent exit is the canonical "no opinion" signal under the current schema. The `tests/claude_hooks/` `_run` helper translates an empty stdout to `{"decision": "allow"}` so existing assertions are preserved.

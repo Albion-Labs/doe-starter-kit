@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.61.3</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.61.4</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -868,6 +868,19 @@
 
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
+
+        <div class="release" id="v1-61-4">
+          <div class="release-header">
+            <span class="version-badge">v1.61.4</span>
+            <span class="release-date">8 May 2026</span>
+          </div>
+          <p class="release-hero">Two follow-on fixes from v1.61.3 surfaced during the wrap of the same session. The <code>commit-msg</code> hook&#x27;s changelog-enforcement check looked for <code>changelog.html</code> (a path that no longer exists; superseded by <code>whats-new.html</code> in earlier kit versions) and would block any version-tagged commit, requiring <code>SKIP_CHANGELOG_CHECK=1</code> as a workaround. The <code>enforce_review_gate</code> hook misfired on cross-project <code>gh pr create</code> &mdash; when one project&#x27;s harness opened a PR against a different repo (e.g. monty editing the kit), the hook still gated against the parent project&#x27;s branch and todo state, blocking the operation despite the PR target being elsewhere. Both are now fixed: <code>commit-msg</code> greps for <code>whats-new.html</code>, and <code>enforce_review_gate</code> detects an inline <code>cd &lt;other-dir&gt; &amp;&amp;</code> prefix that resolves outside the hook&#x27;s cwd tree and passes through silently. Three new tests in <code>test_enforce_review_gate.py</code> cover the cross-project guard.</p>
+          <h4>Fixed</h4>
+          <ul>
+            <li><strong><code>.githooks/commit-msg</code></strong> &mdash; Changelog-enforcement check now greps for <code>whats-new.html</code> (the current tutorial release page) instead of the long-since-removed <code>changelog.html</code>. User-facing message updated from &quot;Add a changelog entry&quot; to &quot;Add a release entry&quot; for clarity.</li>
+            <li><strong><code>.claude/hooks/enforce_review_gate.py</code></strong> &mdash; Added cross-project guard: if the Bash command starts with <code>cd &lt;path&gt; &amp;&amp;</code> and <code>&lt;path&gt;</code> resolves outside the hook&#x27;s cwd tree, the hook exits silently. The release-readiness checks belong to the harness&#x27;s project, not whichever repo the gh command is targeting.</li>
+          </ul>
+        </div>
 
         <div class="release" id="v1-61-3">
           <div class="release-header">
@@ -3557,7 +3570,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.61.3</footer>
+        <footer class="site-footer">DOE Starter Kit v1.61.4</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

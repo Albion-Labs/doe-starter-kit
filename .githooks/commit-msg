@@ -55,13 +55,13 @@ case "$SUBJECT" in
 esac
 
 # ─── Changelog enforcement ───
-# If commit message contains a version tag (vX.Y.Z), changelog.html must be staged.
+# If commit message contains a version tag (vX.Y.Z), whats-new.html must be staged.
 # This prevents shipping versioned steps without a changelog entry.
 if grep -qE '\(v[0-9]+\.[0-9]+\.[0-9]+\)' "$1"; then
-    if ! git diff --cached --name-only | grep -q 'changelog.html'; then
+    if ! git diff --cached --name-only | grep -q 'whats-new.html'; then
         echo "" >&2
-        echo "⚠ Commit has a version tag but changelog.html is not staged." >&2
-        echo "  Add a changelog entry for this version before committing." >&2
+        echo "⚠ Commit has a version tag but whats-new.html is not staged." >&2
+        echo "  Add a release entry for this version before committing." >&2
         echo "  Skip with: SKIP_CHANGELOG_CHECK=1 git commit ..." >&2
         echo "" >&2
         if [ "${SKIP_CHANGELOG_CHECK:-0}" != "1" ]; then
