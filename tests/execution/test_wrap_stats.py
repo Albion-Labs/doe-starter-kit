@@ -173,3 +173,97 @@ def test_count_steps_completed_since_missing_file(tmp_path):
     """Returns 0 when todo.md does not exist."""
     count = count_steps_completed_since(tmp_path / "nonexistent.md", "2000-01-01T00:00:00")
     assert count == 0
+
+
+# ── _merge_main_streak (regression: first-session null lastSessionDate) ──
+
+class _FakeGitShowResult:
+    """Mimics subprocess.run() result for `git show origin/main:<path>`."""
+
+    def __init__(self, returncode=0, stdout="{}"):
+        self.returncode = returncode
+        self.stdout = stdout
+
+
+def _stats_path_inside_kit() -> Path:
+    """`_merge_main_streak` requires stats_path to live inside PROJECT_ROOT."""
+    return wrap_stats.PROJECT_ROOT / ".claude" / "stats.json"
+
+
+def test_merge_main_streak_handles_null_local_and_null_main(monkeypatch):
+    """First-ever wrap regression: both local and origin/main stats.json have
+    lastSessionDate=null. Comparison must not raise TypeError."""
+    main_payload = {"streak": {"current": 0, "best": 0, "lastSessionDate": None}}
+    fake = _FakeGitShowResult(returncode=0, stdout=json.dumps(main_payload))
+    monkeypatch.setattr(wrap_stats.subprocess, "run", lambda *a, **kw: fake)
+
+    data = {"streak": {"current": 0, "best": 0, "lastSessionDate": None}}
+    result = wrap_stats._merge_main_streak(data, _stats_path_inside_kit())
+
+    # No TypeError; nothing copied (main_last is empty after coercion)
+    assert result is data
+    assert result["streak"]["lastSessionDate"] is None
+
+
+def test_merge_main_streak_copies_when_main_is_newer(monkeypatch):
+    """When origin/main has a more recent lastSessionDate, it should be copied."""
+    main_payload = {"streak": {"current": 7, "best": 7, "lastSessionDate": "2026-05-09"}}
+    fake = _FakeGitShowResult(returncode=0, stdout=json.dumps(main_payload))
+    monkeypatch.setattr(wrap_stats.subprocess, "run", lambda *a, **kw: fake)
+
+    data = {"streak": {"current": 3, "best": 3, "lastSessionDate": "2026-05-08"}}
+    result = wrap_stats._merge_main_streak(data, _stats_path_inside_kit())
+
+    assert result["streak"]["lastSessionDate"] == "2026-05-09"
+    assert result["streak"]["current"] == 7
+
+
+def test_merge_main_streak_does_not_copy_when_local_is_newer(monkeypatch):
+    """When local has a more recent lastSessionDate, do not copy main's older streak."""
+    main_payload = {"streak": {"current": 1, "best": 1, "lastSessionDate": "2026-05-01"}}
+    fake = _FakeGitShowResult(returncode=0, stdout=json.dumps(main_payload))
+    monkeypatch.setattr(wrap_stats.subprocess, "run", lambda *a, **kw: fake)
+
+    data = {"streak": {"current": 5, "best": 5, "lastSessionDate": "2026-05-08"}}
+    result = wrap_stats._merge_main_streak(data, _stats_path_inside_kit())
+
+    # Local stays — origin's older streak does not overwrite
+    assert result["streak"]["lastSessionDate"] == "2026-05-08"
+    assert result["streak"]["current"] == 5
+
+
+def test_merge_main_streak_handles_null_main_with_dated_local(monkeypatch):
+    """If main has null but local has a date, do not copy (main_last is empty)."""
+    main_payload = {"streak": {"current": 0, "best": 0, "lastSessionDate": None}}
+    fake = _FakeGitShowResult(returncode=0, stdout=json.dumps(main_payload))
+    monkeypatch.setattr(wrap_stats.subprocess, "run", lambda *a, **kw: fake)
+
+    data = {"streak": {"current": 4, "best": 4, "lastSessionDate": "2026-05-08"}}
+    result = wrap_stats._merge_main_streak(data, _stats_path_inside_kit())
+
+    assert result["streak"]["lastSessionDate"] == "2026-05-08"
+    assert result["streak"]["current"] == 4
+
+
+def test_merge_main_streak_returns_data_unchanged_on_git_failure(monkeypatch):
+    """If `git show origin/main:<path>` fails (e.g., no remote), return data as-is."""
+    fake = _FakeGitShowResult(returncode=128, stdout="")
+    monkeypatch.setattr(wrap_stats.subprocess, "run", lambda *a, **kw: fake)
+
+    data = {"streak": {"current": 4, "best": 4, "lastSessionDate": "2026-05-08"}}
+    result = wrap_stats._merge_main_streak(data, _stats_path_inside_kit())
+
+    assert result is data
+    assert result["streak"]["lastSessionDate"] == "2026-05-08"
+
+
+def test_merge_main_streak_handles_malformed_json(monkeypatch):
+    """If origin/main's stats.json is malformed, swallow the error and return data."""
+    fake = _FakeGitShowResult(returncode=0, stdout="{not json")
+    monkeypatch.setattr(wrap_stats.subprocess, "run", lambda *a, **kw: fake)
+
+    data = {"streak": {"current": 4, "best": 4, "lastSessionDate": "2026-05-08"}}
+    result = wrap_stats._merge_main_streak(data, _stats_path_inside_kit())
+
+    assert result is data
+    assert result["streak"]["lastSessionDate"] == "2026-05-08"

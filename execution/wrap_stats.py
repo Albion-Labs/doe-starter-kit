@@ -265,8 +265,14 @@ def _merge_main_streak(data: dict, stats_path: Path) -> dict:
         main_data = json.loads(result.stdout)
         main_streak = main_data.get("streak", {})
         local_streak = data.get("streak", {})
-        main_last = main_streak.get("lastSessionDate", "")
-        local_last = local_streak.get("lastSessionDate", "")
+        # `or ""` (rather than the dict default) handles the case where the key
+        # exists with a `null` value — true on a project's first-ever wrap when
+        # both local and origin/main stats.json have `lastSessionDate: null`.
+        # `dict.get(key, default)` returns the actual `None`, not the default,
+        # when the key is present with a null value. Without `or ""`, the next
+        # comparison would be `None > None` and raise TypeError.
+        main_last = main_streak.get("lastSessionDate") or ""
+        local_last = local_streak.get("lastSessionDate") or ""
         if main_last > local_last:
             data["streak"] = main_streak
     except (json.JSONDecodeError, subprocess.TimeoutExpired, OSError):
