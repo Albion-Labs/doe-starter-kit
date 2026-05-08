@@ -26,7 +26,10 @@ def _run(payload):
         cwd="/tmp",
     )
     assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout.strip())
+    out = result.stdout.strip()
+    if not out:
+        return {"decision": "allow"}
+    return json.loads(out)
 
 
 # --- File-path branch ---

@@ -58,12 +58,10 @@ def main():
     command = tool_input.get("command", "")
 
     if "gh pr create" not in command:
-        print(json.dumps({"decision": "allow"}))
-        return
+        sys.exit(0)
 
     if os.environ.get("SKIP_REVIEW_GATE") == "1":
-        print(json.dumps({"decision": "allow"}))
-        return
+        sys.exit(0)
 
     try:
         branch = subprocess.check_output(
@@ -87,8 +85,7 @@ def main():
     is_feature_branch = branch.startswith("feature/")
 
     if not is_feature_branch:
-        print(json.dumps({"decision": "allow"}))
-        return
+        sys.exit(0)
 
     # Gate 1: All steps must be complete (no mid-feature PRs)
     steps_ok, steps_msg = check_steps_complete()
@@ -140,7 +137,7 @@ def main():
         }))
         return
 
-    print(json.dumps({"decision": "allow"}))
+    sys.exit(0)
 
 
 if __name__ == "__main__":

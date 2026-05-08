@@ -29,7 +29,10 @@ def _run(payload, cwd=None, env_extra=None):
         env=env,
     )
     assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout.strip())
+    out = result.stdout.strip()
+    if not out:
+        return {"decision": "allow"}
+    return json.loads(out)
 
 
 # --- Edits + ordinary Bash redirects: ALLOW (file-edit branch retired) ---

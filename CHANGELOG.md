@@ -7,6 +7,29 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.61.3 (2026-05-08)
+<!-- hero -->
+Fixes invalid PreToolUse hook output across all six guardrail hooks. Each hook's no-opinion path emitted `{"decision": "allow"}`, which is not a valid value for the root-level `decision` field in Claude Code's hook schema (only `approve` and `block` are accepted; `allow` belongs inside `hookSpecificOutput.permissionDecision`). The harness rejected each output and surfaced "Hook JSON output validation failed -- (root): Invalid input" warnings on every Bash, Edit, Write, and MultiEdit tool call. Block paths were unaffected (they use the valid `{"decision": "block", ...}` shape), so the bug was cosmetic in behaviour but generated roughly 80 wasted tokens per Bash call across every project consuming the kit. Each hook's no-opinion path now uses `sys.exit(0)` -- silent exit is the canonical "no opinion" signal under the current schema. The `tests/claude_hooks/` `_run` helper translates an empty stdout to `{"decision": "allow"}` so existing assertions are preserved.
+<!-- /hero -->
+
+### Fixed
+- **`.claude/hooks/block_dangerous_commands.py`** -- no-opinion path now exits silently via `sys.exit(0)` instead of printing invalid `{"decision": "allow"}` JSON.
+- **`.claude/hooks/block_secrets_in_code.py`** -- `_allow()` helper switched to `sys.exit(0)`.
+- **`.claude/hooks/confirm_pr_merge.py`** -- both early-return allow paths (`gh pr merge` not present, `ALLOW_MERGE=1` set) switched to `sys.exit(0)`.
+- **`.claude/hooks/enforce_review_gate.py`** -- four allow paths (non-`gh pr create`, `SKIP_REVIEW_GATE=1`, non-feature branch, all-gates-passed) switched to `sys.exit(0)`.
+- **`.claude/hooks/guard_kit_writes.py`** -- `SKIP_KIT_GUARD=1` early-return and end-of-main allow path switched to `sys.exit(0)`.
+- **`.claude/hooks/protect_directives.py`** -- `_allow()` helper switched to `sys.exit(0)`.
+
+### Changed
+- **`tests/claude_hooks/test_block_dangerous_commands.py`** -- `_run()` helper now treats empty stdout as `{"decision": "allow"}` so the new silent-exit semantics pass the same assertions.
+- **`tests/claude_hooks/test_guard_kit_writes.py`** -- same `_run()` helper update.
+- **`tests/claude_hooks/test_protect_directives.py`** -- same `_run()` helper update.
+
+### Pull impact
+Behaviour-neutral. Block paths unchanged. Projects on v1.61.2 or earlier see ~6 spurious "Hook JSON output validation failed" warnings per Bash call and ~3 per Edit/Write/MultiEdit; pulling v1.61.3 silences all of them with no other change. No migration manifest needed.
+
+---
+
 ## v1.61.2 (2026-05-08)
 <!-- hero -->
 Documents the canonical Pink Elephant compliance check pattern in `directives/testing-strategy.md` ## Pattern Reference, replacing the brittle `grep -A N` form that captured pre-existing surrounding content within the fixed line buffer. The new pattern has three load-bearing components: a `git rev-parse origin/main` precondition that fails loudly when the ref is not fetched (closing a silent-pass mode caught during adversarial review of this PR), a `grep "^+" | grep -v "^+++ "` two-grep filter that includes added lines while excluding only the diff file header (and keeps legitimately-added markdown `+` bullets in scope, which a single `^+[^+]` filter would falsely drop), and the case-insensitive word-boundary scan for prohibition grammar. The old `grep -A N` form is named in-place as an anti-pattern using the v1.61.1 anti-pattern bullet convention, with attribution to the v1.61.1 Step 1 incident that surfaced the issue. Closes kit issue #42.

@@ -48,7 +48,7 @@ def _block(reason):
 
 
 def _allow():
-    print(json.dumps({"decision": "allow"}))
+    sys.exit(0)
 
 
 def _basename(path):

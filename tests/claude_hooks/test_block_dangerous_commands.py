@@ -29,7 +29,10 @@ def _run(command):
         text=True,
     )
     assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout.strip())
+    out = result.stdout.strip()
+    if not out:
+        return {"decision": "allow"}
+    return json.loads(out)
 
 
 # --- SUBSTRING patterns: still block as before ---
