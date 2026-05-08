@@ -10,7 +10,7 @@ Load this when:
 - A wrap or stand-up surfaces branch drift between session-start and current HEAD
 - Setting up a new project that anticipates parallel sessions
 
-Skip this for solo-session projects (one terminal at a time) -- one folder, one HEAD, no race possible.
+Apply only when multiple Claude sessions run against the same project repo. Solo-session projects use one folder with one HEAD as today -- the convention is opt-in.
 
 ## Inputs
 - A clean git repo with `main` (or the project's trunk branch) accessible
@@ -26,7 +26,7 @@ Skip this for solo-session projects (one terminal at a time) -- one folder, one 
    ```
    The branch must exist (or pass `-b <new-branch>` to create it). The original `<project>/` stays on `main`; the new sibling holds the feature branch.
 
-3. **Switch to the feature worktree** when working on that feature: `cd ../<project>-<feature>`. Keep the trunk worktree on `main` -- run `git checkout` for the feature branch in the sidecar, not in the trunk folder.
+3. **Switch to the feature worktree** when working on that feature: `cd ../<project>-<feature>`. Run `git checkout` for the feature branch in the sidecar; the trunk worktree stays on `main` for the duration.
 
 4. **Single-branch concurrency.** A branch can be checked out in only ONE worktree at a time. Git enforces this. Treat it as a feature: the worktree IS the branch's session ownership.
 
