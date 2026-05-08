@@ -117,7 +117,7 @@ Tag source: e.g. "[retro: feature-name vX.Y.Z]"
 
 ## DOE Starter Kit
 
-- During feature work, make changes in the project repo first; run `/sync-doe` once at feature end to push them to the kit. The sync procedure handles tutorial footer stamping, changelog, tagging, pushing, AND creating the GitHub release. Direct commits to the kit skip all of these -- the tag may exist locally but no release appears on GitHub. [retro: universal]
+- **Kit changes flow through PRs** (v1.60.0+ PR-only model). The kit's `.githooks/pre-commit` 'no direct-to-main' hook plus human PR review are the canonical write gate. Two ways to land a kit change, both PR-based: (1) **Manual PR** for a one-off fix or improvement — branch in the kit, commit, push, `gh pr create`, review, merge, same as any other repo. (2) **`/sync-doe`** for bundling many project-originated kit changes into a versioned release — translates project-side improvements, opens a kit PR with the diff + CHANGELOG entry + version bump (Phase 1), then after merge runs the post-merge release machinery (Phase 2: tutorial stamp + tag + GitHub release) on main with a narrowly-scoped `SKIP_MAIN_PROTECTION=1` for the stamp commit only. Pick the manual PR for a one-line bug fix; pick `/sync-doe` when you have multiple project-originated changes ready to release. If you discover a kit bug while working in a project repo, keep the local patch (so the project keeps working) and open a kit PR with the same fix; the project-side patch can be removed after `/pull-doe` syncs the merged version back. See `directives/kit-development.md` ## Kit-write model: PR-only. [retro: universal]
 
 ## Verification
 
