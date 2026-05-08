@@ -77,6 +77,20 @@ Same as solo mode per-terminal. Each terminal works on a different step. The use
 | `run: <cmd>` | `run: python3 execution/verify.py --self-test` | Exit code 0 |
 | `html: <path> has <sel>` | `html: index.html has .main-content` | CSS selector match |
 
+### Pink Elephant compliance checks (positive-form contracts)
+
+When a feature adds positive-form content -- a heading, sub-block, or paragraph that names what to do rather than what to avoid -- the contract often includes a check that the new content avoids prohibition grammar (`don't`, `never`, `avoid`). The canonical pattern bounds the scan to the feature branch's *additions* via `git diff`, so pre-existing surrounding content (which may legitimately use those words) cannot trip the contract:
+
+```
+Verify: run: cd <repo> && ! git diff origin/main...HEAD -- <file> | grep "^+[^+]" | grep -iE "\b(don't|never|avoid)\b"
+```
+
+The `^+[^+]` filter limits the scan to added lines (line starts with `+` followed by a non-`+` character), excluding `git diff` headers like `+++ b/<file>` and capturing only real additions. Removed lines (`^-`) are excluded so subtracting a prohibition from existing content does not register as new prohibition content.
+
+- **Anti-patterns:** fixed-buffer scans that overspill into surrounding content.
+  - Before: `! grep -A 8 -i "<heading>" <file> | grep -iE "\b(don't|never|avoid)\b"` -- the `-A N` line buffer extends past the new content into pre-existing bullets, falsely failing on words the new feature did not author. Hit during kit v1.61.1 Step 1.
+  - After: the `git diff` form above -- bounded to actual additions, isolated from surrounding content.
+
 ## Three-Level Verification
 
 When writing `[auto]` contract criteria, aim for depth -- not just existence. Three levels of verification catch progressively more bugs:
