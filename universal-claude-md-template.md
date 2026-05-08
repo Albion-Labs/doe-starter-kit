@@ -106,6 +106,10 @@ Tag source: e.g. "[retro: feature-name vX.Y.Z]"
 
 - Hooks that write per-invocation files (e.g. per-PID tracking) accumulate hundreds of orphans per session. Use a single fixed-name file and overwrite each invocation; hooks need the latest state, not history. [retro: universal]
 
+## Parallel Sessions
+
+- For multiple Claude sessions on the same project, use a separate `git worktree` per long-lived branch. Each session gets its own working directory and HEAD; one session's branch switch cannot silently move another session's HEAD. Convention: `<project>/` lives on `main`; feature work happens in sibling `<project>-<feature>/` worktrees, removed when the feature merges. See `directives/parallel-worktrees.md` for setup, scope, and cleanup. Tradeoff: build artefacts (`node_modules/`, `.next/`, etc.) duplicate per worktree; shared docs (STATE.md, todo.md, learnings.md, CLAUDE.md) still need "edit from one terminal at a time" coordination since all worktrees write to the same git history. [retro: monty session 224 -- parallel-session branch race silently moved wrap commits onto a long-lived feature branch]
+
 ## Output
 
 - Assemble multi-section formatted output (wrap-ups, reports, dashboards) as a single block, generated in one script and printed in one tool call. [retro: universal]

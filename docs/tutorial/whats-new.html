@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.61.4</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.61.5</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -869,16 +869,38 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-61-5">
+          <div class="release-header">
+            <span class="version-badge">v1.61.5</span>
+            <span class="release-date">8 May 2026</span>
+          </div>
+          <p class="release-hero">Adds the worktree convention to the kit so every DOE project inherits the structural fix for parallel-session branch races. New <code>directives/parallel-worktrees.md</code> covers when to use, setup, scope (worktrees fix the BRANCH-level race &mdash; silent HEAD switch when one session&#x27;s <code>git checkout</code> moves another session&#x27;s HEAD &mdash; but do NOT fix the FILE-level race for shared docs like STATE.md, todo.md, learnings.md, CLAUDE.md, which still need &quot;edit from one terminal at a time&quot; coordination), and cleanup. Universal CLAUDE.md template gains a <code>## Parallel Sessions</code> section stating the convention as a positive-form rule. Kit&#x27;s CLAUDE.md template gains a new trigger pointing to the directive; the existing parallel-sessions trigger (which actually covered wave/DAG dispatch) is renamed for clarity. This is the convention-statement patch &mdash; the auto-detection layer (drift detection in <code>/stand-up</code> and <code>/wrap</code>, pre-flight checks in kit-write commands, <code>/worktree-create</code> and <code>/worktree-remove</code> slash commands, <code>/crack-on</code> hook) is queued separately as v1.62.0. Source: monty session 224 retro &mdash; the parallel-session race silently moved wrap commits onto a long-lived feature branch.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>directives/parallel-worktrees.md</code></strong> &mdash; new directive. Goal: use git worktrees to isolate branch checkouts when running multiple Claude Code sessions on the same project. Convention: <code>&lt;project&gt;/</code> lives on <code>main</code>; long-lived feature branches get sibling <code>&lt;project&gt;-&lt;feature&gt;/</code> worktrees, removed when the feature merges. Process section walks the setup commands (<code>git worktree add</code>, <code>cd</code>, <code>git worktree remove</code>). Edge Cases section is honest about scope &mdash; worktrees do NOT solve the shared-file race for STATE.md / todo.md / learnings.md / CLAUDE.md, since all worktrees write to the same git history. Includes Anti-patterns Before/After bullet using the v1.61.1 convention.</li>
+            <li><strong><code>universal-claude-md-template.md</code> ## Parallel Sessions section</strong> &mdash; new section between ## Hooks &amp; Session Files and ## Output. One positive-form rule stating the worktree convention with a Tradeoff: line naming the duplicated build artefacts and shared-doc race that worktrees do not fix. Sourced from monty session 224 retro.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>CLAUDE.md</code> template (kit root) Triggers section</strong> &mdash; new trigger: <code>Parallel sessions on same project (worktree setup, branch isolation) -&gt; directives/parallel-worktrees.md</code>. The pre-existing <code>Parallel sessions / wave setup</code> trigger is renamed to <code>Wave / DAG dispatch setup</code> to clarify it covers wave/DAG dispatch specifically (different concern from per-session branch isolation).</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-61-4">
           <div class="release-header">
             <span class="version-badge">v1.61.4</span>
             <span class="release-date">8 May 2026</span>
           </div>
-          <p class="release-hero">Two follow-on fixes from v1.61.3 surfaced during the wrap of the same session. The <code>commit-msg</code> hook&#x27;s changelog-enforcement check looked for <code>changelog.html</code> (a path that no longer exists; superseded by <code>whats-new.html</code> in earlier kit versions) and would block any version-tagged commit, requiring <code>SKIP_CHANGELOG_CHECK=1</code> as a workaround. The <code>enforce_review_gate</code> hook misfired on cross-project <code>gh pr create</code> &mdash; when one project&#x27;s harness opened a PR against a different repo (e.g. monty editing the kit), the hook still gated against the parent project&#x27;s branch and todo state, blocking the operation despite the PR target being elsewhere. Both are now fixed: <code>commit-msg</code> greps for <code>whats-new.html</code>, and <code>enforce_review_gate</code> detects an inline <code>cd &lt;other-dir&gt; &amp;&amp;</code> prefix that resolves outside the hook&#x27;s cwd tree and passes through silently. Three new tests in <code>test_enforce_review_gate.py</code> cover the cross-project guard.</p>
-          <h4>Fixed</h4>
+          <p class="release-hero">Two follow-on fixes from v1.61.3 surfaced during the wrap of the same session: the <code>commit-msg</code> hook&#x27;s changelog-enforcement check looked for <code>changelog.html</code> (a path that no longer exists; superseded by <code>whats-new.html</code> in earlier kit versions) and would block any version-tagged commit, requiring <code>SKIP_CHANGELOG_CHECK=1</code> as a workaround. The <code>enforce_review_gate</code> hook misfired on cross-project <code>gh pr create</code> &mdash; when one project&#x27;s harness opened a PR against a different repo (e.g. monty editing the kit), the hook still gated against the parent project&#x27;s branch and todo state, blocking the operation despite the PR target being elsewhere. Both are now fixed: <code>commit-msg</code> greps for <code>whats-new.html</code>, and <code>enforce_review_gate</code> detects an inline <code>cd &lt;other-dir&gt; &amp;&amp;</code> prefix that resolves outside the hook&#x27;s cwd tree and passes through silently. Three new tests in <code>test_enforce_review_gate.py</code> cover the cross-project guard.</p>
+          <h4 class="fixed">Fixed</h4>
           <ul>
             <li><strong><code>.githooks/commit-msg</code></strong> &mdash; Changelog-enforcement check now greps for <code>whats-new.html</code> (the current tutorial release page) instead of the long-since-removed <code>changelog.html</code>. User-facing message updated from &quot;Add a changelog entry&quot; to &quot;Add a release entry&quot; for clarity.</li>
-            <li><strong><code>.claude/hooks/enforce_review_gate.py</code></strong> &mdash; Added cross-project guard: if the Bash command starts with <code>cd &lt;path&gt; &amp;&amp;</code> and <code>&lt;path&gt;</code> resolves outside the hook&#x27;s cwd tree, the hook exits silently. The release-readiness checks belong to the harness&#x27;s project, not whichever repo the gh command is targeting.</li>
+            <li><strong><code>.claude/hooks/enforce_review_gate.py</code></strong> &mdash; Added cross-project guard: if the Bash command starts with <code>cd &lt;path&gt; &amp;&amp;</code> and <code>&lt;path&gt;</code> resolves outside the hook&#x27;s cwd tree (different project root), the hook exits silently. The release-readiness checks belong to the harness&#x27;s project, not whichever repo the gh command is targeting.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>docs/tutorial/hooks.md</code></strong> &mdash; Updated the <code>commit-msg</code> hook description to match the new check (<code>whats-new.html</code> instead of <code>changelog.html</code>).</li>
+            <li><strong><code>tests/claude_hooks/test_enforce_review_gate.py</code></strong> &mdash; Added three tests for the cross-project guard: <code>cd &lt;outside&gt;</code> exempts, <code>cd ~/</code> (tilde-expanded outside) exempts, <code>cd &lt;subdir-of-cwd&gt;</code> does NOT exempt (still gates within-project work).</li>
           </ul>
         </div>
 
@@ -887,8 +909,8 @@
             <span class="version-badge">v1.61.3</span>
             <span class="release-date">8 May 2026</span>
           </div>
-          <p class="release-hero">Fixes invalid PreToolUse hook output across all six guardrail hooks. Each hook&#x27;s no-opinion path emitted <code>{&quot;decision&quot;: &quot;allow&quot;}</code>, which is not a valid value for the root-level <code>decision</code> field in Claude Code&#x27;s hook schema (only <code>approve</code> and <code>block</code> are accepted there). The harness rejected each output and surfaced &quot;Hook JSON output validation failed &mdash; (root): Invalid input&quot; warnings on every Bash, Edit, Write, and MultiEdit tool call. Block paths were unaffected (they use the valid <code>{&quot;decision&quot;: &quot;block&quot;, ...}</code> shape), so the bug was cosmetic in behaviour but generated roughly 80 wasted tokens per Bash call across every project on the kit. Each hook&#x27;s no-opinion path now uses <code>sys.exit(0)</code> &mdash; silent exit is the canonical &quot;no opinion&quot; signal under the current schema. The <code>tests/claude_hooks/</code> <code>_run</code> helper translates an empty stdout to <code>{&quot;decision&quot;: &quot;allow&quot;}</code> so existing assertions are preserved.</p>
-          <h4>Fixed</h4>
+          <p class="release-hero">Fixes invalid PreToolUse hook output across all six guardrail hooks. Each hook&#x27;s no-opinion path emitted <code>{&quot;decision&quot;: &quot;allow&quot;}</code>, which is not a valid value for the root-level <code>decision</code> field in Claude Code&#x27;s hook schema (only <code>approve</code> and <code>block</code> are accepted; <code>allow</code> belongs inside <code>hookSpecificOutput.permissionDecision</code>). The harness rejected each output and surfaced &quot;Hook JSON output validation failed &mdash; (root): Invalid input&quot; warnings on every Bash, Edit, Write, and MultiEdit tool call. Block paths were unaffected (they use the valid <code>{&quot;decision&quot;: &quot;block&quot;, ...}</code> shape), so the bug was cosmetic in behaviour but generated roughly 80 wasted tokens per Bash call across every project consuming the kit. Each hook&#x27;s no-opinion path now uses <code>sys.exit(0)</code> &mdash; silent exit is the canonical &quot;no opinion&quot; signal under the current schema. The <code>tests/claude_hooks/</code> <code>_run</code> helper translates an empty stdout to <code>{&quot;decision&quot;: &quot;allow&quot;}</code> so existing assertions are preserved.</p>
+          <h4 class="fixed">Fixed</h4>
           <ul>
             <li><strong><code>.claude/hooks/block_dangerous_commands.py</code></strong> &mdash; no-opinion path now exits silently via <code>sys.exit(0)</code> instead of printing invalid <code>{&quot;decision&quot;: &quot;allow&quot;}</code> JSON.</li>
             <li><strong><code>.claude/hooks/block_secrets_in_code.py</code></strong> &mdash; <code>_allow()</code> helper switched to <code>sys.exit(0)</code>.</li>
@@ -896,6 +918,12 @@
             <li><strong><code>.claude/hooks/enforce_review_gate.py</code></strong> &mdash; four allow paths (non-<code>gh pr create</code>, <code>SKIP_REVIEW_GATE=1</code>, non-feature branch, all-gates-passed) switched to <code>sys.exit(0)</code>.</li>
             <li><strong><code>.claude/hooks/guard_kit_writes.py</code></strong> &mdash; <code>SKIP_KIT_GUARD=1</code> early-return and end-of-main allow path switched to <code>sys.exit(0)</code>.</li>
             <li><strong><code>.claude/hooks/protect_directives.py</code></strong> &mdash; <code>_allow()</code> helper switched to <code>sys.exit(0)</code>.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>tests/claude_hooks/test_block_dangerous_commands.py</code></strong> &mdash; <code>_run()</code> helper now treats empty stdout as <code>{&quot;decision&quot;: &quot;allow&quot;}</code> so the new silent-exit semantics pass the same assertions.</li>
+            <li><strong><code>tests/claude_hooks/test_guard_kit_writes.py</code></strong> &mdash; same <code>_run()</code> helper update.</li>
+            <li><strong><code>tests/claude_hooks/test_protect_directives.py</code></strong> &mdash; same <code>_run()</code> helper update.</li>
           </ul>
         </div>
 
@@ -924,6 +952,10 @@
             <li><strong><code>universal-claude-md-template.md</code> Surgical Changes trace-test rationale</strong> &mdash; one sentence appended to the existing trace test (&quot;every changed line should trace directly to the user&#x27;s request&quot;). The new sentence names the failure mode the rule defends against: small, traceable diffs keep human reviewers in the loop. Original Karpathy/Forrest Chang phrasing intact; the addition pairs rule with rationale per the kit&#x27;s own ## Grammar precedent. Defends against Willison&#x27;s &quot;merchants of complexity&quot; framing (the negative form of human-in-the-loop).</li>
           </ul>
         </div>
+
+        <details class="month-group">
+
+          <summary>May 2026 (3 releases)</summary>
 
         <div class="release" id="v1-61-0">
           <div class="release-header">
@@ -971,6 +1003,8 @@
             <li><strong><code>directives/delivery-rules.md</code> Retro Procedure renumbered</strong> &mdash; old Steps 7-10 become 8-11 to make room for Step 7. Step 10&#x27;s cross-reference to &quot;step 8&quot; updated to &quot;step 9&quot; (the <code>/review</code> gate&#x27;s new index).</li>
           </ul>
         </div>
+
+        </details>
 
         <details class="month-group">
 
@@ -3570,7 +3604,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.61.4</footer>
+        <footer class="site-footer">DOE Starter Kit v1.61.5</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->

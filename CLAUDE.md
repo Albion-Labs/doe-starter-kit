@@ -79,7 +79,8 @@ First session on a brand new project: load `directives/planning-rules.md` + `dir
 - Auditing claims -> `directives/claim-auditing.md`, run `/audit`
 - DOE kit sync -> `directives/starter-kit-sync.md`
 - Pulling DOE kit updates -> `directives/starter-kit-pull.md`
-- Parallel sessions / wave setup -> `.claude/plans/multi-agent-coordination.md`
+- Parallel sessions on same project (worktree setup, branch isolation) -> `directives/parallel-worktrees.md`
+- Wave / DAG dispatch setup -> `.claude/plans/multi-agent-coordination.md`
 - Security-sensitive code (input, auth, rendering, headers) -> `directives/security-rules.md`
 - Writing code -> `directives/best-practices/` for the language
 - Refactoring / architecture -> `directives/architectural-invariants.md`

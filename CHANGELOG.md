@@ -7,6 +7,25 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.61.5 (2026-05-08)
+<!-- hero -->
+Adds the worktree convention to the kit so every DOE project inherits the structural fix for parallel-session branch races. New `directives/parallel-worktrees.md` covers when to use, setup, scope (worktrees fix the BRANCH-level race -- silent HEAD switch when one session's `git checkout` moves another session's HEAD -- but do NOT fix the FILE-level race for shared docs like STATE.md, todo.md, learnings.md, CLAUDE.md, which still need "edit from one terminal at a time" coordination), and cleanup. Universal CLAUDE.md template gains a `## Parallel Sessions` section stating the convention as a positive-form rule. Kit's CLAUDE.md template gains a new trigger pointing to the directive; the existing parallel-sessions trigger (which actually covered wave/DAG dispatch) is renamed for clarity. This is the convention-statement patch -- the auto-detection layer (drift detection in `/stand-up` and `/wrap`, pre-flight checks in kit-write commands, `/worktree-create` and `/worktree-remove` slash commands, `/crack-on` hook) is queued separately as v1.62.0. Source: monty session 224 retro -- the parallel-session race silently moved wrap commits onto a long-lived feature branch.
+<!-- /hero -->
+
+### Added
+- **`directives/parallel-worktrees.md`** -- new directive. Goal: use git worktrees to isolate branch checkouts when running multiple Claude Code sessions on the same project. Convention: `<project>/` lives on `main`; long-lived feature branches get sibling `<project>-<feature>/` worktrees, removed when the feature merges. Process section walks the setup commands (`git worktree add`, `cd`, `git worktree remove`). Edge Cases section is honest about scope -- worktrees do NOT solve the shared-file race for STATE.md / todo.md / learnings.md / CLAUDE.md, since all worktrees write to the same git history. Includes Anti-patterns Before/After bullet using the v1.61.1 convention.
+- **`universal-claude-md-template.md` ## Parallel Sessions section** -- new section between ## Hooks & Session Files and ## Output. One positive-form rule stating the worktree convention with a Tradeoff: line naming the duplicated build artefacts and shared-doc race that worktrees do not fix. Sourced from monty session 224 retro.
+
+### Changed
+- **`CLAUDE.md` template (kit root) Triggers section** -- new trigger: `Parallel sessions on same project (worktree setup, branch isolation) -> directives/parallel-worktrees.md`. The pre-existing `Parallel sessions / wave setup` trigger is renamed to `Wave / DAG dispatch setup` to clarify it covers wave/DAG dispatch specifically (different concern from per-session branch isolation).
+
+### Pull impact
+Pure additive directive content. No procedure changes, no hook changes, no behavioural changes. Projects pulling v1.61.5 from v1.61.4 inherit one new directive (`parallel-worktrees.md`), one new section in the universal CLAUDE.md template (which flows into `~/.claude/CLAUDE.md` global via `setup.sh`, subject to the same "skipped if exists" merge behaviour as previous additive releases), and a renamed/added trigger in the kit's CLAUDE.md template. No migration manifest needed (additive release).
+
+The convention is opt-in: solo-session projects ignore it (one folder, branch in HEAD as today). Multi-session projects opt in by creating worktrees per long-lived branch following the documented convention. Auto-detection layer (so the kit AI uses the convention without user prompting) ships separately as v1.62.0.
+
+---
+
 ## v1.61.4 (2026-05-08)
 <!-- hero -->
 Two follow-on fixes from v1.61.3 surfaced during the wrap of the same session: the `commit-msg` hook's changelog-enforcement check looked for `changelog.html` (a path that no longer exists; superseded by `whats-new.html` in earlier kit versions) and would block any version-tagged commit, requiring `SKIP_CHANGELOG_CHECK=1` as a workaround. The `enforce_review_gate` hook misfired on cross-project `gh pr create` -- when one project's harness opened a PR against a different repo (e.g. monty editing the kit), the hook still gated against the parent project's branch and todo state, blocking the operation despite the PR target being elsewhere. Both are now fixed: `commit-msg` greps for `whats-new.html`, and `enforce_review_gate` detects an inline `cd <other-dir> &&` prefix that resolves outside the hook's cwd tree and passes through silently. Three new tests in `test_enforce_review_gate.py` cover the cross-project guard.
