@@ -40,6 +40,33 @@ cd ~/doe-starter-kit && git status --porcelain
 
 If the output is non-empty, the sync MUST stop and surface every dirty path with its diff. The user decides whether the changes are intended (continue) or accidental (revert + retry). This is the canonical detection point for the v1.60.0 model's residual exposure: cross-project AI edits to the kit working tree that go silent until the next sync (since `guard_kit_writes` no longer blocks them at PreToolUse time).
 
+### Step 0.7: Detect pending release (resume mode)
+
+`/sync-doe` is a two-phase command: **Phase 1** (Steps 1-10) opens a PR with the editorial changes (translated diff, CHANGELOG, version bump). **Phase 2** (Step 11) does the post-merge release machinery (tutorial stamp, tag, GitHub release) on main. State between phases lives at `~/doe-starter-kit/.tmp/.sync-doe-pending-release.json`.
+
+At the start of every `/sync-doe` invocation (after Step 0.5), check for the state file:
+
+```bash
+STATE=~/doe-starter-kit/.tmp/.sync-doe-pending-release.json
+if [ -f "$STATE" ]; then
+    PR_NUMBER=$(python3 -c "import json; print(json.load(open('$STATE'))['prNumber'])")
+    PR_STATE=$(gh pr view $PR_NUMBER --repo Albion-Labs/doe-starter-kit --json state --jq .state 2>/dev/null)
+    echo "Pending release detected: PR #$PR_NUMBER (state: $PR_STATE)"
+fi
+```
+
+Branch on the PR state:
+
+| `gh pr view` state | Action |
+|---|---|
+| `MERGED` | Skip Steps 1-10 (no new sync). Jump to **Step 11** with the version + project context from the state file. |
+| `OPEN` | Tell the user: "PR #N still open: \<URL\>. Merge it on GitHub then re-run `/sync-doe` to release." Stop. Do not start a new Phase 1 — the kit can only have one pending release at a time. |
+| `CLOSED` (without merge) | Tell the user: "PR #N was closed without merging. Discard pending state and start a fresh sync? \[y/n\]". On `y`: `rm "$STATE"` and continue normally to Step 1. On `n`: stop. |
+
+If no state file exists, this is a fresh sync — continue to Step 1.
+
+**Conversational shortcut**: if the user is in the same Claude Code session that just opened a PR (Step 10 wrote the state file moments ago) and they reply with a merge confirmation (e.g., "merged", "yes", "done"), Claude can verify the PR state via `gh` and proceed directly to Step 11 without requiring an explicit `/sync-doe` re-invocation.
+
 ### Step 1: Add the starter kit directory
 ```
 /add-dir ~/doe-starter-kit
@@ -245,38 +272,149 @@ done
 
 In those cases, note "No migration manifest needed (additive release)" in the CHANGELOG hero so the absence is documented.
 
-### Step 10: Commit, tag, and push
+### Step 10: Open the PR (Phase 1)
 
-**Run each of these as a SEPARATE Bash tool call** -- one command per call so each exit code propagates independently. Bash pipelines return the last command's exit code: `git commit ... | tail -5 && git tag` fires the tag even when commit was blocked by a hook (`tail` exits 0). Separate calls keep each exit code visible. When chaining is unavoidable, prefix with `set -o pipefail`.
+After Steps 1–9.5 prepare the kit-side changes (translated diff, CHANGELOG entry, version bump in version files, migration manifest if applicable), commit them on a feature branch in the kit and open a PR. **No tutorial stamp, no tag, no GitHub release in Phase 1** — those happen in Step 11 after the PR merges.
+
+The branch + PR is the editorial review surface. The maintainer reviews the diff, the CHANGELOG entry, and the version bump on GitHub before any of it lands on main.
+
+**Run each of these as a SEPARATE Bash tool call** so exit codes propagate independently. Bash pipelines return the last command's exit code: chaining `git commit ... && git push` after a pipe-trimmed prior command fires the push even when commit was blocked by a hook. Separate calls keep each exit code visible. When chaining is unavoidable, prefix with `set -o pipefail`.
 
 ```bash
 cd ~/doe-starter-kit
-python3 ~/doe-starter-kit/execution/generate_whats_new.py
-python3 ~/doe-starter-kit/execution/stamp_tutorial_version.py v[X.Y.Z]
+BRANCH="sync-from-${PROJECT_NAME}-$(date +%Y-%m-%d-%H%M)"
+git checkout -b "$BRANCH"
 git add -A
 git diff --staged --stat
-# Show diff, wait for sign-off
-SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1 git commit -m "chore(release): v[X.Y.Z] — sync from [project] ([what changed])"
-git tag v[X.Y.Z]
-SKIP_MAIN_PROTECTION=1 git push
-git push origin v[X.Y.Z]
+# Show diff, wait for user sign-off before committing
+SKIP_STEP_MARK_CHECK=1 git commit -m "sync: from ${PROJECT_NAME} — [one-line summary of what changed]"
+git push -u origin "$BRANCH"
 ```
 
-Both env vars on the commit are required:
-- `SKIP_MAIN_PROTECTION=1` — the kit repo's `.githooks/pre-commit` and `.githooks/pre-push` refuse direct-to-main by default. Kit sync is the one procedure where direct-to-main is expected.
-- `SKIP_STEP_MARK_CHECK=1` — the commit message contains a version tag `(vX.Y.Z)` which triggers the step-mark enforcement hook. Kit release commits don't correspond to a todo.md step, so the check doesn't apply.
+`SKIP_STEP_MARK_CHECK=1` is required on the commit because the message describes a sync (which is process metadata, not a todo.md step). It is NOT required on subsequent commits within Phase 1 if you're amending.
 
-The `.tmp/.sync-doe-active` bypass file covers the kit-write-guard hook but does **not** disable either of these checks; the env vars are still needed.
+Open the PR:
 
-Then create a GitHub release:
 ```bash
-gh release create v[X.Y.Z] --title "v[X.Y.Z] — [short description]" --notes "[changelog entry content]"
+gh pr create \
+  --repo Albion-Labs/doe-starter-kit \
+  --title "sync: from ${PROJECT_NAME} — [one-line summary]" \
+  --body "$(cat <<'PRBODY'
+[CHANGELOG entry content rendered as the PR body, plus a "Files changed" summary table]
+
+## Phase 2 (post-merge)
+
+After this PR merges, run `/sync-doe` from any project (or reply "merged" in the same session) to trigger Phase 2: tutorial stamp + tag v[X.Y.Z] + GitHub release.
+PRBODY
+)"
 ```
 
-If the stash was used in Step 6, drop it after successful push:
+Capture the PR number and URL from the `gh pr create` output, then write the state file:
+
+```bash
+mkdir -p ~/doe-starter-kit/.tmp
+python3 - <<PYEOF
+import json, os
+from datetime import datetime, timezone
+state = {
+    "version": os.environ["NEW_VERSION"],          # e.g. "v1.62.0"
+    "prNumber": int(os.environ["PR_NUMBER"]),
+    "prUrl": os.environ["PR_URL"],
+    "branch": os.environ["BRANCH"],
+    "project": os.environ["PROJECT_NAME"],
+    "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    "phase": "awaiting-merge",
+}
+path = os.path.expanduser("~/doe-starter-kit/.tmp/.sync-doe-pending-release.json")
+with open(path, "w") as f:
+    json.dump(state, f, indent=2)
+print(f"State written: {path}")
+PYEOF
+```
+
+Switch back to main locally so the kit working tree is in a clean state for any subsequent operations:
+
+```bash
+git checkout main
+```
+
+Tell the user:
+
+> "PR #N opened: \<URL\>. Review and merge it on GitHub. Reply 'merged' (or run `/sync-doe` again later) to release."
+
+If the stash was used in Step 6, drop it after the branch push succeeds:
+
 ```bash
 git stash drop
 ```
+
+**Phase 1 ends here.** The state file persists. Phase 2 runs when the user confirms the PR merged (Step 11).
+
+### Step 11: Release after merge (Phase 2)
+
+Phase 2 runs only after the PR opened in Step 10 has merged on `origin/main`. Step 0.7 (resume detection) routes here when the state file is present and `gh pr view` reports the PR as `MERGED`. In the conversational case (same session, user replies "merged"), the same routing applies — verify the PR state via `gh` before running, then proceed.
+
+**Pre-flight: verify PR merged.**
+
+```bash
+STATE=~/doe-starter-kit/.tmp/.sync-doe-pending-release.json
+PR_NUMBER=$(python3 -c "import json; print(json.load(open('$STATE'))['prNumber'])")
+VERSION=$(python3 -c "import json; print(json.load(open('$STATE'))['version'])")
+PR_STATE=$(gh pr view $PR_NUMBER --repo Albion-Labs/doe-starter-kit --json state --jq .state)
+[ "$PR_STATE" = "MERGED" ] || { echo "PR #$PR_NUMBER not merged (state: $PR_STATE). Aborting Phase 2."; exit 1; }
+```
+
+**Run each command as a SEPARATE Bash tool call** — same exit-code rationale as Step 10.
+
+**Pull the merged main, then stamp tutorials and run any pre-release codegen:**
+
+```bash
+cd ~/doe-starter-kit
+git checkout main
+git pull origin main
+# main now has the merged PR (translated content + CHANGELOG entry + version bump in version files).
+# Tutorial docs are still stamped to the PREVIOUS version — Phase 2 fixes that.
+
+python3 ~/doe-starter-kit/execution/generate_whats_new.py
+python3 ~/doe-starter-kit/execution/stamp_tutorial_version.py "$VERSION"
+git add -A
+git diff --staged --stat
+# Show diff, wait for user sign-off
+SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1 git commit -m "chore(stamp): $VERSION"
+```
+
+Both env vars on the stamp commit are required:
+- `SKIP_MAIN_PROTECTION=1` — the kit repo's `.githooks/pre-commit` refuses direct-to-main by default. **The post-merge tutorial stamp is the one operation where direct-to-main is expected** — the editorial work went through the PR in Phase 1. The bypass scope is now narrower than it was in the pre-Phase-2 design (stamp commit only, not the full release content).
+- `SKIP_STEP_MARK_CHECK=1` — the commit message contains a version tag `(vX.Y.Z)` which triggers the step-mark hook.
+
+**Tag, push tag, push commit (in that order — see universal learning on the pre-push tutorial-docs-version gate):**
+
+```bash
+git tag "$VERSION"
+git push origin "$VERSION"          # tag first — succeeds; tag-only pushes don't trip the docs-version gate
+SKIP_MAIN_PROTECTION=1 git push     # commit — pre-push gate sees tag=$VERSION, docs=$VERSION, passes
+```
+
+The order matters: pushing the commit before pushing the tag means the gate compares stamped docs to the OLD tag and refuses the push. The fix-up cost (force-push, manual unstuck) is large; the prevention cost (one extra Bash call in the right order) is zero.
+
+**Create the GitHub release:**
+
+```bash
+gh release create "$VERSION" \
+  --repo Albion-Labs/doe-starter-kit \
+  --title "$VERSION — [short description]" \
+  --notes "[CHANGELOG entry content, copied from the PR body]"
+```
+
+**Clean up the state file:**
+
+```bash
+rm ~/doe-starter-kit/.tmp/.sync-doe-pending-release.json
+```
+
+**Tell the user:**
+
+> "Released $VERSION."
 
 ## What NOT to sync
 - Task content (todo.md items, archive.md history)
