@@ -5,6 +5,12 @@ Only applies to feature/* branches. Housekeeping, wrap, and other non-feature
 branches pass through freely -- process improvements shouldn't be blocked by
 incomplete feature work.
 
+Cross-project guard (v1.61.4): if the Bash command starts with
+`cd <path> &&` and the path resolves outside the hook's project tree, the
+gate passes through. This handles cross-project `gh pr create` from one
+project's harness targeting a different repo (e.g. monty editing the kit) --
+the hook's release-readiness checks don't apply to a different project.
+
 Checks (feature/* branches only):
 1. All steps in tasks/todo.md ## Current must be [x]. Prevents mid-feature PRs
    which create merge/rebase overhead. PRs are created at retro only.
@@ -62,6 +68,17 @@ def main():
 
     if os.environ.get("SKIP_REVIEW_GATE") == "1":
         sys.exit(0)
+
+    # Cross-project guard: if the command starts with `cd <path> &&` and the
+    # target resolves outside this hook's cwd, the gate doesn't apply.
+    cd_match = re.match(r'^\s*cd\s+(\S+)\s*&&', command)
+    if cd_match:
+        target = os.path.expanduser(cd_match.group(1).strip("'\""))
+        if os.path.isdir(target):
+            target_real = os.path.realpath(target)
+            cwd_real = os.path.realpath(os.getcwd())
+            if target_real != cwd_real and not target_real.startswith(cwd_real + os.sep):
+                sys.exit(0)
 
     try:
         branch = subprocess.check_output(

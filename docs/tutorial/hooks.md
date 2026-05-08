@@ -38,7 +38,7 @@ Fires after `git commit` accepts a message. Runs in this order:
 
 - **Co-author trailer strip.** Removes `Co-Authored-By: Claude` and `Co-Authored-By: Anthropic` lines automatically. The kit policy is no AI co-author trailers in commits.
 - **Conventional Commits validation** (added in v1.57.0). Subject must match `<type>[(scope)][!]: <description>` with type in `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf`, `build`, `ci`, `style`. Allowlisted prefixes (`Merge`, `Revert`, `Initial commit`, `fixup!`, `squash!`, legacy `vX.Y.Z:`) bypass validation. Mode is controlled by the `DOE_COMMIT_HOOK_MODE` env var: default `warn` prints a stderr warning and lets the commit through; set `block` to make non-compliance a hard error. Full spec in `directives/git-conventions.md`.
-- **Changelog enforcement.** If the commit message contains a version tag like `(v1.57.0)`, `changelog.html` must be staged. Skip with `SKIP_CHANGELOG_CHECK=1`.
+- **Changelog enforcement.** If the commit message contains a version tag like `(v1.57.0)`, `whats-new.html` must be staged. Skip with `SKIP_CHANGELOG_CHECK=1`.
 - **Step-marking enforcement.** Same as the pre-commit version but checked again after the message is finalised.
 
 ## pre-push

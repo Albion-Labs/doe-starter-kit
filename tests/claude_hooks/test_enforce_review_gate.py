@@ -124,3 +124,44 @@ def test_feature_branch_with_incomplete_steps_blocks(tmp_path):
     assert decision["decision"] == "block"
     # Steps gate fires before review-artifact gate, so reason mentions steps.
     assert "step" in decision["reason"].lower()
+
+
+# --- Cross-project guard (v1.61.4): inline `cd <other>` exempts ---
+
+def test_cross_project_cd_outside_cwd_allows(tmp_path):
+    """gh pr create preceded by `cd <other-dir>` (cross-project work) should
+    pass through silently -- the gate's release-readiness checks don't apply
+    when the actual repo being PR'd lives elsewhere."""
+    inside = tmp_path / "inside"
+    outside = tmp_path / "outside"
+    inside.mkdir()
+    outside.mkdir()
+    decision = _run(
+        f"cd {outside} && {GH_PR_CREATE} --title foo",
+        cwd=inside,
+    )
+    assert decision["decision"] == "allow"
+
+
+def test_cross_project_cd_with_tilde_expansion_allows(tmp_path):
+    """The cd-detect block expands ~ before comparing paths."""
+    inside = tmp_path / "inside"
+    inside.mkdir()
+    # ~/. expands to home; if that's outside tmp_path/inside it's cross-project
+    decision = _run(
+        f"cd ~/ && {GH_PR_CREATE} --title foo",
+        cwd=inside,
+    )
+    assert decision["decision"] == "allow"
+
+
+def test_inline_cd_to_subdir_still_gates(tmp_path):
+    """cd to a subdir inside the hook's cwd should NOT exempt -- only
+    targets resolving outside the cwd tree are cross-project."""
+    repo = _init_repo(tmp_path, "feature/new-thing-v1.0.0")
+    subdir = repo / "subdir"
+    subdir.mkdir()
+    decision = _run(f"cd {subdir} && {GH_PR_CREATE} --title foo", cwd=repo)
+    # Subdir is inside repo -> not cross-project -> gate continues. No review
+    # artifact present, so the artifact gate fires.
+    assert decision["decision"] == "block"
