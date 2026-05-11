@@ -37,7 +37,7 @@ Run `git branch --show-current` to check the current branch.
 
 Find the first commit of this session: look at `git log --oneline` and identify where your work started (after the last "Update session stats" or "wrap" commit, or use the session start time from `.tmp/.session-start`).
 
-Read `.tmp/.session-start` for the session start ISO timestamp. If it doesn't exist, use the first commit time.
+Read `.tmp/.session-start` for the session start ISO timestamp. If it doesn't exist, omit `--session-start` from the `wrap_stats.py` invocation and set `sessionDuration` to `"N/A"` in the wrap JSON. Do NOT substitute the first commit time as a proxy session-start and do NOT add explanatory prose to `sessionDuration` (e.g. "session timer not started -- duration based on first commit") -- the field reads as `"N/A"` so the renderer shows a clean N/A in the Duration metric card.
 
 Run the stats script:
 ```bash

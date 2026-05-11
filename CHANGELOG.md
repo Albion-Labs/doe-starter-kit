@@ -7,6 +7,19 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.62.1 (2026-05-11)
+<!-- hero -->
+Single-line clarification to `global-commands/wrap.md` Step 2 so the Duration metric card in the HTML wrap-up reads cleanly when `.tmp/.session-start` is missing. The old instruction ("If it doesn't exist, use the first commit time") was ambiguous and several Claude sessions interpreted it by writing explanatory prose into `sessionDuration` ("session timer not started — duration based on first commit"), which then rendered as a long string inside the small Duration metric card. The new instruction is explicit: omit `--session-start` from the `wrap_stats.py` invocation and set `sessionDuration` to `"N/A"`. The renderer shows a clean "N/A" in the card instead of a wrapped explanation.
+<!-- /hero -->
+
+### Fixed
+- **`global-commands/wrap.md` Step 2 fallback for missing `.tmp/.session-start`** — replaces "use the first commit time" with an explicit instruction to set `sessionDuration` to `"N/A"` and skip the `--session-start` flag. Inline anti-pattern callout names the prose form to avoid ("session timer not started -- duration based on first commit") so future sessions don't reinvent it.
+
+### Pull impact
+No migration manifest needed (additive clarification to a slash command, no behavioural change to hooks/permissions/matchers, no prompt-token rewrites to copied templates).
+
+---
+
 ## v1.62.0 (2026-05-08)
 <!-- hero -->
 Three internally-discovered improvements bundled. The headline change: **`/sync-doe` is now a conversational two-phase command** that aligns with the v1.60.0 PR-only kit-write model. Phase 1 (Steps 1-10) opens a kit PR with the editorial diff + CHANGELOG entry + version bump — review surface, no tag, no release. Phase 2 (Step 11) runs after the PR merges and does the post-merge release machinery (tutorial stamp + tag + GitHub release) on main with a narrowly-scoped `SKIP_MAIN_PROTECTION=1` for the stamp commit only. State between phases lives at `~/doe-starter-kit/.tmp/.sync-doe-pending-release.json`; resumes via `/sync-doe` re-invocation or a conversational "merged" reply. Previously `/sync-doe` committed the entire release direct to main with a broad `SKIP_MAIN_PROTECTION=1` bypass — the bypass scope is now tighter and the editorial content goes through PR review like every other kit change.
