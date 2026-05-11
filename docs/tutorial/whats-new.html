@@ -793,7 +793,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.62.0</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.62.1</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -868,6 +868,18 @@
 
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
+
+        <div class="release" id="v1-62-1">
+          <div class="release-header">
+            <span class="version-badge">v1.62.1</span>
+            <span class="release-date">11 May 2026</span>
+          </div>
+          <p class="release-hero">Single-line clarification to <code>global-commands/wrap.md</code> Step 2 so the Duration metric card in the HTML wrap-up reads cleanly when <code>.tmp/.session-start</code> is missing. The old instruction (&quot;If it doesn&#x27;t exist, use the first commit time&quot;) was ambiguous and several Claude sessions interpreted it by writing explanatory prose into <code>sessionDuration</code> (&quot;session timer not started — duration based on first commit&quot;), which then rendered as a long string inside the small Duration metric card. The new instruction is explicit: omit <code>--session-start</code> from the <code>wrap_stats.py</code> invocation and set <code>sessionDuration</code> to <code>&quot;N/A&quot;</code>. The renderer shows a clean &quot;N/A&quot; in the card instead of a wrapped explanation.</p>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong><code>global-commands/wrap.md</code> Step 2 fallback for missing <code>.tmp/.session-start</code></strong> — replaces &quot;use the first commit time&quot; with an explicit instruction to set <code>sessionDuration</code> to <code>&quot;N/A&quot;</code> and skip the <code>--session-start</code> flag. Inline anti-pattern callout names the prose form to avoid (&quot;session timer not started &mdash; duration based on first commit&quot;) so future sessions don&#x27;t reinvent it.</li>
+          </ul>
+        </div>
 
         <div class="release" id="v1-62-0">
           <div class="release-header">
@@ -953,6 +965,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (5 releases)</summary>
+
         <div class="release" id="v1-61-2">
           <div class="release-header">
             <span class="version-badge">v1.61.2</span>
@@ -964,10 +980,6 @@
             <li><strong><code>directives/testing-strategy.md</code> Pink Elephant compliance checks subsection</strong> &mdash; new <code>### Pink Elephant compliance checks (positive-form contracts)</code> heading under <code>## Pattern Reference</code>, sitting between the pattern-type table and <code>## Three-Level Verification</code>. Documents the canonical diff-bounded contract pattern with rev-parse precondition + two-grep additions filter + word-boundary prohibition scan, walks each component&#x27;s load-bearing role, and names the old <code>grep -A N</code> form as a Before/After anti-pattern via the v1.61.1 convention.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (4 releases)</summary>
 
         <div class="release" id="v1-61-1">
           <div class="release-header">
@@ -3630,7 +3642,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.62.0</footer>
+        <footer class="site-footer">DOE Starter Kit v1.62.1</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
