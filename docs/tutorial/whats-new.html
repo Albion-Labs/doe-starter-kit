@@ -638,6 +638,18 @@
       border-left: 3px solid var(--accent);
       border-radius: 0 var(--radius) var(--radius) 0;
     }
+    /* Summary label sits tight on the hero paragraph below it. */
+    .release h4.summary + .release-hero { margin-top: 0; }
+    .release-background {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin: 0 0 14px;
+      padding: 14px 18px;
+      background: var(--bg-card-hover);
+      border-left: 3px solid var(--text-muted);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
     .release {
       margin-bottom: 20px;
       padding-bottom: 20px;
@@ -656,6 +668,8 @@
       color: var(--accent-green);
       margin: 10px 0 4px;
     }
+    .release h4.summary { color: var(--accent); }
+    .release h4.background { color: var(--text-muted); }
     .release h4.changed { color: var(--accent-blue); }
     .release h4.fixed { color: var(--accent-amber); }
     .release h4.removed { color: var(--accent-rose); }
@@ -874,6 +888,7 @@
             <span class="version-badge">v1.63.0</span>
             <span class="release-date">12 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Worktree convention + parallel-session auto-detection lands the structural fix for branch-level races between concurrent Claude Code sessions on the same project. The convention itself (<code>&lt;project&gt;/</code> on the default branch, feature work in <code>&lt;project&gt;-&lt;feature&gt;/</code> siblings) shipped early as v1.61.5; v1.63.0 wires the convention into the kit&#x27;s daily loop so the AI surfaces it at the right moments. <code>/stand-up</code> now reads <code>git worktree list --porcelain</code> and shows a WORKTREES row when 2+ worktrees are present, with a <code>!! Detached:</code> line for any orphaned debug worktree and an honest-scope footnote: worktrees fix BRANCH-level races (HEAD-stomping between sessions), not FILE-level edit conflicts on shared docs (STATE.md, todo.md, learnings.md, CLAUDE.md still need single-terminal coordination). <code>/wrap</code> detects branch drift via <code>.tmp/.session-start-branch</code> (written by <code>/crack-on</code> at kick-off) and auto-switches to the trunk worktree for bookkeeping commits so stats land on main regardless of where the feature work happened. <code>/sync-doe</code> and <code>/pull-doe</code> gain a trunk-worktree pre-flight using <code>git symbolic-ref refs/remotes/origin/HEAD</code> (resilient across main-default and legacy master-default repos). Two new slash commands <code>/worktree-create</code> and <code>/worktree-remove</code> operationalise the convention with the safety gates the Step 0 spike found necessary: locked worktrees stay locked until explicit <code>git worktree unlock</code>, trunk worktrees stay non-removable. The wizard surfaces a &quot;Working with parallel sessions later?&quot; hint at init time so first-time users discover <code>/worktree-create</code> before they need it. Step 0 was a real spike (<code>monty/.tmp/worktree-spike.md</code>) that validated four areas with evidence: CWD detection in PostToolUse hooks, per-worktree firing, shared <code>.tmp/</code> semantics, and <code>git worktree list --porcelain</code> parsing across normal / detached / locked / bare records. The spike caught three pre-existing relative-path landmines in hook scripts (silent false-pass under shell cwd drift, the same failure class v1.62.2 fixed at the invocation layer) and bundled the fixes into Step 2 rather than ship a separate v1.62.3 patch. The kit test suite grew from 199 to 203 tests across this release (+7 from Step 2&#x27;s hook regression tests, +4 from Step 5&#x27;s wizard-hint tests, with deduplication against existing hook tests).</p>
           <h4>Added</h4>
           <ul>
@@ -901,6 +916,7 @@
             <span class="version-badge">v1.62.2</span>
             <span class="release-date">12 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Safety-critical fix for a latent footgun in every kit install since hooks landed: the kit&#x27;s <code>.claude/settings.json</code> template registered every PreToolUse / PostToolUse hook with a <strong>relative</strong> command path (<code>python3 .claude/hooks/X.py</code>). Claude Code&#x27;s persistent Bash shell preserves cwd across tool calls, so any legitimate <code>cd</code> (spinning up a local dev server, running a script from a subdirectory) permanently changed the shell&#x27;s working directory. Subsequent tool calls fired the hooks, which tried to resolve the relative script path against the new cwd, hit errno 2 file-not-found, exited non-zero, and Claude Code interpreted the non-zero exit as <strong>the hook blocking the tool</strong>. Net effect: a single legitimate <code>cd</code> bricked every subsequent Edit / Write / Bash tool call in the session. Only Read still worked (PostToolUse failures are informational). Escape required <code>/clear</code>, losing the conversation context. Hit on 2026-05-12 in the Alkyion project while building a clickable wireframe navigator &mdash; a routine dev workflow. Repeats across every project that ran <code>setup.sh</code> against kit v1.62.1 or earlier. Fix: rewrite every hook command to use <code>$CLAUDE_PROJECT_DIR</code> (the env var Claude Code injects into hook environments, pointing at the project root regardless of shell cwd). Form: <code>python3 &quot;$CLAUDE_PROJECT_DIR/.claude/hooks/X.py&quot;</code> &mdash; quoted to handle project paths with spaces. <strong>No <code>$PWD</code> fallback.</strong> A <code>${CLAUDE_PROJECT_DIR:-$PWD}</code> form would silently re-introduce the same bug whenever the env var was missing; trusting <code>$CLAUDE_PROJECT_DIR</code> unconditionally fast-fails with a loud error instead, which is the correct tradeoff for a safety-critical addressability concern. 18 commands updated across three files: 12 in <code>.claude/settings.json</code> (the active config), 3 in <code>hook-templates/universal.json</code> (the reference doc), 3 in <code>docs/reference/reference/hooks.md</code> (the tutorial doc). 4 regression tests added in <code>tests/claude_hooks/test_settings_paths_cwd_safe.py</code> covering the static no-relative-path invariant, the per-command <code>$CLAUDE_PROJECT_DIR</code> invariant, the dynamic foreign-cwd resolution check, and the fail-loud-on-missing-env-var contract.</p>
           <h4 class="fixed">Fixed</h4>
           <ul>
@@ -919,6 +935,7 @@
             <span class="version-badge">v1.62.1</span>
             <span class="release-date">11 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Single-line clarification to <code>global-commands/wrap.md</code> Step 2 so the Duration metric card in the HTML wrap-up reads cleanly when <code>.tmp/.session-start</code> is missing. The old instruction (&quot;If it doesn&#x27;t exist, use the first commit time&quot;) was ambiguous and several Claude sessions interpreted it by writing explanatory prose into <code>sessionDuration</code> (&quot;session timer not started — duration based on first commit&quot;), which then rendered as a long string inside the small Duration metric card. The new instruction is explicit: omit <code>--session-start</code> from the <code>wrap_stats.py</code> invocation and set <code>sessionDuration</code> to <code>&quot;N/A&quot;</code>. The renderer shows a clean &quot;N/A&quot; in the card instead of a wrapped explanation.</p>
           <h4 class="fixed">Fixed</h4>
           <ul>
@@ -931,6 +948,7 @@
             <span class="version-badge">v1.62.0</span>
             <span class="release-date">8 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Three internally-discovered improvements bundled. The headline change: <strong><code>/sync-doe</code> is now a conversational two-phase command</strong> that aligns with the v1.60.0 PR-only kit-write model. Phase 1 (Steps 1-10) opens a kit PR with the editorial diff + CHANGELOG entry + version bump — review surface, no tag, no release. Phase 2 (Step 11) runs after the PR merges and does the post-merge release machinery (tutorial stamp + tag + GitHub release) on main with a narrowly-scoped <code>SKIP_MAIN_PROTECTION=1</code> for the stamp commit only. State between phases lives at <code>~/doe-starter-kit/.tmp/.sync-doe-pending-release.json</code>; resumes via <code>/sync-doe</code> re-invocation or a conversational &quot;merged&quot; reply. Previously <code>/sync-doe</code> committed the entire release direct to main with a broad <code>SKIP_MAIN_PROTECTION=1</code> bypass — the bypass scope is now tighter and the editorial content goes through PR review like every other kit change. Two supporting docs/code fixes round out the release. <strong>Workflow framing aligned</strong> across <code>universal-claude-md-template.md</code>, <code>SYSTEM-MAP.md</code>, and <code>docs/tutorial/new-project.html</code> — the pre-v1.60.0 &quot;make changes in project repo first; run /sync-doe at feature end&quot; phrasing is replaced with &quot;two ways to land a kit change, both PR-based&quot; framing. <strong><code>wrap_stats.py</code> first-session bug fixed</strong> — <code>_merge_main_streak</code> raised <code>TypeError: &#x27;&gt;&#x27; not supported between NoneType and NoneType</code> on every new DOE project&#x27;s first <code>/wrap</code> because <code>dict.get(key, default)</code> returns the actual <code>None</code> (not the default) when the key exists with a null value. Six regression tests added. <strong>Version bump rationale</strong>: minor for the <code>/sync-doe</code> feat. The worktree auto-detection layer previously queued for v1.62.0 (per v1.61.5&#x27;s footer) is rebumped to <strong>v1.63.0</strong> in the release queue. Source: alkyion bootstrap session 1 audit — the slash command&#x27;s &quot;release directly on main&quot; Step 12 was caught contradicting the canonical directive&#x27;s &quot;opens the kit PR&quot; framing.</p>
           <h4>Added</h4>
           <ul>
@@ -957,6 +975,7 @@
             <span class="version-badge">v1.61.5</span>
             <span class="release-date">8 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Adds the worktree convention to the kit so every DOE project inherits the structural fix for parallel-session branch races. New <code>directives/parallel-worktrees.md</code> covers when to use, setup, scope (worktrees fix the BRANCH-level race &mdash; silent HEAD switch when one session&#x27;s <code>git checkout</code> moves another session&#x27;s HEAD &mdash; but do NOT fix the FILE-level race for shared docs like STATE.md, todo.md, learnings.md, CLAUDE.md, which still need &quot;edit from one terminal at a time&quot; coordination), and cleanup. Universal CLAUDE.md template gains a <code>## Parallel Sessions</code> section stating the convention as a positive-form rule. Kit&#x27;s CLAUDE.md template gains a new trigger pointing to the directive; the existing parallel-sessions trigger (which actually covered wave/DAG dispatch) is renamed for clarity. This is the convention-statement patch &mdash; the auto-detection layer (drift detection in <code>/stand-up</code> and <code>/wrap</code>, pre-flight checks in kit-write commands, <code>/worktree-create</code> and <code>/worktree-remove</code> slash commands, <code>/crack-on</code> hook) is queued separately as v1.62.0. Source: monty session 224 retro &mdash; the parallel-session race silently moved wrap commits onto a long-lived feature branch.</p>
           <h4>Added</h4>
           <ul>
@@ -978,6 +997,7 @@
             <span class="version-badge">v1.61.4</span>
             <span class="release-date">8 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Two follow-on fixes from v1.61.3 surfaced during the wrap of the same session: the <code>commit-msg</code> hook&#x27;s changelog-enforcement check looked for <code>changelog.html</code> (a path that no longer exists; superseded by <code>whats-new.html</code> in earlier kit versions) and would block any version-tagged commit, requiring <code>SKIP_CHANGELOG_CHECK=1</code> as a workaround. The <code>enforce_review_gate</code> hook misfired on cross-project <code>gh pr create</code> &mdash; when one project&#x27;s harness opened a PR against a different repo (e.g. monty editing the kit), the hook still gated against the parent project&#x27;s branch and todo state, blocking the operation despite the PR target being elsewhere. Both are now fixed: <code>commit-msg</code> greps for <code>whats-new.html</code>, and <code>enforce_review_gate</code> detects an inline <code>cd &lt;other-dir&gt; &amp;&amp;</code> prefix that resolves outside the hook&#x27;s cwd tree and passes through silently. Three new tests in <code>test_enforce_review_gate.py</code> cover the cross-project guard.</p>
           <h4 class="fixed">Fixed</h4>
           <ul>
@@ -996,6 +1016,7 @@
             <span class="version-badge">v1.61.3</span>
             <span class="release-date">8 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Fixes invalid PreToolUse hook output across all six guardrail hooks. Each hook&#x27;s no-opinion path emitted <code>{&quot;decision&quot;: &quot;allow&quot;}</code>, which is not a valid value for the root-level <code>decision</code> field in Claude Code&#x27;s hook schema (only <code>approve</code> and <code>block</code> are accepted; <code>allow</code> belongs inside <code>hookSpecificOutput.permissionDecision</code>). The harness rejected each output and surfaced &quot;Hook JSON output validation failed &mdash; (root): Invalid input&quot; warnings on every Bash, Edit, Write, and MultiEdit tool call. Block paths were unaffected (they use the valid <code>{&quot;decision&quot;: &quot;block&quot;, ...}</code> shape), so the bug was cosmetic in behaviour but generated roughly 80 wasted tokens per Bash call across every project consuming the kit. Each hook&#x27;s no-opinion path now uses <code>sys.exit(0)</code> &mdash; silent exit is the canonical &quot;no opinion&quot; signal under the current schema. The <code>tests/claude_hooks/</code> <code>_run</code> helper translates an empty stdout to <code>{&quot;decision&quot;: &quot;allow&quot;}</code> so existing assertions are preserved.</p>
           <h4 class="fixed">Fixed</h4>
           <ul>
@@ -1019,6 +1040,7 @@
             <span class="version-badge">v1.61.2</span>
             <span class="release-date">8 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Documents the canonical Pink Elephant compliance check pattern in <code>directives/testing-strategy.md</code> ## Pattern Reference, replacing the brittle <code>grep -A N</code> form that captured pre-existing surrounding content within the fixed line buffer. The new pattern has three load-bearing components: a <code>git rev-parse origin/main</code> precondition that fails loudly when the ref is not fetched (closing a silent-pass mode caught during adversarial review of this PR), a <code>grep &quot;^+&quot; | grep -v &quot;^+++ &quot;</code> two-grep filter that includes added lines while excluding only the diff file header (and keeps legitimately-added markdown <code>+</code> bullets in scope, which a single <code>^+[^+]</code> filter would falsely drop), and the case-insensitive word-boundary scan for prohibition grammar. The old <code>grep -A N</code> form is named in-place as an anti-pattern using the v1.61.1 anti-pattern bullet convention, with attribution to the v1.61.1 Step 1 incident that surfaced the issue. Closes kit issue #42.</p>
           <h4>Added</h4>
           <ul>
@@ -1031,6 +1053,7 @@
             <span class="version-badge">v1.61.1</span>
             <span class="release-date">6 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Three additive enrichments cherry-picked from a gstack ETHOS.md comparison pass and a completeness check on the just-shipped Karpathy v1.61.0 principles. <code>directives/building-rules.md</code> Reuse-before-writing bullet gains a Three Layers of Knowledge sub-block (Layer 1 tried-and-true / Layer 2 new-and-popular / Layer 3 first-principles) and names Layer 2 mania as the most common search-failure mode. <code>directives/_TEMPLATE.md</code> gains an optional Anti-patterns bullet convention as a meta-block at template end &mdash; a bullet pattern authors sprinkle inside any section where a rule has a recognisable failure mode worth showing. <code>universal-claude-md-template.md</code> Surgical Changes principle pairs the existing trace test with the load-bearing purpose it serves (small, traceable diffs keep human reviewers in the loop), defending against Willison&#x27;s &quot;merchants of complexity&quot; failure mode. All in positive form per Pink Elephant grammar; companion to v1.60.3&#x27;s Anbeeld/WRITING.md prose-discipline patch &mdash; same pattern of cherry-pick small, reject big.</p>
           <h4>Added</h4>
           <ul>
@@ -1045,6 +1068,7 @@
             <span class="version-badge">v1.61.0</span>
             <span class="release-date">5 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Karpathy four engineering principles in positive form (Think Before Coding / Simplicity First / Surgical Changes / Goal-Driven Execution) added to the universal CLAUDE.md template, with three companion enrichments to existing directives: contract-authoring transform table + intent-test + skill-prep in <code>planning-rules.md</code>; mini-plan format + evidence-gate generalisation in <code>building-rules.md</code>; merge-pattern matching in <code>delivery-rules.md</code>. All content additive, all in positive form per the Pink Elephant grammar. Karpathy attribution to forrestchang/andrej-karpathy-skills (MIT).</p>
           <h4>Added</h4>
           <ul>
@@ -1062,6 +1086,7 @@
             <span class="version-badge">v1.60.3</span>
             <span class="release-date">1 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Two prose-discipline additions to existing directives. <code>claim-auditing.md</code> gains a &quot;Claim Discipline&quot; principle covering decorative specificity (synthetic quotes, fake-precise metrics, made-up milestone names) &mdash; the script catches structural drift, this principle catches prose drift. <code>delivery-rules.md</code> retro Step 6 gains a one-line causal-discipline clause: write &#x27;coincided with&#x27; or &#x27;was followed by&#x27; rather than &#x27;caused&#x27; or &#x27;drove&#x27; unless the verified link supports it. Both target a real failure mode (post-hoc causation in retros, fake exactness in pitches and PR bodies) without changing any procedure. Sourced from Anbeeld/WRITING.md after a comparison pass; the rest of that ruleset was scoped out as too prose-oriented for DOE.</p>
           <h4>Added</h4>
           <ul>
@@ -1075,6 +1100,7 @@
             <span class="version-badge">v1.60.2</span>
             <span class="release-date">1 May 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Plan-refresh retro gate. New Step 7 in <code>directives/delivery-rules.md</code> retro procedure scans <code>## Current</code> + <code>## Queue</code> in <code>tasks/todo.md</code> for staleness against the just-shipped change. Triggers any of: new directive grammar (positive form), new workflow gates (PR-only, freshness, dirty-tree), new directives added, retired hooks/patterns. Result records inline as a third bracketed field on the retro line: <code>[refresh: &lt;next-feature-id&gt; &lt;one-line finding&gt;]</code> for substantive updates, <code>[refresh: &lt;id&gt; no-op]</code> when the scan confirms no change is needed. Same scan also runs at Queue -&gt; Current promotion. Catches the conceptual-collision class that grep cannot &mdash; e.g. a feature named &quot;anti-patterns artefact&quot; planned before Pink Elephant grammar shipped.</p>
           <h4>Added</h4>
           <ul>
@@ -1098,6 +1124,7 @@
             <span class="version-badge">v1.60.1</span>
             <span class="release-date">30 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Three precursor patches for the v2.0 auto-doc-sync issue (#35). The <code>block_dangerous_commands</code> hook splits its match logic into substring vs assignment classes &mdash; env-var bypass names (<code>SKIP_REVIEW_GATE</code>, <code>SKIP_CONTRACT_CHECK</code>, <code>SKIP_SIGNOFF_CHECK</code>) now block only on actual assignment, not when mentioned in grep, docs, or quoted strings. <code>setup.sh</code> gains a self-copy guard so re-running it on the kit no longer crashes on <code>cp identical</code>. Pre-push grows a whats-new freshness gate on tag pushes; pre-commit doc-freshness extends to <code>.claude/hooks/*.py</code>, <code>migrations/*.md</code>, and <code>CHANGELOG.md</code>. New <code>tests/claude_hooks/test_block_dangerous_commands.py</code> (20 tests) locks the split.</p>
           <h4>Added</h4>
           <ul>
@@ -1118,6 +1145,7 @@
             <span class="version-badge">v1.60.0</span>
             <span class="release-date">29 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Kit-write discipline committed to a PR-only model. The <code>guard_kit_writes</code> PreToolUse hook is refactored from a broad write-block into a narrow destructive-only check (recursive removal of kit paths, force-push to kit main), and <code>protect_directives</code> retires its overbroad <code>python3 -c</code> Bash pattern. New <code>### Step 0.5</code> dirty-tree pre-flight in <code>/sync-doe</code> plus parallel <code>KIT DIRTY</code> rows in <code>/crack-on</code>, <code>/stand-up</code>, and <code>/wrap</code> form three detection points for cross-project drift. Locked with 32 new pytest tests in <code>tests/claude_hooks/</code> &mdash; first coverage of the kit&#x27;s <code>.claude/hooks/</code> surface.</p>
           <h4>Added</h4>
           <ul>
@@ -1142,6 +1170,7 @@
             <span class="version-badge">v1.59.1</span>
             <span class="release-date">29 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Hook hygiene patch closing two LOW findings from the v1.59.0 monty-side <code>/review</code>: <code>protect_directives.py</code> allows new directive files via an existence check, and <code>guard_kit_writes.py</code> tightens its redirect/<code>tee</code> patterns to eliminate heredoc-body false positives. Adds a stop-gap cwd-aware early-return to <code>guard_kit_writes.py</code> ahead of the v1.60.0 PR-only refactor.</p>
           <h4 class="fixed">Fixed</h4>
           <ul>
@@ -1159,6 +1188,7 @@
             <span class="version-badge">v1.59.0</span>
             <span class="release-date">29 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Pink Elephant rewrite: load-bearing prohibitions across the kit&#x27;s prompt surface (<code>Never X</code>, <code>Don&#x27;t Y</code>, <code>DO NOT Z</code>) rewritten to positive <code>When X, do Y</code> form per the Pink Elephant article (arxiv 2503.22395), with a <code>Tradeoff:</code> line added to 25 of 26 flat directives. Also fixes a silently-broken hook matcher: <code>.claude/settings.json</code> PreToolUse and PostToolUse entries shipped with lowercase patterns that never matched Claude Code&#x27;s actual Tool name strings, so every kit hook had been quietly non-functional since introduction. New <code>migrations/v1.59.0.md</code> manifest format documents 150 OLD/NEW phrase pairs across 33 files plus four behavioural-change records, consumed by a new <code>/pull-doe</code> Step 4.5 pre-flight that surfaces a PULL IMPACT panel before any change is applied.</p>
           <h4>Added</h4>
           <ul>
@@ -1193,6 +1223,7 @@
             <span class="version-badge">v1.58.0</span>
             <span class="release-date">27 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Tested code and tutorial docs gain freshness guardrails. Two warning-only blocks added to <code>.githooks/pre-commit</code> flag commits where a tested source file is staged without its sibling test, and where source files ship without their tutorial-doc counterpart. Both warnings name the missing path so the fix is one ack-and-add away; neither blocks the commit &mdash; they&#x27;re nudges, not gates.</p>
           <h4>Added</h4>
           <ul>
@@ -1220,6 +1251,7 @@
             <span class="version-badge">v1.57.0</span>
             <span class="release-date">27 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Phase 1 of Conventional Commits across the DOE kit: two new directives, an extended <code>commit-msg</code> hook, a CLAUDE.md template section, and five command/directive migrations bundled so that downstream projects bootstrap with the convention from session zero. The new <code>commit-msg</code> validator runs in <code>warn</code> mode by default during the v1.57 -&gt; v1.58 transition window &mdash; non-compliant subjects print a stderr warning but the commit still succeeds; set <code>DOE_COMMIT_HOOK_MODE=block</code> once your team is fully on the convention. Phase 2 (auto-changelog generator, hook block-mode default, PR-title GitHub Action) deferred to a future session.</p>
           <h4>Added</h4>
           <ul>
@@ -1251,6 +1283,7 @@
             <span class="version-badge">v1.56.1</span>
             <span class="release-date">27 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Patch release fixing three spec deviations from v1.56.0 against kit issues #15 and #16. The auto-commit message now stamps the kit release that produced it (<code>chore: initial DOE scaffolding (kit vX.Y.Z)</code>); the <code>.env</code> bootstrap refuses to create the secrets file unless <code>.gitignore</code> actively excludes <code>.env</code>; and the bootstrap confirmation guides users to fill in <code>.env</code> values before running anything. End-to-end wizard runs verified both positive and negative paths.</p>
           <h4>Added</h4>
           <ul>
@@ -1271,6 +1304,7 @@
             <span class="version-badge">v1.56.0</span>
             <span class="release-date">27 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Bootstrap polish: collapses four manual post-setup steps into opt-in wizard prompts so <code>bash ~/doe-starter-kit/setup.sh</code> leaves a fresh project ready for <code>gh repo create</code> with no workarounds. The wizard now offers a <code>chore: initial DOE scaffolding</code> commit on main (pre-checks <code>user.email</code>), copies <code>.env.example</code> to <code>.env</code> for local dev, normalises the project branch to <code>main</code> ahead of the scaffolding commit, and the pre-commit main-branch protection allows the first-ever commit on a fresh repo. Resolves kit issue #19, supersedes #15, #16, #18.</p>
           <h4>Added</h4>
           <ul>
@@ -1297,6 +1331,7 @@
             <span class="version-badge">v1.55.11</span>
             <span class="release-date">21 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Codifies two gotchas surfaced during the v1.55.10 sync: the Bash pipe-exit-code trap (<code>cmd | tail -N &amp;&amp; side_effect</code> fires the side effect even when <code>cmd</code> fails, because <code>tail</code> exits 0), and the <code>SKIP_MAIN_PROTECTION=1</code> requirement on the kit-sync commit and push. Adds the pipe-exit rule to <code>universal-claude-md-template.md</code> ## Shell &amp; Platform so new DOE projects inherit the warning. Patches <code>directives/starter-kit-sync.md</code> Step 10 to show the correct command sequence (separate Bash calls, no pipe-trim chains, explicit env var on commit and push).</p>
           <h4>Added</h4>
           <ul>
@@ -1313,6 +1348,7 @@
             <span class="version-badge">v1.55.10</span>
             <span class="release-date">21 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Enables the Adversarial subagent to run with <code>isolation: worktree</code> by fixing a silent worktree-safety bug in the review-gate handshake: <code>persist_review_findings.py</code> previously wrote its artifact to <code>Path(&quot;.tmp&quot;)/...</code>, which under worktree isolation landed in the worktree&#x27;s <code>.tmp/</code> — invisible to the downstream gate, silently blocking PR creation. Adds four new universal learnings as directive subsections/sections (plan freshness check, contract <code>Verify:</code> reality check, subagent implementation patterns). Makes pytest runs venv-aware so they do not break on Homebrew Python&#x27;s PEP 668 externally-managed guard.</p>
           <h4>Added</h4>
           <ul>
@@ -1336,6 +1372,7 @@
             <span class="version-badge">v1.55.9</span>
             <span class="release-date">20 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Reconciles a pre-existing inconsistency between <code>directives/data-safety.md</code> (which recommended <code>.env.local</code> for local dev in regulated-data projects) and <code>.claude/hooks/block_secrets_in_code.py</code> (which blocks <code>.env.local</code> entirely). The kit standardises on <code>.env</code> as the single canonical secrets file across all frameworks — including Next.js, deviating from its default <code>.env.local</code> convention — and the directive now reflects that rule with a new explanatory note at the top of the Environment Isolation section.</p>
           <h4 class="changed">Changed</h4>
           <ul>
@@ -1349,6 +1386,7 @@
             <span class="version-badge">v1.55.8</span>
             <span class="release-date">20 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Fixes the Claude PR Review GitHub Actions workflow, which had been failing silently on every trigger. Adds the missing <code>id-token: write</code> permission needed for OIDC token fetch, removes an invalid <code>allowed_tools</code> input that the v1 action rejects, and narrows the trigger so the workflow only fires when <code>@claude</code> is explicitly mentioned (instead of running on every collaborator comment).</p>
           <h4 class="fixed">Fixed</h4>
           <ul>
@@ -1366,6 +1404,7 @@
             <span class="version-badge">v1.55.7</span>
             <span class="release-date">20 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Fixes the hardcoded upstream repo slug in <code>/request-doe-feature</code> and <code>/report-doe-bug</code>. Scripts previously pointed at a non-existent <code>williamporter/doe-starter-kit</code>, causing every filing attempt to fall back to local-only saves. Both commands now correctly hit <code>Albion-Labs/doe-starter-kit</code> and file issues directly.</p>
           <h4 class="fixed">Fixed</h4>
           <ul>
@@ -1380,6 +1419,7 @@
             <span class="version-badge">v1.55.6</span>
             <span class="release-date">9 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Tutorial version now pulls from a single source of truth (<code>kit-version.js</code>). All 20 pages load one JS file instead of relying on 20 separate HTML stamps. Stamp script updated to write kit-version.js first, HTML fallback second. Version can never go out of sync across pages again.</p>
           <h4>Added</h4>
           <ul>
@@ -1397,6 +1437,7 @@
             <span class="version-badge">v1.55.5</span>
             <span class="release-date">9 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">CLAUDE.md quality scoring rewritten to be framework-agnostic. The rubric now scores DOE methodology compliance (architecture, triggers, commands, gotchas) instead of matching hardcoded tool names. Any tech stack scores fairly. Kit template CLAUDE.md updated with universal Common Commands and Gotchas sections.</p>
           <h4 class="changed">Changed</h4>
           <ul>
@@ -1414,6 +1455,7 @@
             <span class="version-badge">v1.55.4</span>
             <span class="release-date">8 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Closes the hook installation gap that left migrating projects without critical safety hooks. setup.sh now installs all 9 project hooks, 4 agent definitions, and plan files when run inside a DOE project. The settings.json merge handles both PreToolUse and PostToolUse entries additively — existing project-specific hooks are preserved. Users running /pull-doe will now get the complete hook set automatically.</p>
           <h4 class="fixed">Fixed</h4>
           <ul>
@@ -1475,6 +1517,7 @@
             <span class="version-badge">v1.55.0</span>
             <span class="release-date">8 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">The most comprehensive documentation update since the tutorials launched. Eight new concept sections on the Key Concepts page cover everything from DAGs to adversarial review. A brand-new Migration Guide walks users through upgrading from any DOE version with per-era checklists and CLAUDE.md before/after examples. The What&#x27;s New page — generated from CHANGELOG.md and auto-regenerated on every release — gives every DOE user a single place to see what changed.</p>
           <h4>Added</h4>
           <ul>
@@ -1625,6 +1668,7 @@
             <span class="version-badge">v1.52.0</span>
             <span class="release-date">2 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">DOE becomes a conversation, not a copy-paste. The init wizard replaces blind setup.sh with an 8-card interactive flow that detects your framework, asks what you&#x27;re building, and scaffolds a project with exactly the files you need. Composable capability layers (universal, public-facing, data-handling, regulated) mean a static HTML site and a GDPR-regulated SaaS app both start from the same wizard — they just get different files.</p>
           <h4>Added</h4>
           <ul>
@@ -1700,6 +1744,7 @@
             <span class="version-badge">v1.51.4</span>
             <span class="release-date">1 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Professional security defaults for every DOE project. Review gates block PR creation without adversarial review proof-of-work. Step-marking enforcement ensures todo.md tracks progress mechanically. Slack notifications, integrations directive, and sync audit self-tests round out the release. The principle: deterministic enforcement beats probabilistic rules.</p>
           <h4>Added</h4>
           <ul>
@@ -1775,6 +1820,7 @@
             <span class="version-badge">v1.49.0</span>
             <span class="release-date">1 April 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">The biggest structural change in DOE history. CLAUDE.md was rewritten from a 113-line inline rulebook into a 55-line thin router that loads directives on demand. Every token of irrelevant context degrades agent performance — this release operationalises that principle. Six phase-based directives now handle planning, building, delivery, context management, self-annealing, and framework evolution. A DAG executor enables parallel step dispatch, and custom adversarial review agents (Finder, Adversarial, Referee) provide structured multi-agent code review.</p>
           <h4>Added</h4>
           <ul>
@@ -1809,6 +1855,7 @@
             <span class="version-badge">v1.48.0</span>
             <span class="release-date">31 March 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Superpowers-inspired discipline enforcement for AI agents. Rationalisation tables map every common excuse for skipping guardrails to reality across 6 domains. Serial dispatch protocol (SDD) provides a structured workflow for sequential step execution. Adversarial review with confidence-scored findings, universal CI pipeline with three tiers, and 9 updated session commands complete the Agent Discipline era.</p>
           <h4>Added</h4>
           <ul>
@@ -1902,6 +1949,7 @@
             <span class="version-badge">v1.44.0</span>
             <span class="release-date">19 March 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">DOE moves from direct-to-main commits to a proper branch-based PR workflow. Feature branches, CI gating with GitHub Actions, branch protection on main, snagging as pre-merge gate with Chrome visual verification, and a complete multi-agent coordination protocol. The master-to-main branch rename, PR template, and session command updates ship together. Released as DOE kit v1.44.0.</p>
           <h4>Added</h4>
           <ul>
@@ -1944,6 +1992,7 @@
             <span class="version-badge">v1.42.0</span>
             <span class="release-date">18 March 2026</span>
           </div>
+          <h4 class="summary">Summary</h4>
           <p class="release-hero">Quality Stack goes universal. Testing infrastructure now auto-detects and supports 16 project types — from Next.js to Flutter to Go. Maestro handles mobile UI testing with YAML flows. Framework-aware orchestration, multi-language health checks, and config-driven portability mean the same /snagging command works regardless of what you&#x27;re building.</p>
           <h4>Added</h4>
           <ul>

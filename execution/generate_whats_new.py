@@ -85,6 +85,24 @@ def parse_changelog(text):
                     i += 1  # skip <!-- /hero -->
                 hero = " ".join(l.strip() for l in hero_lines if l.strip())
 
+            # Skip blank lines between hero and background blocks
+            while i < len(lines) and lines[i].strip() == "":
+                i += 1
+
+            # Check for optional background block (postmortem prose that
+            # would otherwise bloat the hero). Renders as <h4>Background</h4>
+            # + <p class="release-background"> below the hero.
+            background = None
+            if i < len(lines) and lines[i].strip() == "<!-- background -->":
+                i += 1
+                bg_lines = []
+                while i < len(lines) and lines[i].strip() != "<!-- /background -->":
+                    bg_lines.append(lines[i])
+                    i += 1
+                if i < len(lines):
+                    i += 1  # skip <!-- /background -->
+                background = " ".join(l.strip() for l in bg_lines if l.strip())
+
             # Collect subsections until next ## heading
             subsections = []
             current_sub = None
@@ -104,6 +122,7 @@ def parse_changelog(text):
                 "version": version,
                 "date": date_str,
                 "hero": hero,
+                "background": background,
                 "subsections": subsections,
             })
         else:
@@ -185,7 +204,11 @@ def render_entry(entry):
     parts.append(f"          </div>")
 
     if entry["hero"]:
+        parts.append(f'          <h4 class="summary">Summary</h4>')
         parts.append(f'          <p class="release-hero">{md_to_html(entry["hero"])}</p>')
+    if entry.get("background"):
+        parts.append(f'          <h4 class="background">Background</h4>')
+        parts.append(f'          <p class="release-background">{md_to_html(entry["background"])}</p>')
 
     for sub_name, items in entry["subsections"]:
         if not items:
@@ -882,6 +905,18 @@ def generate_page(entries):
       border-left: 3px solid var(--accent);
       border-radius: 0 var(--radius) var(--radius) 0;
     }}
+    /* Summary label sits tight on the hero paragraph below it. */
+    .release h4.summary + .release-hero {{ margin-top: 0; }}
+    .release-background {{
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      margin: 0 0 14px;
+      padding: 14px 18px;
+      background: var(--bg-card-hover);
+      border-left: 3px solid var(--text-muted);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }}
     .release {{
       margin-bottom: 20px;
       padding-bottom: 20px;
@@ -900,6 +935,8 @@ def generate_page(entries):
       color: var(--accent-green);
       margin: 10px 0 4px;
     }}
+    .release h4.summary {{ color: var(--accent); }}
+    .release h4.background {{ color: var(--text-muted); }}
     .release h4.changed {{ color: var(--accent-blue); }}
     .release h4.fixed {{ color: var(--accent-amber); }}
     .release h4.removed {{ color: var(--accent-rose); }}
