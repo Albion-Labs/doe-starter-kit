@@ -790,6 +790,14 @@ def card_done(kit_version, project_dir, config, file_count):
     step_num += 1
     rows.append(line(f"  {step_num}. Type: /stand-up"))
 
+    # Worktree convention hint (v1.63.0+) — surfaced on every init so first-time
+    # users discover the parallel-session pattern when they start running multiple
+    # Claude Code sessions on the same project. Universal across solo / team modes.
+    rows.append(line(""))
+    rows.append(line("Working with parallel sessions later?"))
+    rows.append(line("  /worktree-create <feature-slug>  spins up a sibling worktree"))
+    rows.append(line("  See directives/parallel-worktrees.md for the convention"))
+
     if config["collaboration_mode"] == "solo":
         rows.append(line(""))
         rows.append(line("Upgrade to team mode anytime:"))
