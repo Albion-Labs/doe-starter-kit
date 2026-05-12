@@ -40,9 +40,16 @@ fi
 
 # Whats-new freshness on tag pushes
 # When pushing a tag matching v*.*.* (a release tag), fail-fast unless
-# whats-new.html contains a matching release section (or CHANGELOG has the
-# entry). Catches the common failure where a release tag goes out without
-# generate_whats_new.py having been run to refresh whats-new.html.
+# whats-new.html contains a matching release section. Catches the common
+# failure where a release tag goes out without generate_whats_new.py having
+# been run to refresh whats-new.html.
+#
+# Pre-v1.63.1 this check had a CHANGELOG.md fallback. Because CHANGELOG is
+# always written before the tag, the fallback always passed and the gate
+# silently no-op'd -- v1.62.2 and v1.63.0 both shipped with a stale
+# whats-new.html as a result. The fallback is removed: the gate now
+# enforces what its name says.
+#
 # Skip with: SKIP_WHATSNEW_CHECK=1 git push origin <tag>
 if [ "${SKIP_WHATSNEW_CHECK:-0}" != "1" ]; then
     while read -r local_ref local_sha remote_ref remote_sha; do
@@ -50,8 +57,7 @@ if [ "${SKIP_WHATSNEW_CHECK:-0}" != "1" ]; then
             refs/tags/v[0-9]*.[0-9]*.[0-9]*)
                 tag="${remote_ref#refs/tags/}"
                 if [ -f "$PROJECT_ROOT/docs/tutorial/whats-new.html" ]; then
-                    if ! grep -q ">$tag<" "$PROJECT_ROOT/docs/tutorial/whats-new.html" \
-                       && ! grep -qE "^## $tag" "$PROJECT_ROOT/CHANGELOG.md" 2>/dev/null; then
+                    if ! grep -q ">$tag<" "$PROJECT_ROOT/docs/tutorial/whats-new.html"; then
                         echo ""
                         echo "Whats-new freshness check failed for $tag"
                         echo ""
