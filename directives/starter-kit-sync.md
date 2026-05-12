@@ -192,7 +192,7 @@ Before committing, update `CHANGELOG.md`:
    - `### Changed` — modified behaviour, updated wording
    - `### Fixed` — bug fixes, compatibility fixes
    - `### Removed` — deleted files or features
-   Only include subsections that have entries.
+   Only include subsections that have entries. Add the `<!-- hero -->` ... `<!-- /hero -->` block above the subsections (1-3 sentence "do I care?" answer); add the optional `<!-- background -->` ... `<!-- /background -->` block when postmortem prose is load-bearing and does not fit in bullets. See `directives/kit-development.md` ## CHANGELOG structure for the contract.
 4. Present the changelog entry in a bordered box for approval. **Generate programmatically** — compute W from content, use `.ljust(W)` padding, Unicode box-drawing borders. Content inside borders must be ASCII-only. Structure: header row with "CHANGELOG" left-aligned and version + date right-aligned, separator, 2-line plain English summary, then ADDED/CHANGED/FIXED/REMOVED sections with bulleted items. Wait for explicit approval before proceeding.
 
 ### Step 9.5: Author a migration manifest (when the release rewrites prompts or rules)

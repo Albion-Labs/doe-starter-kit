@@ -50,8 +50,12 @@ Every release adds a section to `CHANGELOG.md` at the top, above the previous re
 ```markdown
 ## v1.57.0 (YYYY-MM-DD)
 <!-- hero -->
-One paragraph (no line breaks within) summarising the release for a human reading the GitHub release page or the tutorial. Sentences only -- no bullets here.
+One paragraph (no line breaks within) answering "do I care about this release?" in 1-3 sentences. Names the headline change and who needs it. Specific implementation prose goes in the bullet sections below; the hero stays scannable.
 <!-- /hero -->
+
+<!-- background -->
+(Optional.) Postmortem prose for releases where the why-context is load-bearing: how the bug was caught, why the design decision went the way it did, what failure mode this prevents. Skip the block entirely for small patches that do not need it.
+<!-- /background -->
 
 ### Added
 - **path/to/file** — what was added and why.
@@ -63,7 +67,11 @@ One paragraph (no line breaks within) summarising the release for a human readin
 - **path/to/file** — what was broken and how it's fixed now.
 ```
 
-The `<!-- hero -->` ... `<!-- /hero -->` block is what `gh release create` uses for release notes (extract via `sed -n '/^## v1\.57\.0/,/^## v1\.56/p'`). Keep it scannable; one paragraph, complete sentences. The `### Added` / `### Changed` / `### Fixed` sections are for the diligent reader who wants the per-file detail.
+The `<!-- hero -->` ... `<!-- /hero -->` block is the lead — it answers "do I care?" in 1-3 sentences. The optional `<!-- background -->` ... `<!-- /background -->` block carries postmortem prose for releases where the why-context is load-bearing (e.g. v1.62.2's "every install was broken by a single cd" mechanism). Most patch releases skip the background block. Both blocks are extracted by `gh release create` as release notes (HTML comment markers strip cleanly under GitHub's markdown renderer; prose flows naturally). The page renderer in `execution/generate_whats_new.py` emits `<h4>Summary</h4>` above the hero and `<h4>Background</h4>` above the background when present.
+
+The `### Added` / `### Changed` / `### Fixed` sections are for the diligent reader who wants the per-file detail. **The hero is not a re-prose of these bullets** — if the hero is duplicating bullet content, push the duplication into the bullets and tighten the hero.
+
+Anti-pattern: a hero that exceeds 3 sentences usually contains either (a) postmortem prose that belongs in `<!-- background -->`, or (b) bullet-level detail that belongs in `### Added` / `### Fixed`. v1.62.2 and v1.63.0 are examples of heroes that pre-date this contract — the new contract applies forward only; historical entries are not retroactively rewritten.
 
 ## Release mechanics
 
