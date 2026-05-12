@@ -1,5 +1,13 @@
 First, check if ~/doe-starter-kit is accessible. If not, run: /add-dir ~/doe-starter-kit
 
+## Pre-flight (v1.63.0+) — Trunk worktree check
+
+Before pulling, confirm the project is on its default branch in its trunk worktree. /pull-doe writes to the project's working tree (CLAUDE.md, hooks, settings, directives, executions); those edits should land on the project's default branch, not on a feature branch where they would sit unmerged.
+
+- Determine the project's default branch: `git symbolic-ref refs/remotes/origin/HEAD --short | sed 's|^origin/||'`. Resolves to `main` for current projects and `master` for legacy ones.
+- Verify the current branch matches: `git branch --show-current`. If it differs, STOP and surface: "/pull-doe writes to the project working tree; updates should land on <default-branch>, not on <current-branch>. Switch to the trunk worktree before running /pull-doe."
+- If the project has multiple worktrees (`git worktree list --porcelain` returns 2+ records), identify the trunk by matching its `branch refs/heads/<default>` line and report its path so the user can `cd` there. Path-suffix heuristic is a fallback display hint only; the default-branch lookup is canonical.
+
 Then read directives/starter-kit-pull.md and follow it precisely. The directive covers:
 
 1. Pull latest kit from GitHub — ensure you have the newest version before comparing
