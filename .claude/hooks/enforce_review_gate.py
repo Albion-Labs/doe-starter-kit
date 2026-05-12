@@ -28,9 +28,23 @@ import sys
 from pathlib import Path
 
 
+def _project_root() -> Path:
+    """Return the project root anchored to $CLAUDE_PROJECT_DIR. v1.63.0
+    hardening: relative paths inside this hook resolve against the agent
+    shell's cwd, which silently false-passes (gate goes quiet) when the
+    shell has drifted to a subdir. Pair with v1.62.2 which fixed the
+    invocation-side path. Fall back to cwd only if the env var is unset --
+    a loud failure beats a silent regression.
+    """
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    if project_dir:
+        return Path(project_dir)
+    return Path.cwd()
+
+
 def check_steps_complete():
     """Return (ok, message). ok=True if all steps complete or no steps exist."""
-    todo_path = Path("tasks/todo.md")
+    todo_path = _project_root() / "tasks" / "todo.md"
     if not todo_path.exists():
         return True, ""
 
@@ -81,11 +95,18 @@ def main():
                 sys.exit(0)
 
     try:
+        # Anchor git invocations to $CLAUDE_PROJECT_DIR so the hook stays
+        # cwd-safe (v1.63.0). Pre-fix, these inherited the agent shell's
+        # cwd; a subdir cd would still find the project's .git/ via
+        # upward search, but a foreign cwd (or a directory outside the
+        # project tree) would fail to find git state and the hook would
+        # block with a misleading "could not determine git state" error.
+        project_root = str(_project_root())
         branch = subprocess.check_output(
-            ["git", "branch", "--show-current"], text=True
+            ["git", "-C", project_root, "branch", "--show-current"], text=True
         ).strip()
         head_sha = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], text=True
+            ["git", "-C", project_root, "rev-parse", "HEAD"], text=True
         ).strip()
     except subprocess.CalledProcessError:
         print(json.dumps({
@@ -117,8 +138,11 @@ def main():
         }))
         return
 
-    # Gate 2: Adversarial review must have passed for current HEAD
-    artifact = Path(".tmp") / f"review-passed-{branch}.json"
+    # Gate 2: Adversarial review must have passed for current HEAD.
+    # Artifact path is anchored to $CLAUDE_PROJECT_DIR so the gate stays
+    # cwd-safe -- a stale-looking "no artifact" block under shell drift
+    # is the same false-fail class as the silent false-pass v1.63.0 fixes.
+    artifact = _project_root() / ".tmp" / f"review-passed-{branch}.json"
 
     if not artifact.exists():
         print(json.dumps({

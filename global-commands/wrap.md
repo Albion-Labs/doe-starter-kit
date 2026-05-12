@@ -1,5 +1,30 @@
 Before ending this session, complete all steps in order.
 
+## Step 0a: Worktree handling (v1.63.0+)
+
+Run `git worktree list --porcelain` and count records (lines starting with `worktree `).
+
+**Single-worktree project (1 record):** Skip this whole step; the convention's drift surface doesn't exist when there's nothing to drift between.
+
+**Multi-worktree project (2+ records):**
+
+1. **Branch drift check.** Read `.tmp/.session-start-branch` (written by `/crack-on` at session kick-off; see `/crack-on` for the exact mechanism). Compare against the current branch (`git branch --show-current`). If they differ, this is **branch drift** — somewhere mid-session your HEAD moved to a branch you didn't start on. This is the exact race the worktree convention is designed to surface. Report:
+   - The branch you started on
+   - The branch you're on now
+   - Which worktree path each lives in (parsed from `git worktree list --porcelain`)
+
+   Do not silently continue. Ask the user whether to wrap on the current branch (drift accepted), switch back to the session-start branch, or investigate the divergence first. If `.tmp/.session-start-branch` does not exist (pre-v1.63.0 session, or a session started via `/stand-up` kick-off only — its session-start-branch write was added at v1.63.0), skip the drift check and note the gap.
+
+2. **Trunk-worktree switch for wrap commits.** Identify the **trunk worktree** — the worktree whose branch matches the repo's default branch, parsed via `git symbolic-ref refs/remotes/origin/HEAD` (works for repos with `main` or legacy `master` as default). Wrap-only bookkeeping commits (STATE.md update, stats.json snapshot, session JSON under `docs/wraps/`) belong in the trunk worktree so `main` always reflects the latest session's bookkeeping — even when feature work is not yet merged.
+
+   Sequence when currently in a non-trunk (sibling) worktree:
+   - Commit any actual feature work first (uncommitted edits to feature files in the sibling worktree), pushing to the feature branch per the existing Step 0 rules below.
+   - Then `cd <trunk-worktree-path>` and run the bookkeeping portion of /wrap (Steps 1-end) from the trunk worktree.
+
+   Sequence when currently in the trunk worktree: proceed as today — no switch needed.
+
+   Honest scope reminder: the trunk-worktree switch fixes the **branch-level** race (wrap commits land on main, anchored at the trunk worktree). The remaining **file-level** race surfaces when two parallel sessions both edit STATE.md at the same time — the second wrap commit hits a merge conflict at push. Shared docs (STATE.md, todo.md, learnings.md, CLAUDE.md) still need single-terminal coordination at the file level even when the branch is locked down.
+
 ## Step 0: Branch handling
 
 Run `git branch --show-current` to check the current branch.
