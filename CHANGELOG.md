@@ -7,6 +7,46 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.62.2 (2026-05-12)
+<!-- hero -->
+Safety-critical fix for a latent footgun in every kit install since hooks landed: the kit's `.claude/settings.json` template registered every PreToolUse / PostToolUse hook with a **relative** command path (`python3 .claude/hooks/X.py`). Claude Code's persistent Bash shell preserves cwd across tool calls, so any legitimate `cd` (spinning up a local dev server, running a script from a subdirectory) permanently changed the shell's working directory. Subsequent tool calls fired the hooks, which tried to resolve the relative script path against the new cwd, hit errno 2 file-not-found, exited non-zero, and Claude Code interpreted the non-zero exit as **the hook blocking the tool**. Net effect: a single legitimate `cd` bricked every subsequent Edit / Write / Bash tool call in the session. Only Read still worked (PostToolUse failures are informational). Escape required `/clear`, losing the conversation context. Hit on 2026-05-12 in the Alkyion project while building a clickable wireframe navigator -- a routine dev workflow. Repeats across every project that ran `setup.sh` against kit v1.62.1 or earlier.
+
+Fix: rewrite every hook command to use `$CLAUDE_PROJECT_DIR` (the env var Claude Code injects into hook environments, pointing at the project root regardless of shell cwd). Form: `python3 "$CLAUDE_PROJECT_DIR/.claude/hooks/X.py"` -- quoted to handle project paths with spaces. **No `$PWD` fallback.** A `${CLAUDE_PROJECT_DIR:-$PWD}` form would silently re-introduce the same bug whenever the env var was missing; trusting `$CLAUDE_PROJECT_DIR` unconditionally fast-fails with a loud error instead, which is the correct tradeoff for a safety-critical addressability concern. 18 commands updated across three files: 12 in `.claude/settings.json` (the active config), 3 in `hook-templates/universal.json` (the reference doc), 3 in `docs/reference/reference/hooks.md` (the tutorial doc). 4 regression tests added in `tests/claude_hooks/test_settings_paths_cwd_safe.py` covering the static no-relative-path invariant, the per-command `$CLAUDE_PROJECT_DIR` invariant, the dynamic foreign-cwd resolution check, and the fail-loud-on-missing-env-var contract.
+<!-- /hero -->
+
+### Fixed
+- **`.claude/settings.json`** -- all 12 hook commands rewritten from `python3 .claude/hooks/X.py` to `python3 "$CLAUDE_PROJECT_DIR/.claude/hooks/X.py"`. Covers PostToolUse (copy_plan_to_project, check_completed_feature, check_plan_freshness_hook) and PreToolUse (protect_directives ×2, block_secrets_in_code ×2, guard_kit_writes ×2, block_dangerous_commands, enforce_review_gate, confirm_pr_merge).
+- **`hook-templates/universal.json`** -- 3 reference-doc commands updated to match the active config form.
+- **`docs/reference/reference/hooks.md`** -- 3 example commands in the tutorial updated to match. New users copying from docs now get the cwd-safe form.
+
+### Added
+- **`tests/claude_hooks/test_settings_paths_cwd_safe.py`** -- 4 regression tests. `test_no_relative_hook_paths_in_settings` greps for any bare relative `.claude/hooks/` segment and fails on hit. `test_every_hook_uses_claude_project_dir` asserts the inverse. `test_hooks_resolve_when_cwd_changes` runs every hook command from `/tmp` via shell with `CLAUDE_PROJECT_DIR` exported, confirming no `can't open file` / errno 2 failures. `test_claude_project_dir_required_at_runtime` confirms the fail-loud-on-missing-env-var contract -- a sentinel that documents the conscious choice to skip the `$PWD` fallback.
+
+### Pull impact
+**Existing projects need to update their own `.claude/settings.json` to inherit the fix.** The kit's `setup.sh` hook-merge step (lines 152-216) deduplicates by exact command-string match, so it will NOT replace an old relative-path entry with the new `$CLAUDE_PROJECT_DIR` form on re-run -- it will add the new form alongside the old, leaving both. Manual one-liner (run from project root, after pulling v1.62.2):
+
+```bash
+python3 -c "
+import json
+from pathlib import Path
+p = Path('.claude/settings.json')
+data = json.loads(p.read_text())
+for stage in data.get('hooks', {}).values():
+    for entry in stage:
+        for hook in entry.get('hooks', []):
+            cmd = hook.get('command', '')
+            if cmd.startswith('python3 .claude/hooks/'):
+                rest = cmd[len('python3 .claude/hooks/'):]
+                hook['command'] = f'python3 \"\$CLAUDE_PROJECT_DIR/.claude/hooks/{rest}\"'
+p.write_text(json.dumps(data, indent=2) + chr(10))
+print('rewrote relative hook paths')
+"
+```
+
+After running, restart any active Claude Code session in the project so the new settings take effect. No migration manifest required for the kit-internal change (no behavioural change to hooks themselves, no prompt rewrites to copied templates) -- only the project-side settings.json rewrite above.
+
+---
+
 ## v1.62.1 (2026-05-11)
 <!-- hero -->
 Single-line clarification to `global-commands/wrap.md` Step 2 so the Duration metric card in the HTML wrap-up reads cleanly when `.tmp/.session-start` is missing. The old instruction ("If it doesn't exist, use the first commit time") was ambiguous and several Claude sessions interpreted it by writing explanatory prose into `sessionDuration` ("session timer not started — duration based on first commit"), which then rendered as a long string inside the small Duration metric card. The new instruction is explicit: omit `--session-start` from the `wrap_stats.py` invocation and set `sessionDuration` to `"N/A"`. The renderer shows a clean "N/A" in the card instead of a wrapped explanation.
