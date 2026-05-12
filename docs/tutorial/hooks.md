@@ -46,7 +46,7 @@ Fires after `git commit` accepts a message. Runs in this order:
 Fires on `git push`. Two checks:
 
 - **Tutorial docs version gate.** On `main` or `master` only: docs must match the latest tag. Prevents shipping a release without the tutorial docs being stamped to the same version. Skip with `git push --no-verify`. Branch-aware as of v1.56.0 — feature branches that bump docs ahead of their release tag (the normal pre-merge state) push cleanly.
-- **Whats-new freshness on tag pushes** (added in v1.60.1). When pushing a tag matching `v*.*.*`, fail-fast unless `docs/tutorial/whats-new.html` contains a matching release section (or `CHANGELOG.md` has a corresponding `## vX.Y.Z` heading). Skip with `SKIP_WHATSNEW_CHECK=1 git push origin <tag>`. Catches the failure where release tags went out without `python3 execution/generate_whats_new.py` having been run.
+- **Whats-new freshness on tag pushes** (added in v1.60.1, tightened in v1.63.1). When pushing a tag matching `v*.*.*`, fail-fast unless `docs/tutorial/whats-new.html` contains a matching release section. Skip with `SKIP_WHATSNEW_CHECK=1 git push origin <tag>`. Catches the failure where release tags went out without `python3 execution/generate_whats_new.py` having been run. The pre-v1.63.1 form had a `CHANGELOG.md` fallback; because CHANGELOG is always written before the tag, the fallback always passed and the gate silently no-op'd -- v1.62.2 and v1.63.0 shipped with a stale whats-new.html because of this. The fallback was removed in v1.63.1.
 - **Methodology --quick checks.** Fast structural validations across the kit (cross-reference consistency, directive schema, todo.md format). Catches issues before CI does.
 
 ## When hooks fire too aggressively
