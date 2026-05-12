@@ -50,12 +50,12 @@ Claude Code hooks are configured in `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/protect_directives.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect_directives.py\"",
             "description": "Block unilateral writes to directives/"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/block_secrets_in_code.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_secrets_in_code.py\"",
             "description": "Block secrets outside .env"
           }
         ]
@@ -65,7 +65,7 @@ Claude Code hooks are configured in `.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/block_dangerous_commands.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_dangerous_commands.py\"",
             "description": "Block destructive commands"
           }
         ]

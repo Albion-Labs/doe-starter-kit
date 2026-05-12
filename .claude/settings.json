@@ -18,12 +18,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/copy_plan_to_project.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/copy_plan_to_project.py\"",
             "description": "Auto-copy plans from ~/.claude/plans/ to project .claude/plans/"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/check_completed_feature.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_completed_feature.py\"",
             "description": "Warn when all steps in ## Current are complete but feature not moved"
           }
         ]
@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/check_plan_freshness_hook.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_plan_freshness_hook.py\"",
             "description": "Check plan freshness when .claude/plans/*.md is read"
           }
         ]
@@ -45,17 +45,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/protect_directives.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect_directives.py\"",
             "description": "Block unilateral writes to directives/"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/block_secrets_in_code.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_secrets_in_code.py\"",
             "description": "Block secrets outside .env"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/guard_kit_writes.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_kit_writes.py\"",
             "description": "Block direct writes to ~/doe-starter-kit"
           }
         ]
@@ -65,32 +65,32 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/block_dangerous_commands.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_dangerous_commands.py\"",
             "description": "Block destructive commands"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/guard_kit_writes.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_kit_writes.py\"",
             "description": "Block direct kit writes via Bash (cp, git commit, etc.)"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/protect_directives.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect_directives.py\"",
             "description": "Block Bash redirections that write to directives/"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/block_secrets_in_code.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_secrets_in_code.py\"",
             "description": "Block Bash redirections that write secret-shaped values"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/enforce_review_gate.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/enforce_review_gate.py\"",
             "description": "Block gh pr create without passing adversarial review"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/confirm_pr_merge.py",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/confirm_pr_merge.py\"",
             "description": "Block gh pr merge unless user approves"
           }
         ]
