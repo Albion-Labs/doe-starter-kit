@@ -1,5 +1,7 @@
 As your very first action, start the session clock: run `mkdir -p .tmp && date -u +%Y-%m-%dT%H:%M:%S+00:00 > .tmp/.session-start`
 
+Then capture the session-start branch (v1.63.0+): run `git branch --show-current > .tmp/.session-start-branch`. The `>` redirect replaces any prior contents on every invocation — fresh snapshot per session, regardless of what a previous session left behind. /wrap reads this file in its Step 0a worktree-handling pass to detect **branch drift** (HEAD moved to a different branch mid-session, which is the race the worktree convention surfaces). Empty contents (e.g. detached HEAD at kick-off) are valid and surface as "no branch checked out at session start" in /wrap.
+
 Read CLAUDE.md, tasks/todo.md, STATE.md, and learnings.md.
 
 **PR check:** Run `gh pr list --state open --json number,title,headRefName 2>/dev/null` to check for open PRs. If any exist, show them in the kick-off card as an `OPEN PRS` row (count + titles). If on `main` and about to create a new branch, add a prompt after the card: "N open PR(s) -- merge first or branch independently? Reply 'merge #N' to merge, or 'go' to continue." Wait for the user's response before branching. If on a feature branch that matches an open PR, note it as the active PR.

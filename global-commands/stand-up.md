@@ -18,6 +18,8 @@ Read CLAUDE.md, tasks/todo.md, STATE.md, learnings.md, and ROADMAP.md.
 
 **Kit dirty-tree check (v1.60.0+):** If `~/doe-starter-kit` exists, run `cd ~/doe-starter-kit && git status --porcelain 2>/dev/null` to check for uncommitted changes in the kit working tree. If non-empty, surface in the morning briefing as a `KIT DIRTY` row showing the count plus the first 3 paths. The dirty state could be intentional (active kit feature branch) or accidental (cross-project edits that the v1.60.0 PR-only model no longer blocks at PreToolUse time). Advisory only — do not block.
 
+**Worktree awareness (v1.63.0+):** Run `git worktree list --porcelain` and count records (lines starting with `worktree `). The first record is always the main worktree; additional records mean parallel sessions are structurally possible. Surface this as a `WORKTREES` row when 2+ are present — see card rule below. Single-worktree projects skip the row entirely (no drift possible). This data feeds the BRANCH-level race protection that the worktree convention provides; FILE-level edit conflicts on shared docs (STATE.md, todo.md, learnings.md, CLAUDE.md) remain a single-terminal coordination concern.
+
 Show a bordered kick-off card, then present a plan and wait for sign-off:
 
 ```
@@ -31,6 +33,10 @@ Show a bordered kick-off card, then present a plan and wait for sign-off:
 │    !! [each blocker on its own line]               │
 │  DOE KIT    vX.Y.Z [synced / * pull]                │
 │  KIT DIRTY  N path(s) -- path1, ... (only if dirty)│
+│  WORKTREES  N active -- main, feature/x (>=2 only) │
+│    !! Detached: <name> (no branch checked out)     │
+│    !! Branch-level race fix only -- shared docs    │
+│       still need single-terminal coord             │
 │  OPEN PRS   N open (list titles briefly)           │
 │  TEST HEALTH [regression N/N, health N pass M warn] │
 │  PIPELINE   N in Up Next, M in Queue              │
@@ -59,6 +65,7 @@ Card rules:
 - PROGRESS: count [x] and [ ] steps for the current feature in todo.md ## Current. Bar uses █ for done, ░ for remaining, scaled to 10 characters. If no current feature, omit this line.
 - DOE KIT: `vX.Y.Z synced` if kit version matches STATE.md version. `vX.Y.Z * pull` if the kit has a newer version than STATE.md (run `/pull-doe` to update). Omit entirely if `~/doe-starter-kit` doesn't exist.
 - KIT DIRTY: only shown when the kit working tree has uncommitted changes. Format: `N path(s) -- path1, path2, ...` (truncate to first 3 paths + `+M more` if N > 3). Omit row entirely when kit is clean. This is the morning-briefing detection point for the v1.60.0 PR-only model's residual exposure (cross-project AI edits to the kit working tree).
+- WORKTREES: Run `git worktree list --porcelain` and count records (lines starting with `worktree `). If only 1 record, omit the row entirely (single-worktree project, no drift possible). If 2+, show count + branch summary on the main row, e.g. `3 active -- main, feature/foo, feature/bar`. Parse each record's flags: a record with `branch refs/heads/<name>` is on a branch; a record with `detached` has no branch checked out. For each `detached` record, surface as an indented detail line `!! Detached: <basename of path> (no branch checked out)` — this catches throwaway debug worktrees the user forgot about. After the per-worktree details, always append a final indented footnote: `!! Worktrees fix branch-level races, not file-level edit conflicts on shared docs (STATE.md, todo.md, learnings.md, CLAUDE.md still need single-terminal coordination)`. This is the honest-scope reminder — surfaces in every multi-worktree morning briefing so the BRANCH-vs-FILE distinction stays front of mind. Omit entirely when only one worktree exists.
 - OPEN PRS: Run `gh pr list --state open --json number,title --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null`. Count open PRs. If none, show "None". If 1-3, show count and titles. If 4+, show count only. **Conflict detection:** If 2+ PRs are open, check for file overlaps: run `gh pr view N --json files --jq '.files[].path'` for each PR. If any files appear in multiple PRs, add a warning line after the PR list: `  !! Conflict risk: [overlapping files] -- merge [ready PR] first, then rebase the other`. If no overlaps, no warning needed. **Branch staleness:** If on a feature branch, run `git rev-list --count HEAD..origin/main`. If > 0, add: `  !! Branch is N commits behind main -- rebase before merging`.
 - TEST HEALTH: If `tests/suite.json` exists and is non-empty, run `python3 execution/verify.py --regression` silently and count pass/fail. If `execution/health_check.py` exists, run `python3 execution/health_check.py --quick --json` and count results. Show `TEST HEALTH   Regression N/N, Health N pass M warn`. If the regression suite is empty, show `TEST HEALTH   No regression tests yet`. If neither exists, omit entirely. This surfaces test infrastructure status at session start.
 - SIGN-OFF: Parse `## Awaiting Sign-off` in todo.md. Count `###` headings (features) and `[ ] [manual]` lines (pending manual items). Show `SIGN-OFF   N features (M manual items pending)`. If the section is empty or has no features, omit entirely.
@@ -97,6 +104,7 @@ Show a bordered status card:
 ├──────────────────────────────────────────────────┤
 │  WORKING ON   [feature] [APP/INFRA] vX.Y.x        │
 │  BRANCH       feature/xxx (or main)               │
+│  WORKTREES    N active (>=2 only; condensed)      │
 │  PHASE GOAL   [what done looks like]              │
 │  PROGRESS     ██████░░░░ N/M steps (X%)           │
 │  NEXT STEP    [next uncompleted step from todo]   │
@@ -120,6 +128,7 @@ Card rules:
 - MODEL ROW: same as kick-off mode — final row with `Model: [name] · Thinking: [level]`, padded to match the card's full width.
 - WORKING ON: from todo.md ## Current heading — feature name, type tag [APP/INFRA], and version range. If no current feature, show "No active feature" and skip PROGRESS, PHASE GOAL, and SINCE LAST MILESTONE sections.
 - BRANCH: Run `git branch --show-current`. Show the current branch name (e.g. `feature/pr-workflow-migration` or `main`).
+- WORKTREES: Run `git worktree list --porcelain` and count records. If only 1 worktree, omit. If 2+, show condensed form `N active -- branch1, branch2[, +M more]` truncated to fit (max 3 branches shown explicitly). Append `!! Detached: <name>` indented detail if any record has the `detached` flag. No honest-scope footnote in status mode (kick-off card already showed it this session).
 - PHASE GOAL: read the feature description under ## Current in todo.md. If a plan file is referenced (e.g. "Plan: .claude/plans/..."), read it and summarise what "done" looks like for this feature in one sentence. If no plan file, summarise from the step list.
 - PROGRESS: count [x] and [ ] steps for the current feature. Bar uses █ for done, ░ for remaining, scaled to 10 characters. Show "N/M steps (X%)" where X is the percentage complete.
 - NEXT STEP: find the first uncompleted step (line starting with `[ ]`) for the current feature in todo.md. Show the step number and description (e.g. "Step 4 — /agent-status command"). If all steps are complete, show "All steps complete — ready for retro".

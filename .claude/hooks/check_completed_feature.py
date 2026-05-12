@@ -10,6 +10,7 @@ because todo.md changes haven't been committed yet.
 """
 
 import json
+import os
 import re
 import sys
 
@@ -34,12 +35,17 @@ def check():
     if "todo.md" not in file_path:
         return
 
-    # Find and read the actual todo.md
+    # Find and read the actual todo.md. Anchor to $CLAUDE_PROJECT_DIR so the
+    # hook resolves correctly when the agent shell's cwd has drifted to a
+    # subdir -- relative Path("tasks/todo.md") would silently no-op (file not
+    # found) and the completion warning would silently disappear. v1.63.0
+    # hardening (paired with v1.62.2 which fixed the invocation path).
     from pathlib import Path
-    candidates = [
-        Path("tasks/todo.md"),
-        Path(file_path),
-    ]
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    candidates = []
+    if project_dir:
+        candidates.append(Path(project_dir) / "tasks" / "todo.md")
+    candidates.append(Path(file_path))
     todo_path = None
     for p in candidates:
         if p.exists():
