@@ -9,8 +9,13 @@ State between phases lives in `~/doe-starter-kit/.tmp/.sync-doe-pending-release.
 
 ## Pre-flight (every invocation)
 
-1. **Step 0** — Run `python3 execution/audit_sync.py` to surface universal files missing from the kit
-2. **Step 0.5** — `cd ~/doe-starter-kit && git status --porcelain` — if dirty, surface paths and stop
+1. **Step 0.1 — Trunk worktree check (v1.63.0+).** Before any kit operation, confirm the kit's main worktree is on its default branch. /sync-doe writes to `~/doe-starter-kit`, branches off main, opens a PR — all of which assume the kit's main worktree is checked out on main.
+   - Determine the kit's default branch: `cd ~/doe-starter-kit && git symbolic-ref refs/remotes/origin/HEAD --short | sed 's|^origin/||'`. This resolves to `main` for most kit clones and `master` for legacy ones.
+   - Verify the kit's current branch matches: `git -C ~/doe-starter-kit branch --show-current`. If it differs, STOP and surface: "Kit trunk worktree is on <branch> (expected: <default>). Switch the kit to <default> before running /sync-doe."
+   - Parse `git -C ~/doe-starter-kit worktree list --porcelain` — verify ~/doe-starter-kit is the worktree whose `branch refs/heads/<default>` line matches the kit's default. If a different path holds the trunk (e.g. the kit was moved or set up as a sibling), surface the actual trunk path. Path-suffix heuristic (e.g. "no `-<feature>` suffix in basename") is a display hint only; the canonical signal is the default-branch lookup.
+   - If the kit's main worktree is dirty (uncommitted changes on the default branch), continue to Step 0.5 which handles the dirty-tree case. The trunk check is about *which branch* is checked out; cleanliness is a separate gate.
+2. **Step 0** — Run `python3 execution/audit_sync.py` to surface universal files missing from the kit
+3. **Step 0.5** — `cd ~/doe-starter-kit && git status --porcelain` — if dirty, surface paths and stop
 3. **Step 0.7 — Detect pending release.** If `~/doe-starter-kit/.tmp/.sync-doe-pending-release.json` exists, branch on PR state:
    - PR `MERGED` → skip Phase 1, jump straight to **Step 11 (Phase 2)** with version + project from the state file
    - PR `OPEN` → say "PR #N still open: <URL>. Merge it and re-run `/sync-doe` to release." and stop
