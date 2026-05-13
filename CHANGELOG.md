@@ -12,7 +12,7 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 Auto-stamp completion timestamps on `[x]` task lines as they're marked. Closes the most common DOE CI failure class observed across kit consumers: `audit_claims.py` emits `Severity.FAIL` on `[x] without timestamp`, which blocks `DOE CI / Gates`. Stamping at marking time means the trigger never fires. A new PostToolUse hook (`.claude/hooks/stamp_todo_timestamps.py`) detects `[x]` lines in `tasks/todo.md` that lack the `*(completed HH:MM DD/MM/YY)*` suffix and appends one. Idempotent under repeated firing — re-stamping a stamped line is a no-op. A thin `.githooks/pre-commit` safety-net block runs the same logic on staged `tasks/todo.md` before the audit runs, catching direct human edits where Claude wasn't involved. Both paths share one script via a `--pre-commit FILE` CLI mode.
 <!-- /hero -->
 <!-- background -->
-Across the kit's consumer projects (monty, Alkyion) the dominant CI-failure pattern over the last weeks has been "first PR run fails on missing timestamp, fix-commit, second run passes." The trigger is mechanical formatting (`*(completed HH:MM DD/MM/YY)*`), not signal worth carrying in CI. Auto-stamping at the moment of marking — using the actual wall-clock time, not commit time — eliminates the failure class entirely while keeping the audit logic untouched (timestamp still FAIL, version still WARN). The hook is intentionally narrow: it does not auto-stamp version tags (`→ vX.Y.Z`) because version is meaningful human context that varies by project convention, whereas timestamp is universal bookkeeping. Pre-commit safety net catches the rare case where todo.md is edited without Claude in the loop. Mirrors `audit_claims.py` regexes byte-for-byte so what gets stamped is exactly what the audit accepts.
+Across consumer projects the dominant CI-failure pattern over the last weeks has been "first PR run fails on missing timestamp, fix-commit, second run passes." The trigger is mechanical formatting (`*(completed HH:MM DD/MM/YY)*`), not signal worth carrying in CI. Auto-stamping at the moment of marking — using the actual wall-clock time, not commit time — eliminates the failure class entirely while keeping the audit logic untouched (timestamp still FAIL, version still WARN). The hook is intentionally narrow: it does not auto-stamp version tags (`→ vX.Y.Z`) because version is meaningful human context that varies by project convention, whereas timestamp is universal bookkeeping. Pre-commit safety net catches the rare case where todo.md is edited without Claude in the loop. Mirrors `audit_claims.py` regexes byte-for-byte so what gets stamped is exactly what the audit accepts.
 <!-- /background -->
 
 ### Added
@@ -30,9 +30,6 @@ Across the kit's consumer projects (monty, Alkyion) the dominant CI-failure patt
 **Pre-commit safety net is opt-in by file presence.** Projects that haven't pulled the kit hook yet see no behaviour change — the `.githooks/pre-commit` block is wrapped in `[ -f .claude/hooks/stamp_todo_timestamps.py ]` so the auto-stamp section no-ops on older installs. After pull, direct human edits to `tasks/todo.md` get stamped at commit time, eliminating the "manually edited then committed without stamp" failure path.
 
 **No behaviour change for projects that don't track `tasks/todo.md`** -- the hook bails out immediately when the path doesn't contain `todo.md`.
-
-### Removed
-- Nothing removed.
 
 ---
 
