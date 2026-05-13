@@ -883,6 +883,32 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-64-0">
+          <div class="release-header">
+            <span class="version-badge">v1.64.0</span>
+            <span class="release-date">13 May 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Auto-stamp completion timestamps on <code>[x]</code> task lines as they&#x27;re marked. Closes the most common DOE CI failure class observed across kit consumers: <code>audit_claims.py</code> emits <code>Severity.FAIL</code> on <code>[x] without timestamp</code>, which blocks <code>DOE CI / Gates</code>. Stamping at marking time means the trigger never fires. A new PostToolUse hook (<code>.claude/hooks/stamp_todo_timestamps.py</code>) detects <code>[x]</code> lines in <code>tasks/todo.md</code> that lack the <code>*(completed HH:MM DD/MM/YY)*</code> suffix and appends one. Idempotent under repeated firing — re-stamping a stamped line is a no-op. A thin <code>.githooks/pre-commit</code> safety-net block runs the same logic on staged <code>tasks/todo.md</code> before the audit runs, catching direct human edits where Claude wasn&#x27;t involved. Both paths share one script via a <code>--pre-commit FILE</code> CLI mode.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">Across the kit&#x27;s consumer projects (monty, Alkyion) the dominant CI-failure pattern over the last weeks has been &quot;first PR run fails on missing timestamp, fix-commit, second run passes.&quot; The trigger is mechanical formatting (<code>*(completed HH:MM DD/MM/YY)*</code>), not signal worth carrying in CI. Auto-stamping at the moment of marking — using the actual wall-clock time, not commit time — eliminates the failure class entirely while keeping the audit logic untouched (timestamp still FAIL, version still WARN). The hook is intentionally narrow: it does not auto-stamp version tags (<code>→ vX.Y.Z</code>) because version is meaningful human context that varies by project convention, whereas timestamp is universal bookkeeping. Pre-commit safety net catches the rare case where todo.md is edited without Claude in the loop. Mirrors <code>audit_claims.py</code> regexes byte-for-byte so what gets stamped is exactly what the audit accepts.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>.claude/hooks/stamp_todo_timestamps.py</code></strong> &mdash; new PostToolUse hook (~115 lines). Detects <code>[x]</code> step lines in <code>tasks/todo.md</code> lacking <code>*(completed HH:MM DD/MM/YY)*</code> and appends the stamp inline. Idempotent: already-stamped lines (and lines with the older date-only stamp form <code>*(completed DD/MM/YY)*</code>) are skipped. Anchors to <code>$CLAUDE_PROJECT_DIR</code> per the v1.62.2 cwd-safety pattern, so the hook resolves the real <code>tasks/todo.md</code> even after shell cwd drift. Mirrors <code>audit_claims.py</code>&#x27;s <code>_TASK_DONE_RE</code> and <code>_TIMESTAMP_RE</code> exactly so stamps satisfy the audit byte-for-byte. Contract criteria (<code>- [x] [auto] foo</code>) are skipped because they&#x27;re dash-prefixed and don&#x27;t match the audit&#x27;s task regex. Triggers on <code>Edit | Write | MultiEdit</code> and stays silent on non-todo files and when no stamp is needed. PostToolUse failures never block tools — on any unexpected error (bad JSON, IO error) the hook silently returns.</li>
+            <li><strong><code>.claude/hooks/stamp_todo_timestamps.py --pre-commit FILE</code></strong> &mdash; second invocation mode. Stamps the named file in-place, exits 0. Called by <code>.githooks/pre-commit</code> to catch direct human edits to <code>tasks/todo.md</code> that bypassed the PostToolUse hook (no Claude session involved). Same regexes, same idempotence, same silent-on-error.</li>
+            <li><strong><code>tests/claude_hooks/test_stamp_todo_timestamps.py</code></strong> &mdash; 17 tests covering pure <code>process()</code> (regex behaviour, idempotence on already-stamped lines, date-only stamp tolerance, contract-criteria exemption, indented-unnumbered tasks, retro steps, multi-line input), the JSON-on-stdin subprocess path, repeated-firing convergence, the <code>--pre-commit</code> CLI mode, missing-file safety, and <code>$CLAUDE_PROJECT_DIR</code> resolution under stale-path conditions.</li>
+          </ul>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong><code>.githooks/pre-commit</code></strong> &mdash; new 11-line auto-stamp block that runs before the existing <code>audit_claims.py --hook</code> invocation. Finds staged <code>tasks/todo.md</code> files via <code>git diff --cached --name-only --diff-filter=ACM</code>, runs <code>stamp_todo_timestamps.py --pre-commit</code> on each, re-stages with <code>git add</code>. Skipped silently when <code>.claude/hooks/stamp_todo_timestamps.py</code> is missing (older project that hasn&#x27;t pulled v1.64.0 yet). Every existing pre-commit gate (<code>SKIP_MAIN_PROTECTION</code>, ESLint, stub detection, audit, signoff, contract verification, pending-PRs sync, test freshness, doc freshness) untouched. No new <code>SKIP_*</code> flag — the auto-stamp step is purely additive and never blocks.</li>
+            <li><strong><code>.claude/settings.json</code></strong> &mdash; registered <code>stamp_todo_timestamps.py</code> on the existing <code>Edit | Write | MultiEdit</code> PostToolUse matcher, joining <code>copy_plan_to_project.py</code> and <code>check_completed_feature.py</code>. Hook command uses the <code>$CLAUDE_PROJECT_DIR</code> form established in v1.62.2.</li>
+          </ul>
+          <h4 class="removed">Removed</h4>
+          <ul>
+            <li>Nothing removed.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-63-0">
           <div class="release-header">
             <span class="version-badge">v1.63.0</span>
@@ -970,6 +996,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (8 releases)</summary>
+
         <div class="release" id="v1-61-5">
           <div class="release-header">
             <span class="version-badge">v1.61.5</span>
@@ -987,10 +1017,6 @@
             <li><strong><code>CLAUDE.md</code> template (kit root) Triggers section</strong> &mdash; new trigger: <code>Parallel sessions on same project (worktree setup, branch isolation) -&gt; directives/parallel-worktrees.md</code>. The pre-existing <code>Parallel sessions / wave setup</code> trigger is renamed to <code>Wave / DAG dispatch setup</code> to clarify it covers wave/DAG dispatch specifically (different concern from per-session branch isolation).</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (7 releases)</summary>
 
         <div class="release" id="v1-61-4">
           <div class="release-header">
