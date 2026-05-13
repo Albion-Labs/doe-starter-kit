@@ -73,6 +73,14 @@ The `### Added` / `### Changed` / `### Fixed` sections are for the diligent read
 
 Anti-pattern: a hero that exceeds 3 sentences usually contains either (a) postmortem prose that belongs in `<!-- background -->`, or (b) bullet-level detail that belongs in `### Added` / `### Fixed`. v1.62.2 and v1.63.0 are examples of heroes that pre-date this contract — the new contract applies forward only; historical entries are not retroactively rewritten.
 
+## Content hygiene
+
+Kit content (CHANGELOG.md, docs/tutorial/, directives/, ROADMAP.md, kit PR descriptions, GitHub release notes) is downstream-visible. Two rules.
+
+**Never name specific consumer projects.** The kit is a product; consumer projects (the ones running `/pull-doe`) are not. Naming a consumer project in kit content leaks the user's project list into a shared artefact and creates an awkward asymmetry where some projects are "famous" and others aren't. Refer to consumer projects generically: "consumer projects", "projects using the kit", "a project", "a consuming project". Provenance attribution (e.g. "source: <project> session N retro") goes in the kit PR's commit messages or local notes, not the kit's CHANGELOG. This rule applies to ALL kit-visible content, including pre-existing entries when they get touched.
+
+**Never include empty sections.** A `### Removed` heading followed by "Nothing removed" (or any equivalent "Nothing to report") is bloat — it signals diligence that wasn't required and adds a row of noise to the whats-new page. Omit the section entirely if there's nothing to put in it. Same applies to `### Changed` / `### Fixed` when not applicable. The four-section structure in ## CHANGELOG structure is a menu, not a contract; pick the sections that have content.
+
 ## Release mechanics
 
 Releases are **manual** after PR merge. The kit doesn't auto-release because the human merging is also the human deciding "yes, this is shippable as vX.Y.Z."
