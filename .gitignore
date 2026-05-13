@@ -20,3 +20,6 @@ credentials.json
 *.sqlite3
 *.sql.gz
 *.dump
+
+# Per-clone project-specific term list (audit_sync.py)
+.kit-blocklist

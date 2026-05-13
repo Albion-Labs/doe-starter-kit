@@ -1,0 +1,13 @@
+# DOE Kit: project-specific term blocklist
+# Used by execution/audit_sync.py to skip project-specific files from
+# the universal-sync detection. One term per line. Lines starting with
+# `#` are comments. Matched case-insensitively as `\bWORD\b` regex.
+#
+# Copy this file to `.kit-blocklist` (gitignored) and add your project's
+# codenames, domain terms, and file-path fragments. Each clone of the
+# kit has its own list -- nothing here ships across consumers.
+#
+# Examples (delete and replace with your actual terms):
+# myproject
+# acme-app
+# specific-domain-term
