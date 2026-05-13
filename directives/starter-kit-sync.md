@@ -118,15 +118,15 @@ IMPORTANT: Merge improvements additively -- add new rules, update changed rules,
 
 ### Step 5: Strip project-specific content
 Before copying anything to the starter kit, remove ALL project-specific references:
-- Project names (e.g. "Monty", "Broker Platform")
-- Project-specific file paths (e.g. monty-app-v0.12.3.html)
+- Project names (e.g. "AcmeApp", "YourProduct")
+- Project-specific file paths (e.g. yourapp-v0.12.3.html)
 - Project-specific data (constituency names, API endpoints)
 - Project-specific audit checks (only `@register("universal")` checks go to starter kit)
 - Project-specific directives (only universal SOPs go to starter kit)
 - Project-specific governed documents in the registry (only learnings.md stays)
 
 Replace with generic equivalents:
-- "Monty" → "[project name]" or remove entirely
+- "YourProduct" → "[project name]" or remove entirely
 - Specific HTML filenames → "your-app.html"
 - Project-specific examples → generic examples
 
@@ -161,7 +161,7 @@ Wait for explicit user approval before proceeding to Step 8.
 ### Step 8: Verify
 ```bash
 # Zero project-specific references
-grep -ri "monty\|broker\|pleasantly" ~/doe-starter-kit/ --include="*.md" --include="*.py" --include="*.json"
+grep -riF "$(cat ~/doe-starter-kit/.kit-blocklist 2>/dev/null | grep -v ^# | tr '\n' '|' | sed 's/|$//')" ~/doe-starter-kit/ --include="*.md" --include="*.py" --include="*.json"
 
 # Audit script has only universal checks
 grep '@register(' ~/doe-starter-kit/execution/audit_claims.py
@@ -170,7 +170,7 @@ grep '@register(' ~/doe-starter-kit/execution/audit_claims.py
 grep 'yourproject' ~/doe-starter-kit/execution/audit_claims.py
 
 # Commands are project-agnostic
-grep -ri "monty\|broker" ~/.claude/commands/
+grep -riF "$(cat ~/doe-starter-kit/.kit-blocklist 2>/dev/null | grep -v ^# | tr '\n' '|' | sed 's/|$//')" ~/.claude/commands/
 
 # README consistency: every command file in kit has a matching README entry
 for f in ~/doe-starter-kit/global-commands/*.md; do

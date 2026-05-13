@@ -7,7 +7,7 @@ Tradeoff: Kit-dev rules add a pytest run and CHANGELOG edit to every kit feature
 
 ## When to Use
 - Working in `~/doe-starter-kit` directly
-- Running `/sync-doe` to push monty-side improvements back to the kit
+- Running `/sync-doe` to push project-side improvements back to the kit
 - Reviewing or merging a kit PR
 - Designing a new kit feature that will ship across multiple steps
 
@@ -19,11 +19,11 @@ Empirical basis: 8 minor kit releases (v1.51 - v1.58) shipped with `guard_kit_wr
 
 Last-resort override for the destructive Bash patterns: `SKIP_KIT_GUARD=1`. Set only when an operator genuinely needs to perform a destructive action (emergency rollback). The flag file `.tmp/.sync-doe-active` from v1.59.x is no longer read by the hook; `/sync-doe` may still touch it for backwards compatibility with v1.59.x clients.
 
-Cross-project exposure: in v1.60.0, an AI working in a consuming project (monty, cortex, etc.) can edit the kit working tree directly. The dominant detection point is the `/sync-doe` Step 0.5 dirty-tree pre-flight, which surfaces any uncommitted kit changes for user acknowledgement before applying a sync. See `directives/starter-kit-sync.md` ## Step 0.5.
+Cross-project exposure: in v1.60.0, an AI working in a consuming project can edit the kit working tree directly. The dominant detection point is the `/sync-doe` Step 0.5 dirty-tree pre-flight, which surfaces any uncommitted kit changes for user acknowledgement before applying a sync. See `directives/starter-kit-sync.md` ## Step 0.5.
 
 ## Versioning model: one release per PR
 
-The kit uses a single shared release version per PR — **all steps of a feature ship together in one minor or patch release**, not one patch per step (which is monty's per-step-versioning model). For example, v1.57.0's seven steps all land in `v1.57.0`; there is no `v1.57.1` for Step 1, `v1.57.2` for Step 2, etc.
+The kit uses a single shared release version per PR — **all steps of a feature ship together in one minor or patch release**, not one patch per step (which is a per-step-versioning model some projects use). For example, v1.57.0's seven steps all land in `v1.57.0`; there is no `v1.57.1` for Step 1, `v1.57.2` for Step 2, etc.
 
 **Patch vs minor vs major:**
 - **Patch (`vX.Y.Z+1`)** — bug fixes only. Spec deviations corrected, no new behaviour.
@@ -135,5 +135,5 @@ Concrete rule: if a check would add more than ~200ms to commit latency on a clea
 
 - `git-conventions.md` — the Conventional Commits 1.0 spec and the kit's allowlist that the commit-msg hook enforces
 - `testing-strategy.md` — how to structure tests for kit-surface code and what coverage is expected
-- `starter-kit-sync.md` — pushing monty-side improvements back to the kit (`/sync-doe`)
+- `starter-kit-sync.md` — pushing project-side improvements back to the kit (`/sync-doe`)
 - `starter-kit-pull.md` — pulling kit updates into a project

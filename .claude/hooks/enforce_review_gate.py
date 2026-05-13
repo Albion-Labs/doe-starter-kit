@@ -8,7 +8,7 @@ incomplete feature work.
 Cross-project guard (v1.61.4): if the Bash command starts with
 `cd <path> &&` and the path resolves outside the hook's project tree, the
 gate passes through. This handles cross-project `gh pr create` from one
-project's harness targeting a different repo (e.g. monty editing the kit) --
+project's harness targeting a different repo (e.g. a consumer project editing the kit) --
 the hook's release-readiness checks don't apply to a different project.
 
 Checks (feature/* branches only):

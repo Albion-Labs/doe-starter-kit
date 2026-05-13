@@ -18,14 +18,26 @@ import re
 import sys
 from pathlib import Path
 
-# Project-specific patterns -- files containing these are NOT universal
-PROJECT_PATTERNS = re.compile(
-    r"\b(monty|constituency|constituencies|pcon\d{2}|pulse|broker|pleasantly"
-    r"|restore.britain|albion.labs|election|mp[_\s]interest|census"
-    r"|council.control|swing.model|voting.record|canvass|briefing.pack"
-    r"|candidate.vett|scenario.builder|ward.level)\b",
-    re.IGNORECASE,
-)
+# Project-specific patterns -- files containing these are NOT universal.
+# The actual term list lives in `.kit-blocklist` (gitignored, per-clone)
+# so consumer-project codenames never ship in the kit source tree. The
+# `.kit-blocklist.example` file is tracked as a template.
+_BLOCKLIST_PATH = Path(__file__).resolve().parent.parent / ".kit-blocklist"
+
+
+def _load_project_patterns():
+    if not _BLOCKLIST_PATH.exists():
+        return None
+    terms = [
+        line.strip() for line in _BLOCKLIST_PATH.read_text().splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    if not terms:
+        return None
+    return re.compile(r"\b(" + "|".join(terms) + r")\b", re.IGNORECASE)
+
+
+PROJECT_PATTERNS = _load_project_patterns()
 
 # Files that are always project-specific by nature (skip without scanning)
 ALWAYS_PROJECT_SPECIFIC = {
@@ -89,7 +101,7 @@ def has_project_references(filepath):
     """Check if a file contains project-specific references."""
     try:
         text = Path(filepath).read_text(encoding="utf-8", errors="ignore")
-        return bool(PROJECT_PATTERNS.search(text))
+        return bool(PROJECT_PATTERNS.search(text)) if PROJECT_PATTERNS else False
     except Exception:
         return False
 
