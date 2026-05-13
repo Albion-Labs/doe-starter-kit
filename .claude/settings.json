@@ -25,6 +25,11 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_completed_feature.py\"",
             "description": "Warn when all steps in ## Current are complete but feature not moved"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/stamp_todo_timestamps.py\"",
+            "description": "Auto-stamp completion timestamps on [x] task lines in tasks/todo.md"
           }
         ]
       },

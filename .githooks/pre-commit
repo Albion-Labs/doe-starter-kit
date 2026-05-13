@@ -30,6 +30,22 @@ if [ "${SKIP_MAIN_PROTECTION:-0}" != "1" ]; then
 fi
 
 export PYTHONIOENCODING=utf-8
+
+# ─── Auto-stamp staged tasks/todo.md before audit runs ───
+# Catches direct human edits where the PostToolUse hook didn't fire (no
+# Claude session involved). Stamps any [x] line missing a timestamp, then
+# re-stages. Idempotent. If the stamp script is missing (older project
+# that hasn't pulled v1.64.0 kit yet), skip silently.
+if [ -f .claude/hooks/stamp_todo_timestamps.py ]; then
+    STAGED_TODOS=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E "(^|/)tasks/todo\.md$" || true)
+    if [ -n "$STAGED_TODOS" ]; then
+        for f in $STAGED_TODOS; do
+            python3 .claude/hooks/stamp_todo_timestamps.py --pre-commit "$f" 2>/dev/null
+            git add "$f" 2>/dev/null
+        done
+    fi
+fi
+
 python3 execution/audit_claims.py --hook > /dev/null 2>&1
 EXIT_CODE=$?
 
