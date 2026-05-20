@@ -7,6 +7,29 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.65.0 (2026-05-20)
+<!-- hero -->
+Releases are now **automatic**. A new GitHub Action workflow (`.github/workflows/auto-release.yml`) fires on every push to `main`, detects when the top `## vX.Y.Z` CHANGELOG heading has no matching tag, and runs the full release ceremony (regen `whats-new.html`, stamp tutorial, commit, push, tag, push tag, `gh release create`). Merge = release. Documented previously as a manual ceremony — now enforced by CI, eliminating the drift mode where a CHANGELOG version bump merged to main without a tag being created.
+<!-- /hero -->
+<!-- background -->
+v1.64.1 surfaced the gap concretely: a 1-line `.gitignore` patch merged cleanly, then the human running the kit work pivoted back to a project task. The post-merge ceremony (regen whats-new, stamp tutorial, tag, push tag, `gh release create`) was only completed after explicit prompting. The original "Releases are manual" rationale ("the human merging is also the human deciding shippability") assumed merge ≠ release-ready; the kit's "one release per PR" model means merge IS release-ready by construction. The deferred-tag flexibility paid for nothing while drift accumulated across the v1.62–v1.64 release window (multiple `chore(stamp): vX.Y.Z` commits arriving hours or days after their corresponding feature PRs). Automating the ceremony makes the rule load-bearing instead of memory-dependent.
+
+The workflow uses commit-first / tag-second ordering — opposite of the manual fallback (which uses tag-first because the local pre-push tutorial-docs-version gate fires when pushing the branch and requires the tag to match). GH Actions runners don't activate `.githooks/`, so the gate doesn't apply there and the workflow picks the safer ordering: if the tag push fails after a successful commit push, re-runs detect the existing commit, tag it, push tag — recoverable. Tag-first would risk leaving an orphaned tag pointing to a SHA the runner had locally but never pushed; re-runs would see the tag and no-op, leaving the kit broken.
+<!-- /background -->
+
+### Added
+- **`.github/workflows/auto-release.yml`** — new GitHub Action, triggers on `push: branches: [main]` + `workflow_dispatch`. Detects top `## vX.Y.Z` heading (pre-release tags like `vX.Y.Z-rc.1` excluded by regex requiring space or end-of-line after the version). If `git rev-parse refs/tags/vX.Y.Z` finds the tag, no-ops. Otherwise runs: `generate_whats_new.py`, `stamp_tutorial_version.py vX.Y.Z`, `git commit -m "chore(stamp): vX.Y.Z"` (only if tutorial diff exists), `git push origin main` (only if commit was made), `git tag vX.Y.Z`, `git push origin vX.Y.Z`, `gh release create vX.Y.Z --notes-file <extracted>`. Notes extracted from CHANGELOG via awk state-machine (avoids the sed/awk range-collapse bug where the start line also matches the end pattern). On failure, `actions/github-script@v7` opens an issue labelled `release-automation` + `needs-triage` with the run URL and recovery options. Concurrency pinned via `concurrency.group: auto-release, cancel-in-progress: false` — only one auto-release runs at a time. Permissions limited to `contents: write` + `issues: write`.
+
+### Changed
+- **`directives/kit-development.md` → `## Release mechanics`** — rewritten to describe the auto-release workflow as the canonical path. Old "manual after PR merge" rationale replaced with the empirical drift case from v1.64.1. New sub-sections: "What the workflow does", "Why automatic", "When to bypass automation" (disable workflow via Actions UI for cases where you want to merge without auto-releasing), "Manual fallback (if automation is broken)". Manual fallback retains tag-first ordering and `SKIP_MAIN_PROTECTION=1` on the commit (correcting the prior block which had `SKIP_MAIN_PROTECTION=1` on the wrong step and used a broken sed range for release-notes extraction).
+
+### Pull impact
+**No migration step required for consumer projects.** This change is internal to the kit's own release pipeline; consumer projects pulling via `/pull-doe` continue to consume the kit at whatever tag is current. After this release lands, the workflow self-bootstraps — its first run is on its own merge to main, which triggers the ceremony for v1.65.0 itself.
+
+**For kit contributors:** the manual ceremony is no longer needed after merging a CHANGELOG-bump PR. If the workflow is offline (Actions outage, workflow disabled), the manual fallback in `directives/kit-development.md` documents the correct ordering and flags.
+
+---
+
 ## v1.64.1 (2026-05-20)
 <!-- hero -->
 Add `.claude/worktrees/` to the kit's `.gitignore` so consumer projects using Claude Code's `EnterWorktree` background-isolation tool don't see the runtime worktree directory listed as untracked on every `git status`. Joins the existing `.claude/projects/` ignore line — same shape (Claude Code runtime path), same justification (never meant to be committed).

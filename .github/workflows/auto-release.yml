@@ -1,0 +1,174 @@
+name: Auto-release on CHANGELOG version bump
+
+# Fires on every push to main (PR merges + direct pushes).
+# Detects whether the top CHANGELOG entry has been tagged yet; if not, runs the
+# full release ceremony (whats-new regen, tutorial stamp, tag, push, gh release).
+# Idempotent — no-ops when the top CHANGELOG version is already tagged.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}  # manual re-run for failure recovery
+
+concurrency:
+  group: auto-release
+  cancel-in-progress: false  # never cancel a release mid-flight
+
+permissions:
+  contents: write   # push commits + tags + create releases
+  issues: write     # open issue on failure
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Detect top CHANGELOG version
+        id: changelog
+        # Regex requires the version to be followed by space or end-of-line so
+        # pre-release headings like "## v1.65.0-rc.1 (...)" do NOT match.
+        run: |
+          version=$(grep -oE '^## v[0-9]+\.[0-9]+\.[0-9]+($| )' CHANGELOG.md | head -1 | sed -E 's/^## //;s/[[:space:]]+$//')
+          if [ -z "$version" ]; then
+            echo "::warning::No final-release '## vX.Y.Z' heading found at top of CHANGELOG.md"
+            echo "version=" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+            echo "Detected top CHANGELOG version: $version"
+          fi
+
+      - name: Check whether tag already exists
+        id: tag_check
+        if: steps.changelog.outputs.version != ''
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+        run: |
+          if git rev-parse "refs/tags/${VERSION}" >/dev/null 2>&1; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Tag ${VERSION} already exists — release work complete, no-op"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+            echo "Tag ${VERSION} missing — proceeding with release ceremony"
+          fi
+
+      - name: Skip when no release needed
+        if: steps.changelog.outputs.version == '' || steps.tag_check.outputs.needed != 'true'
+        run: echo "Nothing to do — exiting cleanly"
+
+      - name: Set up Python
+        if: steps.tag_check.outputs.needed == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Configure git for release bot
+        if: steps.tag_check.outputs.needed == 'true'
+        run: |
+          git config user.name "doe-kit-release-bot"
+          git config user.email "doe-kit-release-bot@users.noreply.github.com"
+
+      - name: Regenerate whats-new.html
+        if: steps.tag_check.outputs.needed == 'true'
+        run: python3 execution/generate_whats_new.py
+
+      - name: Stamp tutorial for version
+        if: steps.tag_check.outputs.needed == 'true'
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+        run: python3 execution/stamp_tutorial_version.py "${VERSION}"
+
+      - name: Commit stamp artifacts (if any)
+        if: steps.tag_check.outputs.needed == 'true'
+        id: stamp_commit
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+        run: |
+          git add docs/tutorial/
+          if git diff --cached --quiet; then
+            echo "No tutorial changes — already stamped"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "chore(stamp): ${VERSION}"
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push stamp commit to main
+        # Commit-first ordering: if tag push later fails, the commit on origin
+        # lets a re-run recover (re-stamp is a no-op, the existing commit gets
+        # tagged, tag pushes). Tag-first ordering would risk leaving an
+        # orphaned tag pointing to a SHA that's not on origin if the commit
+        # push failed — re-runs couldn't recover because tag_check would see
+        # the tag and no-op. Local pre-push hooks (which would force tag-first
+        # in a manual run) don't activate in GH Actions runners.
+        if: steps.tag_check.outputs.needed == 'true' && steps.stamp_commit.outputs.committed == 'true'
+        run: git push origin main
+
+      - name: Tag locally
+        if: steps.tag_check.outputs.needed == 'true'
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+        run: git tag "${VERSION}"
+
+      - name: Push tag
+        if: steps.tag_check.outputs.needed == 'true'
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+        run: git push origin "${VERSION}"
+
+      - name: Extract release notes from CHANGELOG
+        if: steps.tag_check.outputs.needed == 'true'
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+        # Awk with state flag avoids the sed/awk range bug where start-line
+        # ALSO matches the end pattern and the range collapses to one line.
+        run: |
+          awk -v v="$VERSION" '
+            in_section && /^## v[0-9]+\.[0-9]+\.[0-9]+/ { exit }
+            $0 ~ "^## " v "($| )" { in_section=1 }
+            in_section { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+          echo "--- release notes preview ---"
+          head -20 /tmp/release-notes.md
+          echo "--- end preview ---"
+
+      - name: Create GitHub release
+        if: steps.tag_check.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.changelog.outputs.version }}
+        run: |
+          gh release create "${VERSION}" \
+            --title "${VERSION}" \
+            --notes-file /tmp/release-notes.md
+
+      - name: Open issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+        with:
+          script: |
+            const version = process.env.VERSION || 'unknown';
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Auto-release ${version} failed — manual intervention needed`,
+              body: [
+                `The auto-release workflow failed at commit \`${context.sha}\`.`,
+                ``,
+                `**Run:** ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+                ``,
+                `**Recovery options:**`,
+                `1. Fix the underlying cause, push a follow-up commit — workflow re-runs on push to main`,
+                `2. Or trigger \`workflow_dispatch\` from the Actions UI once the cause is fixed`,
+                `3. Or complete the release manually (see \`directives/kit-development.md\` → Manual fallback)`,
+                ``,
+                `Re-runs are idempotent: completed steps (existing tag, existing whats-new entry) are detected and skipped.`,
+              ].join('\n'),
+              labels: ['release-automation', 'needs-triage']
+            });
