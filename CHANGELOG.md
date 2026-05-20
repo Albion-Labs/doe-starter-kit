@@ -7,6 +7,26 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.64.1 (2026-05-20)
+<!-- hero -->
+Add `.claude/worktrees/` to the kit's `.gitignore` so consumer projects using Claude Code's `EnterWorktree` background-isolation tool don't see the runtime worktree directory listed as untracked on every `git status`. Joins the existing `.claude/projects/` ignore line — same shape (Claude Code runtime path), same justification (never meant to be committed).
+<!-- /hero -->
+
+### Fixed
+- **`.gitignore`** — added `.claude/worktrees/` next to the existing `.claude/projects/` entry. Claude Code's `EnterWorktree` tool creates a git worktree under `.claude/worktrees/<name>/` for background-agent isolation; without an ignore line the directory shows as untracked in every `git status`. Pattern is additive and harmless for projects that never trigger `EnterWorktree` (no directory ever created, ignore line matches nothing).
+
+### Pull impact
+**Manual one-liner required per consumer project.** Project `.gitignore` files are hand-maintained — `setup.sh` does not merge kit gitignore entries into existing project gitignores (only `.claude/settings.json` hooks get merged). After `/pull-doe`, run this once per project that uses Claude Code background-isolation:
+
+```bash
+grep -qxF '.claude/worktrees/' .gitignore || echo '.claude/worktrees/' >> .gitignore
+git add .gitignore && git commit -m "chore: ignore .claude/worktrees/ per kit v1.64.1"
+```
+
+Projects that never use `EnterWorktree` can skip; the line is harmless either way.
+
+---
+
 ## v1.64.0 (2026-05-13)
 <!-- hero -->
 Auto-stamp completion timestamps on `[x]` task lines as they're marked. Closes the most common DOE CI failure class observed across kit consumers: `audit_claims.py` emits `Severity.FAIL` on `[x] without timestamp`, which blocks `DOE CI / Gates`. Stamping at marking time means the trigger never fires. A new PostToolUse hook (`.claude/hooks/stamp_todo_timestamps.py`) detects `[x]` lines in `tasks/todo.md` that lack the `*(completed HH:MM DD/MM/YY)*` suffix and appends one. Idempotent under repeated firing — re-stamping a stamped line is a no-op. A thin `.githooks/pre-commit` safety-net block runs the same logic on staged `tasks/todo.md` before the audit runs, catching direct human edits where Claude wasn't involved. Both paths share one script via a `--pre-commit FILE` CLI mode.
