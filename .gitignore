@@ -10,6 +10,7 @@ __pycache__/
 node_modules/
 .DS_Store
 .claude/projects/
+.claude/worktrees/
 
 # Security: keys, credentials, database files
 *.pem
