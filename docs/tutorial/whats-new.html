@@ -807,7 +807,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.64.0</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.64.1</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -882,6 +882,19 @@
 
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
+
+        <div class="release" id="v1-64-1">
+          <div class="release-header">
+            <span class="version-badge">v1.64.1</span>
+            <span class="release-date">20 May 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Add <code>.claude/worktrees/</code> to the kit&#x27;s <code>.gitignore</code> so consumer projects using Claude Code&#x27;s <code>EnterWorktree</code> background-isolation tool don&#x27;t see the runtime worktree directory listed as untracked on every <code>git status</code>. Joins the existing <code>.claude/projects/</code> ignore line — same shape (Claude Code runtime path), same justification (never meant to be committed).</p>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong><code>.gitignore</code></strong> — added <code>.claude/worktrees/</code> next to the existing <code>.claude/projects/</code> entry. Claude Code&#x27;s <code>EnterWorktree</code> tool creates a git worktree under <code>.claude/worktrees/&lt;name&gt;/</code> for background-agent isolation; without an ignore line the directory shows as untracked in every <code>git status</code>. Pattern is additive and harmless for projects that never trigger <code>EnterWorktree</code> (no directory ever created, ignore line matches nothing).</li>
+          </ul>
+        </div>
 
         <div class="release" id="v1-64-0">
           <div class="release-header">
@@ -965,6 +978,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (9 releases)</summary>
+
         <div class="release" id="v1-62-0">
           <div class="release-header">
             <span class="version-badge">v1.62.0</span>
@@ -991,10 +1008,6 @@
             <li><strong><code>execution/wrap_stats.py</code> <code>_merge_main_streak</code></strong> — null-coerce <code>lastSessionDate</code> via <code>or &quot;&quot;</code> so first-session wraps no longer hit <code>None &gt; None</code> TypeError. Discovered: every new DOE project&#x27;s first <code>/wrap</code> immediately after <code>bash setup.sh</code>. Regression covered by 6 new pytest cases.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (8 releases)</summary>
 
         <div class="release" id="v1-61-5">
           <div class="release-header">
@@ -3758,7 +3771,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.64.0</footer>
+        <footer class="site-footer">DOE Starter Kit v1.64.1</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
