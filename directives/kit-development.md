@@ -83,27 +83,66 @@ Kit content (CHANGELOG.md, docs/tutorial/, directives/, ROADMAP.md, kit PR descr
 
 ## Release mechanics
 
-Releases are **manual** after PR merge. The kit doesn't auto-release because the human merging is also the human deciding "yes, this is shippable as vX.Y.Z."
+Releases are **automatic** as of v1.65.0. The `auto-release` GitHub Action (`.github/workflows/auto-release.yml`) fires on every push to `main` -- PR merge, direct push, or any other route -- and runs the full release ceremony whenever the top `## vX.Y.Z` heading in `CHANGELOG.md` has no matching tag. Merge = release.
 
-After PR merge:
+### What the workflow does
+
+On every push to main:
+
+1. Extract the top `## vX.Y.Z` heading (pre-release tags like `vX.Y.Z-rc.1` excluded by regex)
+2. If `git rev-parse refs/tags/vX.Y.Z` succeeds, no-op and exit
+3. Otherwise: regen `whats-new.html`, run `stamp_tutorial_version.py`, commit `chore(stamp): vX.Y.Z`, **push commit**, **tag locally**, **push tag**, `gh release create` with notes from the CHANGELOG entry
+
+The workflow uses **commit-first / tag-second** ordering. This is the safe order for partial-failure recovery: if the tag push fails, the commit is already on origin and re-runs detect it (skip the redundant commit, tag the existing HEAD, push tag) -- recoverable. Tag-first would risk leaving an orphaned tag pointing to a SHA the runner had locally but never pushed; re-runs would see the tag and no-op, leaving the kit in a broken state.
+
+The manual fallback (below) uses the OPPOSITE order -- tag-first -- because the local pre-push tutorial-docs-version gate fires when pushing the branch and requires the tag to already match. GH Actions runners don't activate `.githooks/`, so the gate doesn't apply there and the workflow picks the safer ordering.
+
+The workflow is **idempotent**: every step is gated on state checks. Re-runs after partial failure detect what already happened and skip. Trigger a re-run via `workflow_dispatch` from the Actions UI.
+
+**On failure**, the workflow opens an issue labelled `release-automation` + `needs-triage` describing where it stopped and what to do.
+
+**Concurrency** is pinned: only one auto-release runs at a time (`concurrency.group: auto-release`, `cancel-in-progress: false`).
+
+### Why automatic
+
+The kit's prior "manual ceremony" rule depended on human memory at exactly the moment of context-switching after a PR merge -- when attention naturally migrates back to the project that prompted the kit work. v1.64.1 surfaced the gap: a 1-line gitignore patch merged cleanly, then the human pivoted to project work and only completed the release after explicit prompting. The original rationale ("the human merging is also the human deciding shippability") assumed merge != release-ready, but the kit's "one release per PR" model means merge IS release-ready by construction. The deferred-tag flexibility paid for nothing while drift accumulated.
+
+### When to bypass automation
+
+No skip flag by design. To merge a version-bumping PR without auto-releasing:
+
+1. Disable the workflow via Actions UI (`Actions -> auto-release -> ... -> Disable workflow`)
+2. Merge the PR
+3. When ready, run the manual fallback (below) to create the tag
+4. Re-enable the workflow (next push sees tag-already-exists, no-ops)
+
+Don't add a skip flag to the workflow file -- every flag is a foot-gun.
+
+### Manual fallback (if automation is broken)
 
 ```bash
 cd ~/doe-starter-kit
 git checkout main && git pull
-# Regenerate whats-new.html so the deployed docs reflect the new CHANGELOG entry.
 python3 execution/generate_whats_new.py
-git add docs/tutorial/whats-new.html
-git commit -m "docs(tutorial): regen whats-new for vX.Y.Z"
-git push
+python3 execution/stamp_tutorial_version.py vX.Y.Z
+git add docs/tutorial/
+SKIP_MAIN_PROTECTION=1 git commit -m "chore(stamp): vX.Y.Z"
 git tag vX.Y.Z
-git push origin vX.Y.Z
-gh release create vX.Y.Z --title "vX.Y.Z — <short-name>" \
-  --notes "$(sed -n '/^## vX\.Y\.Z/,/^## vX\.Y\./p' CHANGELOG.md | sed '$d')"
+git push origin vX.Y.Z         # tag first -- local pre-push gate doesn't fire on tag-only push
+git push                       # branch push -- gate now sees matching tag+docs, passes
+
+awk -v v="vX.Y.Z" '
+  in_section && /^## v[0-9]+\.[0-9]+\.[0-9]+/ { exit }
+  $0 ~ "^## " v "($| )" { in_section=1 }
+  in_section { print }
+' CHANGELOG.md > /tmp/release-notes.md
+
+gh release create vX.Y.Z --title "vX.Y.Z" --notes-file /tmp/release-notes.md
 ```
 
-The `generate_whats_new.py` step is enforced by the pre-push hook on tag push (added in v1.60.1): pushing `vX.Y.Z` fails if `docs/tutorial/whats-new.html` has no matching section. Skip with `SKIP_WHATSNEW_CHECK=1` for emergency releases.
+`SKIP_MAIN_PROTECTION=1` goes on the **commit** (the kit's pre-commit hook does the no-direct-to-main check). `SKIP_WHATSNEW_CHECK=1` on pre-push exists from v1.60.1 for genuine emergencies where regeneration itself fails.
 
-The release notes come from the CHANGELOG hero + sections of the release being shipped. The CHANGELOG is the source of truth -- write the entry there first; `gh release create` lifts it.
+The CHANGELOG is the source of truth -- both the workflow and the manual fallback lift release notes from it.
 
 ## CC self-dogfood
 
