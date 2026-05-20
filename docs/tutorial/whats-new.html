@@ -807,7 +807,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.64.1</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.65.0</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -882,6 +882,25 @@
 
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
+
+        <div class="release" id="v1-65-0">
+          <div class="release-header">
+            <span class="version-badge">v1.65.0</span>
+            <span class="release-date">20 May 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Releases are now <strong>automatic</strong>. A new GitHub Action workflow (<code>.github/workflows/auto-release.yml</code>) fires on every push to <code>main</code>, detects when the top <code>## vX.Y.Z</code> CHANGELOG heading has no matching tag, and runs the full release ceremony (regen <code>whats-new.html</code>, stamp tutorial, commit, push, tag, push tag, <code>gh release create</code>). Merge = release. Documented previously as a manual ceremony — now enforced by CI, eliminating the drift mode where a CHANGELOG version bump merged to main without a tag being created.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">v1.64.1 surfaced the gap concretely: a 1-line <code>.gitignore</code> patch merged cleanly, then the human running the kit work pivoted back to a project task. The post-merge ceremony (regen whats-new, stamp tutorial, tag, push tag, <code>gh release create</code>) was only completed after explicit prompting. The original &quot;Releases are manual&quot; rationale (&quot;the human merging is also the human deciding shippability&quot;) assumed merge ≠ release-ready; the kit&#x27;s &quot;one release per PR&quot; model means merge IS release-ready by construction. The deferred-tag flexibility paid for nothing while drift accumulated across the v1.62–v1.64 release window (multiple <code>chore(stamp): vX.Y.Z</code> commits arriving hours or days after their corresponding feature PRs). Automating the ceremony makes the rule load-bearing instead of memory-dependent. The workflow uses commit-first / tag-second ordering — opposite of the manual fallback (which uses tag-first because the local pre-push tutorial-docs-version gate fires when pushing the branch and requires the tag to match). GH Actions runners don&#x27;t activate <code>.githooks/</code>, so the gate doesn&#x27;t apply there and the workflow picks the safer ordering: if the tag push fails after a successful commit push, re-runs detect the existing commit, tag it, push tag — recoverable. Tag-first would risk leaving an orphaned tag pointing to a SHA the runner had locally but never pushed; re-runs would see the tag and no-op, leaving the kit broken.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>.github/workflows/auto-release.yml</code></strong> — new GitHub Action, triggers on <code>push: branches: [main]</code> + <code>workflow_dispatch</code>. Detects top <code>## vX.Y.Z</code> heading (pre-release tags like <code>vX.Y.Z-rc.1</code> excluded by regex requiring space or end-of-line after the version). If <code>git rev-parse refs/tags/vX.Y.Z</code> finds the tag, no-ops. Otherwise runs: <code>generate_whats_new.py</code>, <code>stamp_tutorial_version.py vX.Y.Z</code>, <code>git commit -m &quot;chore(stamp): vX.Y.Z&quot;</code> (only if tutorial diff exists), <code>git push origin main</code> (only if commit was made), <code>git tag vX.Y.Z</code>, <code>git push origin vX.Y.Z</code>, <code>gh release create vX.Y.Z --notes-file &lt;extracted&gt;</code>. Notes extracted from CHANGELOG via awk state-machine (avoids the sed/awk range-collapse bug where the start line also matches the end pattern). On failure, <code>actions/github-script@v7</code> opens an issue labelled <code>release-automation</code> + <code>needs-triage</code> with the run URL and recovery options. Concurrency pinned via <code>concurrency.group: auto-release, cancel-in-progress: false</code> — only one auto-release runs at a time. Permissions limited to <code>contents: write</code> + <code>issues: write</code>.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>directives/kit-development.md</code> → <code>## Release mechanics</code></strong> — rewritten to describe the auto-release workflow as the canonical path. Old &quot;manual after PR merge&quot; rationale replaced with the empirical drift case from v1.64.1. New sub-sections: &quot;What the workflow does&quot;, &quot;Why automatic&quot;, &quot;When to bypass automation&quot; (disable workflow via Actions UI for cases where you want to merge without auto-releasing), &quot;Manual fallback (if automation is broken)&quot;. Manual fallback retains tag-first ordering and <code>SKIP_MAIN_PROTECTION=1</code> on the commit (correcting the prior block which had <code>SKIP_MAIN_PROTECTION=1</code> on the wrong step and used a broken sed range for release-notes extraction).</li>
+          </ul>
+        </div>
 
         <div class="release" id="v1-64-1">
           <div class="release-header">
@@ -965,6 +984,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (10 releases)</summary>
+
         <div class="release" id="v1-62-1">
           <div class="release-header">
             <span class="version-badge">v1.62.1</span>
@@ -977,10 +1000,6 @@
             <li><strong><code>global-commands/wrap.md</code> Step 2 fallback for missing <code>.tmp/.session-start</code></strong> — replaces &quot;use the first commit time&quot; with an explicit instruction to set <code>sessionDuration</code> to <code>&quot;N/A&quot;</code> and skip the <code>--session-start</code> flag. Inline anti-pattern callout names the prose form to avoid (&quot;session timer not started &mdash; duration based on first commit&quot;) so future sessions don&#x27;t reinvent it.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (9 releases)</summary>
 
         <div class="release" id="v1-62-0">
           <div class="release-header">
@@ -3771,7 +3790,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.64.1</footer>
+        <footer class="site-footer">DOE Starter Kit v1.65.0</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
