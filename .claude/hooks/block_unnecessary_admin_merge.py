@@ -75,8 +75,14 @@ def main() -> None:
 
     command = event.get("tool_input", {}).get("command", "") or ""
 
-    # Only intercept `gh pr merge` with `--admin`
-    if "gh pr merge" not in command or "--admin" not in command:
+    # Only intercept `gh pr merge ... --admin` -- require --admin to appear
+    # AFTER `gh pr merge` on the same logical command line (no newline or
+    # statement-separator between them). Catches real flag usage while
+    # skipping false positives where --admin appears earlier in echo'd
+    # documentation cards, heredoc bodies, or unrelated chained commands.
+    # [v1.65.1 hotfix: prior naive substring match tripped on heredoc body
+    # containing the literal token "--admin" in a confirmation card.]
+    if not re.search(r'gh pr merge[^\n;]*--admin\b', command):
         sys.exit(0)
 
     # Bypass mechanism (env or inline). AI cannot set this autonomously
