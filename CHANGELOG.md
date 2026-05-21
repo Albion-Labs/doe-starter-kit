@@ -7,6 +7,38 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.65.1 (2026-05-21)
+<!-- hero -->
+Adds `block_unnecessary_admin_merge.py` PreToolUse Bash hook. Intercepts `gh pr merge --admin`, queries the authoritative `mergeStateStatus`, and refuses if the PR is `CLEAN` (admin override unnecessary) or `UNKNOWN` (GitHub still computing checks — transient, ~30-60s). Catches a recurring AI failure mode where Claude misreads the immediate-post-creation `UNKNOWN` window as a permanent block and reflexively reaches for `--admin`.
+<!-- /hero -->
+<!-- background -->
+The failure mode manifested in an Alkyion session 2026-05-21: four PRs (#22, #24, #23, attempted #25) were admin-merged across one afternoon when each was already (or about to be) mergeable normally. Root cause was `gh pr view N --json mergeStateStatus` returning `UNKNOWN` for the ~30-60s window after PR creation while GitHub registered the workflow's check-runs. Claude treated `UNKNOWN` as a permanent state and added `--admin` reflexively. Compounding the error, a "fix" was documented into `scaffold-s0-prep.md` Phase D (a project-side plan) renaming the required branch-protection check context to the workflow's display name (`DOE CI`) — which would have created a real permanent block, because the workflow's rollup check is actually `CI Result` (job `ci-result` line 401-402 of `doe-ci.yml`, `name: CI Result`). The names already matched; there was no drift. PR #25 normal-merged with no admin once the diagnosis was retraced via `gh api repos/<owner>/<repo>/commits/<sha>/check-runs` (the authoritative check-context source).
+
+`gh run list` shows workflow names; `gh api .../check-runs` shows check context names. The two are NOT interchangeable. Conflating them was the root analytical error. The hook is the deterministic guardrail; the directive-level fix is a new universal-learning entry pointing AI to query `/check-runs` before proposing any branch-protection remediation.
+<!-- /background -->
+
+### Added
+- **`.claude/hooks/block_unnecessary_admin_merge.py`** — 163-line PreToolUse Bash hook. Triggers on `gh pr merge` with `--admin` flag. Resolves PR number from explicit arg or current-branch fallback. Queries `gh pr view N --json state,mergeStateStatus,headRefOid`. Decision matrix: `CLEAN` → block with "drop --admin", `UNKNOWN` → block with "wait 30-60s for GitHub to finish computing", `BLOCKED` → surface failing check-runs and require `BYPASS_BLOCK=1` for legitimate override (e.g., unrelated CI breakage, urgent ship). Pass-through for `DIRTY`/`BEHIND`/non-`OPEN` states. Fails closed on API errors. Uses the `{"decision": "block", "reason": "..."}` JSON-output pattern matching `confirm_pr_merge.py`.
+
+### Changed
+- **`.claude/hooks/block_dangerous_commands.py`** — added `BYPASS_BLOCK` to `ASSIGNMENT_DANGEROUS` list. Pattern-matches the existing `SKIP_REVIEW_GATE`/`SKIP_CONTRACT_CHECK`/`SKIP_SIGNOFF_CHECK` discipline: the AI cannot autonomously set the bypass via Bash; the human exports it in their shell when admin-override is genuinely needed.
+- **`.claude/settings.json`** — wires the new hook into `PreToolUse.Bash` at the end of the existing hook chain (runs after `confirm_pr_merge`, so the bordered-card flow fires first, then the admin-necessity check).
+
+### Pull impact
+**Re-run `setup.sh` or `/pull-doe` to receive both files.** Consumer projects that previously had no protection against reflexive `--admin` will inherit it automatically. No manual migration step: `setup.sh` appends the new hook command to existing `settings.json` (dedupes by exact command-string match — first install adds it, re-runs no-op), and overwrites `block_dangerous_commands.py` with the kit version (the `BYPASS_BLOCK` addition lands as part of the file copy). Projects that have ALREADY added this hook out-of-band (e.g., Alkyion as the originating project) will see the kit version land as a no-op merge — the command strings and file contents are identical.
+
+**For humans:** if you legitimately need to admin-merge through a real `BLOCKED` state (CI broken for unrelated reasons, urgent ship), set `BYPASS_BLOCK=1` in your shell session (`export BYPASS_BLOCK=1`) and re-run. The variable is now in `ASSIGNMENT_DANGEROUS`, so an AI session cannot set it inline; a human must.
+
+### Smoke tests verified
+1. Non-admin merge command → hook passes through (no-op).
+2. `BYPASS_BLOCK=1` inline or env var → hook passes through.
+3. AI attempt to set `BYPASS_BLOCK=1` via Bash → blocked by `block_dangerous_commands` upstream.
+4. Nonexistent PR → fail-closed block.
+5. Closed/merged PR returning `UNKNOWN` mergeStateStatus → pass-through (the `state != "OPEN"` early return fix; first-design false-positive was caught during smoke testing).
+6. Real CLEAN PR — validated end-to-end via Alkyion PR #25 normal-merge with no admin (the empirical proof the diagnosis is correct).
+
+---
+
 ## v1.65.0 (2026-05-20)
 <!-- hero -->
 Releases are now **automatic**. A new GitHub Action workflow (`.github/workflows/auto-release.yml`) fires on every push to `main`, detects when the top `## vX.Y.Z` CHANGELOG heading has no matching tag, and runs the full release ceremony (regen `whats-new.html`, stamp tutorial, commit, push, tag, push tag, `gh release create`). Merge = release. Documented previously as a manual ceremony — now enforced by CI, eliminating the drift mode where a CHANGELOG version bump merged to main without a tag being created.

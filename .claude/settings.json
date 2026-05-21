@@ -97,6 +97,11 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/confirm_pr_merge.py\"",
             "description": "Block gh pr merge unless user approves"
+          },
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_unnecessary_admin_merge.py\"",
+            "description": "Block gh pr merge --admin when admin override isn't needed"
           }
         ]
       }

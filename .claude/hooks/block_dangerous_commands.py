@@ -34,6 +34,7 @@ ASSIGNMENT_DANGEROUS = [
     "SKIP_REVIEW_GATE",     # Adversarial-review bypass
     "SKIP_CONTRACT_CHECK",  # Contract-check bypass
     "SKIP_SIGNOFF_CHECK",   # Sign-off check bypass
+    "BYPASS_BLOCK",         # block_unnecessary_admin_merge bypass (must be human-set)
 ]
 
 
