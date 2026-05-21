@@ -807,7 +807,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.65.0</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.65.1</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -882,6 +882,26 @@
 
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
+
+        <div class="release" id="v1-65-1">
+          <div class="release-header">
+            <span class="version-badge">v1.65.1</span>
+            <span class="release-date">21 May 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Adds <code>block_unnecessary_admin_merge.py</code> PreToolUse Bash hook. Intercepts <code>gh pr merge --admin</code>, queries the authoritative <code>mergeStateStatus</code>, and refuses if the PR is <code>CLEAN</code> (admin override unnecessary) or <code>UNKNOWN</code> (GitHub still computing checks — transient, ~30-60s). Catches a recurring AI failure mode where Claude misreads the immediate-post-creation <code>UNKNOWN</code> window as a permanent block and reflexively reaches for <code>--admin</code>.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">The failure mode manifested in an Alkyion session 2026-05-21: four PRs (#22, #24, #23, attempted #25) were admin-merged across one afternoon when each was already (or about to be) mergeable normally. Root cause was <code>gh pr view N --json mergeStateStatus</code> returning <code>UNKNOWN</code> for the ~30-60s window after PR creation while GitHub registered the workflow&#x27;s check-runs. Claude treated <code>UNKNOWN</code> as a permanent state and added <code>--admin</code> reflexively. Compounding the error, a &quot;fix&quot; was documented into <code>scaffold-s0-prep.md</code> Phase D (a project-side plan) renaming the required branch-protection check context to the workflow&#x27;s display name (<code>DOE CI</code>) — which would have created a real permanent block, because the workflow&#x27;s rollup check is actually <code>CI Result</code> (job <code>ci-result</code> line 401-402 of <code>doe-ci.yml</code>, <code>name: CI Result</code>). The names already matched; there was no drift. PR #25 normal-merged with no admin once the diagnosis was retraced via <code>gh api repos/&lt;owner&gt;/&lt;repo&gt;/commits/&lt;sha&gt;/check-runs</code> (the authoritative check-context source). <code>gh run list</code> shows workflow names; <code>gh api .../check-runs</code> shows check context names. The two are NOT interchangeable. Conflating them was the root analytical error. The hook is the deterministic guardrail; the directive-level fix is a new universal-learning entry pointing AI to query <code>/check-runs</code> before proposing any branch-protection remediation.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>.claude/hooks/block_unnecessary_admin_merge.py</code></strong> — 163-line PreToolUse Bash hook. Triggers on <code>gh pr merge</code> with <code>--admin</code> flag. Resolves PR number from explicit arg or current-branch fallback. Queries <code>gh pr view N --json state,mergeStateStatus,headRefOid</code>. Decision matrix: <code>CLEAN</code> → block with &quot;drop --admin&quot;, <code>UNKNOWN</code> → block with &quot;wait 30-60s for GitHub to finish computing&quot;, <code>BLOCKED</code> → surface failing check-runs and require <code>BYPASS_BLOCK=1</code> for legitimate override (e.g., unrelated CI breakage, urgent ship). Pass-through for <code>DIRTY</code>/<code>BEHIND</code>/non-<code>OPEN</code> states. Fails closed on API errors. Uses the <code>{&quot;decision&quot;: &quot;block&quot;, &quot;reason&quot;: &quot;...&quot;}</code> JSON-output pattern matching <code>confirm_pr_merge.py</code>.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>.claude/hooks/block_dangerous_commands.py</code></strong> — added <code>BYPASS_BLOCK</code> to <code>ASSIGNMENT_DANGEROUS</code> list. Pattern-matches the existing <code>SKIP_REVIEW_GATE</code>/<code>SKIP_CONTRACT_CHECK</code>/<code>SKIP_SIGNOFF_CHECK</code> discipline: the AI cannot autonomously set the bypass via Bash; the human exports it in their shell when admin-override is genuinely needed.</li>
+            <li><strong><code>.claude/settings.json</code></strong> — wires the new hook into <code>PreToolUse.Bash</code> at the end of the existing hook chain (runs after <code>confirm_pr_merge</code>, so the bordered-card flow fires first, then the admin-necessity check).</li>
+          </ul>
+        </div>
 
         <div class="release" id="v1-65-0">
           <div class="release-header">
@@ -965,6 +985,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (11 releases)</summary>
+
         <div class="release" id="v1-62-2">
           <div class="release-header">
             <span class="version-badge">v1.62.2</span>
@@ -983,10 +1007,6 @@
             <li><strong><code>tests/claude_hooks/test_settings_paths_cwd_safe.py</code></strong> &mdash; 4 regression tests. <code>test_no_relative_hook_paths_in_settings</code> greps for any bare relative <code>.claude/hooks/</code> segment and fails on hit. <code>test_every_hook_uses_claude_project_dir</code> asserts the inverse. <code>test_hooks_resolve_when_cwd_changes</code> runs every hook command from <code>/tmp</code> via shell with <code>CLAUDE_PROJECT_DIR</code> exported, confirming no <code>can&#x27;t open file</code> / errno 2 failures. <code>test_claude_project_dir_required_at_runtime</code> confirms the fail-loud-on-missing-env-var contract &mdash; a sentinel that documents the conscious choice to skip the <code>$PWD</code> fallback.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (10 releases)</summary>
 
         <div class="release" id="v1-62-1">
           <div class="release-header">
@@ -3790,7 +3810,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.65.0</footer>
+        <footer class="site-footer">DOE Starter Kit v1.65.1</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
