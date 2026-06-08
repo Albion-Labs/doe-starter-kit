@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "framework-benchmark",
+  "project": {
+    "id": "fixture-synthetic",
+    "name": "Synthetic Fixture",
+    "repo": null
+  },
+  "generatedAt": "2026-06-08T21:06:33Z",
+  "catchRate": {
+    "injected": 7,
+    "caught": 6,
+    "rate": 0.8571,
+    "byGate": [
+      {
+        "gate": "block_secrets_in_code",
+        "defectClass": "leaked-secret",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "block_secrets_in_code",
+        "defectClass": "secret-env-write",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "block_dangerous_commands",
+        "defectClass": "destructive-command",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "block_dangerous_commands",
+        "defectClass": "gate-bypass",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "health_check",
+        "defectClass": "left-in-stub",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "health_check",
+        "defectClass": "todo-marker",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "(none - no deterministic gate)",
+        "defectClass": "logic-error",
+        "injected": 1,
+        "caught": 0
+      }
+    ],
+    "control": {
+      "injected": 7,
+      "caught": 0,
+      "rate": 0.0
+    }
+  },
+  "provenance": {
+    "kitCommit": "12e17220c74ac9b462fb828a25488a5f169719ef",
+    "gates": [
+      {
+        "script": ".claude/hooks/block_secrets_in_code.py",
+        "sha256_16": "5b458e6ee78a4fc2"
+      },
+      {
+        "script": ".claude/hooks/block_dangerous_commands.py",
+        "sha256_16": "48022eb0f5252d2d"
+      },
+      {
+        "script": "execution/health_check.py",
+        "sha256_16": "238b4f7eb7538cb5"
+      }
+    ]
+  }
+}

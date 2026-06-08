@@ -3,10 +3,14 @@
 
 Injects a corpus of known defects and measures how many the REAL DOE gates
 catch. catch-rate = caught / injected. The control arm (no gate present) catches
-0 by construction — that is the actual counterfactual for vanilla tooling
-(Lovable/Replit/raw Claude have no such gate), stated plainly, not rigged.
+0 by construction — the actual counterfactual for vanilla tooling, stated plainly.
 
-Gates invoked are the actual kit scripts, unmodified:
+Deterministic: pure Python 3, no network, no LLM, no randomness. Same inputs ->
+same scorecard (bar the generatedAt timestamp). The `provenance` block records
+the exact gate scripts (sha256) and kit commit tested, so a skeptic can confirm
+the number came from the real, unmodified shipped gates.
+
+Gates invoked are the actual kit scripts:
   .claude/hooks/block_secrets_in_code.py     (stdin tool-event -> block JSON)
   .claude/hooks/block_dangerous_commands.py  (stdin tool-event -> block JSON)
   execution/health_check.py                  (file scan -> WARN on findings)
@@ -16,7 +20,7 @@ Usage:
   python3 run.py --json      # also print the scorecard JSON
   python3 run.py --self-test # assert every COVERED fault is caught + control==0; exit 0/1
 """
-import json, shutil, subprocess, sys, tempfile
+import hashlib, json, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
 PROOF = Path(__file__).resolve().parent
@@ -26,11 +30,10 @@ HEALTH = KIT / "execution" / "health_check.py"
 FIXTURE = PROOF / "fixture"
 MANIFEST = PROOF / "corpus" / "manifest.json"
 OUT = PROOF / "out" / "scorecard.json"
+GATE_SCRIPTS = [HOOKS / "block_secrets_in_code.py", HOOKS / "block_dangerous_commands.py", HEALTH]
 
 
 def _run_hook(hook_file, event):
-    """Invoke a PreToolUse hook with a tool-event on stdin.
-    Returns (fired, detail): fired=True iff the hook emits a block decision."""
     path = HOOKS / hook_file
     if not path.exists():
         return None, f"gate script missing: {path}"
@@ -52,8 +55,6 @@ def _run_hook(hook_file, event):
 
 
 def _run_filescan(inject, check_name):
-    """Copy the fixture, inject a defect into src/app.py, run the REAL
-    health_check, report whether the named universal check went WARN."""
     if not HEALTH.exists():
         return None, f"gate script missing: {HEALTH}"
     tmp = Path(tempfile.mkdtemp(prefix="doe-proof-"))
@@ -72,8 +73,7 @@ def _run_filescan(inject, check_name):
         except json.JSONDecodeError:
             return None, "health_check produced non-JSON output"
         if check_name is None:
-            any_warn = any(r.get("status") == "WARN" for r in data.get("universal", []))
-            return any_warn, "any-gate scan"
+            return any(r.get("status") == "WARN" for r in data.get("universal", [])), "any-gate scan"
         for r in data.get("universal", []):
             if r.get("name") == check_name:
                 return (r.get("status") == "WARN"), r.get("detail", "") or r.get("status")
@@ -89,6 +89,23 @@ def _stamp():
             or "1970-01-01T00:00:00Z"
     except Exception:
         return "1970-01-01T00:00:00Z"
+
+
+def _provenance():
+    """Record exactly which gate scripts (and kit commit) produced this score,
+    so the number is auditable: clone at this commit, run, expect the same result."""
+    gates = []
+    for p in GATE_SCRIPTS:
+        if p.exists():
+            gates.append({"script": str(p.relative_to(KIT)),
+                          "sha256_16": hashlib.sha256(p.read_bytes()).hexdigest()[:16]})
+    commit = ""
+    try:
+        commit = subprocess.run(["git", "-C", str(KIT), "rev-parse", "HEAD"],
+                                capture_output=True, text=True, timeout=5).stdout.strip()
+    except Exception:
+        pass
+    return {"kitCommit": commit, "gates": gates}
 
 
 def run():
@@ -107,12 +124,10 @@ def run():
             fired, detail = _run_filescan(fa["inject"], None)
         else:
             fired, detail = None, f"unknown method {m}"
-        caught = bool(fired)  # for expect=block/flag a block IS the catch; for miss, fired stays False
+        caught = bool(fired)
         results.append({**fa, "fired": fired, "caught": caught, "detail": detail})
-        by_gate.append({
-            "gate": fa["gate"] or "(none - no deterministic gate)",
-            "defectClass": fa["class"], "injected": 1, "caught": 1 if caught else 0,
-        })
+        by_gate.append({"gate": fa["gate"] or "(none - no deterministic gate)",
+                        "defectClass": fa["class"], "injected": 1, "caught": 1 if caught else 0})
     injected = len(faults)
     caught = sum(1 for r in results if r["caught"])
     covered = [r for r in results if r.get("covered")]
@@ -128,6 +143,7 @@ def run():
             "byGate": by_gate,
             "control": {"injected": injected, "caught": 0, "rate": 0.0},
         },
+        "provenance": _provenance(),
     }
     return scorecard, results, cov_caught, len(covered)
 
@@ -145,7 +161,6 @@ def main(argv):
         mark = "CAUGHT" if r["caught"] else ("MISS  " if r.get("expect") == "miss" else "LEAK  ")
         print(f"    [{mark}] {r['id']} {r['class']:<20} via {r['gate'] or '(none)'}")
     print(f"  scorecard -> {OUT.relative_to(KIT)}")
-
     if "--self-test" in argv:
         problems = []
         for r in results:
@@ -165,7 +180,6 @@ def main(argv):
                 print("  -", pr)
             return 1
         print("SELF-TEST PASSED (every covered fault caught, control clean, scorecard valid)")
-
     if "--json" in argv:
         print(json.dumps(scorecard, indent=2))
     return 0
