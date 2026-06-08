@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOE v2.0 — Roadmap & Sequencing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0f; --bg-soft:#101018; --panel:#13131d; --panel-2:#171723;
+    --line:#23232f; --line-soft:#1c1c28;
+    --txt:#e7e7ef; --muted:#9a9ab0; --faint:#6b6b82;
+    --accent:#6c63ff; --accent-soft:#8b84ff;
+    --green:#34d399; --amber:#fbbf24; --red:#f87171; --blue:#60a5fa; --violet:#a78bfa;
+    --mono:'JetBrains Mono',ui-monospace,monospace; --sans:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:radial-gradient(1200px 600px at 80% -10%,rgba(108,99,255,.10),transparent 60%),var(--bg);
+    color:var(--txt);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;padding:0 0 100px}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  a{color:var(--accent-soft);text-decoration:none} a:hover{text-decoration:underline}
+
+  /* header */
+  header{padding:54px 0 30px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-soft);font-weight:600}
+  h1{font-size:42px;font-weight:800;letter-spacing:-.02em;margin:10px 0 8px;background:linear-gradient(90deg,#fff,#bdbdf0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{color:var(--muted);font-size:16px;max-width:760px}
+  .meta-row{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;font-family:var(--mono);font-size:12px;color:var(--faint)}
+  .meta-row b{color:var(--muted);font-weight:500}
+
+  section{margin-top:46px}
+  h2{font-size:13px;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+  h2::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+  /* thesis */
+  .thesis{background:linear-gradient(180deg,var(--panel),var(--bg-soft));border:1px solid var(--line);border-radius:16px;padding:28px 30px}
+  .thesis .big{font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.45}
+  .thesis .big em{color:var(--accent-soft);font-style:normal}
+  .thesis p{color:var(--muted);margin-top:14px;font-size:15px}
+  .pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+  .pill{font-family:var(--mono);font-size:11.5px;padding:6px 11px;border-radius:8px;border:1px solid var(--line);color:var(--muted);background:var(--panel-2)}
+  .pill b{color:var(--txt)}
+
+  /* keystone callout */
+  .keystone{margin-top:22px;border:1px solid rgba(108,99,255,.4);background:linear-gradient(135deg,rgba(108,99,255,.12),rgba(108,99,255,.03));border-radius:14px;padding:22px 24px;position:relative;overflow:hidden}
+  .keystone::after{content:"#78";position:absolute;right:18px;top:8px;font-family:var(--mono);font-size:64px;font-weight:700;color:rgba(108,99,255,.10)}
+  .keystone .lab{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent-soft);font-weight:600}
+  .keystone h3{font-size:20px;font-weight:700;margin:6px 0 8px}
+  .keystone p{color:var(--muted);font-size:14.5px;max-width:780px}
+
+  /* dependency flow */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-top:8px}
+  .fnode{flex:1;min-width:150px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 15px;position:relative}
+  .fnode .t{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.1em;text-transform:uppercase}
+  .fnode .h{font-weight:600;font-size:14px;margin-top:4px}
+  .fnode .d{color:var(--muted);font-size:12.5px;margin-top:4px}
+  .farrow{display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:20px;padding:0 10px;font-family:var(--mono)}
+  .fnode.key{border-color:rgba(108,99,255,.5);background:linear-gradient(135deg,rgba(108,99,255,.10),var(--panel))}
+
+  /* tiers */
+  .tier{border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:18px;background:var(--bg-soft)}
+  .tier-head{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--line-soft);background:var(--panel)}
+  .tier-tag{font-family:var(--mono);font-size:12px;font-weight:700;padding:5px 10px;border-radius:7px;letter-spacing:.05em}
+  .t0{background:rgba(96,165,250,.14);color:var(--blue)}
+  .t1{background:rgba(108,99,255,.18);color:var(--accent-soft)}
+  .t2{background:rgba(52,211,153,.14);color:var(--green)}
+  .t3{background:rgba(251,191,36,.14);color:var(--amber)}
+  .t4{background:rgba(155,155,178,.14);color:var(--faint)}
+  .tier-head .name{font-weight:700;font-size:16px}
+  .tier-head .when{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  .tier-body{padding:18px 22px;display:grid;gap:14px}
+
+  /* issue card */
+  .card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--panel-2)}
+  .card-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .inum{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent-soft);background:rgba(108,99,255,.1);padding:2px 8px;border-radius:6px}
+  .ititle{font-weight:600;font-size:15.5px}
+  .area{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);border:1px solid var(--line);padding:3px 8px;border-radius:6px}
+  .card .imp{color:var(--muted);font-size:14px;margin-top:9px}
+  .card .note{margin-top:11px;font-size:13px;border-left:2px solid var(--accent);padding:7px 0 7px 12px;color:var(--txt);background:linear-gradient(90deg,rgba(108,99,255,.06),transparent)}
+  .card .note b{color:var(--accent-soft)}
+  .dep{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:9px}
+  .dep b{color:var(--muted)}
+
+  /* two-col */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:780px){.grid2{grid-template-columns:1fr}}
+
+  .callout{border:1px solid var(--line);border-radius:14px;padding:22px 24px;background:var(--panel)}
+  .callout.hq{border-color:rgba(52,211,153,.35);background:linear-gradient(135deg,rgba(52,211,153,.07),var(--panel))}
+  .callout.push{border-color:rgba(248,113,113,.3);background:linear-gradient(135deg,rgba(248,113,113,.05),var(--panel))}
+  .callout h3{font-size:17px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:9px}
+  .callout p{color:var(--muted);font-size:14px;margin-top:8px}
+  .callout ul{margin:10px 0 0 2px;list-style:none;display:grid;gap:9px}
+  .callout li{color:var(--muted);font-size:14px;padding-left:22px;position:relative}
+  .callout li::before{content:"›";position:absolute;left:6px;color:var(--accent);font-family:var(--mono);font-weight:700}
+  .callout li b{color:var(--txt)}
+
+  .footer{margin-top:50px;padding-top:22px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--faint);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .tag{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:5px;background:rgba(155,155,178,.12);color:var(--faint);margin-left:6px;vertical-align:middle}
+
+  /* theme toggle */
+  .theme-toggle{position:fixed;top:16px;right:18px;z-index:50;display:flex;gap:2px;padding:3px;border:1px solid var(--line);background:var(--panel);border-radius:9px;box-shadow:0 6px 24px rgba(0,0,0,.28)}
+  .theme-toggle button{border:none;background:transparent;color:var(--faint);font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border-radius:6px;cursor:pointer;transition:background .15s,color .15s}
+  .theme-toggle button.active{background:var(--accent);color:#fff}
+  .theme-toggle button:hover:not(.active){color:var(--txt)}
+
+  /* ---- LIGHT MODE ---- */
+  :root[data-theme="light"]{
+    --bg:#f5f5f1; --bg-soft:#ffffff; --panel:#ffffff; --panel-2:#fafaf7;
+    --line:#e6e5df; --line-soft:#efeee9;
+    --txt:#1b1b24; --muted:#56566a; --faint:#8e8ea0;
+    --accent:#6c63ff; --accent-soft:#5249d6;
+  }
+  :root[data-theme="light"] body{background:radial-gradient(1200px 600px at 80% -10%,rgba(108,99,255,.09),transparent 60%),var(--bg)}
+  :root[data-theme="light"] h1{background:linear-gradient(90deg,#1b1b24,#4b44b8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  :root[data-theme="light"] .theme-toggle{box-shadow:0 6px 24px rgba(80,80,110,.14)}
+  :root[data-theme="light"] .keystone::after{color:rgba(108,99,255,.12)}
+</style>
+</head>
+<body>
+<div class="theme-toggle" role="group" aria-label="Theme">
+  <button data-set="dark">Dark</button>
+  <button data-set="light">Light</button>
+</div>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">DOE Starter Kit · Planning Artifact</div>
+    <h1>v2.0 Roadmap &amp; Sequencing</h1>
+    <p class="sub">A maturation milestone, not a feature wave. The throughline: <b style="color:var(--txt)">earn the right to grow by first instrumenting and consolidating</b> — measure what the kit does, prove what works, trim what doesn't.</p>
+    <div class="meta-row">
+      <span><b>Date</b> 2026-06-08</span>
+      <span><b>Repo</b> Albion-Labs/doe-starter-kit</span>
+      <span><b>Committed V2 items</b> 5</span>
+      <span><b>Demand-gated</b> 2</span>
+      <span><b>Status</b> pre-milestone, synced to GH</span>
+    </div>
+  </header>
+
+  <!-- THESIS -->
+  <section>
+    <h2>The diagnosis</h2>
+    <div class="thesis">
+      <div class="big">V2 is dominated by one meta-theme: <em>measure &amp; consolidate</em>, not accumulate. Four of the original six issues are about proving and trimming what already exists; only two add genuinely new capability — and both are gated on demand that doesn't exist yet.</div>
+      <p>The kit diagnosed its own problem: v1.55–v1.62 were "INFRA-on-INFRA" (4 of 5 releases). It has grown to <b style="color:var(--txt)">28 directives · 33 commands · 18 scripts</b>. V2 is the planned correction. The danger to name out loud: <b style="color:var(--txt)">V2 itself becomes more INFRA-on-INFRA</b> unless a value benchmark gates it.</p>
+      <div class="pills">
+        <span class="pill"><b>Measure &amp; trim</b> · #78 #24 #28 #65</span>
+        <span class="pill"><b>Reliability</b> · #35</span>
+        <span class="pill"><b>New capability (gated)</b> · #25 #26 #27</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- KEYSTONE -->
+  <section>
+    <h2>The keystone nobody had filed</h2>
+    <div class="keystone">
+      <div class="lab">New issue · created during this sequencing</div>
+      <h3>#78 — Session telemetry spine</h3>
+      <p>Half of V2 is blocked on the same missing substrate: structured per-session measurement of what the kit actually does. <b style="color:var(--txt)">#24, #28 and #65 cannot proceed without it</b>, and no issue owned it. A local-first, hook-emitted, append-only event log (directive fires · command usage · rule violations · session meta) is the first real domino — and it doubles as the data layer for the HQ dashboard.</p>
+      <div class="flow" style="margin-top:18px">
+        <div class="fnode key"><div class="t">Keystone</div><div class="h">#78 Telemetry spine</div><div class="d">load-rates · usage · violations</div></div>
+        <div class="farrow">→</div>
+        <div class="fnode"><div class="t">unblocks</div><div class="h">#24 Bloat audit</div><div class="d">per-directive load-rate</div></div>
+        <div class="farrow">→</div>
+        <div class="fnode"><div class="t">unblocks</div><div class="h">#28 Output evals</div><div class="d">per-rule pass-rate</div></div>
+        <div class="farrow">→</div>
+        <div class="fnode"><div class="t">feeds</div><div class="h">#65 Benchmark</div><div class="d">DOE-on vs off baseline</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEQUENCING / TIERS -->
+  <section>
+    <h2>Sequencing — five tiers</h2>
+
+    <div class="tier">
+      <div class="tier-head"><span class="tier-tag t0">TIER 0</span><span class="name">Precursors — land before milestone opens</span><span class="when">low effort · fast-follow</span></div>
+      <div class="tier-body">
+        <div class="card">
+          <div class="card-top"><span class="inum">#35▸</span><span class="ititle">Auto doc-sync precursor patches (1–3)</span><span class="area">Reliability</span></div>
+          <div class="imp">Pre-push tag check + extended pre-commit doc mappings + release-checklist line. Closes the most common drift paths without v2-scale infra. ~30 min total.</div>
+          <div class="dep"><b>Why first:</b> independent of telemetry; stops staleness bleeding while the bigger work happens.</div>
+        </div>
+        <div class="card">
+          <div class="card-top"><span class="inum">#65</span><span class="ititle">Comparative DOE-value benchmark suite</span><span class="area">Measurement</span></div>
+          <div class="imp">Baseline of measurable signals (DOE-on vs DOE-off). Explicit precursor to #24 and #28.</div>
+          <div class="note"><b>Gate role:</b> the benchmark is what justifies the trimming in Tier 2. Measure value <b>before</b> cutting surface, or the audit is just vibes.</div>
+          <div class="dep"><b>Couples with</b> #78 (shares the measurable-baseline requirement)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head"><span class="tier-tag t1">TIER 1</span><span class="name">Keystone — the substrate everything reads from</span><span class="when">the first real domino</span></div>
+      <div class="tier-body">
+        <div class="card">
+          <div class="card-top"><span class="inum">#78</span><span class="ititle">Session telemetry spine</span><span class="area">Substrate</span></div>
+          <div class="imp">Append-only JSONL per project: directive fired, command invoked, correction/violation, session meta. Hook-emitted, local-first, air-gappable, derived-not-authoritative.</div>
+          <div class="note"><b>Highest structural leverage in V2.</b> Unblocks #24, #28; feeds #65; is the read-source for the HQ dashboard. Build this and three other items become tractable.</div>
+          <div class="dep"><b>Privacy:</b> shares the air-gap stance with #25 — regulated projects emit nothing to third parties.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head"><span class="tier-tag t2">TIER 2</span><span class="name">Measure &amp; Trim — the core of the milestone</span><span class="when">needs Tier 1</span></div>
+      <div class="tier-body">
+        <div class="card">
+          <div class="card-top"><span class="inum">#24</span><span class="ititle">Kit-bloat audit</span><span class="area">Simplification</span></div>
+          <div class="imp">Per-directive load-rate + per-command usage → cut 30%+ surface area with no capability loss. Directives firing &lt;20% of sessions are merge/remove candidates.</div>
+          <div class="note"><b>Spine of V2 — and the most avoided item on the board.</b> Deleting your own surface is psychologically hardest, which is exactly why it keeps slipping. This is where the milestone earns its name.</div>
+          <div class="dep"><b>Blocked on</b> #78 · <b>gated by</b> #65</div>
+        </div>
+        <div class="card">
+          <div class="card-top"><span class="inum">#28</span><span class="ititle">Output evals — binary YES/NO sub-criteria</span><span class="area">Quality</span></div>
+          <div class="imp">IFEval / InFoBench pattern: decompose each rule into binary criteria, run against transcripts, flag rules &lt;80% pass-rate for "re-grammaring" (the Pink Elephant cycle).</div>
+          <div class="dep"><b>Blocked on</b> #78 + claude-doctor Phase 2 (needs 3mo of signal baseline)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head"><span class="tier-tag t3">TIER 3</span><span class="name">Build-out — reliability &amp; privacy-gated capability</span><span class="when">parallelisable</span></div>
+      <div class="tier-body">
+        <div class="card">
+          <div class="card-top"><span class="inum">#35</span><span class="ititle">Auto doc-sync — full architecture</span><span class="area">Reliability</span></div>
+          <div class="imp">No deployed doc drifts &gt;1 merge cycle without a hard error. Manifest-based source→doc mappings, auto-regenerated whats-new, PR-merge doc gate. (Precursors already landed in Tier 0.)</div>
+          <div class="dep"><b>Independent</b> of the telemetry chain — can run in parallel.</div>
+        </div>
+        <div class="card">
+          <div class="card-top"><span class="inum">#25</span><span class="ititle">Persistent cross-session memory layer</span><span class="area">Memory</span></div>
+          <div class="imp">Continuous context beyond STATE.md/learnings.md, integrated with stand-up/wrap/crack-on.</div>
+          <div class="note"><b>Start boring &amp; air-gapped.</b> Skip proprietary/paid supermemory — monty's regulated data (voter/party/donor) rules out any third-party memory layer. Begin with the "extend STATE.md with structured fields + retrieval" option; self-host (beads/mem0) only if needed.</div>
+          <div class="dep"><b>Shares privacy stance with</b> #78</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head"><span class="tier-tag t4">TIER 4</span><span class="name">Demand-gated — deferred from the milestone</span><span class="when">build only when trigger fires</span></div>
+      <div class="tier-body">
+        <div class="card">
+          <div class="card-top"><span class="inum">#26</span><span class="ititle">Cross-project asset registry <span class="tag">re-tiered v2.0 → triggered</span></span><span class="area">Ecosystem</span></div>
+          <div class="imp">Share directives/agents across projects &amp; humans, PR-vetted, project-type tagged.</div>
+          <div class="note"><b>Premature.</b> Gated on 10+ active projects (currently ~7) or a non-Will contributor asking. Building registry infra for an audience of 3 is the exact INFRA-on-INFRA trap #24 exists to fix.</div>
+          <div class="dep"><b>Trigger:</b> 10+ active DOE projects · non-Will contributor demand</div>
+        </div>
+        <div class="card">
+          <div class="card-top"><span class="inum">#27</span><span class="ititle">Performance-engineering directive <span class="tag">re-tiered v2.0 → triggered</span></span><span class="area">Capability depth</span></div>
+          <div class="imp">Full Doodlestein 7-stage perf pipeline, hypothesis ledger, artefact format.</div>
+          <div class="note"><b>No DOE user needs it yet.</b> The generalised principle ("no hotspot list → no change") already landed in Phase 1B building-rules.md, so the gap is covered until real depth is required.</div>
+          <div class="dep"><b>Trigger:</b> first real perf need · monty Framework Migration Step 18</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HQ SYNERGY + PUSHBACK -->
+  <section>
+    <h2>Two things worth holding onto</h2>
+    <div class="grid2">
+      <div class="callout hq">
+        <h3>◆ The HQ dashboard synergy</h3>
+        <p>The personal HQ command center (being built now) is the natural <b style="color:var(--txt)">read-surface</b> for #78's telemetry. Decision taken: build HQ with the telemetry layer in mind, so it does double duty.</p>
+        <ul>
+          <li>Per-project view: <b>ops</b> (GitHub/Vercel) + <b>narrative</b> (session history)</li>
+          <li>Kit-wide view: which directives fire, which rules get violated, which commands are dead weight</li>
+          <li>Net effect: <b>the personal tool kickstarts the V2 keystone for free</b></li>
+        </ul>
+      </div>
+      <div class="callout push">
+        <h3>◆ Where I pushed back</h3>
+        <ul>
+          <li><b>#26 &amp; #27 are premature</b> — re-tiered to demand-gated, not milestone work</li>
+          <li><b>#24 is highest-leverage &amp; most avoided</b> — make it the spine, not the afterthought</li>
+          <li><b>#25: don't adopt proprietary supermemory</b> — regulated data forces the air-gapped path</li>
+          <li><b>Gate V2 with #65</b> — or the milestone repeats the INFRA-on-INFRA sin it exists to cure</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUILD ON TOP -->
+  <section>
+    <h2>Building on top — the "and more"</h2>
+    <div class="callout">
+      <ul>
+        <li><b>The telemetry spine (#78)</b> is the single biggest unlock and wasn't on the board — now filed.</li>
+        <li><b>A unified "feature-lifecycle manifest"</b> — every kit feature → code / docs / test / eval / usage status — could serve #35, #24 and #28 from one artifact instead of three bespoke systems.</li>
+        <li><b>Saved-query-as-widget</b> (Sourcegraph Code Insights pattern): "directives unused &gt;N sessions", "rules &lt;80% pass" as tracked trend lines in HQ.</li>
+        <li><b>Cost/token economics</b> per session — no V2 issue covers it; cheap to add once #78 exists.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="footer">
+    <span>DOE v2.0 roadmap · generated 2026-06-08 · uncommitted planning artifact (PR before merge)</span>
+    <span>docs/planning/v2-roadmap.html</span>
+  </div>
+</div>
+<script>
+(function(){
+  var root=document.documentElement;
+  var saved=localStorage.getItem('doe-roadmap-theme');
+  if(saved){root.setAttribute('data-theme',saved);}
+  var btns=document.querySelectorAll('.theme-toggle button');
+  function sync(){var t=root.getAttribute('data-theme')||'dark';btns.forEach(function(b){b.classList.toggle('active',b.dataset.set===t);});}
+  btns.forEach(function(b){b.addEventListener('click',function(){root.setAttribute('data-theme',b.dataset.set);localStorage.setItem('doe-roadmap-theme',b.dataset.set);sync();});});
+  sync();
+})();
+</script>
+</body>
+</html>
