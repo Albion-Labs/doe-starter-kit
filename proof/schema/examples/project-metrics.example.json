@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "project-metrics",
+  "project": { "id": "fixture-with-history", "name": "Synthetic Project With History", "repo": null },
+  "generatedAt": "2026-06-08T19:30:00Z",
+  "dora": {
+    "changeFailureRate": 0.04,
+    "reworkRate": 0.11,
+    "leadTimeHours": 6.2,
+    "deployFrequencyPerWeek": 9.0,
+    "window": { "from": "2026-05-08T00:00:00Z", "to": "2026-06-08T00:00:00Z" }
+  },
+  "economics": {
+    "poundsSaved": 0,
+    "model": "defects-shifted-left x mean-remediation-cost (sourced, conservative)",
+    "sources": ["NIST 2002 ($59.5B/yr US macro)", "Boehm-Basili 2001 (5:1 small-system fix ratio)"]
+  },
+  "defectsCaught": [
+    { "id": "F01", "class": "leaked-secret", "gate": "block_secrets_in_code", "caughtAt": "2026-05-20T11:04:00Z", "estimatedCostGBP": 0, "costBasis": "pre-merge catch; no production exposure" }
+  ],
+  "history": [
+    { "at": "2026-05-08T00:00:00Z", "changeFailureRate": 0.09, "reworkRate": 0.18 },
+    { "at": "2026-06-08T00:00:00Z", "changeFailureRate": 0.04, "reworkRate": 0.11 }
+  ],
+  "perception": { "dxiScore": null, "frictionFlag": false }
+}
