@@ -53,6 +53,15 @@ def _merges(repo, days):
     return [int(x) for x in out.splitlines() if x.strip().isdigit()]
 
 
+def _median(xs):
+    xs = sorted(xs)
+    n = len(xs)
+    if n == 0:
+        return None
+    mid = n // 2
+    return xs[mid] if n % 2 else round((xs[mid - 1] + xs[mid]) / 2, 2)
+
+
 def _lead_time_hours(repo, days):
     out = _git(repo, "log", f"--since={days} days ago", "--merges", "--pretty=%H %ct")
     leads = []
@@ -70,10 +79,7 @@ def _lead_time_hours(repo, days):
         times = [int(x) for x in _git(repo, "log", f"{base}..{parents[2]}", "--pretty=%ct").splitlines() if x.strip().isdigit()]
         if times:
             leads.append((ct - min(times)) / 3600.0)
-    if not leads:
-        return None
-    leads.sort()
-    return round(leads[len(leads) // 2], 2)
+    return _median(leads)
 
 
 def compute(repo, days, defects_caught=0):
@@ -89,6 +95,8 @@ def compute(repo, days, defects_caught=0):
         "changeFailureRate": min(cfr, 1.0),
         "reworkRate": min(rwr, 1.0),
         "deployFrequencyPerWeek": round((len(merges) or total) / weeks, 2),
+        "deployFrequencyBasis": "merges" if merges else "commits (no merge commits found)",
+        "basis": "git-commit-message heuristic PROXY -- not deployment/incident telemetry",
     }
     lead = _lead_time_hours(repo, days)
     if lead is not None:
@@ -131,8 +139,8 @@ def _self_test():
             problems.append(f"CFR {sc['dora']['changeFailureRate']} != 0.25")
         if sc["dora"]["reworkRate"] != 0.375:
             problems.append(f"reworkRate {sc['dora']['reworkRate']} != 0.375")
-        if sc["economics"]["poundsSaved"] <= 0:
-            problems.append("poundsSaved not computed for defects_caught=6")
+        if sc["economics"]["poundsSaved"] != 360.0:
+            problems.append(f"poundsSaved {sc['economics']['poundsSaved']} != expected 360.0 (6 x 15 x 4)")
         OUT.parent.mkdir(parents=True, exist_ok=True)
         OUT.write_text(json.dumps(sc, indent=2))
         v = subprocess.run([sys.executable, str(PROOF / "schema" / "validate.py"), str(OUT)],

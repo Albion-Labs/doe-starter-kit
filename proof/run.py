@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """DOE Proof Kit — fault-injection harness (PK-1).
 
-Injects a corpus of known defects and measures how many the REAL DOE gates
-catch. catch-rate = caught / injected. The control arm (no gate present) catches
-0 by construction — the actual counterfactual for vanilla tooling, stated plainly.
+Injects a corpus of known defects, runs the REAL DOE gates, scores catch-rate
+(caught / injected). Two honest measurements accompany it:
+  - falsePositives: each gate is also run against a BENIGN counterpart input;
+    it must NOT fire. This is MEASURED and proves the gates discriminate rather
+    than always-fire.
+  - control: 0 by CONSTRUCTION (vanilla tooling has none of these gates) -- this
+    is labelled as such, not dressed up as a measured experiment.
 
-Deterministic: pure Python 3, no network, no LLM, no randomness. Same inputs ->
-same scorecard (bar the generatedAt timestamp). The `provenance` block records
-the exact gate scripts (sha256) and kit commit tested, so a skeptic can confirm
-the number came from the real, unmodified shipped gates.
+"enforcement" distinguishes a hard BLOCK (hook decision) from an advisory FLAG
+(health_check WARN, non-blocking), so the card never presents a flag as a block.
 
-Gates invoked are the actual kit scripts:
-  .claude/hooks/block_secrets_in_code.py     (stdin tool-event -> block JSON)
-  .claude/hooks/block_dangerous_commands.py  (stdin tool-event -> block JSON)
-  execution/health_check.py                  (file scan -> WARN on findings)
+Deterministic: pure Python 3, no network, no LLM, no randomness (bar generatedAt).
+provenance records the sha256 of each real gate + the kit commit.
 
 Usage:
-  python3 run.py             # run, write out/scorecard.json, print summary
-  python3 run.py --json      # also print the scorecard JSON
-  python3 run.py --self-test # assert every COVERED fault is caught + control==0; exit 0/1
+  python3 run.py            # run, write out/scorecard.json, print summary
+  python3 run.py --json     # also print the scorecard JSON
+  python3 run.py --self-test
 """
 import hashlib, json, shutil, subprocess, sys, tempfile
 from pathlib import Path
@@ -31,6 +31,7 @@ FIXTURE = PROOF / "fixture"
 MANIFEST = PROOF / "corpus" / "manifest.json"
 OUT = PROOF / "out" / "scorecard.json"
 GATE_SCRIPTS = [HOOKS / "block_secrets_in_code.py", HOOKS / "block_dangerous_commands.py", HEALTH]
+ENFORCEMENT = {"block": "blocked", "flag": "flagged", "miss": "none"}
 
 
 def _run_hook(hook_file, event):
@@ -40,7 +41,7 @@ def _run_hook(hook_file, event):
     try:
         p = subprocess.run([sys.executable, str(path)], input=json.dumps(event),
                            capture_output=True, text=True, timeout=30)
-    except Exception as ex:
+    except (OSError, subprocess.SubprocessError) as ex:
         return None, f"invoke error: {ex}"
     out = (p.stdout or "").strip()
     if not out:
@@ -61,12 +62,13 @@ def _run_filescan(inject, check_name):
     try:
         dst = tmp / "fixture"
         shutil.copytree(FIXTURE, dst)
-        with open(dst / "src" / "app.py", "a") as f:
-            f.write(inject)
+        if inject:
+            with open(dst / "src" / "app.py", "a") as f:
+                f.write(inject)
         try:
             p = subprocess.run([sys.executable, str(HEALTH), "--json", "--quick"],
                                cwd=str(dst), capture_output=True, text=True, timeout=60)
-        except Exception as ex:
+        except (OSError, subprocess.SubprocessError) as ex:
             return None, f"invoke error: {ex}"
         try:
             data = json.loads(p.stdout)
@@ -82,52 +84,69 @@ def _run_filescan(inject, check_name):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def _fire_hook_value(fa, value):
+    ti = dict(fa.get("input_extra", {}))
+    ti[fa["input_field"]] = value
+    return _run_hook(fa["hook"], {"tool_name": fa["tool_name"], "tool_input": ti})
+
+
+def _fire(fa, benign=False):
+    """Run the gate for fault `fa`. benign=True runs the safe counterpart and
+    expects NO fire. Returns (fired, detail)."""
+    m = fa["method"]
+    if m == "hook":
+        parts = fa["benign_value_parts"] if benign else fa["value_parts"]
+        return _fire_hook_value(fa, "".join(parts))
+    inject = "" if benign else fa["inject"]
+    check = fa.get("check")
+    return _run_filescan(inject, check if check else None)
+
+
 def _stamp():
     try:
         return subprocess.run(["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"],
-                              capture_output=True, text=True, timeout=5).stdout.strip() \
-            or "1970-01-01T00:00:00Z"
-    except Exception:
+                              capture_output=True, text=True, timeout=5).stdout.strip() or "1970-01-01T00:00:00Z"
+    except (OSError, subprocess.SubprocessError):
         return "1970-01-01T00:00:00Z"
 
 
 def _provenance():
-    """Record exactly which gate scripts (and kit commit) produced this score,
-    so the number is auditable: clone at this commit, run, expect the same result."""
     gates = []
     for p in GATE_SCRIPTS:
         if p.exists():
             gates.append({"script": str(p.relative_to(KIT)),
                           "sha256_16": hashlib.sha256(p.read_bytes()).hexdigest()[:16]})
+        else:
+            gates.append({"script": str(p.relative_to(KIT)), "sha256_16": "MISSING"})
     commit = ""
     try:
         commit = subprocess.run(["git", "-C", str(KIT), "rev-parse", "HEAD"],
                                 capture_output=True, text=True, timeout=5).stdout.strip()
-    except Exception:
+    except (OSError, subprocess.SubprocessError):
         pass
-    return {"kitCommit": commit, "gates": gates}
+    return {"kitCommit": commit or "UNKNOWN", "gates": gates}
 
 
 def run():
     faults = json.loads(MANIFEST.read_text())["faults"]
     results, by_gate = [], []
+    fp_fired = 0
+    fp_detail = []
     for fa in faults:
-        m = fa["method"]
-        if m == "hook":
-            value = "".join(fa["value_parts"])
-            ti = dict(fa.get("input_extra", {}))
-            ti[fa["input_field"]] = value
-            fired, detail = _run_hook(fa["hook"], {"tool_name": fa["tool_name"], "tool_input": ti})
-        elif m == "filescan":
-            fired, detail = _run_filescan(fa["inject"], fa["check"])
-        elif m == "filescan-miss":
-            fired, detail = _run_filescan(fa["inject"], None)
-        else:
-            fired, detail = None, f"unknown method {m}"
+        fired, detail = _fire(fa, benign=False)
         caught = bool(fired)
         results.append({**fa, "fired": fired, "caught": caught, "detail": detail})
-        by_gate.append({"gate": fa["gate"] or "(none - no deterministic gate)",
-                        "defectClass": fa["class"], "injected": 1, "caught": 1 if caught else 0})
+        by_gate.append({
+            "gate": fa["gate"] or "(none - no deterministic gate)",
+            "defectClass": fa["class"],
+            "enforcement": ENFORCEMENT.get(fa.get("expect"), "unknown"),
+            "injected": 1, "caught": 1 if caught else 0,
+        })
+        # measured false-positive arm: run the benign counterpart, expect no fire
+        bfired, bdetail = _fire(fa, benign=True)
+        if bfired:
+            fp_fired += 1
+            fp_detail.append(f"{fa['id']} false-fired on benign input ({bdetail})")
     injected = len(faults)
     caught = sum(1 for r in results if r["caught"])
     covered = [r for r in results if r.get("covered")]
@@ -141,7 +160,16 @@ def run():
             "injected": injected, "caught": caught,
             "rate": round(caught / injected, 4) if injected else 0.0,
             "byGate": by_gate,
-            "control": {"injected": injected, "caught": 0, "rate": 0.0},
+            "control": {
+                "injected": injected, "caught": 0, "rate": 0.0,
+                "basis": "by-construction: vanilla tooling (raw Claude / Lovable / Replit) has none of these gates, so it catches none of these defects",
+            },
+        },
+        "falsePositives": {
+            "injected": injected, "fired": fp_fired,
+            "rate": round(fp_fired / injected, 4) if injected else 0.0,
+            "basis": "measured: each gate run against a benign counterpart input; it must not fire",
+            "detail": fp_detail,
         },
         "provenance": _provenance(),
     }
@@ -153,13 +181,18 @@ def main(argv):
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(scorecard, indent=2))
     cr = scorecard["catchRate"]
+    fp = scorecard["falsePositives"]
+    blocked = sum(1 for g in cr["byGate"] if g["enforcement"] == "blocked" and g["caught"])
+    flagged = sum(1 for g in cr["byGate"] if g["enforcement"] == "flagged" and g["caught"])
     print("DOE Proof - fault injection")
-    print(f"  injected {cr['injected']} | caught {cr['caught']} | rate {cr['rate']:.0%}")
-    print(f"  covered defect classes (DOE has a gate): {cov_caught}/{cov_total} caught")
-    print(f"  control (no gate / vanilla tooling): {cr['control']['caught']}/{cr['control']['injected']}")
+    print(f"  injected {cr['injected']} | caught {cr['caught']} ({blocked} blocked, {flagged} flagged) | rate {cr['rate']:.0%}")
+    print(f"  covered classes (DOE has a gate): {cov_caught}/{cov_total} caught")
+    print(f"  false-positives on benign input (MEASURED): {fp['fired']}/{fp['injected']}")
+    print(f"  control without DOE: 0/{cr['injected']} (by construction)")
     for r in results:
-        mark = "CAUGHT" if r["caught"] else ("MISS  " if r.get("expect") == "miss" else "LEAK  ")
-        print(f"    [{mark}] {r['id']} {r['class']:<20} via {r['gate'] or '(none)'}")
+        enf = ENFORCEMENT.get(r.get("expect"), "?")
+        mark = (enf.upper() if r["caught"] else ("MISS" if r.get("expect") == "miss" else "LEAK"))
+        print(f"    [{mark:<8}] {r['id']} {r['class']:<20} via {r['gate'] or '(none)'}")
     print(f"  scorecard -> {OUT.relative_to(KIT)}")
     if "--self-test" in argv:
         problems = []
@@ -168,8 +201,8 @@ def main(argv):
                 problems.append(f"covered fault {r['id']} NOT caught -- {r['detail']}")
             if r.get("expect") == "miss" and r["caught"]:
                 problems.append(f"fault {r['id']} expected MISS but was caught")
-        if cr["control"]["caught"] != 0:
-            problems.append("control caught > 0")
+        if fp["fired"] != 0:
+            problems.append("MEASURED false-positive(s): " + "; ".join(fp["detail"]))
         v = subprocess.run([sys.executable, str(PROOF / "schema" / "validate.py"), str(OUT)],
                            capture_output=True, text=True)
         if v.returncode != 0:
@@ -179,7 +212,7 @@ def main(argv):
             for pr in problems:
                 print("  -", pr)
             return 1
-        print("SELF-TEST PASSED (every covered fault caught, control clean, scorecard valid)")
+        print("SELF-TEST PASSED (covered faults caught, zero measured false-positives, scorecard valid)")
     if "--json" in argv:
         print(json.dumps(scorecard, indent=2))
     return 0

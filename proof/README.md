@@ -20,7 +20,7 @@ python3 run.py                       # writes out/scorecard.json
 python3 render.py out/scorecard.json out/scorecard.html
 ```
 
-Expected: **6/6 covered defect classes caught**, control **0/7**, headline **86%**.
+Expected: **6/6 covered classes caught** (4 BLOCKED + 2 FLAGGED), **0/7 measured false-positives**, control 0/7 by construction, headline **86%**.
 
 ## Recreate it yourself (2 minutes)
 
@@ -63,8 +63,21 @@ clone at that commit, run, and you must get the same result.
    see whether DOE catches it. (If it doesn't, that's an honest gap — file it.)
 2. **Break a gate.** Temporarily edit one of the gate scripts to do nothing, re-run, and
    watch the catch-rate fall. That fall is the proof the gate was doing real work.
-3. **Check the control.** It's 0/7 because vanilla tooling (raw Claude, Lovable, Replit)
-   has none of these gates. Not a trick — the actual counterfactual.
+3. **Check the false-positive arm (measured).** Each gate is also run against a *benign*
+   counterpart input and must NOT fire — the scorecard's `falsePositives` is 0/7, measured,
+   proving the gates discriminate rather than always-fire.
+4. **Mind the enforcement level.** BLOCKED = hard-stopped by a hook; FLAGGED = detected by an
+   advisory check (non-blocking). The card shows them separately so a flag is never sold as a
+   block. Control (0/7) is *by construction* — vanilla tooling has none of these gates — and is
+   labelled as such, not dressed up as a measured experiment.
+
+## Honesty guardrails baked in
+
+- **Blocked vs flagged:** 4 of the 6 catches are hard blocks; 2 are advisory flags. Shown separately.
+- **False-positives are measured** (benign inputs), not assumed.
+- **Control is labelled "by construction"**, not presented as a measurement.
+- **DORA metrics carry a `basis: PROXY` flag** — they're git-commit-message heuristics, not deploy telemetry.
+- **Economics labels its one assumption** (the GBP15 base cost) vs its one source (Boehm-Basili 5:1).
 
 ## Why 86% and not 100%?
 

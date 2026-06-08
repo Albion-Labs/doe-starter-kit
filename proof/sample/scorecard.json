@@ -6,7 +6,7 @@
     "name": "Synthetic Fixture",
     "repo": null
   },
-  "generatedAt": "2026-06-08T21:06:33Z",
+  "generatedAt": "2026-06-08T21:33:54Z",
   "catchRate": {
     "injected": 7,
     "caught": 6,
@@ -15,42 +15,49 @@
       {
         "gate": "block_secrets_in_code",
         "defectClass": "leaked-secret",
+        "enforcement": "blocked",
         "injected": 1,
         "caught": 1
       },
       {
         "gate": "block_secrets_in_code",
-        "defectClass": "secret-env-write",
+        "defectClass": "secret-in-redirect",
+        "enforcement": "blocked",
         "injected": 1,
         "caught": 1
       },
       {
         "gate": "block_dangerous_commands",
         "defectClass": "destructive-command",
+        "enforcement": "blocked",
         "injected": 1,
         "caught": 1
       },
       {
         "gate": "block_dangerous_commands",
         "defectClass": "gate-bypass",
+        "enforcement": "blocked",
         "injected": 1,
         "caught": 1
       },
       {
         "gate": "health_check",
         "defectClass": "left-in-stub",
+        "enforcement": "flagged",
         "injected": 1,
         "caught": 1
       },
       {
         "gate": "health_check",
         "defectClass": "todo-marker",
+        "enforcement": "flagged",
         "injected": 1,
         "caught": 1
       },
       {
         "gate": "(none - no deterministic gate)",
         "defectClass": "logic-error",
+        "enforcement": "none",
         "injected": 1,
         "caught": 0
       }
@@ -58,11 +65,19 @@
     "control": {
       "injected": 7,
       "caught": 0,
-      "rate": 0.0
+      "rate": 0.0,
+      "basis": "by-construction: vanilla tooling (raw Claude / Lovable / Replit) has none of these gates, so it catches none of these defects"
     }
   },
+  "falsePositives": {
+    "injected": 7,
+    "fired": 0,
+    "rate": 0.0,
+    "basis": "measured: each gate run against a benign counterpart input; it must not fire",
+    "detail": []
+  },
   "provenance": {
-    "kitCommit": "12e17220c74ac9b462fb828a25488a5f169719ef",
+    "kitCommit": "69c8063c55a3fe47d06cf6793beda6822bb6c949",
     "gates": [
       {
         "script": ".claude/hooks/block_secrets_in_code.py",
@@ -77,5 +92,22 @@
         "sha256_16": "238b4f7eb7538cb5"
       }
     ]
-  }
+  },
+  "ablation": [
+    {
+      "ceremony": "gate:block_dangerous_commands",
+      "marginalCatch": 2,
+      "verdict": "load-bearing"
+    },
+    {
+      "ceremony": "gate:block_secrets_in_code",
+      "marginalCatch": 2,
+      "verdict": "load-bearing"
+    },
+    {
+      "ceremony": "gate:health_check",
+      "marginalCatch": 2,
+      "verdict": "load-bearing"
+    }
+  ]
 }
