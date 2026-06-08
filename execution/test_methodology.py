@@ -1190,23 +1190,30 @@ def scenario_readme_claims_match_disk(verbose: bool = False):
             lambda: len(list((PROJECT_ROOT / ".claude" / "agents").glob("*.md")))),
     ]
 
+    # A claim that is ABSENT means this isn't the kit's README (e.g. a consumer
+    # project where test_methodology.py is installed). Skip absent claims; only
+    # FAIL on a claim that is present AND wrong. Otherwise this scenario would
+    # break --quick in every downstream project.
     mismatches = []
+    checked = 0
     for label, pattern, actual_fn in checks:
         m = re.search(pattern, text)
-        actual = actual_fn()
         if m is None:
-            mismatches.append(f"{label}: no claim found in README")
-            vlines.append(f"  {label}: CLAIM missing — actual {actual}")
+            vlines.append(f"  {label}: no claim in README — skipped (not the kit repo?)")
             continue
+        checked += 1
+        actual = actual_fn()
         claimed = int(m.group(1))
         ok = claimed == actual
         vlines.append(f"  {label}: claim {claimed} vs actual {actual} {'OK' if ok else 'MISMATCH'}")
         if not ok:
             mismatches.append(f"{label}: README says {claimed}, disk has {actual}")
 
+    if checked == 0:
+        return _result("PASS", "no kit count claims in README — nothing to enforce here", vlines)
     if mismatches:
         return _result("FAIL", f"{len(mismatches)} README claim(s) wrong: " + "; ".join(mismatches), vlines)
-    return _result("PASS", f"all {len(checks)} README counts match disk", vlines)
+    return _result("PASS", f"all {checked} README counts match disk", vlines)
 
 
 # ════════════════════════════════════════════════════════════
