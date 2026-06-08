@@ -1,0 +1,28 @@
+name: DOE Proof
+
+# Re-runs the gate-efficacy benchmark as a regression gate. Scoped to proof/ so
+# it never interferes with the kit's normal CI.
+on:
+  push:
+    paths: ["proof/**", ".github/workflows/proof.yml"]
+  pull_request:
+    paths: ["proof/**", ".github/workflows/proof.yml"]
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Schema — examples validate
+        run: python3 proof/schema/validate.py proof/schema/examples/
+      - name: Corpus — integrity
+        run: python3 proof/corpus_check.py
+      - name: Gate efficacy — self-test (every covered fault caught, control clean)
+        run: python3 proof/run.py --self-test
+      - name: Metrics — self-test (CFR/rework correct, economics sourced)
+        run: python3 proof/metrics.py --self-test
+      - name: No cost-curve folklore in economics
+        run: "! grep -rEi '100x|IBM Systems Sciences' proof/economics/"
