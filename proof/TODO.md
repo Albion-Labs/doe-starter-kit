@@ -1,47 +1,17 @@
 # DOE Proof Kit — Tasks
 
-**Mission:** Prove DOE catches real defects (deterministically) and improves real-world outcomes (honestly), in a way a company could sell — a scorecard that stands alone for a sales call now and feeds HQ later.
+**Mission:** Prove DOE catches real defects (deterministically) and improves real-world outcomes (honestly), in a way a company could sell.
 
 **Decisions (resolved):** subsystem inside `~/doe-starter-kit` (`proof/`); fully synthetic, project-agnostic fixture; developed on `feature/proof-kit` (worktree-isolated), landed via PR. Data contract locked at schemaVersion 1.0, additive-only. Full design in `SPEC.md`.
 
-**Status:** PK-0, PK-1, PK-2 COMPLETE — the call-ready set. PK-3+ remain.
+**Status:** PK-0 through PK-5 COMPLETE. Only PK-6 (HQ integration) deferred.
 
 ---
 
 ## Current
-
-*(empty — PK-3 promotes here on go)*
-
----
+*(empty)*
 
 ## Queue
-
-### PK-3 — Real-project metrics extractor  *(Thing 2: prove it on real projects)*
-Read git history -> change-failure-rate, rework-rate, lead-time -> same-schema JSON. Honest economics.
-- [ ] Build `proof/metrics.py --repo <path>` -> `out/metrics.json`
-- [ ] CFR + rework (rework moves first) + lead-time guardrail
-- [ ] Economics module with NIST/Boehm-sourced constants
-Contract:
-- [auto] Verify: run: `python3 proof/metrics.py --repo fixtures/with-history --json` -- exit 0
-- [auto] Verify: run: `python3 schema/validate.py out/metrics.json` -- exit 0
-- [auto] Verify: run: `! grep -rEi "100x|IBM Systems Sciences" proof/economics/` -- exit 0 (no folklore)
-- [manual] Metrics match hand-computed values on the known fixture.
-
-### PK-4 — CI regression + growing corpus
-- [ ] `.github/workflows/proof.yml` runs the harness on push
-- [ ] Append-only corpus integrity check
-- [ ] History time-series accumulation in scorecard
-Contract:
-- [auto] Verify: file: `.github/workflows/proof.yml` exists
-- [auto] Verify: run: `python3 proof/run.py --self-test` -- exit 0 (CI gate)
-- [manual] A deliberately-introduced escaped defect can be promoted into the corpus in one step.
-
-### PK-5 — Self-pruning ablation  *(prove DOE cuts its own theatre)*
-- [ ] Build `proof/ablation.py` -> per-ceremony marginal catch report
-- [ ] Emit `ablation` block into scorecard
-Contract:
-- [auto] Verify: run: `python3 proof/ablation.py --json` -- exit 0
-- [manual] Report credibly separates load-bearing gates from ceremony.
 
 ### PK-6 — HQ integration  *(DEFERRED — blocked on HQ existing)*
 HQ reads the PK-0 schema across projects. Listed only to fix the interface boundary.
@@ -50,23 +20,25 @@ HQ reads the PK-0 schema across projects. Listed only to fix the interface bound
 
 ## Done
 
-### PK-0 — Pin the data contract  *(commit e7ca1fa)*
-- [x] `schema/scorecard.schema.json` (v1.0, additive-only)
-- [x] 2 valid examples + dependency-free `schema/validate.py`
-- Verified: examples validate, negative-control broken scorecard correctly rejected.
+### PK-0 — Data contract  *(e7ca1fa)*
+Schema v1.0 (additive-only) + dependency-free validator + 2 examples. Negative-control broken scorecard correctly rejected.
 
-### PK-1 — Fault-injection harness  *(commit 12e1722)*
-- [x] Synthetic fixture + 7-fault corpus (F01-F07), trigger strings stored split
-- [x] `run.py` invokes the REAL unmodified kit gates, scores catch-rate
-- [x] Control pass (0/7) + provenance (gate sha256 + kit commit)
-- Verified: 6/6 covered classes caught; F07 honest miss; `--self-test` PASS.
+### PK-1 — Fault-injection harness  *(12e1722)*
+Synthetic fixture + 7-fault corpus; `run.py` invokes the REAL unmodified kit gates; 6/6 covered classes caught, F07 honest miss (86%), control 0/7.
 
-### PK-2 — Standalone HTML scorecard
-- [x] `render.py` json -> self-contained themed HTML
-- [x] `README.md` reproduction guide + `sample/` reference card
-- Verified: renders, has `[data-catch-rate]`, zero external refs.
+### PK-2 — HTML scorecard + reproduction  *(1c41d62)*
+`render.py` self-contained themed card; `README.md` reproduction/audit guide; provenance (gate sha256 + kit commit); `sample/` reference card.
+
+### PK-3 — Real-project metrics  *(f8846c1)*
+`metrics.py` git-proxy DORA (CFR, rework, lead-time, deploy-freq) + sourced economics (NIST/Boehm, no folklore). Self-test: CFR 0.25 / rework 0.375.
+
+### PK-4 — CI gate + corpus integrity  *(59bdb13)*
+`corpus_check.py` append-only integrity; `.github/workflows/proof.yml` re-runs the whole benchmark on every proof/ change.
+
+### PK-5 — Self-pruning ablation
+`ablation.py` marginal-catch per gate; all 3 gates load-bearing, 0 candidate-to-cut. Ceremony-level ablation flagged as future work.
 
 ---
 
 ## Sequencing
-PK-0 -> PK-1 -> PK-2 (done, call-ready) -> PK-3 -> PK-4 -> PK-5. PK-6 deferred.
+PK-0 -> PK-1 -> PK-2 -> PK-3 -> PK-4 -> PK-5 done. PK-6 deferred (needs HQ).
