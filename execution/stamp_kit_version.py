@@ -14,7 +14,8 @@ import re
 import sys
 from pathlib import Path
 
-KIT_DOCS = Path.home() / "doe-starter-kit" / "docs" / "tutorial"
+KIT_ROOT = Path.home() / "doe-starter-kit"
+KIT_DOCS = KIT_ROOT / "docs" / "tutorial"
 
 # Only match version stamps in known locations: sidebar-version span, hero-badge div, site-footer
 # This avoids clobbering example version numbers in tutorial content
@@ -60,7 +61,12 @@ def stamp(version):
             print(f"  {name}")
         return False
 
-    print(f"Stamped {updated} files with {version} ({len(html_files)} total)")
+    # Keep the kit's own version receipt current so it can't silently drift
+    # (this is why .doe-kit-version rotted to v1.15.1 — nothing wrote it).
+    version_file = KIT_ROOT / ".doe-kit-version"
+    version_file.write_text(version + "\n", encoding="utf-8")
+
+    print(f"Stamped {updated} files with {version} ({len(html_files)} total); wrote {version_file.name}")
     return True
 
 

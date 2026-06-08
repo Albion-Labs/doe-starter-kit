@@ -43,12 +43,14 @@ CLAUDE.md tells Claude to check these before starting work:
 
 | File | Goes to | Purpose |
 |------|---------|---------|
-| CLAUDE.md | `./CLAUDE.md` | The operating system. 9 rules, guardrails, code hygiene, break glass, triggers. Auto-loaded. |
-| settings.json | `./.claude/settings.json` | 3 pre-action hooks (protect directives, block secrets, block dangerous commands) |
+| CLAUDE.md | `./CLAUDE.md` | The operating system. 7 operating rules, guardrails, code hygiene, break glass, triggers. Auto-loaded. |
+| settings.json | `./.claude/settings.json` | PreToolUse guardrail hooks (see The Guardrails below) |
 | SYSTEM-MAP.md | `./SYSTEM-MAP.md` | This breakdown. For you, not Claude. |
 | CUSTOMIZATION.md | `./CUSTOMIZATION.md` | What to keep, customize, or clear when starting a new project. For you, not Claude. |
 
 ### 🔒 The Guardrails (enforce the rules automatically)
+
+> Scope: the `block_*` / `protect_*` hooks are **accident-prevention** — string-matched denylists that catch a careless paste, not a security boundary. A determined actor can phrase around them. Treat them as guardrails, not guarantees.
 
 | File | Goes to | Purpose |
 |------|---------|---------|
@@ -112,7 +114,7 @@ CLAUDE.md tells Claude to check these before starting work:
 | File | Goes to | Purpose |
 |------|---------|---------|
 | dispatch_dag.py | `./execution/` | DAG executor for parallel step dispatch |
-| test_methodology.py | `./execution/` | Structural methodology checks (17 scenarios) |
+| test_methodology.py | `./execution/` | Structural methodology checks (19 scenarios) |
 | audit_claims.py | `./execution/` | Automated false-positive detection. Extensible with project-specific checks via `@register()` decorator. |
 | wrap_stats.py | `./execution/` | Deterministic session scoring. Gathers git metrics, computes streak/multiplier/score/badges, updates stats.json, outputs JSON for `/wrap` to render. |
 
@@ -148,7 +150,7 @@ Multi-agent files install to machine-level locations via `setup.sh`. They use `P
 ```
 SESSION START
 │
-├─→ CLAUDE.md (auto-loaded — 9 rules + guardrails + break glass)
+├─→ CLAUDE.md (auto-loaded — 7 operating rules + guardrails + break glass)
 ├─→ ~/.claude/CLAUDE.md (auto-loaded — universal learnings)
 │
 ├─→ Rule #1 says: check todo.md + STATE.md
@@ -179,8 +181,8 @@ DURING WORK
 ├─→ .claude/plans/ → Claude reads feature designs (version map per step)
 ├─→ .tmp/ → scratch space for intermediate files
 │
-├─→ Rule #8: before every commit, check if STATE.md or learnings.md need updating
-├─→ Rule #9: pitch spontaneously if a genuine improvement is spotted
+├─→ Before every commit: check if STATE.md or learnings.md need updating (delivery discipline)
+├─→ Pitch spontaneously when a genuine improvement is spotted (improvement culture)
 │
 PER STEP COMPLETION
 │
