@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://doe.dev/schemas/scorecard-1.0.json",
   "title": "DOE Proof Scorecard",
-  "description": "v1.0 (additive-only). Adding new fields never bumps the version; renaming or removing a field bumps schemaVersion. Consumers (standalone HTML card, HQ) key off schemaVersion and ignore unknown fields.",
+  "description": "Additive-only governance: adding new fields never bumps the version. Removing or renaming a field bumps schemaVersion -- and this rule is in force from the first external consumer onward. The economics/cost fields were removed during pre-consumer finalization (no consumer depended on them; the HQ consumer is not built yet), which is why this remains 1.0. Consumers (standalone HTML card, HQ) key off schemaVersion and ignore unknown fields.",
   "type": "object",
   "required": [
     "schemaVersion",
