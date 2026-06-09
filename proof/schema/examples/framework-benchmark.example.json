@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "framework-benchmark",
+  "project": { "id": "fixture-synthetic", "name": "Synthetic Fixture", "repo": null },
+  "generatedAt": "2026-06-08T19:30:00Z",
+  "catchRate": {
+    "injected": 8,
+    "caught": 8,
+    "rate": 1.0,
+    "byGate": [
+      { "gate": "block_secrets_in_code", "defectClass": "leaked-secret", "injected": 1, "caught": 1 },
+      { "gate": "audit_claims", "defectClass": "left-in-stub", "injected": 1, "caught": 1 },
+      { "gate": "fact_check", "defectClass": "false-claim", "injected": 1, "caught": 1 },
+      { "gate": "contract_verify", "defectClass": "broken-build", "injected": 1, "caught": 1 },
+      { "gate": "step_mark_hook", "defectClass": "unmarked-step", "injected": 1, "caught": 1 },
+      { "gate": "test_suite", "defectClass": "silent-regression", "injected": 1, "caught": 1 },
+      { "gate": "main_protection", "defectClass": "direct-to-main", "injected": 1, "caught": 1 },
+      { "gate": "block_secrets_in_code", "defectClass": "secret-env-write", "injected": 1, "caught": 1 }
+    ],
+    "control": { "injected": 8, "caught": 0, "rate": 0.0 }
+  },
+  "ablation": [
+    { "ceremony": "review-gate", "marginalCatch": 2, "verdict": "load-bearing" },
+    { "ceremony": "retro-plan-refresh", "marginalCatch": 0, "verdict": "candidate-to-cut" }
+  ],
+  "history": [
+    { "at": "2026-06-01T00:00:00Z", "catchRate": 0.875 },
+    { "at": "2026-06-08T00:00:00Z", "catchRate": 1.0 }
+  ]
+}

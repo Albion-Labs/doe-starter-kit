@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "framework-benchmark",
+  "project": {
+    "id": "fixture-synthetic",
+    "name": "Synthetic Fixture",
+    "repo": null
+  },
+  "generatedAt": "2026-06-09T11:48:40Z",
+  "catchRate": {
+    "injected": 7,
+    "caught": 6,
+    "rate": 0.8571,
+    "byGate": [
+      {
+        "gate": "block_secrets_in_code",
+        "defectClass": "leaked-secret",
+        "enforcement": "blocked",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "block_secrets_in_code",
+        "defectClass": "secret-in-redirect",
+        "enforcement": "blocked",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "block_dangerous_commands",
+        "defectClass": "destructive-command",
+        "enforcement": "blocked",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "block_dangerous_commands",
+        "defectClass": "gate-bypass",
+        "enforcement": "blocked",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "health_check",
+        "defectClass": "left-in-stub",
+        "enforcement": "flagged",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "health_check",
+        "defectClass": "todo-marker",
+        "enforcement": "flagged",
+        "injected": 1,
+        "caught": 1
+      },
+      {
+        "gate": "(none - no deterministic gate)",
+        "defectClass": "logic-error",
+        "enforcement": "none",
+        "injected": 1,
+        "caught": 0
+      }
+    ],
+    "control": {
+      "injected": 7,
+      "caught": 0,
+      "rate": 0.0,
+      "basis": "by-construction: vanilla tooling (raw Claude / Lovable / Replit) has none of these gates, so it catches none of these defects"
+    }
+  },
+  "falsePositives": {
+    "injected": 7,
+    "fired": 0,
+    "rate": 0.0,
+    "basis": "measured: each gate run against a benign counterpart input; it must not fire",
+    "detail": []
+  },
+  "provenance": {
+    "kitCommit": "bf5803fb92c6a451b61ad3666565dac98acaecd3",
+    "gates": [
+      {
+        "script": ".claude/hooks/block_secrets_in_code.py",
+        "sha256_16": "5b458e6ee78a4fc2"
+      },
+      {
+        "script": ".claude/hooks/block_dangerous_commands.py",
+        "sha256_16": "48022eb0f5252d2d"
+      },
+      {
+        "script": "execution/health_check.py",
+        "sha256_16": "238b4f7eb7538cb5"
+      }
+    ]
+  }
+}
