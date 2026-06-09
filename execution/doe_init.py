@@ -13,6 +13,7 @@ import json
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 
@@ -982,16 +983,29 @@ def install_layer_files(config, kit_dir, project_dir):
         total += 1
         return True
 
+    # Global files are shared across every project; back up any existing,
+    # differing one before overwriting so a user's customisation is never lost.
+    backup_root = Path.home() / ".claude" / ".doe-backups" / datetime.now().strftime("%Y%m%d-%H%M%S")
+    global_backups = []
+
     def copy_to_global(src, dst):
-        """Copy src to global destination. Overwrites."""
+        """Copy src to global destination. Backs up an existing, differing file first."""
         nonlocal total
         if not src.exists():
             return False
         dst.parent.mkdir(parents=True, exist_ok=True)
-        # Remove read-only destination before copying (shutil.copy2
-        # preserves source permissions, so previous installs may
-        # have left read-only files that can't be overwritten)
         if dst.exists():
+            try:
+                if dst.read_bytes() != src.read_bytes():
+                    bdst = backup_root / dst.parent.name / dst.name
+                    bdst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(dst, bdst)
+                    global_backups.append(dst.name)
+            except OSError:
+                pass
+            # Remove read-only destination before copying (shutil.copy2
+            # preserves source permissions, so previous installs may
+            # have left read-only files that can't be overwritten)
             dst.chmod(0o644)
         shutil.copy2(src, dst)
         total += 1
@@ -1217,6 +1231,9 @@ def install_layer_files(config, kit_dir, project_dir):
     rows.append(line(f"{total} files installed"))
     rows.append(bot())
     print_card(rows)
+
+    if global_backups:
+        print(f"  Backed up {len(global_backups)} existing global file(s) you had customised to {backup_root}")
 
     return total
 

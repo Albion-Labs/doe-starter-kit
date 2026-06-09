@@ -16,7 +16,9 @@ from pathlib import Path
 
 import pytest
 
-KIT = Path.home() / "doe-starter-kit"
+# Resolve the hook relative to THIS test file, not a hardcoded ~/doe-starter-kit.
+# The hardcoded path tested the wrong copy in git worktrees and did not exist in CI.
+KIT = Path(__file__).resolve().parents[2]
 HOOK = KIT / ".claude" / "hooks" / "block_dangerous_commands.py"
 
 
@@ -53,6 +55,59 @@ def test_rm_rf_home_blocks():
 
 def test_rm_rf_dot_blocks():
     assert _run("rm -rf .")["decision"] == "block"
+
+
+# --- Recursive-force rm: flag-order / whitespace / quote insensitive ---
+# Previously these were fixed substrings ("rm -rf /"), so trivial variants bypassed.
+
+@pytest.mark.parametrize("cmd", [
+    "rm -fr /",                  # flag order swapped
+    "rm -r -f /",                # split flags
+    "rm  -rf  /",                # extra whitespace
+    'rm -rf "/"',                # quoted target
+    "rm --recursive --force /",  # long flags
+    "rm -rf /*",                 # glob of root
+    "cd /tmp/x && rm -rf *",     # glob target in a chain
+])
+def test_dangerous_rm_variants_block(cmd):
+    assert _run(cmd)["decision"] == "block"
+
+
+# --- rm false-positives: specific paths and non-recursive rm are allowed ---
+
+@pytest.mark.parametrize("cmd", [
+    "rm -rf ./build",            # specific subdir is fine
+    "rm -rf node_modules",       # specific dir is fine
+    "rm file.txt",               # no recursive/force
+    "rm -i important.txt",       # interactive, single file
+])
+def test_safe_rm_allows(cmd):
+    assert _run(cmd)["decision"] == "allow"
+
+
+# --- ORM .delete() / deleteMany() no longer false-positive (removed as substrings) ---
+
+@pytest.mark.parametrize("cmd", [
+    'grep -rn ".delete()" src/',
+    "node -e 'await user.delete()'",
+    "rg 'prisma.user.deleteMany()'",
+])
+def test_orm_delete_allows(cmd):
+    assert _run(cmd)["decision"] == "allow"
+
+
+# --- Documented known limitations ---
+# block_dangerous_commands is accident-prevention, NOT a security boundary. A target
+# reached via a variable or env expansion is out of reach of this static check. These
+# assert the CURRENT (permissive) behaviour so that if a future hardening starts
+# blocking them, this test fails and forces a conscious update rather than silent drift.
+
+@pytest.mark.parametrize("cmd", [
+    'D=/; rm -rf "$D"',          # target via shell variable
+    'rm -rf "$HOME"',            # env-expanded target
+])
+def test_known_rm_bypasses_still_allow(cmd):
+    assert _run(cmd)["decision"] == "allow"
 
 
 def test_drop_table_blocks():
