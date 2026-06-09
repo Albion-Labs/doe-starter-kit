@@ -1,0 +1,19 @@
+# DOE Kit: declared intentional-divergence manifest
+# Used by execution/audit_sync.py to separate DELIBERATE local divergence
+# from accidental drift. Any kit-managed file you intentionally keep
+# different from the kit goes here; everything else that differs is
+# reported as DRIFT (sync it back via /sync-doe, or declare it here).
+#
+# Copy this file to `.doe-overrides` (gitignored) and list the paths your
+# project deliberately forks. Each clone has its own manifest -- nothing
+# here ships across projects.
+#
+# Format: one project-relative path per line, as audit_sync reports it
+# (e.g. `.claude/hooks/foo.py`, `directives/bar.md`, `commands/baz.md`).
+# A trailing slash matches a whole directory prefix. Lines starting with
+# `#` are comments; an inline `  # reason` trailer is recommended.
+#
+# Examples (delete and replace with your actual overrides):
+# .claude/hooks/block_dangerous_commands.py  # project adds 2 repo-specific patterns
+# directives/security-rules.md               # stricter auth rules for this codebase
+# execution/build.py                         # project-specific build, never upstreamed

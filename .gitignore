@@ -24,3 +24,6 @@ credentials.json
 
 # Per-clone project-specific term list (audit_sync.py)
 .kit-blocklist
+
+# Per-clone declared intentional-divergence manifest (audit_sync.py)
+.doe-overrides

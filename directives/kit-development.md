@@ -21,6 +21,21 @@ Last-resort override for the destructive Bash patterns: `SKIP_KIT_GUARD=1`. Set 
 
 Cross-project exposure: in v1.60.0, an AI working in a consuming project can edit the kit working tree directly. The dominant detection point is the `/sync-doe` Step 0.5 dirty-tree pre-flight, which surfaces any uncommitted kit changes for user acknowledgement before applying a sync. See `directives/starter-kit-sync.md` ## Step 0.5.
 
+## Roles: by context and repo permission, not a self-declared flag
+
+There is no "consumer vs creator" identity. Every person using the kit is BOTH a consumer of it inside their project repos AND a contributor the moment they hit a kit gap and fix it — role is a function of what you are doing in the moment, not a setting on your machine. The old `**DOE Role:**` line in `STATE.md` (and the `setup.sh` prompt that wrote it) was removed in v1.66.0: it gated nothing in code — no hook or command ever read it, and even the `/wrap` messaging it claimed to control was never conditional on it.
+
+Who can release is governed at the repo layer, where it belongs and is actually enforced:
+- `.github/CODEOWNERS` requires owner review on security-critical paths (`.githooks`, `.github/workflows`, `CLAUDE.md`).
+- Branch protection + the `.githooks/pre-commit` 'no-direct-to-main' hook force every change through a PR.
+- `auto-release.yml` (v1.65.0+) means merge == release; only merged PRs ship.
+
+Anyone may open a `/sync-doe` PR; merging it is gated by the above. The four loops every project uses, flagless: **Use** (no gate) → **Improve** (local patch → `/sync-doe` PR → review → merge → auto-release) → **Update** (`/pull-doe`) → **Idea** (`/report-doe-bug` / `/request-doe-feature` → kit issues).
+
+## Local divergence: staging area, not end state
+
+A project's vendored kit files differing from the kit is fine ONLY as one of two declared things: (1) an in-flight patch awaiting backport via `/sync-doe`, or (2) a deliberate project-specific override recorded in the project's `.doe-overrides` manifest (per-clone, gitignored; `.doe-overrides.example` is the template). Everything else that differs is **drift** — silent forks that erode the kit's whole reason to exist (one methodology across projects). `execution/audit_sync.py` reports un-declared diverged files as `diverged` (drift) and declared ones as `declared_overrides` (suppressed); `/wrap` surfaces the drift count each session so it never accumulates invisibly.
+
 ## Versioning model: one release per PR
 
 The kit uses a single shared release version per PR — **all steps of a feature ship together in one minor or patch release**, not one patch per step (which is a per-step-versioning model some projects use). For example, v1.57.0's seven steps all land in `v1.57.0`; there is no `v1.57.1` for Step 1, `v1.57.2` for Step 2, etc.

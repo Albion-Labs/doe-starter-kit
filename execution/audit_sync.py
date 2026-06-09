@@ -39,6 +39,43 @@ def _load_project_patterns():
 
 PROJECT_PATTERNS = _load_project_patterns()
 
+
+def load_overrides(project_root):
+    """Load declared intentional-divergence paths from `.doe-overrides`.
+
+    Each non-comment line is a project-relative path (or directory prefix
+    ending in `/`) that the project deliberately keeps different from the
+    kit. Inline `# reason` trailers are stripped. Matching findings are
+    moved out of `diverged`/`missing_from_kit` into `declared_overrides`
+    so the drift signal only ever flags UN-declared divergence. The file
+    is per-clone and gitignored; `.doe-overrides.example` is the template.
+    """
+    path = Path(project_root) / ".doe-overrides"
+    if not path.exists():
+        return []
+    entries = []
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        # Drop an inline `  # reason` trailer if present.
+        entry = stripped.split("#", 1)[0].strip()
+        if entry:
+            entries.append(entry)
+    return entries
+
+
+def _is_overridden(finding, overrides):
+    """A finding (e.g. `directives/x.md`) matches an override by exact path
+    or by directory-prefix (override ending in `/`)."""
+    for o in overrides:
+        if o.endswith("/"):
+            if finding.startswith(o):
+                return True
+        elif finding == o:
+            return True
+    return False
+
 # Files that are always project-specific by nature (skip without scanning)
 ALWAYS_PROJECT_SPECIFIC = {
     "build.py",
@@ -121,12 +158,13 @@ def audit(project_root, verbose=False):
 
     pairs = get_sync_pairs(project_root)
     findings = {
-        "missing_from_kit": [],  # universal files in project, not in kit
-        "needs_stripping": [],   # universal structure but has project content
-        "project_specific": [],  # correctly not in kit
-        "kit_only": [],          # in kit, not in project
-        "diverged": [],          # in both, content differs
-        "in_sync": [],           # in both, identical
+        "missing_from_kit": [],    # universal files in project, not in kit
+        "needs_stripping": [],     # universal structure but has project content
+        "project_specific": [],    # correctly not in kit
+        "kit_only": [],            # in kit, not in project
+        "diverged": [],            # in both, content differs (UN-declared drift)
+        "declared_overrides": [],  # diverged/missing but declared in .doe-overrides
+        "in_sync": [],             # in both, identical
     }
 
     for proj_dir, kit_dir, label, check_kit_only in pairs:
@@ -170,6 +208,18 @@ def audit(project_root, verbose=False):
             else:
                 findings["in_sync"].append(f"{label}{f}")
 
+    # Subtract declared intentional divergence from the drift signal.
+    overrides = load_overrides(project_root)
+    if overrides:
+        for bucket in ("diverged", "missing_from_kit"):
+            kept = []
+            for finding in findings[bucket]:
+                if _is_overridden(finding, overrides):
+                    findings["declared_overrides"].append(finding)
+                else:
+                    kept.append(finding)
+            findings[bucket] = kept
+
     return findings
 
 
@@ -204,7 +254,7 @@ def print_summary(findings):
             print(f"    * {f}")
 
     if diverged:
-        print(f"\n  DIVERGED ({len(diverged)} files differ):")
+        print(f"\n  DRIFT ({len(diverged)} un-declared diverged files — sync back or declare in .doe-overrides):")
         for f in diverged:
             print(f"    ~ {f}")
 
@@ -213,7 +263,11 @@ def print_summary(findings):
         for f in kit_only:
             print(f"    ? {f}")
 
-    print(f"\n  In sync: {len(in_sync)} | Project-specific: {len(project_specific)}")
+    overrides = findings.get("declared_overrides", [])
+    print(
+        f"\n  In sync: {len(in_sync)} | Project-specific: {len(project_specific)}"
+        f" | Declared overrides: {len(overrides)}"
+    )
     print()
 
 
@@ -248,9 +302,16 @@ def self_test():
         (proj / "execution" / "shared.py").write_text("# Shared tool\n")
         (kit / "execution" / "shared.py").write_text("# Shared tool\n")
 
-        # 6. File in both, different -> DIVERGED
+        # 6. File in both, different -> DIVERGED (drift)
         (proj / "execution" / "diverged.py").write_text("# Version A\n")
         (kit / "execution" / "diverged.py").write_text("# Version B\n")
+
+        # 6b. Diverged but declared in .doe-overrides -> DECLARED_OVERRIDES
+        (proj / "execution" / "diverged2.py").write_text("# Local A\n")
+        (kit / "execution" / "diverged2.py").write_text("# Local B\n")
+        (proj / ".doe-overrides").write_text(
+            "# test overrides\nexecution/diverged2.py  # intentional local fork\n"
+        )
 
         # 7. File only in kit -> KIT_ONLY
         (kit / "directives" / "kit_only.md").write_text("# Kit directive\n")
@@ -283,8 +344,14 @@ def self_test():
         if not any("shared.py" in f for f in findings["in_sync"]):
             errors.append("FAIL: shared.py should be IN_SYNC")
 
-        if not any("diverged.py" in f for f in findings["diverged"]):
+        if not any(f.endswith("diverged.py") for f in findings["diverged"]):
             errors.append("FAIL: diverged.py should be DIVERGED")
+
+        if not any("diverged2.py" in f for f in findings["declared_overrides"]):
+            errors.append("FAIL: diverged2.py should be DECLARED_OVERRIDES")
+
+        if any("diverged2.py" in f for f in findings["diverged"]):
+            errors.append("FAIL: diverged2.py should NOT be in DIVERGED (it is overridden)")
 
         if not any("kit_only.md" in f for f in findings["kit_only"]):
             errors.append("FAIL: kit_only.md should be KIT_ONLY")
