@@ -89,7 +89,7 @@ Trace data flow across module boundaries. Catches "works alone, broken together"
    - If the producer can return an empty array, does the consumer handle that?
 
 3. **Check settings consistency:**
-   - Are user settings (role, party, constituency, region) read the same way across all modules?
+   - Are user settings (role, team, region, locale) read the same way across all modules?
    - Do all modules handle the "no settings yet" case?
    - Are there modules that cache a setting value and don't update when settings change?
 

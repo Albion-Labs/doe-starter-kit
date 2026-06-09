@@ -120,7 +120,7 @@ IMPORTANT: Merge improvements additively -- add new rules, update changed rules,
 Before copying anything to the starter kit, remove ALL project-specific references:
 - Project names (e.g. "AcmeApp", "YourProduct")
 - Project-specific file paths (e.g. yourapp-v0.12.3.html)
-- Project-specific data (constituency names, API endpoints)
+- Project-specific data (client or domain names, API endpoints)
 - Project-specific audit checks (only `@register("universal")` checks go to starter kit)
 - Project-specific directives (only universal SOPs go to starter kit)
 - Project-specific governed documents in the registry (only learnings.md stays)

@@ -82,7 +82,7 @@ PY
 For each manifest in the range, run the **pull-impact pre-flight**:
 
 1. Read the manifest's "Pull impact summary" (a one-paragraph overview at the top -- typical content: phrase rewrites preserve meaning, behavioural changes listed at end).
-2. Extract every `OLD: "..."` line. The manifest's populator escapes inner double quotes as `\"` and newlines as `\n`, so an awk-on-`"` extractor would split mid-phrase on entries like `Reform UK ... sending false \"no record\" replies ...`. Use the Python extractor below — it strips the manifest's documentation code fences first (so the format-block placeholder `<exact phrase removed from the file>` doesn't leak through as a phantom phrase), then captures from the leading `"` to the trailing `"$` greedily, then decodes the escapes back to plain text:
+2. Extract every `OLD: "..."` line. The manifest's populator escapes inner double quotes as `\"` and newlines as `\n`, so an awk-on-`"` extractor would split mid-phrase on entries like `the controller ... sending false \"no record\" replies ...`. Use the Python extractor below — it strips the manifest's documentation code fences first (so the format-block placeholder `<exact phrase removed from the file>` doesn't leak through as a phantom phrase), then captures from the leading `"` to the trailing `"$` greedily, then decodes the escapes back to plain text:
    ```bash
    cd <project-root>
    python3 - <<'PY' > /tmp/pull-impact-old-phrases.txt

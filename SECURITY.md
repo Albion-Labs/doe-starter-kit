@@ -126,7 +126,7 @@ AI coding agents (Claude Code, GitHub Copilot, Cursor) introduce specific securi
 ## Cross-References
 
 - `directives/data-safety.md` -- Technical data protection (environment isolation, destructive operation prevention, secret management details)
-- `directives/data-compliance.md` -- Legal compliance (GDPR, DPA 2018, PPERA)
+- `directives/data-compliance.md` -- Legal compliance, GDPR / DPA 2018 (regulated layer)
 - `directives/incident-response.md` -- Incident response procedure
 - `THREAT_MODEL.md` -- Threat model and data classification
 - `legal-framework.md` -- Legal obligations

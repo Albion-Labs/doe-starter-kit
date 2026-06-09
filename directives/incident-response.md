@@ -34,7 +34,7 @@ When personal data may have been compromised, accessed without authorisation, lo
 **Triage (Hour 0-1):**
 4. Classify the data involved using `THREAT_MODEL.md` data classification.
 5. Estimate the number of individuals affected.
-6. Determine if electoral register data is involved (criminal matter -- take legal advice immediately).
+6. Determine if any sector-regulated data is involved whose misuse is a criminal matter, not just a civil one (take legal advice immediately).
 7. Determine if RESTRICTED (special category) data is involved.
 
 **Containment (Hour 1-4):**
@@ -75,7 +75,7 @@ When a team member leaves or is removed, complete this checklist within 24 hours
 
 ### 3. Bulk DSAR Response
 
-A bulk Subject Access Request occurs when multiple individuals (or an organisation on behalf of individuals) submit DSARs simultaneously. This happened to Reform UK (96% failure rate) and is the most operationally dangerous compliance event.
+A bulk Subject Access Request occurs when multiple individuals (or an organisation on behalf of individuals) submit DSARs simultaneously. It is one of the most operationally dangerous compliance events — in real bulk-DSAR episodes controllers have failed the large majority of requests.
 
 **On receipt:**
 1. Log each DSAR individually with receipt date. The 30-day clock starts per-request from the date of receipt.
@@ -87,7 +87,7 @@ A bulk Subject Access Request occurs when multiple individuals (or an organisati
 **For bulk requests specifically:**
 - Prioritise by receipt date (FIFO).
 - Track progress in a spreadsheet or task list -- each request must have: requestor name, receipt date, deadline, status, response date.
-- Verify the database for the data subject before responding. A "no records" reply requires evidence -- Reform UK sent blanket replies and those replies are now evidence against them.
+- Verify the database for the data subject before responding. A "no records" reply requires evidence -- blanket "no record" replies sent without checking have been used as evidence against the controller.
 - If the system genuinely holds no data about a requestor, confirm this after checking ALL data stores (database, backups, logs, email, paper files, third-party processors).
 
 ### 4. Bulk Erasure Response
@@ -96,7 +96,7 @@ Similar to bulk DSAR but for Right to Erasure (Article 17) requests:
 
 1. Log each request with receipt date.
 2. For each individual, identify all data held and the legal basis for retention.
-3. Delete everything that does not have a competing legal basis for retention (e.g. PPERA record-keeping for donation records).
+3. Delete everything that does not have a competing legal basis for retention (e.g. a statutory record-keeping obligation).
 4. For data retained under legal obligation, inform the requestor which data is retained and why.
 5. Run the erasure verification test (see `directives/data-compliance.md`).
 6. Confirm deletion to each requestor.
@@ -122,7 +122,7 @@ When a secret (API key, database password, auth token) is found in version contr
 - Updated security controls and directives
 
 ## Edge Cases
-- **Electoral register breach** is both a GDPR matter (ICO) and a criminal matter (police). Take legal advice before any external statement; the lawyer drafts the wording.
+- **Sector-regulated data breach** (e.g. financial or health records) can be both a GDPR matter (ICO) and a criminal matter (police). Take legal advice before any external statement; the lawyer drafts the wording.
 - **AI-caused breach** (e.g. AI agent sent personal data to a third-party API) -- the data controller is still liable. Document the AI tool as a sub-processor and restrict its data access.
 - **Breach discovered outside business hours** -- the 72-hour clock does not pause for weekends. Have ICO notification details accessible at all times.
 - **Former team member refuses to confirm credential deletion** -- assume all credentials they had access to are compromised. Rotate everything.
