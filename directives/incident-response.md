@@ -44,7 +44,7 @@ When personal data may have been compromised, accessed without authorisation, lo
 
 **Assessment (Hour 4-24):**
 11. Determine exact scope: which records, which individuals, what time window.
-12. Assess risk to individuals. Political opinion data breaches carry reputational and safety risks beyond typical PII.
+12. Assess risk to individuals. Special-category data breaches (health, political opinion, biometrics, etc.) carry reputational and safety risks beyond typical PII.
 13. Decide if individuals need direct notification (required if "high risk to rights and freedoms" -- Article 34).
 
 **ICO Notification (Hour 24-72):**
@@ -126,7 +126,7 @@ When a secret (API key, database password, auth token) is found in version contr
 - **AI-caused breach** (e.g. AI agent sent personal data to a third-party API) -- the data controller is still liable. Document the AI tool as a sub-processor and restrict its data access.
 - **Breach discovered outside business hours** -- the 72-hour clock does not pause for weekends. Have ICO notification details accessible at all times.
 - **Former team member refuses to confirm credential deletion** -- assume all credentials they had access to are compromised. Rotate everything.
-- **DSAR from a hostile party** (e.g. political opponent fishing for internal data) -- you still comply. DSARs are processed regardless of the requestor's motives, except where "manifestly unfounded or excessive" applies (Article 12(5)). Document the reasoning carefully when invoking the exception.
+- **DSAR from a hostile party** (e.g. a competitor or litigant fishing for internal data) -- you still comply. DSARs are processed regardless of the requestor's motives, except where "manifestly unfounded or excessive" applies (Article 12(5)). Document the reasoning carefully when invoking the exception.
 
 ## Verification
 - [ ] Breach response procedure documented and accessible to all team members

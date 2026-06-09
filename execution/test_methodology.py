@@ -1133,12 +1133,15 @@ _DOMAIN_LEAK_RE = re.compile(
     r"|reform uk|good law project|voting intention|representation of the people",
     re.IGNORECASE,
 )
+# Each category maps to the candidate directories an entry may live in. Git hooks
+# (pre-commit, commit-msg, pre-push) live in .githooks/, not .claude/hooks/, so
+# both are listed — an entry that resolves in none is surfaced, not silently dropped.
 _UNIVERSAL_LAYER_DIRS = {
-    "files": ".",
-    "directives": "directives",
-    "commands": "global-commands",
-    "scripts": "global-scripts",
-    "hooks": ".claude/hooks",
+    "files": ["."],
+    "directives": ["directives"],
+    "commands": ["global-commands"],
+    "scripts": ["global-scripts", "execution"],
+    "hooks": [".githooks", ".claude/hooks"],
 }
 
 
@@ -1161,11 +1164,14 @@ def scenario_universal_layer_domain_neutral(verbose: bool = False):
 
     universal = layers.get("universal", {})
     leaks = []
+    unresolved = []
     scanned = 0
-    for category, subdir in _UNIVERSAL_LAYER_DIRS.items():
+    for category, subdirs in _UNIVERSAL_LAYER_DIRS.items():
         for name in universal.get(category, []):
-            p = PROJECT_ROOT / subdir / name
-            if not p.is_file():
+            p = next((PROJECT_ROOT / sd / name for sd in subdirs
+                      if (PROJECT_ROOT / sd / name).is_file()), None)
+            if p is None:
+                unresolved.append(f"{category}:{name}")
                 continue
             scanned += 1
             matches = sorted({m.group(0).lower()
@@ -1176,8 +1182,13 @@ def scenario_universal_layer_domain_neutral(verbose: bool = False):
                 vlines.append(f"  {rel}: {', '.join(matches)}")
 
     vlines.insert(0, f"  Universal-layer files scanned: {scanned}")
+    if unresolved:
+        vlines.append(f"  Unresolved entries (coverage gap): {', '.join(unresolved)}")
     if leaks:
         return _result("FAIL", f"{len(leaks)} universal-layer file(s) carry domain-specific content (move to regulated layer): " + "; ".join(leaks), vlines)
+    # An entry the scanner can't locate is a coverage hole, not a pass — surface it.
+    if unresolved:
+        return _result("WARN", f"scanned {scanned}; {len(unresolved)} universal entr(y/ies) could not be located: {', '.join(unresolved)}", vlines)
     return _result("PASS", f"no domain-specific leakage in {scanned} universal-layer files", vlines)
 
 
