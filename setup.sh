@@ -2,7 +2,9 @@
 # DOE Starter Kit — one-command setup
 # For new/non-DOE projects: runs the init wizard (doe_init.py)
 # For existing DOE projects: installs global commands, hooks, scripts, and settings.
-# Safe to run repeatedly (updates in place, never overwrites user config).
+# Safe to run repeatedly. Project files are never overwritten. Global tooling in
+# ~/.claude/ IS updated in place — but any existing global file that differs is
+# first backed up to ~/.claude/.doe-backups/<timestamp>/ so nothing is lost.
 
 set -e
 
@@ -18,6 +20,26 @@ SETTINGS_FILE="$HOME/.claude/settings.json"
 # Get kit version from latest git tag (fall back to "unknown")
 KIT_VERSION=$(cd "$SCRIPT_DIR" && git describe --tags --abbrev=0 2>/dev/null || echo "unknown")
 TODAY=$(date +%d/%m/%y)
+
+# --- Safe overwrite of global tooling ---
+# Global files in ~/.claude/ are shared across every project, so a user may have
+# their own command/hook/script with the same name. Before replacing one, preserve
+# the existing copy under a timestamped backup dir (created lazily, once per run).
+BACKUP_DIR="$HOME/.claude/.doe-backups/$(date +%Y%m%d-%H%M%S)"
+BACKUP_COUNT=0
+
+# backup_then_copy SRC DST SUBDIR
+# Copies SRC -> DST. If DST already exists and differs from SRC, the existing DST
+# is first copied to BACKUP_DIR/SUBDIR/ so a user's customised file is never lost.
+backup_then_copy() {
+    src="$1"; dst="$2"; subdir="$3"
+    if [ -f "$dst" ] && ! cmp -s "$src" "$dst"; then
+        mkdir -p "$BACKUP_DIR/$subdir"
+        cp -p "$dst" "$BACKUP_DIR/$subdir/"
+        BACKUP_COUNT=$((BACKUP_COUNT + 1))
+    fi
+    cp -f "$src" "$dst"
+}
 
 # --- Wizard delegation ---
 # If this is a new or non-DOE project, run the init wizard instead of blind-copy setup.
@@ -40,7 +62,7 @@ for f in "$COMMANDS_SRC"/*.md; do
     if [ "$fname" = "README.md" ]; then
         continue
     fi
-    cp -f "$f" "$COMMANDS_DST/$fname"
+    backup_then_copy "$f" "$COMMANDS_DST/$fname" commands
     COMMAND_COUNT=$((COMMAND_COUNT + 1))
 done
 
@@ -49,7 +71,7 @@ mkdir -p "$HOOKS_DST"
 HOOK_COUNT=0
 for f in "$HOOKS_SRC"/*.py; do
     [ -f "$f" ] || continue
-    cp -f "$f" "$HOOKS_DST/$(basename "$f")"
+    backup_then_copy "$f" "$HOOKS_DST/$(basename "$f")" hooks
     HOOK_COUNT=$((HOOK_COUNT + 1))
 done
 
@@ -102,9 +124,15 @@ mkdir -p "$SCRIPTS_DST"
 SCRIPT_COUNT=0
 for f in "$SCRIPTS_SRC"/*.py; do
     [ -f "$f" ] || continue
-    cp -f "$f" "$SCRIPTS_DST/$(basename "$f")"
+    backup_then_copy "$f" "$SCRIPTS_DST/$(basename "$f")" scripts
     SCRIPT_COUNT=$((SCRIPT_COUNT + 1))
 done
+
+# Tell the user if we preserved any of their existing global files.
+if [ "$BACKUP_COUNT" -gt 0 ]; then
+    echo "ℹ  Backed up $BACKUP_COUNT existing global file(s) you had customised to:"
+    echo "   $BACKUP_DIR"
+fi
 
 # 4a. Merge global hooks into ~/.claude/settings.json
 python3 -c "

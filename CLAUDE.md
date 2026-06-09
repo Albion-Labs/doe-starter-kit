@@ -55,7 +55,7 @@ gh pr create --title "..." --body "..."
 - **Caveat:** After context compaction, Claude loses all loaded directives. Re-read the triggers relevant to your current task after a `/clear` or long conversation.
 - **Workaround:** If a pre-commit hook fails with "not executable", run `chmod +x .githooks/*` to fix permissions.
 - **Kit-write model:** kit edits flow through branches and PRs. The `.githooks/pre-commit` 'no direct-to-main' hook plus PR review are the canonical gate; `guard_kit_writes` blocks only irreversible Bash operations (recursive removal, force-push to kit main). See `directives/kit-development.md` ## Kit-write model: PR-only.
-- **Note:** `execution/` scripts avoid hidden nondeterminism — no `random`, no interactive `input()`, no unconfirmed paid API calls. Some read git state or the clock explicitly; that's the I/O layer, kept obvious. AI reasoning lives in orchestration (CLAUDE.md + directives). Enforced by `tests/test_determinism.py` (new pure scripts can't silently add randomness/network; the genuine I/O scripts are allowlisted).
+- **Note:** `execution/` scripts avoid hidden nondeterminism — no `random`, no interactive `input()`, no unconfirmed paid API calls. Some read git state or the clock explicitly; that's the I/O layer, kept obvious. AI reasoning lives in orchestration (CLAUDE.md + directives). Enforced by the `execution_determinism` scenario in `execution/test_methodology.py` (new pure scripts can't silently add randomness/network; the genuine I/O scripts are allowlisted).
 <!-- Add project-specific gotchas here as you discover them -->
 
 ## Context Rules
