@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOE Proof — Live</title>
+<style>
+/* ===== Albion Hub · Chalk & Flint ===== */
+:root{
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:"Avenir Next","Helvetica Neue",-apple-system,system-ui,sans-serif;
+  --rad:14px; --rad-s:9px; --ease:cubic-bezier(.22,.61,.36,1);
+}
+/* DARK · FLINT */
+html[data-theme="dark"]{
+  --bg:#14171A; --bg2:#101316; --panel:#1B2024; --panel2:#0F1214; --raise:#232A30;
+  --line:#2A3138; --line2:#39434b; --hairline:#1F252A;
+  --ink:#E9ECE8; --ink2:#c4cbc4; --mut:#8B9590; --dim:#5E6872;
+  --accent:#41A56E; --accent2:#56bd84; --on-accent:#0E1311; --live:#4FB97E;
+  --okbg:#16291e; --missbg:#13181c; --leak:#c98a4a; --leakbg:#241a10;
+  --grain:.05; --grid:rgba(233,236,232,.022);
+  --shadow:0 1px 0 rgba(255,255,255,.03),0 20px 52px -30px rgba(0,0,0,.9);
+}
+/* LIGHT · CHALK */
+html[data-theme="light"]{
+  --bg:#F4F2EC; --bg2:#EEEBE2; --panel:#FFFFFF; --panel2:#ECE9E0; --raise:#FFFFFF;
+  --line:#D9D5CB; --line2:#c8c2b3; --hairline:#E8E4DC;
+  --ink:#16181C; --ink2:#3b3f45; --mut:#5C6066; --dim:#94918A;
+  --accent:#216E48; --accent2:#1a5a3a; --on-accent:#F6F4EE; --live:#2E8B57;
+  --okbg:#dcebe1; --missbg:#ECE9E0; --leak:#9c6a1c; --leakbg:#f0e6d3;
+  --grain:.025; --grid:rgba(22,24,28,.03);
+  --shadow:0 1px 0 rgba(255,255,255,.6),0 22px 46px -32px rgba(40,45,40,.45);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+    radial-gradient(120% 80% at 50% -10%, var(--bg2), var(--bg) 60%);
+  background-size:34px 34px,34px 34px,100% 100%;
+  min-height:100vh;transition:background-color .4s var(--ease),color .4s var(--ease);
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:var(--grain);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode:overlay}
+::selection{background:var(--accent);color:var(--on-accent)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;border:none;color:inherit}
+.wrap{max-width:940px;margin:0 auto;padding:30px 24px 70px;position:relative;z-index:1}
+
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:13px}
+.mark{font-family:var(--mono);font-weight:600;font-size:13px;letter-spacing:.34em;text-transform:uppercase}
+.live{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mut);background:var(--panel);border:1px solid var(--line);border-radius:30px;padding:4px 11px 4px 9px}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--live);position:relative}
+.pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--live);
+  animation:pulse 2s var(--ease) infinite;opacity:.6}
+@keyframes pulse{0%{transform:scale(.6);opacity:.7}100%{transform:scale(1.9);opacity:0}}
+.top-r{display:flex;align-items:center;gap:12px}
+.kit{font-size:11px;color:var(--dim)}
+.theme{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:30px;padding:3px;gap:2px}
+.theme button{width:30px;height:24px;border-radius:30px;display:grid;place-items:center;color:var(--dim);transition:.18s}
+.theme button.on{background:var(--raise);color:var(--accent);box-shadow:var(--shadow)}
+.theme svg{width:13px;height:13px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow)}
+.lede{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);
+  margin:30px 6px 11px;font-weight:600;display:flex;align-items:center;gap:9px}
+.lede::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.hero{display:grid;grid-template-columns:1.35fr 1fr;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--rad);overflow:hidden;box-shadow:var(--shadow)}
+.hero>div{background:var(--panel);padding:26px 28px}
+.readout .pct{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;
+  font-size:78px;line-height:.86;letter-spacing:-.04em;color:var(--accent)}
+.readout .pct .u{font-size:26px;color:var(--mut);margin-left:2px}
+.readout .cap{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-top:8px}
+.meter{display:flex;gap:5px;margin-top:20px}
+.cell{height:38px;flex:1;border-radius:6px;border:1px solid var(--line);background:var(--panel2);
+  transition:transform .3s var(--ease),background .3s var(--ease),opacity .3s;transform-origin:bottom}
+.cell.blocked{background:var(--accent);border-color:transparent}
+.cell.flagged{background:var(--okbg);border-color:var(--accent)}
+.cell.miss{background:transparent;border-style:dashed;border-color:var(--line2)}
+.cell.leak{background:var(--leak);border-color:transparent}
+.cell.off{opacity:.4;border-style:dashed;background:var(--panel2)}
+.meter-key{display:flex;gap:16px;margin-top:13px;font-size:10.5px;color:var(--mut);flex-wrap:wrap}
+.meter-key span{display:inline-flex;align-items:center;gap:6px}
+.kd{width:11px;height:11px;border-radius:3px}
+.control{display:flex;flex-direction:column;justify-content:space-between;gap:18px}
+.runbtn{width:100%;background:var(--accent);color:var(--on-accent);font-weight:650;font-size:14px;
+  padding:14px;border-radius:var(--rad-s);letter-spacing:.02em;transition:.16s var(--ease);
+  box-shadow:0 1px 0 rgba(255,255,255,.14) inset,0 10px 24px -12px var(--accent)}
+.runbtn:hover{background:var(--accent2);transform:translateY(-1px)}
+.runbtn:active{transform:translateY(0)}
+.runbtn[disabled]{opacity:.55;cursor:default;transform:none}
+.runbtn kbd{font-family:var(--mono);font-size:10px;opacity:.6;margin-left:7px;border:1px solid currentColor;border-radius:4px;padding:0 4px}
+.ladder{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--rad-s);overflow:hidden}
+.lrow{background:var(--panel);display:flex;justify-content:space-between;align-items:baseline;padding:10px 13px}
+.lrow .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:17px;font-weight:600}
+.lrow .l{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+
+.gates{padding:15px 16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.gates .hint{font-size:11.5px;color:var(--dim);margin-right:2px}
+.tog{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:9px;padding:8px 13px 8px 11px;font-family:var(--mono);font-size:12px;cursor:pointer;
+  user-select:none;transition:.16s var(--ease)}
+.tog:hover{border-color:var(--line2)}
+.tog.off{opacity:.62;border-color:var(--leak);background:var(--leakbg)}
+.sw{width:32px;height:18px;border-radius:20px;background:var(--accent);position:relative;transition:.2s var(--ease);flex-shrink:0}
+.tog.off .sw{background:var(--dim)}
+.sw::after{content:"";position:absolute;top:2px;left:16px;width:14px;height:14px;border-radius:50%;
+  background:var(--on-accent);transition:.2s var(--ease);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.tog.off .sw::after{left:2px;background:var(--bg)}
+.tk{font-family:var(--mono);font-size:9px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 4px;margin-left:2px}
+
+.tbl{overflow:hidden}
+.thead,.row{display:grid;grid-template-columns:26px 1.3fr 1.5fr auto 20px;gap:14px;align-items:center;padding:13px 18px}
+.thead{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--line)}
+.rowwrap{border-bottom:1px solid var(--hairline)}
+.rowwrap:last-child{border-bottom:none}
+.row{cursor:pointer;transition:background .14s}
+.row:hover{background:var(--panel2)}
+.row.dim{opacity:.38}
+.row .id{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.row .cls{font-weight:560;font-size:14px}
+.row .gate{font-family:var(--mono);color:var(--mut);font-size:12px}
+.badge{font-family:var(--mono);font-size:10px;font-weight:650;padding:4px 9px;border-radius:6px;
+  letter-spacing:.06em;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.badge .bd{width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-blocked{color:var(--accent);background:var(--okbg)}
+.b-flagged{color:var(--accent);background:transparent;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 48%,transparent)}
+.b-flagged .bd{background:transparent;box-shadow:inset 0 0 0 1.5px var(--accent)}
+.b-miss{color:var(--dim);background:var(--missbg);box-shadow:inset 0 0 0 1px var(--line2)}
+.b-leak{color:var(--leak);background:var(--leakbg)}
+.chev{color:var(--dim);font-size:11px;transition:.2s var(--ease);text-align:center}
+.row.open .chev{transform:rotate(90deg);color:var(--accent)}
+.detail{max-height:0;overflow:hidden;transition:max-height .32s var(--ease)}
+.detail-in{padding:2px 18px 16px;background:var(--panel2);font-size:12.5px}
+.detail .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:13px 0 6px}
+.detail pre{margin:0;padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:8px;
+  font-family:var(--mono);font-size:12px;color:var(--ink2);white-space:pre-wrap;word-break:break-word}
+.detail .reason{color:var(--mut);margin-top:8px;line-height:1.6}
+@keyframes rin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.anim{animation:rin .34s var(--ease) both}
+
+.console{padding:19px 20px}
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px;margin-bottom:13px}
+.seg button{background:transparent;color:var(--mut);padding:7px 14px;border-radius:6px;font-size:12.5px;transition:.15s var(--ease)}
+.seg button.on{background:var(--raise);color:var(--accent);font-weight:600;box-shadow:var(--shadow)}
+.field textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--ink);
+  padding:13px 15px;font-family:var(--mono);font-size:13px;resize:vertical;min-height:58px;transition:border .15s}
+.field textarea:focus{outline:none;border-color:var(--accent)}
+.beatrow{display:flex;gap:11px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.trybtn{background:var(--accent);color:var(--on-accent);font-weight:650;padding:10px 19px;border-radius:var(--rad-s);
+  font-size:13px;transition:.16s var(--ease);box-shadow:0 8px 20px -12px var(--accent)}
+.trybtn:hover{background:var(--accent2)}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{background:var(--panel2);border:1px solid var(--line);color:var(--mut);border-radius:7px;padding:6px 11px;
+  font-size:11.5px;font-family:var(--mono);transition:.15s}
+.chip:hover{color:var(--ink);border-color:var(--line2);transform:translateY(-1px)}
+.pres{margin-top:14px;display:none;align-items:center;gap:14px;padding:14px 16px;border-radius:10px;
+  background:var(--panel2);border:1px solid var(--line)}
+.pres.show{display:flex;animation:rin .3s var(--ease) both}
+.stamp{font-family:var(--mono);font-weight:700;font-size:13px;padding:6px 13px;border-radius:7px;white-space:nowrap;
+  animation:stamp .34s var(--ease) both}
+@keyframes stamp{0%{transform:scale(1.4) rotate(-4deg);opacity:0}60%{transform:scale(.96)}100%{transform:none;opacity:1}}
+.pres .why{font-size:13px;color:var(--mut);line-height:1.5}
+.pres .why b{color:var(--ink);font-family:var(--mono);font-size:12px}
+
+.foot{margin-top:30px;font-size:11.5px;color:var(--dim);line-height:1.8}
+.foot b{color:var(--mut)}
+.foot code{font-family:var(--mono);color:var(--accent)}
+.kbd{display:inline-flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.kbd kbd{font-family:var(--mono);font-size:10px;color:var(--mut);background:var(--panel);border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:5px;padding:2px 6px}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid color-mix(in srgb,var(--on-accent) 25%,transparent);
+  border-top-color:var(--on-accent);border-radius:50%;animation:sp .6s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:680px){.hero{grid-template-columns:1fr}.readout .pct{font-size:62px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand">
+      <span class="mark">DOE&nbsp;Proof</span>
+      <span class="live"><span class="pulse"></span>Real gates · live</span>
+    </div>
+    <div class="top-r">
+      <span class="kit mono" id="kit">kit —</span>
+      <div class="theme" id="theme">
+        <button data-th="dark" title="Flint (dark)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg></button>
+        <button data-th="light" title="Chalk (light)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6L19 19M19 5l-1.4 1.4M6.4 17.6L5 19"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="readout">
+      <div class="pct mono"><span id="pct">0</span><span class="u">%</span></div>
+      <div class="cap">caught by the real gates · 7 injected defects</div>
+      <div class="meter" id="meter"></div>
+      <div class="meter-key">
+        <span><span class="kd" style="background:var(--accent)"></span>blocked</span>
+        <span><span class="kd" style="background:var(--okbg);border:1px solid var(--accent)"></span>flagged (advisory)</span>
+        <span><span class="kd" style="background:transparent;border:1px dashed var(--line2)"></span>honest miss</span>
+      </div>
+    </div>
+    <div class="control">
+      <button class="runbtn" id="run">▸ Run benchmark <kbd>R</kbd></button>
+      <div class="ladder">
+        <div class="lrow"><span class="l">covered caught</span><span class="n mono" id="s-cov">—</span></div>
+        <div class="lrow"><span class="l">blocked / flagged</span><span class="n mono" id="s-bf">—</span></div>
+        <div class="lrow"><span class="l">false-positives</span><span class="n mono" id="s-fp">—</span></div>
+        <div class="lrow"><span class="l">caught without DOE</span><span class="n mono" id="s-ctrl">0/—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lede">Tamper — flip a gate off, watch the score fall <span class="tk">1 2 3</span></div>
+  <div class="panel gates" id="gates"><span class="hint">Gates</span></div>
+
+  <div class="lede">The 7 injected defects</div>
+  <div class="panel tbl">
+    <div class="thead"><div></div><div>Defect class</div><div>Gate</div><div>Result</div><div></div></div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="lede">Beat the gates — type your own, throw it at the real gate <span class="tk">T</span></div>
+  <div class="panel console">
+    <div class="seg" id="seg">
+      <button data-k="command" class="on">Shell command</button>
+      <button data-k="write">File content</button>
+      <button data-k="code">Code snippet</button>
+    </div>
+    <div class="field"><textarea id="payload" spellcheck="false"></textarea></div>
+    <div class="beatrow">
+      <button class="trybtn" id="try">Try it ▸</button>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="pres" id="pres"></div>
+  </div>
+
+  <div class="foot">
+    <b>Honest by design.</b> Every result is the <b>real gate script</b> executing in Python on this machine — nothing is simulated in the browser.
+    Control (without DOE) is 0 by construction: vanilla tooling has none of these gates. Reproduce headless any time: <code>python3 run.py --self-test</code>.
+    <div class="kbd"><kbd>R</kbd> run <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> toggle gates <kbd>T</kbd> console <kbd>L</kbd> theme</div>
+  </div>
+
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const GATES=["block_secrets_in_code","block_dangerous_commands","health_check"];
+const disabled=new Set(); let rafN=0;
+
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);
+  try{localStorage.setItem('doe-theme',t)}catch(e){}
+  $$('#theme button').forEach(b=>b.classList.toggle('on',b.dataset.th===t));}
+(function(){let t='dark';try{t=localStorage.getItem('doe-theme')||'dark'}catch(e){}setTheme(t);})();
+$$('#theme button').forEach(b=>b.addEventListener('click',()=>setTheme(b.dataset.th)));
+
+function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function cellClass(r,eff){if(r.disabled)return 'off';if(!eff)return r.enforcement==='none'?'miss':'leak';
+  return r.enforcement==='flagged'?'flagged':'blocked';}
+function badgeOf(r,eff){if(!eff)return r.enforcement==='none'?['b-miss','MISS']:['b-leak','LEAK'];
+  return r.enforcement==='flagged'?['b-flagged','FLAGGED']:['b-blocked','BLOCKED'];}
+function renderMeter(rows,stagger){const m=$('#meter');m.innerHTML='';
+  rows.forEach((r,i)=>{const eff=('effCaught'in r)?r.effCaught:r.caught;
+    const c=document.createElement('div');c.className='cell '+cellClass(r,eff);c.title=r.defectClass;
+    if(stagger){c.style.transform='scaleY(.15)';setTimeout(()=>c.style.transform='',120+i*60);}
+    m.appendChild(c);});}
+function renderRows(rows,anim){const host=$('#rows');host.innerHTML='';
+  rows.forEach((r,i)=>{const eff=('effCaught'in r)?r.effCaught:r.caught;const [bc,bt]=badgeOf(r,eff);
+    const w=document.createElement('div');w.className='rowwrap'+(anim?' anim':'');
+    if(anim)w.style.animationDelay=(i*55)+'ms';
+    w.innerHTML=`
+      <div class="row ${r.disabled?'dim':''}">
+        <div class="id">${esc(r.id)}</div><div class="cls">${esc(r.defectClass)}</div>
+        <div class="gate">${esc(r.gate)}</div>
+        <div><span class="badge ${bc}"><span class="bd"></span>${bt}</span></div>
+        <div class="chev">▸</div>
+      </div>
+      <div class="detail"><div class="detail-in">
+        <div class="lbl">Injected payload</div>
+        <pre>${esc(r.payload)||'(code injected into a clean file)'}</pre>
+        <div class="reason">${r.disabled?'<b style="color:var(--leak)">Gate disabled</b> — this defect now slips through.':esc(r.detail||'')}</div>
+      </div></div>`;
+    const row=w.querySelector('.row'),det=w.querySelector('.detail');
+    row.addEventListener('click',()=>{const o=row.classList.toggle('open');det.style.maxHeight=o?det.scrollHeight+'px':'0';});
+    host.appendChild(w);});}
+function countTo(t){cancelAnimationFrame(rafN);const el=$('#pct');const s=+el.textContent||0;const t0=performance.now();
+  (function tk(n){const p=Math.min(1,(n-t0)/650);const e=1-Math.pow(1-p,3);el.textContent=Math.round(s+(t-s)*e);if(p<1)rafN=requestAnimationFrame(tk);})(t0);}
+function setHead(d){countTo(Math.round(d.rate*100));
+  if(d.covered)$('#s-cov').textContent=`${d.covered.caught}/${d.covered.total}`;
+  if(d.rows){const f=r=>('effCaught'in r)?r.effCaught:r.caught;
+    $('#s-bf').textContent=`${d.rows.filter(r=>f(r)&&r.enforcement==='blocked').length} / ${d.rows.filter(r=>f(r)&&r.enforcement==='flagged').length}`;}
+  if(d.falsePositives)$('#s-fp').textContent=`${d.falsePositives.fired}/${d.falsePositives.injected}`;
+  $('#s-ctrl').textContent=`0/${d.injected}`;}
+async function runBench(anim){const b=$('#run');b.disabled=true;b.innerHTML='<span class="spin"></span> running…';
+  try{const d=await(await fetch('/api/run')).json();disabled.clear();syncTog();
+    setHead(d);renderMeter(d.rows,anim);renderRows(d.rows,anim);
+    if(d.provenance&&d.provenance.kitCommit)$('#kit').textContent='kit '+d.provenance.kitCommit.slice(0,8);
+  }catch(e){}b.disabled=false;b.innerHTML='▸ Run benchmark <kbd>R</kbd>';}
+async function ablate(){const d=await(await fetch('/api/ablate',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({disabled:[...disabled]})})).json();setHead(d);renderMeter(d.rows,false);renderRows(d.rows,false);}
+function buildTog(){const h=$('#gates');GATES.forEach((g,i)=>{const t=document.createElement('div');t.className='tog';t.dataset.g=g;
+    t.innerHTML=`<span class="sw"></span><span>${g}</span><span class="tk">${i+1}</span>`;
+    t.addEventListener('click',()=>toggleGate(g));h.appendChild(t);});}
+function toggleGate(g){disabled.has(g)?disabled.delete(g):disabled.add(g);syncTog();ablate();}
+function syncTog(){$$('.tog').forEach(t=>t.classList.toggle('off',disabled.has(t.dataset.g)));}
+
+let kind='command';
+const PLACE={command:'echo "API_KEY=sk_live_..." >> .env',write:'const KEY = "ghp_xxxxxxxxxxxxxxxx..."',code:'def refund():\n    raise NotImplementedError'};
+const CHIPS={
+  command:[['leak a secret','echo "AWS=AKIAIOSFODNN7EXAMPLE" >> config.txt'],['destructive','rm -rf / --no-preserve-root'],['clean ✓','npm run build']],
+  write:[['hardcoded token','GITHUB_TOKEN = "ghp_0123456789abcdefghijklmnopqrstuvwxyzABCD"'],['clean ✓','GREETING = "hello world"']],
+  code:[['left-in stub','def pay():\n    raise NotImplementedError'],['TODO marker','# TODO: finish refund path'],['clean ✓','def add(a, b):\n    return a + b']]
+};
+function setKind(k){kind=k;$$('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  $('#payload').placeholder=PLACE[k];const h=$('#chips');h.innerHTML='';
+  CHIPS[k].forEach(([l,v])=>{const c=document.createElement('button');c.className='chip';c.textContent=l;
+    c.addEventListener('click',()=>{$('#payload').value=v;$('#payload').focus();});h.appendChild(c);});
+  $('#pres').classList.remove('show');}
+async function tryProbe(){const payload=$('#payload').value;
+  const d=await(await fetch('/api/probe',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({kind,payload})})).json();
+  const res=$('#pres');res.classList.remove('show');void res.offsetWidth;res.classList.add('show');
+  const caught=d.fired;const cls=caught?(kind==='code'?'b-flagged':'b-blocked'):'b-miss';
+  const txt=caught?(kind==='code'?'FLAGGED':'BLOCKED'):'ALLOWED';
+  res.innerHTML=`<span class="stamp badge ${cls}"><span class="bd"></span>${txt}</span>
+    <span class="why">${caught?`Caught by <b>${esc(d.gate)}</b>. ${esc(d.reason)}`:esc(d.reason)}</span>`;}
+
+document.addEventListener('keydown',e=>{
+  if(/INPUT|TEXTAREA/.test(e.target.tagName)){if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))tryProbe();return;}
+  const k=e.key.toLowerCase();
+  if(k==='r')runBench(true);else if(k==='t'){e.preventDefault();$('#payload').focus();}
+  else if(k==='l')setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+  else if(k==='1')toggleGate(GATES[0]);else if(k==='2')toggleGate(GATES[1]);else if(k==='3')toggleGate(GATES[2]);});
+$('#run').addEventListener('click',()=>runBench(true));
+$('#try').addEventListener('click',tryProbe);
+$$('#seg button').forEach(b=>b.addEventListener('click',()=>setKind(b.dataset.k)));
+buildTog();setKind('command');runBench(true);
+</script>
+</body>
+</html>
