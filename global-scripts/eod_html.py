@@ -16,7 +16,7 @@ import sys
 from datetime import datetime
 
 from html_builder import (
-    page_scaffold, esc, badge, metric_grid, data_table, raw,
+    page_scaffold, esc, badge, metric_grid, data_table, raw, icon,
     dl_item, check_row, page_header, collapsible_js, bar_chart,
     allocation_bar, stats_bar,
 )
@@ -24,33 +24,29 @@ from html_builder import (
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
-def _collapsible_card(title, body, *, meta_html='', collapsed=False, accent=''):
-    """Collapsible card with optional raw HTML in the header meta area.
+def _collapsible_card(title, body, *, meta_html='', collapsed=False, icon_name=''):
+    """Collapsible card with a HugeIcons-style glyph + title + optional meta.
 
-    Args:
-        accent: Optional highlight colour token name (e.g. 'amber', 'blue').
-            Adds a coloured left border and tinted background.
+    No coloured left-edge stripe — Chalk & Flint signals via icon/badge, never a
+    coloured card border (see feedback_no_left_border_accent).
     """
     cls = 'card card-collapsible'
     if collapsed:
         cls += ' collapsed'
 
-    style = ''
-    if accent:
-        style = (
-            f' style="border-left: 3px solid var(--{accent}); '
-            f'background: var(--{accent}-bg);"'
-        )
-
-    title_html = f'<span class="card-title">{esc(title)}</span>'
+    ico = (
+        f'<span class="ico" style="color:var(--text-faint);display:flex;">'
+        f'{icon(icon_name)}</span>'
+    ) if icon_name else ''
+    inner = f'{ico}<span class="card-title">{esc(title)}</span>'
     if meta_html:
-        title_html = (
-            f'<div style="display: flex; align-items: center; gap: 8px;">'
-            f'{title_html} {meta_html}</div>'
-        )
+        inner += f' {meta_html}'
+    title_html = (
+        f'<div style="display: flex; align-items: center; gap: 8px;">{inner}</div>'
+    )
 
     return (
-        f'<div class="{cls}"{style}>'
+        f'<div class="{cls}">'
         f'<div class="card-header">'
         f'{title_html}'
         f'<span class="card-chevron">&#9660;</span>'
@@ -97,67 +93,37 @@ def render_header(data):
 
 
 def render_metrics(data):
-    """Three rows of metric cards (3 per row) matching wireframe."""
+    """Twelve-tile stat grid — 3 bands of 4 (cadence -> output -> outcomes)."""
     m = data.get("metrics", {})
     if not m:
         return ""
 
-    sessions = m.get("sessions", 0)
-    total_dur = m.get("totalDuration", "")
-    avg_session = m.get("avgSession", "")
-    commits = m.get("commits", 0)
     added = m.get("linesAdded", 0)
     removed = m.get("linesRemoved", 0)
-    files = m.get("filesTouched", 0)
-    steps = m.get("stepsCompleted", 0)
-    features = m.get("featuresCompleted", 0)
-    agents = m.get("agentsSpawned", 0)
+    decisions = data.get("decisions", [])
+    learnings = data.get("learnings", [])
+    d_count = len(decisions) if isinstance(decisions, list) else 0
+    l_count = len(learnings) if isinstance(learnings, list) else 0
+    prs = m.get("prsMerged", 0)
 
-    # Row 1: Sessions, Total Duration, Avg Session
-    row1 = metric_grid([
-        (str(sessions), 'Sessions'),
-        (str(total_dur), 'Total Duration'),
-        (str(avg_session), 'Avg Session'),
-    ], columns=3)
-
-    # Row 2: Commits, Lines Changed (dual-colour), Files Touched
-    def _mc(val, label):
-        return (
-            f'<div class="metric-card">'
-            f'<div class="metric-value">{esc(str(val))}</div>'
-            f'<div class="metric-label">{esc(label)}</div>'
-            f'</div>'
-        )
-
-    added_str = esc(str(added))
-    removed_str = esc(str(removed))
-    lines_card = (
-        f'<div class="metric-card">'
-        f'<div class="metric-value">'
-        f'<span style="color: var(--green);">+{added_str}</span>'
-        f' / '
-        f'<span style="color: var(--rose);">-{removed_str}</span>'
-        f'</div>'
-        f'<div class="metric-label">Lines Changed</div>'
-        f'</div>'
-    )
-
-    row2 = (
-        f'<div class="metric-grid metric-grid-3">'
-        f'{_mc(commits, "Commits")}'
-        f'{lines_card}'
-        f'{_mc(files, "Files Touched")}'
-        f'</div>'
-    )
-
-    # Row 3: Steps Completed, Features Completed, Agents Spawned
-    row3 = metric_grid([
-        (str(steps), 'Steps Completed'),
-        (str(features), 'Features Completed'),
-        (str(agents), 'Agents Spawned'),
-    ], columns=3)
-
-    return f'<div class="section">{row1}{row2}{row3}</div>'
+    tiles = [
+        # Band 1 — cadence
+        (str(m.get("sessions", 0)), 'Sessions'),
+        (str(m.get("totalDuration", "") or "N/A"), 'Total Time'),
+        (str(m.get("avgSession", "") or "N/A"), 'Avg Session'),
+        (str(m.get("commits", 0)), 'Commits'),
+        # Band 2 — output
+        (f'+{added}', 'Lines Added', 'acc'),
+        (f'−{removed}', 'Lines Removed', 'faint'),
+        (str(m.get("filesTouched", 0)), 'Files Touched'),
+        (str(m.get("stepsCompleted", 0)), 'Steps Done'),
+        # Band 3 — outcomes & knowledge
+        (str(m.get("featuresCompleted", 0)), 'Features Shipped'),
+        (str(d_count), 'Decisions'),
+        (str(l_count), 'Learnings'),
+        (str(prs), 'PRs Merged', 'acc' if prs else None),
+    ]
+    return f'<div class="section">{metric_grid(tiles, columns=4)}</div>'
 
 
 def render_summary(data):
@@ -193,9 +159,9 @@ def render_summary(data):
     elif breakdowns:
         # Backward compat: old breakdown format
         color_map = {
-            'build': '--green', 'review': '--blue',
-            'housekeeping': '--amber', 'debug': '--rose',
-            'research': '--accent',
+            'build': '--accent', 'review': '--text-dim',
+            'housekeeping': '--text-dim', 'debug': '--text-dim',
+            'research': '--status-live',
         }
         for b in breakdowns:
             heading = b.get("heading", "")
@@ -232,12 +198,12 @@ def render_summary(data):
     tag = data.get("tag")
     if tag:
         variant_map = {
-            'BUILD': 'pass', 'PLAN': 'info', 'DEBUG': 'fail',
+            'BUILD': 'pass', 'PLAN': 'info', 'DEBUG': 'dim',
             'HOUSEKEEPING': 'dim', 'RESEARCH': 'accent',
         }
         meta = badge(tag.upper(), variant_map.get(tag.upper(), 'dim'))
 
-    return _collapsible_card('\U0001f4cb Summary', body, meta_html=meta)
+    return _collapsible_card('Summary', body, meta_html=meta, icon_name='summary')
 
 
 def render_daily_timeline(data):
@@ -249,10 +215,12 @@ def render_daily_timeline(data):
     total_dur = data.get("metrics", {}).get("totalDuration", "")
 
     # Allocation bar: aggregate by tag
+    # Monochrome allocation (EOD is non-triage): the Albion green + muted greys,
+    # no alert colours.
     tag_color_map = {
-        'BUILD': 'var(--green)', 'PLAN': 'var(--blue)',
-        'DEBUG': 'var(--rose)', 'HOUSEKEEPING': 'var(--amber)',
-        'RESEARCH': 'var(--accent)',
+        'BUILD': 'var(--accent)', 'PLAN': 'var(--text-dim)',
+        'DEBUG': 'var(--text-faint)', 'HOUSEKEEPING': 'var(--text-faint)',
+        'RESEARCH': 'var(--status-live)',
     }
     tag_label_map = {
         'BUILD': 'Build', 'PLAN': 'Planning',
@@ -324,7 +292,7 @@ def render_daily_timeline(data):
         tag_html = ""
         if tag:
             variant_map = {
-                'BUILD': 'pass', 'PLAN': 'accent', 'DEBUG': 'fail',
+                'BUILD': 'pass', 'PLAN': 'accent', 'DEBUG': 'dim',
                 'HOUSEKEEPING': 'dim', 'RESEARCH': 'info',
             }
             tag_html = badge(tag.upper(), variant_map.get(tag.upper(), 'dim'))
@@ -344,7 +312,7 @@ def render_daily_timeline(data):
     # Total
     total_html = ''
     if total_dur:
-        mono = "'SF Mono', 'Fira Code', 'Consolas', monospace"
+        mono = "var(--mono)"
         total_html = (
             f'<div style="margin-top: 12px; text-align: right;">'
             f'<span style="font-family: {mono}; font-size: 13px; '
@@ -355,7 +323,7 @@ def render_daily_timeline(data):
     count = len(items)
     meta = f'<span class="card-meta">{count} sessions, {esc(total_dur)} total</span>'
 
-    return _collapsible_card('\u23f1\ufe0f Daily Timeline', body, meta_html=meta)
+    return _collapsible_card('Daily Timeline', body, meta_html=meta, icon_name='clock')
 
 
 def render_commit_breakdown(data):
@@ -367,10 +335,8 @@ def render_commit_breakdown(data):
     total_commits = data.get("metrics", {}).get("commits", 0)
     max_count = max((item.get("count", 0) for item in items), default=1)
 
-    colors = [
-        'var(--accent)', 'var(--blue)', 'var(--green)',
-        'var(--amber)', 'var(--rose)',
-    ]
+    # Monochrome bars: accent green alternating with a muted grey.
+    colors = ['var(--accent)', 'var(--text-faint)']
     chart_rows = []
     for i, item in enumerate(items):
         name = item.get("name", "")
@@ -384,7 +350,7 @@ def render_commit_breakdown(data):
         f'{total_commits} commits in {len(items)} groups</span>'
     )
 
-    return _collapsible_card('\U0001f4dd Commit Breakdown', body, meta_html=meta)
+    return _collapsible_card('Commit Breakdown', body, meta_html=meta, icon_name='commit')
 
 
 def render_decisions(data):
@@ -409,16 +375,16 @@ def render_decisions(data):
                 rows.append(('Solution', esc(solution)))
             if context and not problem:
                 rows.append(('Context', esc(context)))
-            parts.append(dl_item(title_text, rows, pills=[('decision', 'green')]))
+            parts.append(dl_item(title_text, rows, pills=[('decision', 'accent')]))
         else:
-            parts.append(dl_item(str(d), [], pills=[('decision', 'green')]))
+            parts.append(dl_item(str(d), [], pills=[('decision', 'accent')]))
 
     body = ''.join(parts)
     count = len(decisions)
     meta = f'<span class="card-meta">{count} decision{"s" if count != 1 else ""}</span>'
 
     return _collapsible_card(
-        '\u2696\ufe0f Decisions', body, meta_html=meta, collapsed=True)
+        'Decisions', body, meta_html=meta, collapsed=True, icon_name='decision')
 
 
 def render_learnings(data):
@@ -443,16 +409,16 @@ def render_learnings(data):
                 rows.append(('Change', esc(solution)))
             if context and not problem:
                 rows.append(('Context', esc(context)))
-            parts.append(dl_item(title_text, rows, pills=[('learning', 'accent')]))
+            parts.append(dl_item(title_text, rows, pills=[('learning', 'neutral')]))
         else:
-            parts.append(dl_item(str(learning), [], pills=[('learning', 'accent')]))
+            parts.append(dl_item(str(learning), [], pills=[('learning', 'neutral')]))
 
     body = ''.join(parts)
     count = len(learnings)
     meta = f'<span class="card-meta">{count} learning{"s" if count != 1 else ""}</span>'
 
     return _collapsible_card(
-        '\U0001f4a1 Learnings', body, meta_html=meta, collapsed=True)
+        'Learnings', body, meta_html=meta, collapsed=True, icon_name='learning')
 
 
 def render_checks(data):
@@ -537,7 +503,7 @@ def render_checks(data):
     meta = ' '.join(header_badges)
 
     return _collapsible_card(
-        '\u2705 System Checks', body, meta_html=meta, collapsed=True)
+        'System Checks', body, meta_html=meta, collapsed=True, icon_name='shield')
 
 
 def render_next_up(data):

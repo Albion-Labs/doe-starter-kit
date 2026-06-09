@@ -13,10 +13,10 @@ import re
 import sys
 
 from html_builder import (
-    page_scaffold, esc, badge, badge_row, metric_grid, card,
+    page_scaffold, esc, badge, badge_row, metric_grid, card, icon,
     timeline as builder_timeline, timeline_legend, data_table, raw,
     dl_item, pill, check_row, next_card, page_footer, page_header,
-    section, collapsible_js, DOE_COLORS,
+    section, section_header, collapsible_js, DOE_COLORS,
 )
 
 
@@ -45,33 +45,29 @@ def _parse_hhmm(time_str):
     return None
 
 
-def _collapsible_card(title, body, *, meta_html='', collapsed=False, accent=''):
-    """Collapsible card with optional raw HTML in the header meta area.
+def _collapsible_card(title, body, *, meta_html='', collapsed=False, icon_name=''):
+    """Collapsible card with a HugeIcons-style glyph + title + optional meta.
 
-    Args:
-        accent: Optional highlight colour token name (e.g. 'amber', 'blue').
-            Adds a coloured left border and tinted background.
+    No coloured left-edge stripe — Chalk & Flint signals via icon/badge, never a
+    coloured card border (see feedback_no_left_border_accent).
     """
     cls = 'card card-collapsible'
     if collapsed:
         cls += ' collapsed'
 
-    style = ''
-    if accent:
-        style = (
-            f' style="border-left: 3px solid var(--{accent}); '
-            f'background: var(--{accent}-bg);"'
-        )
-
-    title_html = f'<span class="card-title">{esc(title)}</span>'
+    ico = (
+        f'<span class="ico" style="color:var(--text-faint);display:flex;">'
+        f'{icon(icon_name)}</span>'
+    ) if icon_name else ''
+    inner = f'{ico}<span class="card-title">{esc(title)}</span>'
     if meta_html:
-        title_html = (
-            f'<div style="display: flex; align-items: center; gap: 8px;">'
-            f'{title_html} {meta_html}</div>'
-        )
+        inner += f' {meta_html}'
+    title_html = (
+        f'<div style="display: flex; align-items: center; gap: 8px;">{inner}</div>'
+    )
 
     return (
-        f'<div class="{cls}"{style}>'
+        f'<div class="{cls}">'
         f'<div class="card-header">'
         f'{title_html}'
         f'<span class="card-chevron">&#9660;</span>'
@@ -127,7 +123,7 @@ def render_header(data):
     tag = data.get("tag", "")
     if tag:
         variant_map = {
-            'BUILD': 'pass', 'PLAN': 'info', 'DEBUG': 'fail',
+            'BUILD': 'pass', 'PLAN': 'info', 'DEBUG': 'dim',
             'HOUSEKEEPING': 'dim', 'RESEARCH': 'accent',
         }
         badges.append(badge(tag.upper(), variant_map.get(tag.upper(), 'dim')))
@@ -136,48 +132,48 @@ def render_header(data):
 
 
 def render_metrics(data):
-    """Six-column metric grid."""
+    """Twelve-tile stat grid — 3 bands of 4 (cadence -> output -> outcomes).
+
+    A session wrap reports one session; cadence tiles derive from that session's
+    own metrics, outcome tiles from the decision/learning arrays and a verifiable
+    PRs-merged count (no self-reported numbers).
+    """
     m = data.get("metrics", {})
     if not m:
         return ""
 
-    commits = m.get("commits", 0)
-    steps = m.get("stepsCompleted", 0)
+    today = data.get("todaySessions", [])
+    sessions = len(today) if today else 1
+    duration = m.get("sessionDuration", "") or "N/A"
+    avg = duration if sessions <= 1 else "N/A"
     added = m.get("linesAdded", 0)
     removed = m.get("linesRemoved", 0)
-    duration = esc(m.get("sessionDuration", ""))
-    files = m.get("filesTouched", 0)
-    agents = m.get("agentsSpawned", 0)
+    decisions = data.get("decisions", [])
+    learnings = data.get("learnings", [])
+    d_count = len(decisions) if isinstance(decisions, list) else 0
+    l_count = len(learnings) if isinstance(learnings, list) else 0
+    features = m.get("featuresShipped", m.get("featuresCompleted", 0))
+    prs = m.get("prsMerged", 0)
 
-    # Lines +/- needs dual-colour HTML — build metric grid manually
-    def _mc(val, label):
-        return (
-            f'<div class="metric-card">'
-            f'<div class="metric-value">{esc(str(val))}</div>'
-            f'<div class="metric-label">{esc(label)}</div>'
-            f'</div>'
-        )
-
-    lines_card = (
-        f'<div class="metric-card">'
-        f'<div class="metric-value" style="color: var(--green);">+{esc(str(added))}</div>'
-        f'<div style="font-family: \'SF Mono\', \'Fira Code\', \'Consolas\', monospace; '
-        f'font-size: 16px; font-weight: 600; color: var(--rose); margin-top: -2px;">'
-        f'-{esc(str(removed))}</div>'
-        f'<div class="metric-label">Lines +/-</div>'
-        f'</div>'
-    )
-
-    cards = [
-        _mc(commits, 'Commits'),
-        _mc(steps, 'Steps'),
-        lines_card,
-        _mc(duration, 'Duration'),
-        _mc(files, 'Files Touched'),
-        _mc(agents, 'Agents Spawned'),
+    tiles = [
+        # Band 1 — cadence
+        (str(sessions), 'Sessions'),
+        (str(duration), 'Total Time'),
+        (str(avg), 'Avg Session'),
+        (str(m.get("commits", 0)), 'Commits'),
+        # Band 2 — output
+        (f'+{added}', 'Lines Added', 'acc'),
+        (f'−{removed}', 'Lines Removed', 'faint'),
+        (str(m.get("filesTouched", 0)), 'Files Touched'),
+        (str(m.get("stepsCompleted", 0)), 'Steps Done'),
+        # Band 3 — outcomes & knowledge
+        (str(features), 'Features Shipped'),
+        (str(d_count), 'Decisions'),
+        (str(l_count), 'Learnings'),
+        (str(prs), 'PRs Merged', 'acc' if prs else None),
     ]
 
-    return f'<div class="metric-grid metric-grid-6">{"".join(cards)}</div>'
+    return metric_grid(tiles, columns=4)
 
 
 def render_summary(data):
@@ -198,9 +194,9 @@ def render_summary(data):
             f'<p style="margin-bottom: 16px; color: var(--text);">{esc(summary)}</p>')
 
     color_map = {
-        'build': '--green', 'review': '--blue',
-        'housekeeping': '--amber', 'debug': '--rose',
-        'research': '--accent',
+        'build': '--accent', 'review': '--text-dim',
+        'housekeeping': '--text-dim', 'debug': '--text-dim',
+        'research': '--status-live',
     }
 
     for b in breakdowns:
@@ -227,12 +223,12 @@ def render_summary(data):
         text = esc(vibe.get("text", ""))
         vibe_str = f'{emoji} {text}'.strip() if emoji else text
         meta = (
-            f'<span style="margin-left: auto; font-family: \'SF Mono\', monospace; '
+            f'<span style="margin-left: auto; font-family: var(--mono); '
             f'font-size: 12px; color: var(--text-dim); letter-spacing: 0.04em;">'
             f'Vibe: {vibe_str}</span>'
         )
 
-    return _collapsible_card('\U0001f4cb Summary', body, meta_html=meta)
+    return _collapsible_card('Summary', body, meta_html=meta, icon_name='summary')
 
 
 def render_timeline_section(data):
@@ -303,14 +299,14 @@ def render_timeline_section(data):
     if session_dur_str:
         total_html = (
             f'<div style="margin-top: 12px; text-align: right;">'
-            f'<span style="font-family: \'SF Mono\', monospace; font-size: 13px; '
+            f'<span style="font-family: var(--mono); font-size: 13px; '
             f'font-weight: 600;">Total: {esc(session_dur_str)}</span></div>'
         )
 
     body = tl_html + legend + total_html
     meta = f'<span class="card-meta">{esc(session_dur_str)}</span>' if session_dur_str else ''
 
-    return _collapsible_card('\u23f1\ufe0f Timeline', body, meta_html=meta)
+    return _collapsible_card('Timeline', body, meta_html=meta, icon_name='clock')
 
 
 def render_commits(data):
@@ -341,7 +337,7 @@ def render_commits(data):
                 rows.append(
                     f'<div style="display: flex; align-items: baseline; gap: 10px; '
                     f'padding: 4px 0; font-size: 13px;">'
-                    f'<span style="font-family: \'SF Mono\', monospace; font-size: 12px; '
+                    f'<span style="font-family: var(--mono); font-size: 12px; '
                     f'color: var(--accent); flex-shrink: 0;">{esc(h)}</span>'
                     f'<span{msg_style}>{msg}</span>'
                     f'</div>'
@@ -368,7 +364,7 @@ def render_commits(data):
             items.append(
                 f'<div style="display: flex; align-items: baseline; gap: 10px; '
                 f'padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px;">'
-                f'<span style="font-family: \'SF Mono\', monospace; font-size: 12px; '
+                f'<span style="font-family: var(--mono); font-size: 12px; '
                 f'color: var(--accent); flex-shrink: 0;">{h}</span>'
                 f'<span{msg_style}>{msg}</span>'
                 f'</div>'
@@ -376,7 +372,7 @@ def render_commits(data):
         body = ''.join(items)
         meta = f'<span class="card-meta">{esc(str(total_commits))} commits</span>'
 
-    return _collapsible_card('\U0001f4dd Commits', body, meta_html=meta)
+    return _collapsible_card('Commits', body, meta_html=meta, icon_name='commit')
 
 
 def render_decisions_learnings(data):
@@ -404,9 +400,9 @@ def render_decisions_learnings(data):
                 rows.append(('Solution', esc(solution)))
             if context and not problem:
                 rows.append(('Context', esc(context)))
-            parts.append(dl_item(title_text, rows, pills=[('decision', 'green')]))
+            parts.append(dl_item(title_text, rows, pills=[('decision', 'accent')]))
         else:
-            parts.append(dl_item(str(d), [], pills=[('decision', 'green')]))
+            parts.append(dl_item(str(d), [], pills=[('decision', 'accent')]))
 
     for l in learnings:
         if isinstance(l, dict):
@@ -421,9 +417,9 @@ def render_decisions_learnings(data):
                 rows.append(('Change', esc(solution)))
             if context and not problem:
                 rows.append(('Context', esc(context)))
-            parts.append(dl_item(title_text, rows, pills=[('learning', 'accent')]))
+            parts.append(dl_item(title_text, rows, pills=[('learning', 'neutral')]))
         else:
-            parts.append(dl_item(str(l), [], pills=[('learning', 'accent')]))
+            parts.append(dl_item(str(l), [], pills=[('learning', 'neutral')]))
 
     body = ''.join(parts)
     d_count = len(decisions)
@@ -435,7 +431,8 @@ def render_decisions_learnings(data):
         counts.append(f'{l_count} learning{"s" if l_count != 1 else ""}')
     meta = f'<span class="card-meta">{", ".join(counts)}</span>'
 
-    return _collapsible_card('\u2696\ufe0f Decisions + Learnings', body, meta_html=meta, collapsed=True)
+    return _collapsible_card('Decisions + Learnings', body, meta_html=meta,
+                             collapsed=True, icon_name='decision')
 
 
 def render_checks(data):
@@ -509,8 +506,10 @@ def render_checks(data):
     inner = '\n'.join(rows)
     return (
         f'<div class="section">'
-        f'<div class="section-title" style="margin-bottom: 10px;">'
-        f'\u2705 System Checks{header_badges}</div>'
+        f'<div class="section-title" style="margin-bottom: 10px; '
+        f'display: flex; align-items: center; gap: 8px;">'
+        f'<span style="color: var(--text-faint); display: flex;">{icon("shield")}</span> '
+        f'System Checks{header_badges}</div>'
         f'<div class="checks-card">\n{inner}\n</div>'
         f'</div>'
     )
@@ -546,7 +545,8 @@ def render_today_sessions(data):
     body = ''.join(rows)
     meta = badge(f'{len(sessions)} sessions', 'dim')
 
-    return _collapsible_card("\U0001f4c5 Today's Sessions", body, meta_html=meta, collapsed=True)
+    return _collapsible_card("Today's Sessions", body, meta_html=meta,
+                             collapsed=True, icon_name='sessions')
 
 
 def render_awaiting_signoff(data):
@@ -600,8 +600,10 @@ def render_awaiting_signoff(data):
 
     return (
         f'<div class="section">'
-        f'<div class="section-title" style="margin-bottom: 10px;">'
-        f'\u270d\ufe0f Awaiting Sign-off '
+        f'<div class="section-title" style="margin-bottom: 10px; '
+        f'display: flex; align-items: center; gap: 8px;">'
+        f'<span style="color: var(--text-faint); display: flex;">{icon("check")}</span> '
+        f'Awaiting Sign-off '
         f'<span class="so-header-badge">'
         f'{total_features} features &middot; {total_items} manual items</span>'
         f'</div>\n'
@@ -636,16 +638,16 @@ WRAP_CSS = r"""
   }
   .session-row:last-child { border-bottom: none; }
   .session-row-time {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-family: var(--mono);
     font-size: 13px; color: var(--text-dim); flex: 0 0 120px;
   }
   .session-row-duration {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-family: var(--mono);
     font-size: 13px; font-weight: 600; flex: 0 0 60px;
   }
   .session-row-summary { flex: 1; }
   .session-row-commits {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-family: var(--mono);
     font-size: 13px; color: var(--text-dim); flex: 0 0 90px; text-align: right;
   }
 
@@ -662,20 +664,20 @@ WRAP_CSS = r"""
     padding-left: 4.5rem; font-size: 0.8rem; color: var(--text-dim);
   }
   .checks-badge {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-family: var(--mono);
     font-size: 0.75rem; font-weight: 600;
     padding: 0.15rem 0.5rem; border-radius: 4px;
     flex-shrink: 0;
   }
   .checks-badge-pass { color: var(--green); background: var(--green-dim); }
-  .checks-badge-warn { color: var(--amber); background: var(--amber-dim); }
+  .checks-badge-warn { color: var(--text-dim); background: var(--surface-sunk); }
   .checks-badge-fail { color: var(--rose); background: var(--rose-dim); }
   .checks-label { color: var(--text-dim); }
   .checks-value { color: var(--text); }
 
   /* ── Awaiting Sign-off (amber bordered expandable cards) ── */
   .so-card {
-    background: var(--surface); border: 1px solid var(--amber);
+    background: var(--surface); border: 1px solid var(--text-dim);
     border-radius: 8px; margin-bottom: 0.8rem;
   }
   .so-card:last-child { margin-bottom: 0; }
@@ -690,12 +692,12 @@ WRAP_CSS = r"""
   }
   .so-card[open] > .so-card-header::before { transform: rotate(90deg); }
   .so-feature {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-family: var(--mono);
     font-size: 0.85rem; font-weight: 600; color: var(--text); flex: 1;
   }
   .so-count {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 0.7rem; color: var(--amber); background: var(--amber-dim);
+    font-family: var(--mono);
+    font-size: 0.7rem; color: var(--text-dim); background: var(--surface-sunk);
     padding: 0.15rem 0.5rem; border-radius: 4px; flex-shrink: 0;
   }
   .so-summary {
@@ -705,14 +707,14 @@ WRAP_CSS = r"""
   .so-group { padding: 0.6rem 1.2rem; }
   .so-group:last-child { padding-bottom: 1rem; }
   .so-group-name {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-family: var(--mono);
     font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 0.3rem;
     display: flex; align-items: center; gap: 0.4rem;
   }
   .so-group-count {
-    font-size: 0.6rem; font-weight: 400; color: var(--amber);
-    background: var(--amber-dim); padding: 0.05rem 0.35rem; border-radius: 3px;
+    font-size: 0.6rem; font-weight: 400; color: var(--text-dim);
+    background: var(--surface-sunk); padding: 0.05rem 0.35rem; border-radius: 3px;
   }
   .so-checklist { list-style: none; padding: 0; margin: 0; }
   .so-item {
@@ -721,11 +723,11 @@ WRAP_CSS = r"""
   }
   .so-item::before {
     content: '\25A1'; position: absolute; left: 0;
-    color: var(--amber); font-size: 0.7rem;
+    color: var(--text-dim); font-size: 0.7rem;
   }
   .so-header-badge {
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 0.7rem; color: var(--amber); margin-left: 8px;
+    font-family: var(--mono);
+    font-size: 0.7rem; color: var(--text-dim); margin-left: 8px;
   }
 """
 
