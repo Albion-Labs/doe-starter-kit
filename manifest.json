@@ -79,7 +79,7 @@
     },
     "regulated": {
       "directives": ["data-compliance.md", "documentation-governance.md"],
-      "files": ["data-governance.md", "legal-framework.md"]
+      "files": ["data-governance.md", "legal-framework.md", "THREAT_MODEL-regulated.md"]
     }
   },
   "global_scripts": [

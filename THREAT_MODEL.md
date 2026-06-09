@@ -10,15 +10,15 @@ Every piece of data in the system belongs to one of four classification levels. 
 
 | Level | Description | Examples | Storage Requirements |
 |-------|-------------|----------|---------------------|
-| **PUBLIC** | Freely available data. No harm if disclosed. | Published election results, public candidate statements, constituency boundaries, publicly available policy documents | No special requirements. Can be cached, logged, displayed without restriction. |
-| **INTERNAL** | Operational data not intended for public release. Disclosure causes embarrassment or minor competitive harm. | Campaign strategy documents, internal polling, canvass route plans, volunteer schedules, draft communications | Access restricted to project team. Not committed to a public repo. Not included in error logs or analytics. |
-| **CONFIDENTIAL** | Personal data subject to UK GDPR. Disclosure causes harm to individuals. | Voter names, email addresses, phone numbers, postal addresses, donation amounts, membership records | Encrypted at rest and in transit. Access logged. Retention periods enforced. Subject to SAR and erasure procedures. See `directives/data-compliance.md`. |
-| **RESTRICTED** | Special category data (Article 9 UK GDPR) or data with criminal liability for misuse. Highest sensitivity. | Political opinions (canvass responses, voting intention), trade union membership, health data, ethnicity data, full electoral register data | All CONFIDENTIAL requirements plus: explicit legal basis required (Article 9(2)), access limited to named individuals, stored separately from other personal data, breach triggers criminal as well as civil liability for electoral register data. |
+| **PUBLIC** | Freely available data. No harm if disclosed. | Published marketing pages, public documentation, open datasets, press releases | No special requirements. Can be cached, logged, displayed without restriction. |
+| **INTERNAL** | Operational data not intended for public release. Disclosure causes embarrassment or minor competitive harm. | Internal strategy documents, roadmaps, employee schedules, draft communications | Access restricted to project team. Not committed to a public repo. Not included in error logs or analytics. |
+| **CONFIDENTIAL** | Personal data subject to data-protection law (e.g. UK/EU GDPR). Disclosure causes harm to individuals. | User names, email addresses, phone numbers, postal addresses, payment details, account records | Encrypted at rest and in transit. Access logged. Retention periods enforced. Subject to access and erasure procedures. See `directives/data-compliance.md` (regulated layer). |
+| **RESTRICTED** | Special-category data (Article 9 UK/EU GDPR) or data whose misuse carries criminal or sector-specific liability. Highest sensitivity. | Health, biometric, genetic, ethnicity, religious/political-belief or trade-union data; plus any sector-regulated dataset (see the regulated-layer threat addendum) | All CONFIDENTIAL requirements plus: explicit legal basis required (Article 9(2)), access limited to named individuals, stored separately from other personal data, breach may trigger criminal as well as civil liability. |
 
 ### Classification Decision Tree
 
-1. Is it special category data (political opinion, health, ethnicity, trade union, religion, sexual orientation, biometrics, genetics)? -> **RESTRICTED**
-2. Is it from the full electoral register? -> **RESTRICTED** (criminal liability under Representation of the People Act)
+1. Is it special-category data (political opinion, health, ethnicity, trade union, religion, sexual orientation, biometrics, genetics)? -> **RESTRICTED**
+2. Is it a sector-regulated dataset whose misuse carries statutory or criminal penalties (e.g. financial or health records, or a regulated register)? -> **RESTRICTED** (see the regulated-layer threat addendum if installed)
 3. Can it identify a living individual (directly or by combination)? -> **CONFIDENTIAL**
 4. Is it internal operational data not intended for public release? -> **INTERNAL**
 5. Otherwise -> **PUBLIC**
@@ -136,16 +136,16 @@ Every piece of data in the system belongs to one of four classification levels. 
 - Review access quarterly
 - Principle of least privilege from the start
 
-### T7: Electoral Register Misuse
+### T7: Special-Category / Regulated-Data Misuse
 
-**Risk:** Full electoral register data used for non-electoral purposes, merged with commercial data, or disclosed to unauthorised persons.
+**Risk:** Special-category or sector-regulated data used beyond its lawful purpose, merged with other datasets, or disclosed to unauthorised persons.
 **Likelihood:** Low if controls are followed.
-**Impact:** Criminal liability (Representation of the People Act), not just civil/GDPR.
+**Impact:** Potential criminal as well as civil liability, depending on the dataset and sector.
 **Mitigations:**
-- Register data stored separately with dedicated access controls
+- Regulated datasets stored separately with dedicated access controls
 - Never in seed data, test data, or non-production environments
 - Access logged and auditable
-- See `directives/data-safety.md` for criminal liability details
+- For sector-specific obligations and criminal-liability detail, install the regulated layer — see the regulated-layer threat addendum
 
 ---
 
@@ -174,7 +174,7 @@ Review this threat model when:
 ## Cross-References
 
 - `SECURITY.md` -- Disclosure policy, secret rotation, dependency security
-- `directives/data-safety.md` -- Technical enforcement of data protection
-- `directives/data-compliance.md` -- Legal compliance (GDPR, DPA 2018, PPERA)
+- `directives/data-safety.md` -- Technical enforcement of data protection (data-handling layer)
+- `directives/data-compliance.md` -- Legal compliance, GDPR / DPA 2018 (regulated layer)
 - `directives/incident-response.md` -- Incident response procedure
-- `legal-framework.md` -- Legal obligations and review triggers
+- `THREAT_MODEL-regulated.md` -- Sector-specific data classes, threats, and criminal-liability detail (regulated layer)

@@ -1121,6 +1121,78 @@ def scenario_plan_vs_actual(verbose: bool = False):
 
 
 # ════════════════════════════════════════════════════════════
+# Scenario 18: universal_layer_domain_neutral
+# ════════════════════════════════════════════════════════════
+
+# Domain-specific terms that must NOT appear in always-installed (universal-layer)
+# files. Regulated/electoral content belongs in the opt-in `regulated` layer so a
+# generic project never inherits it. Word-boundaried so "selector" (electoral) and
+# "constituent" (constituency) do not false-positive.
+_DOMAIN_LEAK_RE = re.compile(
+    r"\belectoral\b|\bppera\b|\bcanvass\w*|\bconstituenc\w*"
+    r"|reform uk|good law project|voting intention|representation of the people",
+    re.IGNORECASE,
+)
+# Each category maps to the candidate directories an entry may live in. Git hooks
+# (pre-commit, commit-msg, pre-push) live in .githooks/, not .claude/hooks/, so
+# both are listed — an entry that resolves in none is surfaced, not silently dropped.
+_UNIVERSAL_LAYER_DIRS = {
+    "files": ["."],
+    "directives": ["directives"],
+    "commands": ["global-commands"],
+    "scripts": ["global-scripts", "execution"],
+    "hooks": [".githooks", ".claude/hooks"],
+}
+
+
+def scenario_universal_layer_domain_neutral(verbose: bool = False):
+    """FAIL if an always-installed (universal-layer) file carries domain-specific
+    regulatory content. Such content (electoral register, PPERA, etc.) belongs in
+    the opt-in `regulated` layer, not in every project's install.
+
+    Skips when manifest.json is absent (e.g. a consumer project) — nothing to check.
+    """
+    import json
+    manifest = PROJECT_ROOT / "manifest.json"
+    vlines = []
+    if not manifest.exists():
+        return _result("PASS", "no manifest.json — not the kit repo, nothing to check", vlines)
+    try:
+        layers = json.loads(manifest.read_text(encoding="utf-8")).get("layers", {})
+    except (json.JSONDecodeError, OSError) as e:
+        return _result("WARN", f"cannot read manifest.json: {e}", vlines)
+
+    universal = layers.get("universal", {})
+    leaks = []
+    unresolved = []
+    scanned = 0
+    for category, subdirs in _UNIVERSAL_LAYER_DIRS.items():
+        for name in universal.get(category, []):
+            p = next((PROJECT_ROOT / sd / name for sd in subdirs
+                      if (PROJECT_ROOT / sd / name).is_file()), None)
+            if p is None:
+                unresolved.append(f"{category}:{name}")
+                continue
+            scanned += 1
+            matches = sorted({m.group(0).lower()
+                              for m in _DOMAIN_LEAK_RE.finditer(p.read_text(encoding="utf-8", errors="ignore"))})
+            if matches:
+                rel = p.relative_to(PROJECT_ROOT)
+                leaks.append(f"{rel}: {', '.join(matches)}")
+                vlines.append(f"  {rel}: {', '.join(matches)}")
+
+    vlines.insert(0, f"  Universal-layer files scanned: {scanned}")
+    if unresolved:
+        vlines.append(f"  Unresolved entries (coverage gap): {', '.join(unresolved)}")
+    if leaks:
+        return _result("FAIL", f"{len(leaks)} universal-layer file(s) carry domain-specific content (move to regulated layer): " + "; ".join(leaks), vlines)
+    # An entry the scanner can't locate is a coverage hole, not a pass — surface it.
+    if unresolved:
+        return _result("WARN", f"scanned {scanned}; {len(unresolved)} universal entr(y/ies) could not be located: {', '.join(unresolved)}", vlines)
+    return _result("PASS", f"no domain-specific leakage in {scanned} universal-layer files", vlines)
+
+
+# ════════════════════════════════════════════════════════════
 # Scenario registry
 # ════════════════════════════════════════════════════════════
 
@@ -1286,6 +1358,7 @@ SCENARIOS = [
     ("plan_vs_actual",              scenario_plan_vs_actual),
     ("readme_claims_match_disk",    scenario_readme_claims_match_disk),
     ("execution_determinism",       scenario_execution_determinism),
+    ("universal_layer_domain_neutral", scenario_universal_layer_domain_neutral),
 ]
 
 # Scenarios excluded from --quick mode
@@ -1346,6 +1419,7 @@ Scenarios:
   plan_vs_actual                 Completed features' plan deliverables exist
   readme_claims_match_disk       README numeric claims (counts) match the tree (FAIL on drift)
   execution_determinism          No hidden randomness/input/network in pure execution/ scripts
+  universal_layer_domain_neutral Universal-layer files carry no domain-specific content (FAIL on leak)
         """,
     )
     parser.add_argument(

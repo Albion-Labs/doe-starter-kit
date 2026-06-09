@@ -114,7 +114,7 @@ CLAUDE.md tells Claude to check these before starting work:
 | File | Goes to | Purpose |
 |------|---------|---------|
 | dispatch_dag.py | `./execution/` | DAG executor for parallel step dispatch |
-| test_methodology.py | `./execution/` | Structural methodology checks (19 scenarios) |
+| test_methodology.py | `./execution/` | Structural methodology checks (20 scenarios) |
 | audit_claims.py | `./execution/` | Automated false-positive detection. Extensible with project-specific checks via `@register()` decorator. |
 | wrap_stats.py | `./execution/` | Deterministic session scoring. Gathers git metrics, computes streak/multiplier/score/badges, updates stats.json, outputs JSON for `/wrap` to render. |
 
