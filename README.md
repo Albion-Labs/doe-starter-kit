@@ -4,7 +4,7 @@ A structured framework for AI-assisted development using Claude Code. **Directiv
 
 ## What This Is
 
-A structured framework for AI-assisted development. Drop into any project -- `doe init` asks what you're building and installs only what applies. Supports Next.js, Vite, Python, Go, Flutter, and static HTML.
+Albion-Labs' **internal operating harness** for AI-assisted development with Claude Code — shared with and maintained by the team, not a public starter kit. Used across Albion-Labs projects: `doe init` asks what you're building and installs only what applies (Next.js, Vite, Python, Go, Flutter, and static HTML).
 
 ## Quick Start
 
@@ -23,7 +23,7 @@ cd my-existing-project
 bash ~/doe-starter-kit/setup.sh
 ```
 
-The wizard detects your existing code (package.json, go.mod, etc.), infers the framework, and adds DOE files alongside your code. Existing files are never overwritten.
+The wizard detects your existing code (package.json, go.mod, etc.), infers the framework, and adds DOE files alongside your code. Existing **project** files are never overwritten. Note: shared global tooling installed to `~/.claude/` (commands, hooks, scripts) **can be replaced** with the kit's versions — back up any custom global files before running setup. (Safe backup-before-overwrite is in progress.)
 
 **After setup:** Start Claude Code and type `/stand-up`.
 
@@ -42,26 +42,26 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 
 ## What's Included
 
-**Framework (120+ files)**
+**Framework**
 
 - **CLAUDE.md** — 7 operating rules, progressive disclosure triggers, guardrails
 - **STATE.md** — Session memory (blockers, current position)
-- **33 directives** — SOPs for planning, building, delivery, security, testing, architecture, and more
-- **23 execution scripts** — Verification, auditing, scoring, test orchestration, and quality gates
+- **36 directives** — SOPs for planning, building, delivery, security, testing, architecture, and more
+- **25 execution scripts** — Verification, auditing, scoring, test orchestration, and quality gates
 - **Audit system** — Automated false-positive detection with pre-commit hook
 - **Multi-agent coordination** — Wave management, task claiming, heartbeats, merge protocol for parallel Claude Code sessions (`/agent-status` dashboard). Installs globally to `~/.claude/scripts/` and `~/.claude/hooks/`.
-- **31 slash commands** — session lifecycle, quality checks, visual tools, multi-agent, utilities, and infrastructure (see below)
+- **33 slash commands** — session lifecycle, quality checks, visual tools, multi-agent, utilities, and infrastructure (see below)
 - **Session timer** — `/stand-up` (in kick-off mode) and `/crack-on` start a clock, `/sitrep` and `/wrap` report elapsed time
 - **Gamification** — Session scoring, badges, streaks, leaderboard, themed wrap-up cards
 - **Git hooks** — Pre-commit claim audit, commit message cleanup, pre-push methodology check
-- **7 guardrail hooks** — Block secrets, protect directives, prevent dangerous commands, enforce review gate, confirm PR merge
+- **7 guardrail hooks** — block secrets, protect directives, block dangerous commands, guard kit writes, enforce review gate, confirm PR merge, block unnecessary admin-merge. These are **accident-prevention** (catching a careless paste), **not a security boundary** — they are string-matched denylists that a determined actor can phrase around.
 - **4 custom agents** — Finder, Adversarial, Referee, ReadOnly for adversarial code review
 - **Context monitoring** — Warns at 60% context usage, stops at 80% for graceful handoff
 
 **Documentation (55 files)**
 
-- **18 HTML tutorial pages** (`docs/tutorial/`) — Mintlify-style visual guides covering installation, first session, key concepts, commands, daily workflow, feature lifecycle, example apps, tips, and glossary
-- **37 markdown reference docs** (`docs/reference/`) — searchable reference for every command, concept, workflow, file format, and example app
+- **20 HTML tutorial pages** (`docs/tutorial/`) — Mintlify-style visual guides covering installation, first session, key concepts, commands, daily workflow, feature lifecycle, example apps, tips, and glossary
+- **33 markdown reference docs** (`docs/reference/`) — searchable reference for every command, concept, workflow, file format, and example app
 
 **Guides**
 
@@ -70,7 +70,7 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 
 ## Slash Commands
 
-31 commands in `global-commands/`. Install with `./setup.sh` or copy manually. Run `/commands` inside Claude Code for the full reference and installation health check.
+33 commands in `global-commands/`. Install with `./setup.sh` or copy manually. Run `/commands` inside Claude Code for the full reference and installation health check.
 
 | Category | Commands | Purpose |
 |----------|----------|---------|
@@ -112,4 +112,4 @@ The starter kit uses semantic versioning with GitHub releases. Every `/sync-doe`
 
 ## File Count
 
-178 files across 27 directories. See SYSTEM-MAP.md for the complete map.
+Around 305 files across 49 directories. The structured counts above (directives, scripts, commands, docs, hooks, agents) are enforced against the tree by `test_methodology.py` (scenario `readme_claims_match_disk`), so they can't silently drift. See SYSTEM-MAP.md for the complete map.

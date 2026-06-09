@@ -7,7 +7,7 @@ The human defines intent, constraints, and verification criteria. Claude recomme
 Probabilistic AI handles reasoning. Deterministic code handles execution. Non-negotiable.
 - **Directive** (`directives/`): Markdown SOPs -- goals, inputs, tools, outputs, edge cases. Pure prose.
 - **Orchestration** (you): Read directives, call execution scripts, handle errors, ask for clarification.
-- **Execution** (`execution/`): Deterministic Python scripts. Credentials in `.env`. Same result every time.
+- **Execution** (`execution/`): Python scripts that do the work deterministically — no hidden randomness, no unconfirmed paid API calls. Credentials in `.env`. (Reads of git state/clock and explicit network calls are the I/O layer — keep them obvious.)
 IMPORTANT: Check `execution/` first; reuse existing scripts whenever they cover the task.
 
 ## Core Behaviour
@@ -55,7 +55,7 @@ gh pr create --title "..." --body "..."
 - **Caveat:** After context compaction, Claude loses all loaded directives. Re-read the triggers relevant to your current task after a `/clear` or long conversation.
 - **Workaround:** If a pre-commit hook fails with "not executable", run `chmod +x .githooks/*` to fix permissions.
 - **Kit-write model:** kit edits flow through branches and PRs. The `.githooks/pre-commit` 'no direct-to-main' hook plus PR review are the canonical gate; `guard_kit_writes` blocks only irreversible Bash operations (recursive removal, force-push to kit main). See `directives/kit-development.md` ## Kit-write model: PR-only.
-- **Note:** `execution/` scripts are deterministic: same input, same output. Keep randomness, API calls, and interactive prompts out of `execution/` -- AI reasoning lives in orchestration (CLAUDE.md + directives).
+- **Note:** `execution/` scripts avoid hidden nondeterminism — no `random`, no interactive `input()`, no unconfirmed paid API calls. Some read git state or the clock explicitly; that's the I/O layer, kept obvious. AI reasoning lives in orchestration (CLAUDE.md + directives). Enforced by `tests/test_determinism.py` (new pure scripts can't silently add randomness/network; the genuine I/O scripts are allowlisted).
 <!-- Add project-specific gotchas here as you discover them -->
 
 ## Context Rules

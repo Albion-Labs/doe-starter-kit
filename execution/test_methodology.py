@@ -1124,6 +1124,148 @@ def scenario_plan_vs_actual(verbose: bool = False):
 # Scenario registry
 # ════════════════════════════════════════════════════════════
 
+# ════════════════════════════════════════════════════════════
+# Scenario 18: readme_claims_match_disk
+# ════════════════════════════════════════════════════════════
+
+# Guardrail hooks the README advertises as accident-prevention blockers.
+# Adding/removing one must update both this list and the README count.
+_GUARDRAIL_HOOKS = [
+    "block_dangerous_commands.py",
+    "block_secrets_in_code.py",
+    "block_unnecessary_admin_merge.py",
+    "confirm_pr_merge.py",
+    "enforce_review_gate.py",
+    "guard_kit_writes.py",
+    "protect_directives.py",
+]
+
+
+def _count_operating_rules() -> int:
+    claude_md = PROJECT_ROOT / "CLAUDE.md"
+    if not claude_md.exists():
+        return -1
+    text = claude_md.read_text(encoding="utf-8")
+    return len(re.findall(r"^\d+\.\s+\*\*(.+?)\.\*\*", text, re.MULTILINE))
+
+
+def _count_slash_commands() -> int:
+    d = PROJECT_ROOT / "global-commands"
+    if not d.exists():
+        return -1
+    return len([p for p in d.glob("*.md") if p.name.lower() != "readme.md"])
+
+
+def _count_guardrail_hooks() -> int:
+    hooks = PROJECT_ROOT / ".claude" / "hooks"
+    return sum(1 for h in _GUARDRAIL_HOOKS if (hooks / h).exists())
+
+
+def scenario_readme_claims_match_disk(verbose: bool = False):
+    """FAIL if a numeric claim in README.md disagrees with the files on disk.
+
+    This is why the README counts rotted (178 files, 33 directives, ...): nothing
+    held them to the tree. Each claim is parsed from README.md and compared to a
+    live count. Update the README when you add/remove the things it counts.
+    """
+    readme = PROJECT_ROOT / "README.md"
+    vlines = []
+    if not readme.exists():
+        return _result("WARN", "README.md not found", vlines)
+    text = readme.read_text(encoding="utf-8")
+
+    checks = [
+        ("operating rules", r"(\d+)\s+operating rules", _count_operating_rules),
+        ("directives", r"(\d+)\s+directives",
+            lambda: len(list((PROJECT_ROOT / "directives").rglob("*.md")))),
+        ("execution scripts", r"(\d+)\s+execution scripts",
+            lambda: len(list((PROJECT_ROOT / "execution").glob("*.py")))),
+        ("slash commands", r"(\d+)\s+slash commands", _count_slash_commands),
+        ("guardrail hooks", r"(\d+)\s+guardrail hooks", _count_guardrail_hooks),
+        ("HTML tutorial pages", r"(\d+)\s+HTML tutorial pages",
+            lambda: len(list((PROJECT_ROOT / "docs" / "tutorial").glob("*.html")))),
+        ("markdown reference docs", r"(\d+)\s+markdown reference docs",
+            lambda: len(list((PROJECT_ROOT / "docs" / "reference").rglob("*.md")))),
+        ("custom agents", r"(\d+)\s+custom agents",
+            lambda: len(list((PROJECT_ROOT / ".claude" / "agents").glob("*.md")))),
+    ]
+
+    # A claim that is ABSENT means this isn't the kit's README (e.g. a consumer
+    # project where test_methodology.py is installed). Skip absent claims; only
+    # FAIL on a claim that is present AND wrong. Otherwise this scenario would
+    # break --quick in every downstream project.
+    mismatches = []
+    checked = 0
+    for label, pattern, actual_fn in checks:
+        m = re.search(pattern, text)
+        if m is None:
+            vlines.append(f"  {label}: no claim in README — skipped (not the kit repo?)")
+            continue
+        checked += 1
+        actual = actual_fn()
+        claimed = int(m.group(1))
+        ok = claimed == actual
+        vlines.append(f"  {label}: claim {claimed} vs actual {actual} {'OK' if ok else 'MISMATCH'}")
+        if not ok:
+            mismatches.append(f"{label}: README says {claimed}, disk has {actual}")
+
+    if checked == 0:
+        return _result("PASS", "no kit count claims in README — nothing to enforce here", vlines)
+    if mismatches:
+        return _result("FAIL", f"{len(mismatches)} README claim(s) wrong: " + "; ".join(mismatches), vlines)
+    return _result("PASS", f"all {checked} README counts match disk", vlines)
+
+
+# ════════════════════════════════════════════════════════════
+# Scenario 19: execution_determinism
+# ════════════════════════════════════════════════════════════
+
+# Patterns that introduce hidden nondeterminism into a "pure" execution script.
+# Clock and git reads are intentionally NOT flagged — they are the explicit I/O
+# layer (see CLAUDE.md). These must stay out of pure scripts.
+_NONDET_PATTERNS = {
+    "random": re.compile(r"\bimport random\b|\brandom\.(random|randint|choice|shuffle|uniform|sample)\b"),
+    "interactive input()": re.compile(r"(?<![\w.])input\s*\("),
+    "in-process network": re.compile(r"\b(urllib\.request|urlopen|requests\.(get|post|put|delete|patch|request)|http\.client|socket\.socket)\b"),
+}
+# Scripts that ARE the I/O layer: each maps to the categories it may legitimately use.
+_DETERMINISM_ALLOWLIST = {
+    "doe_init.py": {"interactive input()"},        # interactive setup wizard
+    "slack_notify.py": {"in-process network"},     # posts to Slack webhook
+}
+# The scanner itself defines the forbidden tokens as regex string literals, so it
+# trips its own patterns. It is the test harness, not a pure-work script — skip it.
+_DETERMINISM_SKIP = {"test_methodology.py"}
+
+
+def scenario_execution_determinism(verbose: bool = False):
+    """FAIL if a pure execution/ script hides randomness, prompts, or network I/O.
+
+    Backs the CLAUDE.md claim that execution/ avoids hidden nondeterminism. The
+    genuine I/O scripts are allowlisted; a NEW script that adds random/input/network
+    must drop it or be added to the allowlist consciously.
+    """
+    exec_dir = PROJECT_ROOT / "execution"
+    vlines = []
+    if not exec_dir.exists():
+        return _result("WARN", "execution/ not found", vlines)
+
+    scripts = [p for p in sorted(exec_dir.glob("*.py")) if p.name not in _DETERMINISM_SKIP]
+    violations = []
+    for py in scripts:
+        allowed = _DETERMINISM_ALLOWLIST.get(py.name, set())
+        src = py.read_text(encoding="utf-8")
+        for category, pattern in _NONDET_PATTERNS.items():
+            if pattern.search(src) and category not in allowed:
+                violations.append(f"{py.name}: {category}")
+                vlines.append(f"  {py.name}: {category} (not allowlisted)")
+
+    vlines.insert(0, f"  Scripts scanned: {len(scripts)}")
+    if violations:
+        return _result("FAIL", f"{len(violations)} determinism violation(s): " + "; ".join(violations), vlines)
+    return _result("PASS", f"no hidden nondeterminism in execution/ ({len(scripts)} scripts)", vlines)
+
+
 SCENARIOS = [
     ("session_start_discipline",    scenario_session_start_discipline),
     ("contract_completeness",       scenario_contract_completeness),
@@ -1142,6 +1284,8 @@ SCENARIOS = [
     ("cross_reference_consistency", scenario_cross_reference_consistency),
     ("agent_definition_integrity",  scenario_agent_definition_integrity),
     ("plan_vs_actual",              scenario_plan_vs_actual),
+    ("readme_claims_match_disk",    scenario_readme_claims_match_disk),
+    ("execution_determinism",       scenario_execution_determinism),
 ]
 
 # Scenarios excluded from --quick mode
@@ -1200,6 +1344,8 @@ Scenarios:
   cross_reference_consistency    Cross-references point to real files
   agent_definition_integrity     Agent files match README claims
   plan_vs_actual                 Completed features' plan deliverables exist
+  readme_claims_match_disk       README numeric claims (counts) match the tree (FAIL on drift)
+  execution_determinism          No hidden randomness/input/network in pure execution/ scripts
         """,
     )
     parser.add_argument(
