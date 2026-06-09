@@ -659,7 +659,7 @@ def card_setup():
 
 
 def card_data():
-    """Card 4: Data questions (sequential). Returns (has_database, has_personal_data)."""
+    """Card 4: Data questions (sequential). Returns (has_database, has_personal_data, is_political)."""
     # First question: user data
     rows = [top()]
     rows.append(line("DATA"))
@@ -672,7 +672,7 @@ def card_data():
     has_database = ask_yn("> ")
 
     if not has_database:
-        return False, False
+        return False, False, False
 
     # Second question: personal data (only if user data = yes)
     rows = [top()]
@@ -689,7 +689,26 @@ def card_data():
 
     has_personal_data = ask_yn("> ")
 
-    return True, has_personal_data
+    if not has_personal_data:
+        return True, False, False
+
+    # Third question: political / electoral data (only if personal data = yes)
+    rows = [top()]
+    rows.append(line("POLITICAL / ELECTORAL"))
+    rows.append(sep())
+    rows.append(line("Is this a political or electoral"))
+    rows.append(line("campaign project?"))
+    rows.append(line("(electoral register, canvass/voter data,"))
+    rows.append(line("political donations)"))
+    rows.append(line(""))
+    rows.append(line("Most projects: no. Adds criminal-liability"))
+    rows.append(line("and campaign-finance directives."))
+    rows.append(bot())
+    print_card(rows)
+
+    is_political = ask_yn("> ")
+
+    return True, has_personal_data, is_political
 
 
 def _resolve_framework_name(config):
@@ -853,6 +872,8 @@ def get_active_layers(config):
         layers.append("data_handling")
     if config.get("has_personal_data"):
         layers.append("regulated")
+    if config.get("is_political"):
+        layers.append("political")
     return layers
 
 
@@ -938,7 +959,7 @@ def generate_claude_md(config, kit_dir):
     parts.append((claude_sections / "20_structure.md").read_text())
 
     # 5. Layer sections (skip universal -- those are the base sections)
-    layer_order = ["public_facing", "data_handling", "regulated"]
+    layer_order = ["public_facing", "data_handling", "regulated", "political"]
     for layer in layer_order:
         if layer in active_layers:
             layer_section = templates_dir / "_layers" / layer / "claude_section.md"
@@ -1636,7 +1657,7 @@ def run_wizard(kit_dir, project_dir):
     collab = card_setup()
 
     # Card 4: Data questions
-    has_database, has_personal_data = card_data()
+    has_database, has_personal_data, is_political = card_data()
 
     # Build config dict
     config = {
@@ -1649,6 +1670,7 @@ def run_wizard(kit_dir, project_dir):
         "security_owner": collab["security_owner"],
         "has_database": has_database,
         "has_personal_data": has_personal_data,
+        "is_political": is_political,
         "platform_targets": platform_targets,
         "detected_framework": state["framework_key"],
         "project_dir": str(project_dir),
