@@ -883,6 +883,37 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-67-0">
+          <div class="release-header">
+            <span class="version-badge">v1.67.0</span>
+            <span class="release-date">9 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Bakes the locked Albion &quot;Chalk &amp; Flint&quot; design system into the kit&#x27;s whole HTML report family. All four generators — <code>/wrap</code>, <code>/eod</code>, the HQ dashboard, and the manual test checklist — now render in one two-pole system: warm <strong>chalk</strong> (light) and green-tinted <strong>flint</strong> (dark, the default for tooling), bound by a single Albion green accent reserved for positive/live/primary. Inter for everything, JetBrains Mono for code-ish tokens only, HugeIcons stroke glyphs in section headers, a 6/8/12 radius scale, and a sun/moon sliding toggle that cross-fades the two poles. <code>html_builder.py</code> is now the single source of tokens and chrome; the four generators consume it instead of each carrying its own palette. Same content, new skin. Closes #72.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">The report generators had drifted into four different looks: <code>html_builder.py</code> shipped an indigo accent with a blue/amber/rose/green spread, <code>build_hq.py</code> ran its own near-black palette via a <code>body.light</code> class-toggle, and <code>generate_test_checklist.py</code> carried a self-contained <code>:root</code> with a <code>--grey-*</code> scale and its own theme switch. Four palettes, four theme mechanisms, no shared spine — exactly the divergence the kit exists to prevent, but for visual language. This release collapses them onto the Chalk &amp; Flint table from the locked design memory (flint default, chalk light pole), mapped onto the builder&#x27;s existing <code>[data-theme]</code> mechanism rather than a second toggle. Legacy CSS var names (<code>--green</code>, <code>--amber</code>, <code>--rose</code>, <code>--blue</code>, <code>--surface2</code>, …) are kept as aliases that resolve onto the new palette, so the migration is a reskin, not a rewrite of every call site. Two disciplines from the design memory are enforced structurally. <strong>Monochrome by default:</strong> <code>/wrap</code> and <code>/eod</code> are non-triage and carry no alert colours — line deltas read green/faint, allocation and commit bars are green + muted grey, decision badges are the reserved green and learnings are neutral. The <strong>governed alert pair</strong> (red <code>#B23A22</code>/<code>#E0654E</code>, amber <code>#9A6B12</code>/<code>#D9A441</code>) is allowed only on the triage surfaces — the HQ dashboard and the test checklist — for fail/warn/stale states, and nowhere else. Cards never signal state with a coloured left-edge stripe (icon/badge/health-bar only). The metric grid is the joined 12-tile &quot;stat&quot; grid (3 bands of 4: cadence → output → outcomes) so there are no half-empty rows. The same pass removes a dishonest metric. <code>agentsSpawned</code> was self-reported — the <code>/wrap</code> and <code>/eod</code> prompts asked the model to &quot;count how many times the Agent tool was invoked,&quot; a number nothing could verify, dressed up as a deterministic stat. It is gone from both generators and both JSON prompts, replaced in the 12-tile grid by <code>prsMerged</code>, which is countable from git/<code>gh</code>. A new <code>report_generator_styling</code> methodology scenario guards against regression: it WARNs if any report generator grows its own <code>&lt;style&gt;</code> tag or <code>:root</code> selector instead of routing through the builder.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>global-scripts/html_builder.py</code></strong> — the Chalk &amp; Flint two-pole token system (<code>:root</code> chalk pole + <code>[data-theme=&quot;dark&quot;]</code> flint pole, with legacy var aliases that resolve per-pole at the point of use), Inter + JetBrains Mono pulled from Google Fonts in <code>page_scaffold</code>, a 6/8/12 radius scale, and a colour-only cross-fade transition on theme change.</li>
+            <li><strong><code>icon(name, ...)</code></strong> and <strong><code>section_header(title, icon_name, ...)</code></strong> helpers — inline HugeIcons-style stroke SVGs (summary, clock, commit, decision, shield, next, check, alert, sessions, learning, list) for section/page headers.</li>
+            <li><strong>Sun/moon sliding toggle</strong> — <code>theme_toggle_css</code>/<code>theme_toggle_js</code> rewritten as the accent-thumb pill bound to the existing <code>[data-theme]</code> mechanism (no second toggle). Reports default to flint; a saved preference wins.</li>
+            <li><strong>Joined 12-tile metric grid</strong> — <code>metric_grid</code> reskinned to the hairline-joined &quot;stat&quot; grid (default 4 columns / 12 tiles) with left-aligned mono values and <code>acc</code>/<code>faint</code> emphasis.</li>
+            <li><strong>Badge/pill variants</strong> — <code>neutral</code> and <code>mono</code> badge modifiers, a <code>pill-neutral</code>, and the governed alert pair wired to <code>badge-warn</code>/<code>badge-fail</code> (triage only).</li>
+            <li><strong><code>execution/test_methodology.py</code></strong> — new <code>report_generator_styling</code> scenario: WARNs on any report generator carrying a local <code>&lt;style&gt;</code>/<code>:root</code> instead of consuming <code>html_builder</code> (the builder itself is the exempt source of truth).</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>global-scripts/wrap_html.py</code></strong> &amp; <strong><code>global-scripts/eod_html.py</code></strong> — consume the reskinned builder; render the 12-tile stat grid (EOD includes <code>PRs Merged</code>); HugeIcons section headers replace the emoji prefixes; line deltas use accent-green/faint; allocation and commit bars go monochrome (accent + muted); decision badges are the reserved green, learnings neutral; no coloured card stripes (the unused <code>accent=</code> left-border option is gone).</li>
+            <li><strong><code>global-scripts/build_hq.py</code></strong> — refactored onto <code>html_builder.page_scaffold</code>; its <code>body.light</code> class-toggle theme system and local <code>:root</code> are replaced by the builder&#x27;s <code>[data-theme]</code> chalk/flint poles and shared sun/moon toggle. The heatmap, swimlane, week navigation, scrubber, card-expand toggles, and all data logic are unchanged; as a triage surface it keeps the governed red/amber pair.</li>
+            <li><strong><code>execution/generate_test_checklist.py</code></strong> — refactored onto <code>html_builder.page_scaffold</code> via a <code>sys.path</code> shim to <code>../global-scripts</code>; its local <code>:root</code> token scale and theme toggle are dropped for the builder&#x27;s poles. The heatmap, checkbox/collapsible toggles, automated-test results, timer, and JSON export are unchanged; as a triage surface it keeps the governed red/amber pair for fail/warn/stale.</li>
+            <li><strong><code>global-commands/wrap.md</code></strong> &amp; <strong><code>global-commands/eod.md</code></strong> — the <code>metrics</code> JSON schema swaps <code>agentsSpawned</code> for <code>prsMerged</code>, with <code>/wrap</code> guidance to count merged PRs from git/<code>gh</code> (a verifiable number) rather than self-report.</li>
+          </ul>
+          <h4 class="removed">Removed</h4>
+          <ul>
+            <li><strong>Self-reported <code>agentsSpawned</code> metric</strong> — removed from <code>wrap_html.py</code>, <code>eod_html.py</code>, and the <code>/wrap</code> + <code>/eod</code> JSON prompts. Nothing computed it; it was a model-asserted count presented as a deterministic stat. Replaced by the verifiable <code>prsMerged</code> tile.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-66-0">
           <div class="release-header">
             <span class="version-badge">v1.66.0</span>
@@ -963,6 +994,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (13 releases)</summary>
+
         <div class="release" id="v1-64-0">
           <div class="release-header">
             <span class="version-badge">v1.64.0</span>
@@ -984,10 +1019,6 @@
             <li><strong><code>.claude/settings.json</code></strong> &mdash; registered <code>stamp_todo_timestamps.py</code> on the existing <code>Edit | Write | MultiEdit</code> PostToolUse matcher, joining <code>copy_plan_to_project.py</code> and <code>check_completed_feature.py</code>. Hook command uses the <code>$CLAUDE_PROJECT_DIR</code> form established in v1.62.2.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (12 releases)</summary>
 
         <div class="release" id="v1-63-0">
           <div class="release-header">

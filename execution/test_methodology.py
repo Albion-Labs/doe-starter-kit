@@ -1345,6 +1345,62 @@ def scenario_execution_determinism(verbose: bool = False):
     return _result("PASS", f"no hidden nondeterminism in execution/ ({len(scripts)} scripts)", vlines)
 
 
+def scenario_report_generator_styling(verbose: bool = False):
+    """Guard: HTML report generators must consume the shared html_builder, not
+    carry their own design tokens.
+
+    Every report generator routes its document through html_builder.page_scaffold
+    (single <style>, single :root, Chalk & Flint tokens). A generator-local
+    ``<style>`` tag or ``:root {`` selector means it has drifted off the builder
+    and will diverge from the locked design system. html_builder.py itself is the
+    single source and is exempt. WARN (not FAIL) so a deliberate exception can
+    ship while still surfacing the drift.
+    """
+    vlines = []
+    # (relative path, label) — the builder is the source of truth, excluded.
+    generators = [
+        "global-scripts/wrap_html.py",
+        "global-scripts/eod_html.py",
+        "global-scripts/build_hq.py",
+        "execution/generate_test_checklist.py",
+    ]
+    offenders = []
+    scanned = 0
+    for rel in generators:
+        path = PROJECT_ROOT / rel
+        if not path.exists():
+            vlines.append(f"  {rel}: not found — skipped")
+            continue
+        scanned += 1
+        src = path.read_text(encoding="utf-8", errors="replace")
+        hits = []
+        if "<style>" in src or "<style " in src:
+            hits.append("<style> tag")
+        if re.search(r":root\s*\{", src):
+            hits.append(":root selector")
+        if hits:
+            offenders.append(f"{rel} ({', '.join(hits)})")
+            vlines.append(f"  DRIFT  {rel}: {', '.join(hits)}")
+        else:
+            vlines.append(f"  ok     {rel}: consumes html_builder")
+
+    vlines.insert(0, f"  Generators scanned: {scanned}")
+    if scanned == 0:
+        return _result("WARN", "no report generators found to scan", vlines)
+    if offenders:
+        return _result(
+            "WARN",
+            f"{len(offenders)} generator(s) carry local styling off the builder: "
+            + "; ".join(offenders),
+            vlines,
+        )
+    return _result(
+        "PASS",
+        f"all {scanned} report generators consume html_builder (no local <style>/:root)",
+        vlines,
+    )
+
+
 SCENARIOS = [
     ("session_start_discipline",    scenario_session_start_discipline),
     ("contract_completeness",       scenario_contract_completeness),
@@ -1366,6 +1422,7 @@ SCENARIOS = [
     ("readme_claims_match_disk",    scenario_readme_claims_match_disk),
     ("execution_determinism",       scenario_execution_determinism),
     ("non_political_layers_domain_neutral", scenario_non_political_layers_domain_neutral),
+    ("report_generator_styling",    scenario_report_generator_styling),
 ]
 
 # Scenarios excluded from --quick mode

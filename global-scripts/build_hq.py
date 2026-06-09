@@ -16,6 +16,9 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import html_builder
+from html_builder import page_scaffold
+
 
 def esc(text):
     return html.escape(str(text))
@@ -551,39 +554,28 @@ def check_wrap_exists(session_num, project_root):
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 
-CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg: #0a0a0f; --surface: #12121a; --surface2: #1a1a26; --border: #2a2a3a;
-    --text: #e0e0e8; --text-dim: #8888a0; --accent: #6c63ff;
-    --accent-glow: rgba(108, 99, 255, 0.15);
-    --green: #4ade80; --green-dim: rgba(74, 222, 128, 0.1);
-    --amber: #fbbf24; --amber-dim: rgba(251, 191, 36, 0.1);
-    --red: #f87171; --cyan: #67e8f9;
-  }
-  body.light {
-    --bg: #f0efe9; --surface: #f8f7f3; --surface2: #eae9e3; --border: #d5d4cc;
-    --text: #1a1a2e; --text-dim: #6b6b80; --accent: #5046e5;
-    --accent-glow: rgba(80, 70, 229, 0.08);
-    --green: #16a34a; --green-dim: rgba(22, 163, 74, 0.08);
-    --amber: #d97706; --amber-dim: rgba(217, 119, 6, 0.08);
-    --red: #dc2626; --cyan: #0891b2;
-  }
-
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; line-height: 1.6; min-height: 100vh; padding: 2rem; }
+# Component CSS only — tokens, reset, base body font, and theme toggle are all
+# provided by html_builder.base_css() / theme_toggle_css(). page_scaffold wraps
+# COMPONENT_CSS in the single style element. Token VALUES map onto the Chalk &
+# Flint builder palette: --surface2 -> --surface-sunk; --accent-glow ->
+# --accent-soft; --green/--green-dim are the live/positive Albion green family;
+# --amber/--amber-dim and --red are the governed triage alert pair; --cyan reads
+# as --accent (no cyan in the system). These names resolve via the builder's
+# legacy aliases, so most references are left as-is.
+COMPONENT_CSS = r"""
+  body { padding: 2rem; }
   .container { max-width: 900px; margin: 0 auto; }
   .view-container { display: none; }
   .view-container.active { display: block; }
 
   /* ── Header ── */
   .page-header { text-align: center; padding: 2.5rem 2rem 2rem; border: 1px solid var(--border); border-radius: 12px; background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%); position: relative; overflow: hidden; margin-bottom: 2rem; }
-  .page-header::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%); pointer-events: none; }
-  .page-title { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text); position: relative; margin-bottom: 0.3rem; }
-  .page-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--accent); letter-spacing: 0.1em; position: relative; }
+  .page-header::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at center, var(--accent-soft) 0%, transparent 70%); pointer-events: none; }
+  .page-title { font-family: var(--mono); font-size: 2rem; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text); position: relative; margin-bottom: 0.3rem; }
+  .page-subtitle { font-family: var(--mono); font-size: 0.85rem; color: var(--accent); letter-spacing: 0.1em; position: relative; }
 
   /* ── Back Nav ── */
-  .back-nav { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+  .back-nav { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-family: var(--mono); font-size: 0.75rem; }
   .back-nav a { color: var(--accent); text-decoration: none; cursor: pointer; }
   .back-nav a:hover { text-decoration: underline; }
   .back-nav .sep { color: var(--text-dim); }
@@ -592,19 +584,19 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   /* ── Lifetime Stats ── */
   .lifetime-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 2rem; }
   .lifetime-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 0.8rem; text-align: center; }
-  .lifetime-value { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700; color: var(--text); }
+  .lifetime-value { font-family: var(--mono); font-size: 1.6rem; font-weight: 700; color: var(--text); }
   .lifetime-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-top: 0.15rem; }
 
   /* ── Allocation Bar ── */
   .allocation-section { margin-bottom: 2rem; }
-  .allocation-section-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.6rem; }
+  .allocation-section-label { font-family: var(--mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.6rem; }
   .allocation-bar-container { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; }
   .allocation-bar { display: flex; height: 24px; border-radius: 6px; overflow: hidden; margin-bottom: 0.8rem; }
   .allocation-segment { height: 100%; transition: opacity 0.15s; cursor: default; }
   .allocation-segment:hover { opacity: 0.85; }
   .allocation-segment:first-child { border-radius: 6px 0 0 6px; }
   .allocation-segment:last-child { border-radius: 0 6px 6px 0; }
-  .allocation-labels { display: flex; gap: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+  .allocation-labels { display: flex; gap: 1.5rem; font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); }
   .alloc-label { display: flex; align-items: center; gap: 0.4rem; }
   .alloc-dot { width: 8px; height: 8px; border-radius: 2px; }
   .alloc-name { color: var(--text); font-weight: 500; }
@@ -612,7 +604,7 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   /* ── Week Navigation ── */
   .week-section { margin-bottom: 2rem; }
   .week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-  .week-label { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 600; color: var(--text); letter-spacing: 0.05em; }
+  .week-label { font-family: var(--mono); font-size: 1rem; font-weight: 600; color: var(--text); letter-spacing: 0.05em; }
   .week-label-sub { font-size: 0.75rem; font-weight: 400; color: var(--text-dim); margin-left: 0.6rem; }
   .week-arrows { display: flex; gap: 0.4rem; }
   .week-arrow { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); cursor: pointer; font-size: 0.8rem; transition: all 0.15s; }
@@ -621,19 +613,19 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
 
   /* ── Week Summary ── */
   .week-summary { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem 1.5rem; margin-bottom: 1rem; }
-  .week-summary-title { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.6rem; }
+  .week-summary-title { font-family: var(--mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.6rem; }
   .week-summary-text { font-size: 0.9rem; color: var(--text); line-height: 1.6; margin-bottom: 0.8rem; }
-  .week-summary-metrics { display: flex; gap: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim); padding-top: 0.6rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .week-summary-metrics { display: flex; gap: 1.5rem; font-family: var(--mono); font-size: 0.75rem; color: var(--text-dim); padding-top: 0.6rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
   .week-summary-metrics .wsm-val { color: var(--text); font-weight: 600; }
   .week-summary-metrics .wsm-green { color: var(--green); }
   .wsm-delta { font-size: 0.65rem; font-weight: 600; padding: 0 0.3rem; border-radius: 3px; margin-left: 0.2rem; }
   .wsm-delta.up { color: var(--green); background: var(--green-dim); }
-  .wsm-delta.down { color: var(--red); background: rgba(248, 113, 113, 0.1); }
-  .week-best-of { display: flex; gap: 1.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); flex-wrap: wrap; }
+  .wsm-delta.down { color: var(--alert-red); background: var(--alert-red-soft); }
+  .week-best-of { display: flex; gap: 1.5rem; font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); flex-wrap: wrap; }
   .best-item { display: flex; align-items: center; gap: 0.3rem; }
   .best-label { color: var(--amber); font-weight: 600; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; }
   .best-val { color: var(--text); }
-  .week-comparison { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); margin-top: 0.3rem; }
+  .week-comparison { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); margin-top: 0.3rem; }
 
   /* ── Day Strip ── */
   .week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 1rem; align-items: stretch; }
@@ -642,45 +634,47 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   .project-view .week-day.has-sessions { cursor: pointer; }
   .project-view .week-day.has-sessions:hover { border-color: var(--accent); background: var(--surface2); }
   .week-day.today { border-color: var(--accent); }
-  .week-day.selected { border-color: var(--accent); background: var(--accent-glow); box-shadow: 0 0 12px rgba(108, 99, 255, 0.15); }
+  .week-day.selected { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 12px var(--accent-soft); }
   .week-day.rest-day { opacity: 0.4; }
   .wd-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-  .wd-dow { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+  .wd-dow { font-family: var(--mono); font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
   .week-day.has-sessions .wd-dow { color: var(--text); }
-  .wd-date { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text-dim); }
+  .wd-date { font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); }
   .week-day.today .wd-date { color: var(--accent); font-weight: 600; }
-  .wd-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--accent); background: var(--accent-glow); padding: 1px 5px; border-radius: 3px; margin-bottom: 6px; display: inline-block; align-self: flex-start; }
-  .wd-metrics { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text-dim); display: flex; gap: 6px; margin-bottom: 6px; }
+  .wd-badge { font-family: var(--mono); font-size: 0.6rem; color: var(--accent); background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; margin-bottom: 6px; display: inline-block; align-self: flex-start; }
+  .wd-metrics { font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); display: flex; gap: 6px; margin-bottom: 6px; }
   .wd-metrics .wdm-c { color: var(--text); }
   .wd-metrics .wdm-a { color: var(--green); }
   .wd-summary { font-size: 0.65rem; color: var(--text-dim); line-height: 1.4; flex: 1; overflow: hidden; }
-  .wd-feature { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--accent); margin-top: 4px; }
+  .wd-feature { font-family: var(--mono); font-size: 0.6rem; color: var(--accent); margin-top: 4px; }
   .wd-steps { display: flex; gap: 2px; margin-top: 4px; }
   .wd-step { width: 8px; height: 4px; border-radius: 2px; background: var(--border); }
   .wd-step.done { background: var(--green); }
   .wd-step.wip { background: var(--amber); }
-  .wd-rest { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-dim); margin: auto 0; text-align: center; }
+  .wd-rest { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); margin: auto 0; text-align: center; }
 
   /* Portfolio day: project dots + mini bar */
   .wd-projects { display: flex; gap: 4px; margin-bottom: 6px; }
-  .wd-project-dot { width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 0.5rem; font-weight: 700; color: var(--bg); }
-  body.light .wd-project-dot { color: #fff; }
+  /* dot label sits on a saturated project-colour swatch: white on chalk
+     (light pole = chalk default); dark bg-colour text on flint */
+  .wd-project-dot { width: 18px; height: 18px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.5rem; font-weight: 700; color: #fff; }
+  [data-theme="dark"] .wd-project-dot { color: var(--bg); }
   .wd-mini-bar { display: flex; height: 4px; border-radius: 2px; overflow: hidden; margin-top: auto; }
   .wd-mini-segment { height: 100%; }
 
   /* ── Swimlane ── */
   .swimlane-section { margin-bottom: 2rem; }
-  .swimlane-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.6rem; }
+  .swimlane-label { font-family: var(--mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.6rem; }
   .swimlane { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; position: relative; }
   .sl-dow-row { display: grid; grid-template-columns: 140px repeat(7, 1fr); gap: 0; margin-bottom: 4px; }
   .sl-dow-spacer { }
-  .sl-dow { font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; color: var(--text-dim); text-align: center; text-transform: uppercase; letter-spacing: 0.08em; border-left: 1px solid var(--border); }
+  .sl-dow { font-family: var(--mono); font-size: 0.55rem; color: var(--text-dim); text-align: center; text-transform: uppercase; letter-spacing: 0.08em; border-left: 1px solid var(--border); }
   .swimlane-grid { display: grid; grid-template-columns: 140px repeat(7, 1fr); gap: 0; align-items: center; }
-  .sl-project-name, .sl-feature-name { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text); font-weight: 500; padding-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sl-project-name, .sl-feature-name { font-family: var(--mono); font-size: 0.65rem; color: var(--text); font-weight: 500; padding-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sl-cell { height: 28px; position: relative; border-left: 1px solid var(--border); }
   .sl-bar { position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 3px; opacity: 0.8; }
   .sl-bar.app { background: var(--green); }
-  .sl-bar.infra { background: var(--cyan); }
+  .sl-bar.infra { background: var(--accent); }
   .sl-bar.planning { background: var(--amber); opacity: 0.5; }
   .sl-bar.shipped { background: var(--green); opacity: 1; }
   .sl-bar.shipped::after { content: '\2713'; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 0.55rem; color: var(--bg); font-weight: 700; }
@@ -690,14 +684,14 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   .scrubber-track { position: relative; height: 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; cursor: pointer; }
   .scrubber-bar { position: absolute; bottom: 0; width: 5px; border-radius: 2px 2px 0 0; opacity: 0.6; background: var(--accent); }
   .scrubber-bar.active { opacity: 1; }
-  .scrubber-viewport { position: absolute; top: 0; height: 100%; background: rgba(108, 99, 255, 0.08); border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); cursor: grab; transition: left 0.15s ease; }
-  .scrubber-viewport:hover { background: rgba(108, 99, 255, 0.12); }
-  .scrubber-labels { display: flex; justify-content: space-between; margin-top: 0.3rem; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text-dim); }
+  .scrubber-viewport { position: absolute; top: 0; height: 100%; background: var(--accent-soft); border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); cursor: grab; transition: left 0.15s ease; }
+  .scrubber-viewport:hover { background: var(--accent-soft); }
+  .scrubber-labels { display: flex; justify-content: space-between; margin-top: 0.3rem; font-family: var(--mono); font-size: 0.6rem; color: var(--text-dim); }
   .scrubber-milestone { position: absolute; top: 0; height: 100%; border-left: 1px dashed var(--accent); opacity: 0.4; pointer-events: none; }
-  .scrubber-milestone-label { position: absolute; top: 2px; left: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.5rem; color: var(--accent); white-space: nowrap; pointer-events: none; }
+  .scrubber-milestone-label { position: absolute; top: 2px; left: 4px; font-family: var(--mono); font-size: 0.5rem; color: var(--accent); white-space: nowrap; pointer-events: none; }
 
   /* ── Section Label ── */
-  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1rem; }
+  .section-label { font-family: var(--mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1rem; }
 
   /* ── Project Cards (Portfolio) ── */
   .project-cards-section { margin-bottom: 2rem; }
@@ -708,47 +702,47 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   .project-card.expanded .card-chevron { transform: rotate(90deg); opacity: 1; }
   .project-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; border-top: 0px solid var(--border); margin-top: 0; }
   .project-card.expanded .project-detail { max-height: 500px; border-top: 1px solid var(--border); margin-top: 0.8rem; padding-top: 0.8rem; }
-  .recent-activity-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.4rem; }
+  .recent-activity-label { font-family: var(--mono); font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.4rem; }
   .recent-session { font-size: 0.8rem; color: var(--text); padding: 0.2rem 0; line-height: 1.5; }
-  .recent-session .rs-num { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); font-weight: 600; }
-  .recent-session .rs-date { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-dim); margin-left: 0.3rem; }
+  .recent-session .rs-num { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); font-weight: 600; }
+  .recent-session .rs-date { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); margin-left: 0.3rem; }
   .project-top { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
-  .project-name { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 700; color: var(--text); }
-  .status-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 0.1rem 0.5rem; border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .project-name { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--text); }
+  .status-badge { font-family: var(--mono); font-size: 0.65rem; padding: 0.1rem 0.5rem; border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
   .status-badge.active { color: var(--green); background: var(--green-dim); }
   .status-badge.idle { color: var(--amber); background: var(--amber-dim); }
-  .status-badge.dormant { color: var(--red); background: rgba(248, 113, 113, 0.1); }
-  .project-last-active { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); margin-left: auto; padding-right: 2rem; }
-  .project-metrics { display: flex; gap: 1.2rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.6rem; flex-wrap: wrap; }
+  .status-badge.dormant { color: var(--alert-red); background: var(--alert-red-soft); }
+  .project-last-active { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); margin-left: auto; padding-right: 2rem; }
+  .project-metrics { display: flex; gap: 1.2rem; font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.6rem; flex-wrap: wrap; }
   .pm-val { color: var(--text); font-weight: 500; }
   .pm-green { color: var(--green); }
-  .pm-red { color: var(--red); }
-  .wsm-red { color: var(--red); }
+  .pm-red { color: var(--alert-red); }
+  .wsm-red { color: var(--alert-red); }
   .wsm-dim { color: var(--text-dim); font-size: 0.9em; }
   .project-feature-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.4rem; }
-  .project-feature-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
-  .project-feature-name { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text); font-weight: 500; }
+  .project-feature-label { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .project-feature-name { font-family: var(--mono); font-size: 0.75rem; color: var(--text); font-weight: 500; }
   .project-version .pv-ver { color: var(--accent); font-weight: 600; }
-  .view-project-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; color: var(--accent); background: var(--accent-glow); border: 1px solid var(--accent); padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-decoration: none; margin-top: 0.6rem; }
+  .view-project-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.7rem; font-weight: 600; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent); padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-decoration: none; margin-top: 0.6rem; }
   .view-project-btn:hover { background: var(--accent); color: var(--bg); }
 
   /* ── Controls (Project view) ── */
   .controls { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .search-box { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.8rem; color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.85rem; outline: none; }
+  .search-box { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.8rem; color: var(--text); font-family: var(--sans); font-size: 0.85rem; outline: none; }
   .search-box:focus { border-color: var(--accent); }
   .search-box::placeholder { color: var(--text-dim); }
   .filter-pills { display: flex; gap: 0.4rem; }
-  .pill { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; padding: 0.35rem 0.7rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
+  .pill { font-family: var(--mono); font-size: 0.7rem; padding: 0.35rem 0.7rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
   .pill:hover { border-color: var(--accent); color: var(--text); }
-  .pill.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+  .pill.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
   /* ── Day Groups (Project view) ── */
   .day-group { margin-bottom: 2rem; scroll-margin-top: 70px; }
   .day-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.8rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
   .day-header:hover { opacity: 0.8; }
-  .day-date { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; color: var(--text); letter-spacing: 0.05em; }
-  .day-stats { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
-  .day-streak { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--green); background: var(--green-dim); padding: 0.15rem 0.5rem; border-radius: 4px; }
+  .day-date { font-family: var(--mono); font-size: 0.85rem; font-weight: 600; color: var(--text); letter-spacing: 0.05em; }
+  .day-stats { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); }
+  .day-streak { margin-left: auto; font-family: var(--mono); font-size: 0.7rem; color: var(--green); background: var(--green-dim); padding: 0.15rem 0.5rem; border-radius: 4px; }
   .day-collapse-icon { font-size: 0.7rem; color: var(--text-dim); transition: transform 0.2s; margin-right: 0.3rem; }
   .day-group.collapsed .day-collapse-icon { transform: rotate(-90deg); }
   .day-group-content { overflow: hidden; transition: max-height 0.3s ease; max-height: 5000px; }
@@ -763,56 +757,49 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   .session-card.expanded .card-chevron { transform: rotate(90deg); opacity: 1; }
   .session-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; border-top: 0px solid var(--border); margin-top: 0; }
   .session-card.expanded .session-detail { max-height: 500px; border-top: 1px solid var(--border); margin-top: 0.8rem; padding-top: 0.8rem; }
-  .detail-block-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.3rem; }
-  .view-wrap-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; color: var(--accent); background: var(--accent-glow); border: 1px solid var(--accent); padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-decoration: none; margin-top: 0.4rem; }
+  .detail-block-label { font-family: var(--mono); font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.3rem; }
+  .view-wrap-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.7rem; font-weight: 600; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent); padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-decoration: none; margin-top: 0.4rem; }
   .view-wrap-btn:hover { background: var(--accent); color: var(--bg); }
   .no-wrap-note { font-size: 0.7rem; color: var(--text-dim); font-style: italic; margin-top: 0.6rem; }
   .session-top { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; }
-  .session-num { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent); background: var(--accent-glow); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 600; }
-  .session-duration { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
-  .session-type { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .session-num { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); background: var(--accent-soft); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 600; }
+  .session-duration { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); }
+  .session-type { font-family: var(--mono); font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
   .session-type.app { color: var(--green); background: var(--green-dim); }
-  .session-type.infra { color: var(--cyan); background: rgba(103, 232, 249, 0.1); }
+  .session-type.infra { color: var(--accent); background: var(--accent-soft); }
   .session-type.planning { color: var(--amber); background: var(--amber-dim); }
   .session-summary { font-size: 0.85rem; color: var(--text); line-height: 1.5; margin-bottom: 0.6rem; padding-right: 2rem; }
-  .session-metrics { display: flex; gap: 1.2rem; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+  .session-metrics { display: flex; gap: 1.2rem; font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); }
   .metric-val { color: var(--text); font-weight: 500; }
   .metric-added { color: var(--green); }
-  .metric-removed { color: var(--red); }
-  .session-feature { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); margin-left: auto; padding-right: 1.5rem; }
+  .metric-removed { color: var(--alert-red); }
+  .session-feature { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); margin-left: auto; padding-right: 1.5rem; }
   .feature-name { color: var(--text); font-weight: 500; }
   .feature-step { color: var(--accent); }
 
   /* ── Milestones ── */
   .milestones { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
-  .milestone-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); }
+  .milestone-tag { font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); }
   .milestone-tag .mt-ver { color: var(--accent); font-weight: 600; }
   .milestone-tag .mt-name { color: var(--text); }
 
   /* ── Keyboard nav ── */
-  .project-card.kb-focus, .session-card.kb-focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+  .project-card.kb-focus, .session-card.kb-focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
   .day-group.kb-focus { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
   .week-panel { display: none; }
   .week-panel.active { display: block; }
   .week-panel-lower { display: none; }
   .week-panel-lower.active { display: block; }
 
-  /* ── Theme Toggle ── */
-  .theme-toggle { position: fixed; top: 1rem; right: 1rem; display: flex; align-items: center; gap: 0.3rem; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 0.3rem 0.5rem; cursor: pointer; z-index: 200; user-select: none; }
-  .theme-toggle:hover { border-color: var(--accent); }
-  .toggle-option { font-size: 0.9rem; }
-  .toggle-switch { width: 28px; height: 16px; background: var(--border); border-radius: 8px; position: relative; transition: background 0.2s; }
-  .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--text); transition: transform 0.2s; }
-  body.light .toggle-switch::after { transform: translateX(0); }
-  body:not(.light) .toggle-switch::after { transform: translateX(12px); }
+  /* Theme toggle is provided by html_builder (chalk/flint sun-moon pill). */
 
   /* ── Keyboard Help ── */
   .kb-help { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 300; align-items: center; justify-content: center; }
   .kb-help.visible { display: flex; }
   .kb-help-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem 2rem; max-width: 400px; width: 90%; }
-  .kb-help-title { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.1em; }
+  .kb-help-title { font-family: var(--mono); font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.1em; }
   .kb-row { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.8rem; }
-  .kb-key { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--accent); background: var(--accent-glow); padding: 0.1rem 0.5rem; border-radius: 3px; font-weight: 600; }
+  .kb-key { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); background: var(--accent-soft); padding: 0.1rem 0.5rem; border-radius: 3px; font-weight: 600; }
   .kb-desc { color: var(--text-dim); }
 
   /* ── Footer ── */
@@ -820,7 +807,7 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   .archive-footer strong { color: var(--accent); font-weight: 600; }
 
   /* ── Badges ── */
-  .badge { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .badge { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
   .badge-group { display: inline-flex; gap: 0.4rem; align-items: center; }
   .badge-platform-win { color: #0078D4; background: rgba(0, 120, 212, 0.12); }
   .badge-platform-mac { color: #555; background: rgba(85, 85, 85, 0.12); }
@@ -838,7 +825,7 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
   .platform-stats, .model-stats { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
   .stats-split { display: flex; gap: 1rem; margin-bottom: 1rem; }
   .stats-split > * { flex: 1; margin-bottom: 0; }
-  .platform-row, .model-row { display: flex; align-items: center; gap: 1rem; padding: 0.3rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-dim); }
+  .platform-row, .model-row { display: flex; align-items: center; gap: 1rem; padding: 0.3rem 0; font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); }
   .platform-row span, .model-row span { white-space: nowrap; }
 
   /* ── Streak Heatmap ── */
@@ -850,14 +837,10 @@ CSS = r"""  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono
 
   /* ── Tag Filter ── */
   .tag-filter-bar { display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; }
-  .tag-pill { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
+  .tag-pill { font-family: var(--mono); font-size: 0.65rem; padding: 0.2rem 0.6rem; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
   .tag-pill:hover { border-color: var(--accent); color: var(--text); }
-  .tag-pill.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+  .tag-pill.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
   .tag-pill .tag-count { font-size: 0.55rem; opacity: 0.7; margin-left: 0.2rem; }
-
-  /* ── Enhanced Theme Toggle ── */
-  .theme-auto-label { position: fixed; top: 3rem; right: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text-dim); text-align: center; z-index: 200; cursor: pointer; }
-  .theme-auto-label:hover { color: var(--accent); }
 
   @media (max-width: 700px) {
     .lifetime-bar { grid-template-columns: repeat(3, 1fr); }
@@ -883,7 +866,7 @@ def render_portfolio_header(global_stats, num_projects, total_days):
 def render_portfolio_lifetime(gs):
     ntw = gs.get('netThisWeek', 0)
     ntw_sign = "+" if ntw >= 0 else ""
-    ntw_color = "var(--green)" if ntw >= 0 else "var(--red)"
+    ntw_color = "var(--green)" if ntw >= 0 else "var(--alert-red)"
     return f"""  <div class="lifetime-bar">
     <div class="lifetime-stat"><div class="lifetime-value">{format_number(gs['totalSessions'])}</div><div class="lifetime-label">Total Sessions</div></div>
     <div class="lifetime-stat"><div class="lifetime-value">{format_number(gs['totalCommits'])}</div><div class="lifetime-label">Total Commits</div></div>
@@ -1003,9 +986,9 @@ def render_streak_heatmap(all_sessions):
             y = top_margin + row * step
 
             if count == 0:
-                fill = "var(--heatmap-empty, rgba(255,255,255,0.05))"
+                fill = "var(--surface-sunk)"
             elif count == 1:
-                fill = "rgba(99, 102, 241, 0.4)"
+                fill = "var(--accent-line)"
             else:
                 fill = "var(--accent)"
 
@@ -1023,7 +1006,7 @@ def render_streak_heatmap(all_sessions):
             month_name = first_day_of_week.strftime("%b")
             month_labels.append(
                 f'<text x="{mx}" y="{top_margin - 5}" '
-                f'font-family="\'JetBrains Mono\', monospace" font-size="9" '
+                f'font-family="var(--mono)" font-size="9" '
                 f'fill="var(--text-dim)">{month_name}</text>'
             )
             last_month_label = month_key
@@ -1034,7 +1017,7 @@ def render_streak_heatmap(all_sessions):
         y = top_margin + row * step + cell_size - 1
         day_labels.append(
             f'<text x="{left_margin - 4}" y="{y}" text-anchor="end" '
-            f'font-family="\'JetBrains Mono\', monospace" font-size="9" '
+            f'font-family="var(--mono)" font-size="9" '
             f'fill="var(--text-dim)">{label}</text>'
         )
 
@@ -1256,7 +1239,7 @@ def render_project_lifetime(lt, streak, total_code_lines=0, net_this_week=0):
     ts = lt.get("totalSessions", 0); tc = lt.get("totalCommits", 0)
     sv = streak.get("current", 0)
     ntw_sign = "+" if net_this_week >= 0 else ""
-    ntw_color = "var(--green)" if net_this_week >= 0 else "var(--red)"
+    ntw_color = "var(--green)" if net_this_week >= 0 else "var(--alert-red)"
     return f"""  <div class="lifetime-bar">
     <div class="lifetime-stat"><div class="lifetime-value">{ts}</div><div class="lifetime-label">Sessions</div></div>
     <div class="lifetime-stat"><div class="lifetime-value">{tc}</div><div class="lifetime-label">Commits</div></div>
@@ -1331,7 +1314,7 @@ def render_project_day_strip(monday, days_dict, today_str, slug=""):
                 step_html = f'<div class="wd-steps">{blocks}</div>'
             badge = f"{n} session" if n == 1 else f"{n} sessions"
             feat_div = f'<div class="wd-feature">{esc(feat)}</div>' if feat else ""
-            cells.append(f'      <div class="{cls}" data-date="{ds}" onclick="window[\'scrollToDay_{slug}\'](\'{ds}\')"><div class="wd-header"><span class="wd-dow">{dow}</span><span class="wd-date">{dl}</span></div><div class="wd-badge">{badge}</div><div class="wd-metrics"><span class="wdm-c">{tc}c</span><span class="wdm-a">+{format_lines(ta)}</span><span style="color:var(--red)">-{format_lines(tr)}</span></div><div class="wd-summary">{esc(summ)}</div>{feat_div}{step_html}</div>')
+            cells.append(f'      <div class="{cls}" data-date="{ds}" onclick="window[\'scrollToDay_{slug}\'](\'{ds}\')"><div class="wd-header"><span class="wd-dow">{dow}</span><span class="wd-date">{dl}</span></div><div class="wd-badge">{badge}</div><div class="wd-metrics"><span class="wdm-c">{tc}c</span><span class="wdm-a">+{format_lines(ta)}</span><span style="color:var(--alert-red)">-{format_lines(tr)}</span></div><div class="wd-summary">{esc(summ)}</div>{feat_div}{step_html}</div>')
     return f'    <div class="week-strip">\n{chr(10).join(cells)}\n    </div>'
 
 def render_project_swimlane(swimlane_data, monday):
@@ -1503,20 +1486,8 @@ function handleRoute() {
 window.addEventListener('hashchange', handleRoute);
 handleRoute();
 
-// ── Theme ──
-(function() {
-  var KEY = 'doe-theme';
-  var toggle = document.getElementById('themeToggle');
-  var label = document.getElementById('themeAutoLabel');
-  var mode = localStorage.getItem(KEY) || 'auto';
-  function getAutoTheme() { var h = new Date().getHours(); return (h >= 6 && h < 18) ? 'light' : 'dark'; }
-  function applyTheme(theme) { document.body.classList.toggle('light', theme === 'light'); }
-  function update() { if (mode === 'auto') { applyTheme(getAutoTheme()); label.textContent = 'Auto'; } else { applyTheme(mode); label.textContent = 'Reset to auto'; } }
-  if (toggle) toggle.addEventListener('click', function() { if (mode === 'auto') { mode = getAutoTheme() === 'light' ? 'dark' : 'light'; } else { mode = mode === 'light' ? 'dark' : 'light'; } localStorage.setItem(KEY, mode); update(); });
-  if (label) label.addEventListener('click', function(e) { e.stopPropagation(); mode = 'auto'; localStorage.removeItem(KEY); update(); });
-  if (mode === 'auto') { applyTheme(getAutoTheme()); } else { applyTheme(mode); }
-  if (label) label.textContent = mode === 'auto' ? 'Auto' : 'Reset to auto';
-})();
+// Theme (chalk/flint) is owned by html_builder's toggle JS, appended after
+// this script by page_scaffold. It drives [data-theme] and persists choice.
 
 // ── Shared ──
 function toggleCard(card) { card.classList.toggle('expanded'); }
@@ -1788,7 +1759,7 @@ def build_project_view(project):
   <div class="archive-footer">
     <div>Built with <strong>DOE</strong> &mdash; Directive, Orchestration, Execution</div>
     <div style="margin-top: 0.3rem; font-size: 0.7rem;">Showing {len(recent)} recent sessions. Lifetime: {total_sessions} sessions.</div>
-    <div style="margin-top: 0.5rem; font-size: 0.65rem; font-family: 'JetBrains Mono', monospace; opacity: 0.5;">Press ? for keyboard shortcuts &bull; B to go back</div>
+    <div style="margin-top: 0.5rem; font-size: 0.65rem; font-family: var(--mono); opacity: 0.5;">Press ? for keyboard shortcuts &bull; B to go back</div>
   </div>"""
 
     return content, weeks_js_data
@@ -1855,17 +1826,11 @@ window['scrollToDay_{slug}'] = function(date) {{
         else:
             project_views.append(f'<div class="view-container project-view" id="view-{p["slug"]}">\n<div class="container">\n{result}\n</div>\n</div>')
 
-    # Theme init JS
-    if theme == "light":
-        theme_js = "document.body.classList.add('light');"
-    elif theme == "dark":
-        theme_js = "// dark by default"
-    else:
-        theme_js = "if (new Date().getHours() >= 6 && new Date().getHours() < 18) document.body.classList.add('light');"
-
+    # Theming is owned by html_builder's toggle (flint default, chalk = light).
+    # The legacy --theme CLI flag is retained for back-compat but no longer
+    # injects a body class; the builder persists the user's choice instead.
     p_week_json = json.dumps(p_week_data, ensure_ascii=False)
-    js = JS_TEMPLATE.replace("THEME_INIT", theme_js)
-    js = js.replace("P_CURRENT_WEEK_IDX", str(cidx))
+    js = JS_TEMPLATE.replace("P_CURRENT_WEEK_IDX", str(cidx))
     js = js.replace("P_WEEK_DATA", p_week_json)
     js = js.replace("PROJECT_WEEK_JS", "\n".join(project_week_js_parts))
 
@@ -1884,32 +1849,10 @@ window['scrollToDay_{slug}'] = function(date) {{
     footer = f"""  <div class="archive-footer">
     <div>Built with <strong>DOE</strong> &mdash; Directive, Orchestration, Execution</div>
     <div style="margin-top: 0.3rem; font-size: 0.7rem;">{len(projects)} projects from {esc(registry_path)}</div>
-    <div style="margin-top: 0.5rem; font-size: 0.65rem; font-family: 'JetBrains Mono', monospace; opacity: 0.5;">Press ? for keyboard shortcuts</div>
+    <div style="margin-top: 0.5rem; font-size: 0.65rem; font-family: var(--mono); opacity: 0.5;">Press ? for keyboard shortcuts</div>
   </div>"""
 
-    body_cls = ""
-    if theme == "light": body_cls = ' class="light"'
-    elif theme == "dark": body_cls = ''
-
-    return f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HQ</title>
-<style>
-{CSS}
-</style>
-</head>
-<body{body_cls}>
-<div class="theme-toggle" id="themeToggle">
-  <span class="toggle-option">&#9728;&#65039;</span>
-  <span class="toggle-switch"></span>
-  <span class="toggle-option">&#127769;</span>
-</div>
-<div class="theme-auto-label" id="themeAutoLabel">Auto</div>
-
-{kb}
+    body = f"""{kb}
 
 <div class="view-container portfolio-view active" id="view-portfolio">
 <div class="container">
@@ -1922,21 +1865,19 @@ window['scrollToDay_{slug}'] = function(date) {{
 </div>
 
 {chr(10).join(project_views)}
-
-<script>
-{js}
-</script>
-</body>
-</html>
 """
+
+    return page_scaffold("HQ", body, css=COMPONENT_CSS, js=js, theme_toggle=True)
 
 
 def render_error_page(message):
-    return f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>HQ</title>
-<style>{CSS}</style></head><body>
-<div class="container"><div class="page-header"><div class="page-title">HQ</div><div class="page-subtitle">{esc(message)}</div></div></div>
-</body></html>"""
+    body = (
+        f'<div class="container"><div class="page-header">'
+        f'<div class="page-title">HQ</div>'
+        f'<div class="page-subtitle">{esc(message)}</div>'
+        f'</div></div>'
+    )
+    return page_scaffold("HQ", body, css=COMPONENT_CSS, theme_toggle=True)
 
 
 def main():

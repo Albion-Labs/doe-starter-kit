@@ -79,7 +79,7 @@ Parse the JSON output. The key fields:
 
 ```
 result.metrics      → commits, linesAdded, linesRemoved, filesTouched,
-                      stepsCompleted, sessionDuration, commitLog
+                      stepsCompleted, sessionDuration, prsMerged, commitLog
 result.streak       → current streak day count
 result.stats        → the full updated stats.json
 ```
@@ -143,7 +143,7 @@ Using the stats JSON from Step 2, compose a JSON object with this schema. You mu
     "filesTouched": N,
     "stepsCompleted": N,
     "sessionDuration": "Xh Ym",
-    "agentsSpawned": N,
+    "prsMerged": N,
     "commitLog": [
       {"hash": "abc1234", "time": "HH:MM", "message": "Commit message", "type": "normal|fix|test"}
     ]
@@ -281,4 +281,4 @@ Then check for open PRs: `gh pr list --state open --json number,title,headRefNam
 - Commit stats.json BEFORE generating the wrap-up so the push includes it.
 - The `decisions` array should list decisions written to STATE.md this session, or `["None this session"]`.
 - The `learnings` array should list learnings written to learnings.md or ~/.claude/CLAUDE.md, or `["None this session"]`.
-- For agents spawned, count how many times the Agent tool was invoked during this session.
+- For `prsMerged`, count PRs merged during this session — a verifiable number, e.g. from the commit log's merge refs or `gh pr list --state merged --search "merged:>=<session-start>"`. Use `0` if none. (Do not self-report a count nothing can verify.)

@@ -7,6 +7,35 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.67.0 (2026-06-09)
+<!-- hero -->
+Bakes the locked Albion "Chalk & Flint" design system into the kit's whole HTML report family. All four generators — `/wrap`, `/eod`, the HQ dashboard, and the manual test checklist — now render in one two-pole system: warm **chalk** (light) and green-tinted **flint** (dark, the default for tooling), bound by a single Albion green accent reserved for positive/live/primary. Inter for everything, JetBrains Mono for code-ish tokens only, HugeIcons stroke glyphs in section headers, a 6/8/12 radius scale, and a sun/moon sliding toggle that cross-fades the two poles. `html_builder.py` is now the single source of tokens and chrome; the four generators consume it instead of each carrying its own palette. Same content, new skin. Closes #72.
+<!-- /hero -->
+<!-- background -->
+The report generators had drifted into four different looks: `html_builder.py` shipped an indigo accent with a blue/amber/rose/green spread, `build_hq.py` ran its own near-black palette via a `body.light` class-toggle, and `generate_test_checklist.py` carried a self-contained `:root` with a `--grey-*` scale and its own theme switch. Four palettes, four theme mechanisms, no shared spine — exactly the divergence the kit exists to prevent, but for visual language. This release collapses them onto the Chalk & Flint table from the locked design memory (flint default, chalk light pole), mapped onto the builder's existing `[data-theme]` mechanism rather than a second toggle. Legacy CSS var names (`--green`, `--amber`, `--rose`, `--blue`, `--surface2`, …) are kept as aliases that resolve onto the new palette, so the migration is a reskin, not a rewrite of every call site.
+
+Two disciplines from the design memory are enforced structurally. **Monochrome by default:** `/wrap` and `/eod` are non-triage and carry no alert colours — line deltas read green/faint, allocation and commit bars are green + muted grey, decision badges are the reserved green and learnings are neutral. The **governed alert pair** (red `#B23A22`/`#E0654E`, amber `#9A6B12`/`#D9A441`) is allowed only on the triage surfaces — the HQ dashboard and the test checklist — for fail/warn/stale states, and nowhere else. Cards never signal state with a coloured left-edge stripe (icon/badge/health-bar only). The metric grid is the joined 12-tile "stat" grid (3 bands of 4: cadence → output → outcomes) so there are no half-empty rows.
+
+The same pass removes a dishonest metric. `agentsSpawned` was self-reported — the `/wrap` and `/eod` prompts asked the model to "count how many times the Agent tool was invoked," a number nothing could verify, dressed up as a deterministic stat. It is gone from both generators and both JSON prompts, replaced in the 12-tile grid by `prsMerged`, which is countable from git/`gh`. A new `report_generator_styling` methodology scenario guards against regression: it WARNs if any report generator grows its own `<style>` tag or `:root` selector instead of routing through the builder.
+<!-- /background -->
+
+### Added
+- **`global-scripts/html_builder.py`** — the Chalk & Flint two-pole token system (`:root` chalk pole + `[data-theme="dark"]` flint pole, with legacy var aliases that resolve per-pole at the point of use), Inter + JetBrains Mono pulled from Google Fonts in `page_scaffold`, a 6/8/12 radius scale, and a colour-only cross-fade transition on theme change.
+- **`icon(name, ...)`** and **`section_header(title, icon_name, ...)`** helpers — inline HugeIcons-style stroke SVGs (summary, clock, commit, decision, shield, next, check, alert, sessions, learning, list) for section/page headers.
+- **Sun/moon sliding toggle** — `theme_toggle_css`/`theme_toggle_js` rewritten as the accent-thumb pill bound to the existing `[data-theme]` mechanism (no second toggle). Reports default to flint; a saved preference wins.
+- **Joined 12-tile metric grid** — `metric_grid` reskinned to the hairline-joined "stat" grid (default 4 columns / 12 tiles) with left-aligned mono values and `acc`/`faint` emphasis.
+- **Badge/pill variants** — `neutral` and `mono` badge modifiers, a `pill-neutral`, and the governed alert pair wired to `badge-warn`/`badge-fail` (triage only).
+- **`execution/test_methodology.py`** — new `report_generator_styling` scenario: WARNs on any report generator carrying a local `<style>`/`:root` instead of consuming `html_builder` (the builder itself is the exempt source of truth).
+
+### Changed
+- **`global-scripts/wrap_html.py`** & **`global-scripts/eod_html.py`** — consume the reskinned builder; render the 12-tile stat grid (EOD includes `PRs Merged`); HugeIcons section headers replace the emoji prefixes; line deltas use accent-green/faint; allocation and commit bars go monochrome (accent + muted); decision badges are the reserved green, learnings neutral; no coloured card stripes (the unused `accent=` left-border option is gone).
+- **`global-scripts/build_hq.py`** — refactored onto `html_builder.page_scaffold`; its `body.light` class-toggle theme system and local `:root` are replaced by the builder's `[data-theme]` chalk/flint poles and shared sun/moon toggle. The heatmap, swimlane, week navigation, scrubber, card-expand toggles, and all data logic are unchanged; as a triage surface it keeps the governed red/amber pair.
+- **`execution/generate_test_checklist.py`** — refactored onto `html_builder.page_scaffold` via a `sys.path` shim to `../global-scripts`; its local `:root` token scale and theme toggle are dropped for the builder's poles. The heatmap, checkbox/collapsible toggles, automated-test results, timer, and JSON export are unchanged; as a triage surface it keeps the governed red/amber pair for fail/warn/stale.
+- **`global-commands/wrap.md`** & **`global-commands/eod.md`** — the `metrics` JSON schema swaps `agentsSpawned` for `prsMerged`, with `/wrap` guidance to count merged PRs from git/`gh` (a verifiable number) rather than self-report.
+
+### Removed
+- **Self-reported `agentsSpawned` metric** — removed from `wrap_html.py`, `eod_html.py`, and the `/wrap` + `/eod` JSON prompts. Nothing computed it; it was a model-asserted count presented as a deterministic stat. Replaced by the verifiable `prsMerged` tile.
+
 ## v1.66.0 (2026-06-09)
 <!-- hero -->
 Removes the consumer/creator role flag and replaces it with drift tracking. The `**DOE Role:**` line in `STATE.md` and the `setup.sh` prompt that wrote it are gone — they gated nothing in code (no hook or command ever read the flag, and the `/wrap` behaviour its comment claimed was never conditional on it). Role is now what it always actually was: a function of context (everyone consumes the kit and contributes to it) enforced at the repo layer via CODEOWNERS + branch protection + PR-only, not a self-declared per-machine setting. In its place, `audit_sync.py` now distinguishes accidental DRIFT from declared overrides via a new `.doe-overrides` manifest, and `/wrap` surfaces the drift count each session.

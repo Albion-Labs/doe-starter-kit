@@ -57,7 +57,7 @@ Build a JSON object with this schema:
     "filesTouched": N,
     "stepsCompleted": N,
     "featuresCompleted": N,
-    "agentsSpawned": N
+    "prsMerged": N
   },
   "sessionTimeline": [
     {"number": 76, "start": "HH:MM", "duration": "Xh Ym", "summary": "What this session did", "pct": N}
