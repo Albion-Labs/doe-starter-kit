@@ -508,9 +508,9 @@ def render_checks(data):
         if u_display or c_display:
             count_parts = []
             if u_display:
-                count_parts.append(f'{u_display} user pulls')
+                count_parts.append(f'{u_display} pulls')
             if c_display:
-                count_parts.append(f'{c_display} creator syncs')
+                count_parts.append(f'{c_display} syncs')
             kit_rows.append(check_row(', '.join(count_parts), 'pass'))
 
         check_parts.append(

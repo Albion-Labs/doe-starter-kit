@@ -7,6 +7,33 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.66.0 (2026-06-09)
+<!-- hero -->
+Removes the consumer/creator role flag and replaces it with drift tracking. The `**DOE Role:**` line in `STATE.md` and the `setup.sh` prompt that wrote it are gone — they gated nothing in code (no hook or command ever read the flag, and the `/wrap` behaviour its comment claimed was never conditional on it). Role is now what it always actually was: a function of context (everyone consumes the kit and contributes to it) enforced at the repo layer via CODEOWNERS + branch protection + PR-only, not a self-declared per-machine setting. In its place, `audit_sync.py` now distinguishes accidental DRIFT from declared overrides via a new `.doe-overrides` manifest, and `/wrap` surfaces the drift count each session.
+<!-- /hero -->
+<!-- background -->
+The flag dated from the kit's OSS-starter era, where "people who build projects with DOE" and "people who maintain the kit" looked like two populations. Internally they are not: every team member is a consumer of the kit inside their project repos AND a contributor the instant they hit a kit gap and fix it. A self-declared identity flag set once at setup can never track a role that changes by the moment, which is why it decayed into a no-op — recon confirmed nothing read it. Deleting it loses nothing operationally because the real gates (CODEOWNERS review on `.githooks`/`.github/workflows`/`CLAUDE.md`, the `no-direct-to-main` pre-commit hook, `auto-release` on merge) already apply to everyone equally regardless of the flag.
+
+The replacement addresses the failure mode the flag never did: silent forks. Local divergence of vendored kit files is legitimate only as (1) an in-flight patch awaiting `/sync-doe`, or (2) a deliberate project-specific override. Everything else is drift, and N projects each running a slightly different harness erodes the kit's whole reason to exist (one methodology). `audit_sync.py` already computed a `diverged` bucket; this release teaches it to subtract paths declared in a per-clone `.doe-overrides` manifest (mirrors the existing `.kit-blocklist` pattern) so the drift signal only ever flags UN-declared divergence, and `/wrap` reports it so it cannot accumulate invisibly.
+<!-- /background -->
+
+### Added
+- **`.doe-overrides.example`** — template for the per-clone manifest declaring intentional kit divergence. Copy to `.doe-overrides` (gitignored). One project-relative path per line (trailing `/` matches a directory prefix); inline `# reason` trailers recommended.
+- **`execution/audit_sync.py`** — `load_overrides()` + `_is_overridden()` and a new `declared_overrides` findings bucket. Diverged/missing files declared in `.doe-overrides` move out of the drift signal into `declared_overrides` (informational, never warned on). Self-test extended with override fixtures.
+- **`directives/kit-development.md`** — two new sections: "Roles: by context and repo permission, not a self-declared flag" and "Local divergence: staging area, not end state".
+
+### Changed
+- **`global-commands/wrap.md`** — step 6 sync check now reads three counts from `audit_sync.py` (`missing_from_kit`, `diverged`, `declared_overrides`) and surfaces a `Kit drift:` warning for un-declared divergence. The drift warning fires only when the project is version-synced; when it is behind on `/pull-doe`, `diverged` is dominated by pull-lag (the kit clone sits on `main`, ahead of the project's synced version), so the warning is suppressed in favour of the pull prompt. Also states explicitly that inbound (pull) + outbound (sync/drift) checks run for every project with no consumer/creator distinction.
+- **`execution/audit_sync.py`** — `print_summary` relabels the `DIVERGED` section to `DRIFT` and reports a declared-overrides count in the footer.
+- **`global-scripts/eod_html.py`** — DOE Kit report labels "user pulls"/"creator syncs" → "pulls"/"syncs" (data keys unchanged), dropping the role framing.
+
+### Removed
+- **`setup.sh`** — the "Are you a DOE contributor?" prompt and the `DOE Role` STATE.md rewrite (former section 10).
+- **`STATE.md`** — the `**DOE Role:**` line and its two explanatory comments.
+
+### Pull impact
+`/pull-doe` only rewrites STATE.md's "DOE Starter Kit" version line; it does NOT touch other STATE.md content. So an existing project's inert `**DOE Role:**` line persists after pulling — delete it by hand if you want (it is harmless either way; nothing reads it). To start tracking intentional kit divergence, `cp .doe-overrides.example .doe-overrides` in your project and list any kit files you deliberately keep forked; everything else that differs will show as drift in `/wrap`.
+
 ## v1.65.1 (2026-05-21)
 <!-- hero -->
 Adds `block_unnecessary_admin_merge.py` PreToolUse Bash hook. Intercepts `gh pr merge --admin`, queries the authoritative `mergeStateStatus`, and refuses if the PR is `CLEAN` (admin override unnecessary) or `UNKNOWN` (GitHub still computing checks — transient, ~30-60s). Catches a recurring AI failure mode where Claude misreads the immediate-post-creation `UNKNOWN` window as a permanent block and reflexively reaches for `--admin`.

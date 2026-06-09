@@ -316,29 +316,7 @@ if [ -f "$SCRIPT_DIR/.github/pull_request_template.md" ] && [ ! -f ".github/pull
     echo "✓ PR template installed to .github/"
 fi
 
-# 10. Set DOE Role in project STATE.md
-STATE_FILE="STATE.md"
-if [ -f "$STATE_FILE" ] && grep -q "DOE Role:" "$STATE_FILE"; then
-    echo ""
-    echo "Are you a DOE contributor? (Most users: no)"
-    echo "  n = Consumer — you build projects using DOE (default)"
-    echo "  y = Creator  — you contribute improvements back to the starter kit"
-    printf "Choice [n]: "
-    read -r DOE_ROLE_CHOICE
-    if [ "$DOE_ROLE_CHOICE" = "y" ] || [ "$DOE_ROLE_CHOICE" = "Y" ]; then
-        # Cross-platform sed -i (macOS needs '', Linux doesn't)
-        if sed --version 2>/dev/null | grep -q GNU; then
-            sed -i 's/\*\*DOE Role:\*\* consumer/**DOE Role:** creator/' "$STATE_FILE"
-        else
-            sed -i '' 's/\*\*DOE Role:\*\* consumer/**DOE Role:** creator/' "$STATE_FILE"
-        fi
-        echo "✓ DOE Role set to creator"
-    else
-        echo "✓ DOE Role set to consumer"
-    fi
-fi
-
-# 11. Summary
+# 10. Summary
 echo ""
 echo "✓ $COMMAND_COUNT commands installed to ~/.claude/commands/"
 echo "✓ $HOOK_COUNT global hooks installed to ~/.claude/hooks/"
