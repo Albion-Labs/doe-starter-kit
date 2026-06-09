@@ -23,7 +23,7 @@ The replacement addresses the failure mode the flag never did: silent forks. Loc
 - **`directives/kit-development.md`** — two new sections: "Roles: by context and repo permission, not a self-declared flag" and "Local divergence: staging area, not end state".
 
 ### Changed
-- **`global-commands/wrap.md`** — step 6 sync check now reads three counts from `audit_sync.py` (`missing_from_kit`, `diverged`, `declared_overrides`), surfaces a `Kit drift:` warning for un-declared divergence, and states explicitly that inbound (pull) + outbound (sync/drift) checks run for every project with no consumer/creator distinction.
+- **`global-commands/wrap.md`** — step 6 sync check now reads three counts from `audit_sync.py` (`missing_from_kit`, `diverged`, `declared_overrides`) and surfaces a `Kit drift:` warning for un-declared divergence. The drift warning fires only when the project is version-synced; when it is behind on `/pull-doe`, `diverged` is dominated by pull-lag (the kit clone sits on `main`, ahead of the project's synced version), so the warning is suppressed in favour of the pull prompt. Also states explicitly that inbound (pull) + outbound (sync/drift) checks run for every project with no consumer/creator distinction.
 - **`execution/audit_sync.py`** — `print_summary` relabels the `DIVERGED` section to `DRIFT` and reports a declared-overrides count in the footer.
 - **`global-scripts/eod_html.py`** — DOE Kit report labels "user pulls"/"creator syncs" → "pulls"/"syncs" (data keys unchanged), dropping the role framing.
 
@@ -32,7 +32,7 @@ The replacement addresses the failure mode the flag never did: silent forks. Loc
 - **`STATE.md`** — the `**DOE Role:**` line and its two explanatory comments.
 
 ### Pull impact
-Re-running `/pull-doe` removes the `**DOE Role:**` line from your project's `STATE.md` (it was inert). To start tracking intentional kit divergence, `cp .doe-overrides.example .doe-overrides` in your project and list any kit files you deliberately keep forked; everything else that differs will show as drift in `/wrap`.
+`/pull-doe` only rewrites STATE.md's "DOE Starter Kit" version line; it does NOT touch other STATE.md content. So an existing project's inert `**DOE Role:**` line persists after pulling — delete it by hand if you want (it is harmless either way; nothing reads it). To start tracking intentional kit divergence, `cp .doe-overrides.example .doe-overrides` in your project and list any kit files you deliberately keep forked; everything else that differs will show as drift in `/wrap`.
 
 ## v1.65.1 (2026-05-21)
 <!-- hero -->
