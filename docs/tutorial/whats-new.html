@@ -807,7 +807,7 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.65.1</span></a>
+      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.66.0</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
@@ -883,6 +883,34 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-66-0">
+          <div class="release-header">
+            <span class="version-badge">v1.66.0</span>
+            <span class="release-date">9 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Removes the consumer/creator role flag and replaces it with drift tracking. The <code><strong>DOE Role:</strong></code> line in <code>STATE.md</code> and the <code>setup.sh</code> prompt that wrote it are gone — they gated nothing in code (no hook or command ever read the flag, and the <code>/wrap</code> behaviour its comment claimed was never conditional on it). Role is now what it always actually was: a function of context (everyone consumes the kit and contributes to it) enforced at the repo layer via CODEOWNERS + branch protection + PR-only, not a self-declared per-machine setting. In its place, <code>audit_sync.py</code> now distinguishes accidental DRIFT from declared overrides via a new <code>.doe-overrides</code> manifest, and <code>/wrap</code> surfaces the drift count each session.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">The flag dated from the kit&#x27;s OSS-starter era, where &quot;people who build projects with DOE&quot; and &quot;people who maintain the kit&quot; looked like two populations. Internally they are not: every team member is a consumer of the kit inside their project repos AND a contributor the instant they hit a kit gap and fix it. A self-declared identity flag set once at setup can never track a role that changes by the moment, which is why it decayed into a no-op — recon confirmed nothing read it. Deleting it loses nothing operationally because the real gates (CODEOWNERS review on <code>.githooks</code>/<code>.github/workflows</code>/<code>CLAUDE.md</code>, the <code>no-direct-to-main</code> pre-commit hook, <code>auto-release</code> on merge) already apply to everyone equally regardless of the flag. The replacement addresses the failure mode the flag never did: silent forks. Local divergence of vendored kit files is legitimate only as (1) an in-flight patch awaiting <code>/sync-doe</code>, or (2) a deliberate project-specific override. Everything else is drift, and N projects each running a slightly different harness erodes the kit&#x27;s whole reason to exist (one methodology). <code>audit_sync.py</code> already computed a <code>diverged</code> bucket; this release teaches it to subtract paths declared in a per-clone <code>.doe-overrides</code> manifest (mirrors the existing <code>.kit-blocklist</code> pattern) so the drift signal only ever flags UN-declared divergence, and <code>/wrap</code> reports it so it cannot accumulate invisibly.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>.doe-overrides.example</code></strong> — template for the per-clone manifest declaring intentional kit divergence. Copy to <code>.doe-overrides</code> (gitignored). One project-relative path per line (trailing <code>/</code> matches a directory prefix); inline <code># reason</code> trailers recommended.</li>
+            <li><strong><code>execution/audit_sync.py</code></strong> — <code>load_overrides()</code> + <code>_is_overridden()</code> and a new <code>declared_overrides</code> findings bucket. Diverged/missing files declared in <code>.doe-overrides</code> move out of the drift signal into <code>declared_overrides</code> (informational, never warned on). Self-test extended with override fixtures.</li>
+            <li><strong><code>directives/kit-development.md</code></strong> — two new sections: &quot;Roles: by context and repo permission, not a self-declared flag&quot; and &quot;Local divergence: staging area, not end state&quot;.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>global-commands/wrap.md</code></strong> — step 6 sync check now reads three counts from <code>audit_sync.py</code> (<code>missing_from_kit</code>, <code>diverged</code>, <code>declared_overrides</code>) and surfaces a <code>Kit drift:</code> warning for un-declared divergence. The drift warning fires only when the project is version-synced; when it is behind on <code>/pull-doe</code>, <code>diverged</code> is dominated by pull-lag (the kit clone sits on <code>main</code>, ahead of the project&#x27;s synced version), so the warning is suppressed in favour of the pull prompt. Also states explicitly that inbound (pull) + outbound (sync/drift) checks run for every project with no consumer/creator distinction.</li>
+            <li><strong><code>execution/audit_sync.py</code></strong> — <code>print_summary</code> relabels the <code>DIVERGED</code> section to <code>DRIFT</code> and reports a declared-overrides count in the footer.</li>
+            <li><strong><code>global-scripts/eod_html.py</code></strong> — DOE Kit report labels &quot;user pulls&quot;/&quot;creator syncs&quot; → &quot;pulls&quot;/&quot;syncs&quot; (data keys unchanged), dropping the role framing.</li>
+          </ul>
+          <h4 class="removed">Removed</h4>
+          <ul>
+            <li><strong><code>setup.sh</code></strong> — the &quot;Are you a DOE contributor?&quot; prompt and the <code>DOE Role</code> STATE.md rewrite (former section 10).</li>
+            <li><strong><code>STATE.md</code></strong> — the <code><strong>DOE Role:</strong></code> line and its two explanatory comments.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-65-1">
           <div class="release-header">
             <span class="version-badge">v1.65.1</span>
@@ -957,6 +985,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (12 releases)</summary>
+
         <div class="release" id="v1-63-0">
           <div class="release-header">
             <span class="version-badge">v1.63.0</span>
@@ -984,10 +1016,6 @@
             <li><strong><code>.claude/hooks/enforce_review_gate.py</code></strong> &mdash; anchors three paths to <code>$CLAUDE_PROJECT_DIR</code> via a new <code>_project_root()</code> helper: (1) <code>tasks/todo.md</code> in <code>check_steps_complete</code> (pre-fix returned <code>(True, &quot;&quot;)</code> on missing file, silently false-passing the PR gate &mdash; same class as the v1.57.0 pipeline silent-pass bug), (2) <code>.tmp/review-passed-&lt;branch&gt;.json</code> artifact path (pre-fix wrote / read against cwd/.tmp, missing the artifact and blocking with a misleading &quot;review required&quot; error after shell drift), (3) <code>git branch / rev-parse</code> invocations now use <code>git -C &lt;project_root&gt;</code> so they work from any cwd, not just from inside the project tree.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (11 releases)</summary>
 
         <div class="release" id="v1-62-2">
           <div class="release-header">
@@ -3810,7 +3838,7 @@
           </a>
         </div>
 
-        <footer class="site-footer">DOE Starter Kit v1.65.1</footer>
+        <footer class="site-footer">DOE Starter Kit v1.66.0</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
