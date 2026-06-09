@@ -77,7 +77,7 @@ clone at that commit, run, and you must get the same result.
 - **False-positives are measured** (benign inputs), not assumed.
 - **Control is labelled "by construction"**, not presented as a measurement.
 - **DORA metrics carry a `basis: PROXY` flag** — they're git-commit-message heuristics, not deploy telemetry.
-- **Economics labels its one assumption** (the GBP15 base cost) vs its one source (Boehm-Basili 5:1).
+- **No cost is invented:** money figures are intentionally omitted. The only cost basis we would surface is real model token-usage x published per-token prices.
 
 ## Why 86% and not 100%?
 

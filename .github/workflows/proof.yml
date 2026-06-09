@@ -22,7 +22,5 @@ jobs:
         run: python3 proof/corpus_check.py
       - name: Gate efficacy — self-test (every covered fault caught, control clean)
         run: python3 proof/run.py --self-test
-      - name: Metrics — self-test (CFR/rework correct, economics sourced)
+      - name: Metrics — self-test (CFR/rework proxy, no cost invented)
         run: python3 proof/metrics.py --self-test
-      - name: No cost-curve folklore in economics
-        run: "! grep -rEi '100x|IBM Systems Sciences' proof/economics/"

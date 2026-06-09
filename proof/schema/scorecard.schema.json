@@ -4,136 +4,278 @@
   "title": "DOE Proof Scorecard",
   "description": "v1.0 (additive-only). Adding new fields never bumps the version; renaming or removing a field bumps schemaVersion. Consumers (standalone HTML card, HQ) key off schemaVersion and ignore unknown fields.",
   "type": "object",
-  "required": ["schemaVersion", "kind", "project", "generatedAt"],
+  "required": [
+    "schemaVersion",
+    "kind",
+    "project",
+    "generatedAt"
+  ],
   "properties": {
-    "schemaVersion": { "type": "string", "pattern": "^1\\.[0-9]+$" },
-    "kind": { "enum": ["framework-benchmark", "project-metrics"] },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]+$"
+    },
+    "kind": {
+      "enum": [
+        "framework-benchmark",
+        "project-metrics"
+      ]
+    },
     "project": {
       "type": "object",
-      "required": ["id", "name"],
+      "required": [
+        "id",
+        "name"
+      ],
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "repo": { "type": ["string", "null"] }
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "repo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
-    "generatedAt": { "type": "string", "format": "date-time" },
-
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
     "catchRate": {
       "type": "object",
-      "required": ["injected", "caught", "rate"],
+      "required": [
+        "injected",
+        "caught",
+        "rate"
+      ],
       "properties": {
-        "injected": { "type": "integer", "minimum": 0 },
-        "caught": { "type": "integer", "minimum": 0 },
-        "rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "injected": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "caught": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "byGate": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["gate", "defectClass", "injected", "caught"],
+            "required": [
+              "gate",
+              "defectClass",
+              "injected",
+              "caught"
+            ],
             "properties": {
-              "gate": { "type": "string" },
-              "defectClass": { "type": "string" },
-              "injected": { "type": "integer", "minimum": 0 },
-              "caught": { "type": "integer", "minimum": 0 }
+              "gate": {
+                "type": "string"
+              },
+              "defectClass": {
+                "type": "string"
+              },
+              "injected": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "caught": {
+                "type": "integer",
+                "minimum": 0
+              }
             }
           }
         },
         "control": {
           "type": "object",
-          "required": ["injected", "caught", "rate"],
+          "required": [
+            "injected",
+            "caught",
+            "rate"
+          ],
           "properties": {
-            "injected": { "type": "integer", "minimum": 0 },
-            "caught": { "type": "integer", "minimum": 0 },
-            "rate": { "type": "number", "minimum": 0, "maximum": 1 }
+            "injected": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "caught": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
           }
         }
       }
     },
-
     "dora": {
       "type": "object",
-      "required": ["changeFailureRate", "reworkRate"],
+      "required": [
+        "changeFailureRate",
+        "reworkRate"
+      ],
       "properties": {
-        "changeFailureRate": { "type": "number", "minimum": 0, "maximum": 1 },
-        "reworkRate": { "type": "number", "minimum": 0, "maximum": 1 },
-        "leadTimeHours": { "type": "number", "minimum": 0 },
-        "deployFrequencyPerWeek": { "type": "number", "minimum": 0 },
+        "changeFailureRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reworkRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "leadTimeHours": {
+          "type": "number",
+          "minimum": 0
+        },
+        "deployFrequencyPerWeek": {
+          "type": "number",
+          "minimum": 0
+        },
         "window": {
           "type": "object",
           "properties": {
-            "from": { "type": "string", "format": "date-time" },
-            "to": { "type": "string", "format": "date-time" }
+            "from": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "to": {
+              "type": "string",
+              "format": "date-time"
+            }
           }
         }
       }
     },
-
-    "economics": {
-      "type": "object",
-      "properties": {
-        "poundsSaved": { "type": "number" },
-        "model": { "type": "string" },
-        "sources": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-
     "defectsCaught": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "class", "gate"],
+        "required": [
+          "id",
+          "class",
+          "gate"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "class": { "type": "string" },
-          "gate": { "type": "string" },
-          "caughtAt": { "type": "string" },
-          "estimatedCostGBP": { "type": "number" },
-          "costBasis": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "class": {
+            "type": "string"
+          },
+          "gate": {
+            "type": "string"
+          },
+          "caughtAt": {
+            "type": "string"
+          }
         }
       }
     },
-
     "ablation": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["ceremony", "marginalCatch", "verdict"],
+        "required": [
+          "ceremony",
+          "marginalCatch",
+          "verdict"
+        ],
         "properties": {
-          "ceremony": { "type": "string" },
-          "marginalCatch": { "type": "integer" },
-          "verdict": { "enum": ["load-bearing", "candidate-to-cut"] }
+          "ceremony": {
+            "type": "string"
+          },
+          "marginalCatch": {
+            "type": "integer"
+          },
+          "verdict": {
+            "enum": [
+              "load-bearing",
+              "candidate-to-cut"
+            ]
+          }
         }
       }
     },
-
     "history": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["at"],
+        "required": [
+          "at"
+        ],
         "properties": {
-          "at": { "type": "string" },
-          "catchRate": { "type": "number" },
-          "changeFailureRate": { "type": "number" },
-          "reworkRate": { "type": "number" }
+          "at": {
+            "type": "string"
+          },
+          "catchRate": {
+            "type": "number"
+          },
+          "changeFailureRate": {
+            "type": "number"
+          },
+          "reworkRate": {
+            "type": "number"
+          }
         }
       }
     },
-
     "perception": {
       "type": "object",
       "properties": {
-        "dxiScore": { "type": ["number", "null"] },
-        "frictionFlag": { "type": "boolean" }
+        "dxiScore": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "frictionFlag": {
+          "type": "boolean"
+        }
       }
     }
   },
-
   "allOf": [
-    { "if": { "properties": { "kind": { "const": "framework-benchmark" } } },
-      "then": { "required": ["catchRate"] } },
-    { "if": { "properties": { "kind": { "const": "project-metrics" } } },
-      "then": { "required": ["dora"] } }
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "framework-benchmark"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "catchRate"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "project-metrics"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "dora"
+        ]
+      }
+    }
   ]
 }

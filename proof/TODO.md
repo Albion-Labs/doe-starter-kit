@@ -30,7 +30,7 @@ Synthetic fixture + 7-fault corpus; `run.py` invokes the REAL unmodified kit gat
 `render.py` self-contained themed card; `README.md` reproduction/audit guide; provenance (gate sha256 + kit commit); `sample/` reference card.
 
 ### PK-3 — Real-project metrics  *(f8846c1)*
-`metrics.py` git-proxy DORA (CFR, rework, lead-time, deploy-freq) + sourced economics (NIST/Boehm, no folklore). Self-test: CFR 0.25 / rework 0.375.
+`metrics.py` git-proxy DORA (CFR, rework, lead-time, deploy-freq), every value basis-flagged as proxy. No cost estimated (per-token model usage only). Self-test: CFR 0.25 / rework 0.375.
 
 ### PK-4 — CI gate + corpus integrity  *(59bdb13)*
 `corpus_check.py` append-only integrity; `.github/workflows/proof.yml` re-runs the whole benchmark on every proof/ change.

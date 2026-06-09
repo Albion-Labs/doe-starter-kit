@@ -6,7 +6,7 @@
     "name": "Synthetic Fixture",
     "repo": null
   },
-  "generatedAt": "2026-06-08T21:33:54Z",
+  "generatedAt": "2026-06-09T11:48:40Z",
   "catchRate": {
     "injected": 7,
     "caught": 6,
@@ -77,7 +77,7 @@
     "detail": []
   },
   "provenance": {
-    "kitCommit": "69c8063c55a3fe47d06cf6793beda6822bb6c949",
+    "kitCommit": "bf5803fb92c6a451b61ad3666565dac98acaecd3",
     "gates": [
       {
         "script": ".claude/hooks/block_secrets_in_code.py",
@@ -92,22 +92,5 @@
         "sha256_16": "238b4f7eb7538cb5"
       }
     ]
-  },
-  "ablation": [
-    {
-      "ceremony": "gate:block_dangerous_commands",
-      "marginalCatch": 2,
-      "verdict": "load-bearing"
-    },
-    {
-      "ceremony": "gate:block_secrets_in_code",
-      "marginalCatch": 2,
-      "verdict": "load-bearing"
-    },
-    {
-      "ceremony": "gate:health_check",
-      "marginalCatch": 2,
-      "verdict": "load-bearing"
-    }
-  ]
+  }
 }

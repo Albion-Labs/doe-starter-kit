@@ -95,16 +95,9 @@ Corpus is **append-only with a manifest**: every defect that ever escapes a real
     "window": { "from": "ISO", "to": "ISO" }
   },
 
-  // economics — DEFENSIBLE sources only, never the 100x folklore
-  "economics": {
-    "poundsSaved": 0.0,
-    "model":   "string (named, sourced model)",
-    "sources": ["NIST 2002 $59.5B", "Boehm-Basili 5:1 small-system"]
-  },
-
   "defectsCaught": [
     { "id": "F01", "class": "leaked-secret", "gate": "block_secrets_in_code",
-      "caughtAt": "ISO", "estimatedCostGBP": 0.0, "costBasis": "string" }
+      "caughtAt": "ISO" }
   ],
 
   // self-pruning ablation — which ceremony actually contributes
@@ -122,7 +115,7 @@ Corpus is **append-only with a manifest**: every defect that ever escapes a real
 
 ## 5. Honesty guardrails (enforced as contracts, not promises)
 
-- **No folklore:** economics module must not contain the "100x" figure or cite the non-existent "IBM Systems Sciences Institute." Enforced by a deterministic grep gate.
+- **No invented cost:** money figures are omitted entirely. The only acceptable cost basis is real model token-usage x published per-token prices (not collected by this subsystem yet), so no money is reported.
 - **Label confidence:** any outcome number ships with N + method; framework-benchmark vs project-metrics never mixed in one claim.
 - **Falsifiable:** each gate test is framed as a hypothesis the harness tries to *disprove*; an untested gate is reported as "unproven", not "passing".
 - **Self-pruning:** the ablation arm (gates-only vs full ceremony) flags any ceremony with zero marginal catch as a candidate to cut. We attack DOE harder than the buyer can.
