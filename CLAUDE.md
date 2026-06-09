@@ -86,6 +86,7 @@ First session on a brand new project: load `directives/planning-rules.md` + `dir
 - Refactoring / architecture -> `directives/architectural-invariants.md`
 - Testing setup -> `directives/testing-strategy.md`
 - Personal data features -> `directives/data-compliance.md` (DPIA is hard blocker)
+- Political / electoral-campaign data -> `directives/political-data.md` (criminal liability; political layer)
 - New functions / debugging -> `directives/best-practices/tdd-and-debugging.md`
 - DOE feature request -> `/request-doe-feature`
 - [APP] feature with visual output -> `directives/chrome-verification.md`

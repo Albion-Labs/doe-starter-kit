@@ -1121,22 +1121,26 @@ def scenario_plan_vs_actual(verbose: bool = False):
 
 
 # ════════════════════════════════════════════════════════════
-# Scenario 18: universal_layer_domain_neutral
+# Scenario 18: non_political_layers_domain_neutral
 # ════════════════════════════════════════════════════════════
 
-# Domain-specific terms that must NOT appear in always-installed (universal-layer)
-# files. Regulated/electoral content belongs in the opt-in `regulated` layer so a
-# generic project never inherits it. Word-boundaried so "selector" (electoral) and
-# "constituent" (constituency) do not false-positive.
+# Electoral/political domain terms that must NOT appear in any NON-political layer.
+# This content (electoral register, PPERA, canvass, etc.) belongs ONLY in the opt-in
+# `political` layer, so a project that isn't a political campaign never inherits it.
+# Word-boundaried so "selector" (electoral) and "constituent" (constituency) do not
+# false-positive. "political opinion" is deliberately NOT a term — it's a legitimate
+# generic GDPR special-category example.
 _DOMAIN_LEAK_RE = re.compile(
     r"\belectoral\b|\bppera\b|\bcanvass\w*|\bconstituenc\w*"
     r"|reform uk|good law project|voting intention|representation of the people",
     re.IGNORECASE,
 )
+# The opt-in layer that is ALLOWED to contain the above. Everything else must be clean.
+_POLITICAL_LAYER = "political"
 # Each category maps to the candidate directories an entry may live in. Git hooks
 # (pre-commit, commit-msg, pre-push) live in .githooks/, not .claude/hooks/, so
 # both are listed — an entry that resolves in none is surfaced, not silently dropped.
-_UNIVERSAL_LAYER_DIRS = {
+_LAYER_DIRS = {
     "files": ["."],
     "directives": ["directives"],
     "commands": ["global-commands"],
@@ -1145,10 +1149,12 @@ _UNIVERSAL_LAYER_DIRS = {
 }
 
 
-def scenario_universal_layer_domain_neutral(verbose: bool = False):
-    """FAIL if an always-installed (universal-layer) file carries domain-specific
-    regulatory content. Such content (electoral register, PPERA, etc.) belongs in
-    the opt-in `regulated` layer, not in every project's install.
+def scenario_non_political_layers_domain_neutral(verbose: bool = False):
+    """FAIL if any NON-political layer file carries electoral/political content.
+
+    The whole point of the `political` layer is that a normal project (even one
+    with a database and personal data) never inherits electoral-register/PPERA/
+    campaign content. So every layer EXCEPT `political` must be domain-clean.
 
     Skips when manifest.json is absent (e.g. a consumer project) — nothing to check.
     """
@@ -1162,34 +1168,35 @@ def scenario_universal_layer_domain_neutral(verbose: bool = False):
     except (json.JSONDecodeError, OSError) as e:
         return _result("WARN", f"cannot read manifest.json: {e}", vlines)
 
-    universal = layers.get("universal", {})
     leaks = []
     unresolved = []
     scanned = 0
-    for category, subdirs in _UNIVERSAL_LAYER_DIRS.items():
-        for name in universal.get(category, []):
-            p = next((PROJECT_ROOT / sd / name for sd in subdirs
-                      if (PROJECT_ROOT / sd / name).is_file()), None)
-            if p is None:
-                unresolved.append(f"{category}:{name}")
-                continue
-            scanned += 1
-            matches = sorted({m.group(0).lower()
-                              for m in _DOMAIN_LEAK_RE.finditer(p.read_text(encoding="utf-8", errors="ignore"))})
-            if matches:
-                rel = p.relative_to(PROJECT_ROOT)
-                leaks.append(f"{rel}: {', '.join(matches)}")
-                vlines.append(f"  {rel}: {', '.join(matches)}")
+    for layer, content in layers.items():
+        if layer == _POLITICAL_LAYER:
+            continue  # the political layer is allowed to contain this content
+        for category, subdirs in _LAYER_DIRS.items():
+            for name in content.get(category, []):
+                p = next((PROJECT_ROOT / sd / name for sd in subdirs
+                          if (PROJECT_ROOT / sd / name).is_file()), None)
+                if p is None:
+                    unresolved.append(f"{layer}/{category}:{name}")
+                    continue
+                scanned += 1
+                matches = sorted({m.group(0).lower()
+                                  for m in _DOMAIN_LEAK_RE.finditer(p.read_text(encoding="utf-8", errors="ignore"))})
+                if matches:
+                    rel = p.relative_to(PROJECT_ROOT)
+                    leaks.append(f"[{layer}] {rel}: {', '.join(matches)}")
+                    vlines.append(f"  [{layer}] {rel}: {', '.join(matches)}")
 
-    vlines.insert(0, f"  Universal-layer files scanned: {scanned}")
+    vlines.insert(0, f"  Non-political layer files scanned: {scanned}")
     if unresolved:
         vlines.append(f"  Unresolved entries (coverage gap): {', '.join(unresolved)}")
     if leaks:
-        return _result("FAIL", f"{len(leaks)} universal-layer file(s) carry domain-specific content (move to regulated layer): " + "; ".join(leaks), vlines)
-    # An entry the scanner can't locate is a coverage hole, not a pass — surface it.
+        return _result("FAIL", f"{len(leaks)} non-political file(s) carry electoral/political content (move to the `political` layer): " + "; ".join(leaks), vlines)
     if unresolved:
-        return _result("WARN", f"scanned {scanned}; {len(unresolved)} universal entr(y/ies) could not be located: {', '.join(unresolved)}", vlines)
-    return _result("PASS", f"no domain-specific leakage in {scanned} universal-layer files", vlines)
+        return _result("WARN", f"scanned {scanned}; {len(unresolved)} entr(y/ies) could not be located: {', '.join(unresolved)}", vlines)
+    return _result("PASS", f"no electoral/political leakage across {scanned} non-political layer files", vlines)
 
 
 # ════════════════════════════════════════════════════════════
@@ -1358,7 +1365,7 @@ SCENARIOS = [
     ("plan_vs_actual",              scenario_plan_vs_actual),
     ("readme_claims_match_disk",    scenario_readme_claims_match_disk),
     ("execution_determinism",       scenario_execution_determinism),
-    ("universal_layer_domain_neutral", scenario_universal_layer_domain_neutral),
+    ("non_political_layers_domain_neutral", scenario_non_political_layers_domain_neutral),
 ]
 
 # Scenarios excluded from --quick mode
@@ -1419,7 +1426,7 @@ Scenarios:
   plan_vs_actual                 Completed features' plan deliverables exist
   readme_claims_match_disk       README numeric claims (counts) match the tree (FAIL on drift)
   execution_determinism          No hidden randomness/input/network in pure execution/ scripts
-  universal_layer_domain_neutral Universal-layer files carry no domain-specific content (FAIL on leak)
+  non_political_layers_domain_neutral  No electoral/political content outside the opt-in political layer (FAIL on leak)
         """,
     )
     parser.add_argument(

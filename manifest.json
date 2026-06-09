@@ -79,7 +79,11 @@
     },
     "regulated": {
       "directives": ["data-compliance.md", "documentation-governance.md"],
-      "files": ["data-governance.md", "legal-framework.md", "THREAT_MODEL-regulated.md"]
+      "files": ["data-governance.md", "legal-framework.md"]
+    },
+    "political": {
+      "directives": ["political-data.md"],
+      "files": ["THREAT_MODEL-political.md"]
     }
   },
   "global_scripts": [
@@ -124,6 +128,7 @@
     {"situation": "[APP] feature", "directive": "chrome-verification.md", "layer": "public_facing"},
     {"situation": "Data safety / handling", "directive": "data-safety.md", "layer": "data_handling"},
     {"situation": "Personal data features", "directive": "data-compliance.md", "layer": "regulated"},
-    {"situation": "Dataset or legal position change", "directive": "documentation-governance.md", "layer": "regulated"}
+    {"situation": "Dataset or legal position change", "directive": "documentation-governance.md", "layer": "regulated"},
+    {"situation": "Electoral / political-campaign data", "directive": "political-data.md", "layer": "political"}
   ]
 }

@@ -1,9 +1,11 @@
 # Directive: Data Safety
 
 ## Goal
-Prevent accidental or AI-caused destruction, exposure, or corruption of data across all environments. This directive protects regulated political data that cannot legally be lost once collected.
+Prevent accidental or AI-caused destruction, exposure, or corruption of data across all environments. This directive protects regulated personal data that cannot legally be lost once collected.
 
-Tradeoff: Defensive practices around production data add friction to every database-touching change in exchange for preventing irrecoverable loss or criminal exposure of regulated data. Apply on every commit that touches SQL, migrations, `.env*`, storage buckets, or production credentials. Skip when: the change is a UI-only edit with no data-layer impact (and verify by reading the diff before skipping).
+Tradeoff: Defensive practices around production data add friction to every database-touching change in exchange for preventing irrecoverable loss or unlawful exposure of regulated data. Apply on every commit that touches SQL, migrations, `.env*`, storage buckets, or production credentials. Skip when: the change is a UI-only edit with no data-layer impact (and verify by reading the diff before skipping).
+
+For political-campaign data governed by campaign-finance law, additional criminal-liability and retention rules apply — see `directives/political-data.md`, installed with the political layer.
 
 ## When to Use
 - Writing or modifying SQL, database migrations, or schema changes
@@ -26,7 +28,7 @@ Tradeoff: Defensive practices around production data add friction to every datab
 
 **Production data is irreplaceable regulated data. Every rule below exists to protect it.**
 
-Once the system collects personal data (membership, canvass responses, donations), that data is subject to UK GDPR retention requirements and PPERA record-keeping obligations. Losing it is not just an inconvenience -- it is a reportable data breach (72-hour ICO notification window) and potential regulatory violation. Even before personal data enters the system, treating all data as irreplaceable builds the right habits.
+Once the system collects personal data (account records, survey responses, payments), that data is subject to UK GDPR retention requirements and any applicable statutory retention obligations. Losing it is not just an inconvenience -- it is a reportable data breach (72-hour ICO notification window) and potential regulatory violation. Even before personal data enters the system, treating all data as irreplaceable builds the right habits.
 
 ### Data Controller Liability
 
@@ -37,21 +39,6 @@ Once the system collects personal data (membership, canvass responses, donations
 - You must be able to demonstrate compliance (accountability principle, Article 5(2))
 
 This remains true until a formal, documented handover of data controllership to a party or organisation. The handover must specify: what data is transferred, what obligations transfer with it, what happens to data if the relationship ends, and who is responsible during the transition period. Document this in `legal-framework.md` when it occurs.
-
-### Electoral Register Data — Criminal Liability
-
-**Misuse of the full electoral register is a criminal offence carrying imprisonment.** Under the Representation of the People (England and Wales) Regulations 2001 (reg. 115), it is an offence to:
-- Use full register data for any purpose other than those specified in law
-- Disclose full register data to an unauthorised person
-- Fail to comply with security requirements for register data
-
-Political parties may use the full register for electoral purposes, but merging it with commercial data, sharing it with third parties, or using it for non-electoral purposes is criminal. If the system integrates electoral register data:
-- It must be stored separately from other data, with its own access controls
-- Access must be logged and auditable
-- It must never be included in seed data, test data, backups shared outside the secure environment, or any non-production system
-- A leak of electoral register data is both a GDPR breach (ICO notification) AND a criminal matter (police)
-
-This is not a fine. This is a court appearance.
 
 ---
 
@@ -80,7 +67,7 @@ Every item must have a dated artifact proving completion:
 
 ### The Demo Temptation
 
-Under pressure -- especially before a party meeting, investor pitch, or demo -- there will be a temptation to load real member data to show the system working with "real" data. **This is the single most likely way the system breaks from "safe" to "uncontrolled."**
+Under pressure -- especially before a stakeholder meeting, investor pitch, or demo -- there will be a temptation to load real customer data to show the system working with "real" data. **This is the single most likely way the system breaks from "safe" to "uncontrolled."**
 
 **What happens if you load real data for a demo without the gate checklist:**
 - You become the data controller for that data immediately
@@ -88,7 +75,7 @@ Under pressure -- especially before a party meeting, investor pitch, or demo -- 
 - If anything goes wrong (laptop stolen, database exposed, demo environment shared), it's a reportable breach
 - "I was just testing" is not a legal defence
 
-**Safe alternative:** The seed data script generates realistic synthetic data that looks convincing in a demo. Names, addresses, constituencies, donation amounts, canvass responses -- all fake, all safe. Build the seed script to produce demo-quality output. Invest time in the seed script, not in risking real data.
+**Safe alternative:** The seed data script generates realistic synthetic data that looks convincing in a demo. Names, addresses, regions, payment amounts, survey responses -- all fake, all safe. Build the seed script to produce demo-quality output. Invest time in the seed script, not in risking real data.
 
 ### IP Addresses and Logging
 
@@ -198,7 +185,7 @@ Every schema migration must follow this sequence:
 5. **Keep the old schema compatible.** For at least one deployment cycle, both old and new code must work. This means: add columns before requiring them, stop writing to columns before removing them.
 
 ### Soft-Delete Policy
-All regulated records (membership, canvass, donations, communications) use soft deletes:
+All regulated records (account records, survey responses, payments, communications) use soft deletes:
 - Add `deleted_at TIMESTAMP DEFAULT NULL` to every table containing personal or regulated data.
 - "Deleted" records have `deleted_at` set. Application queries filter `WHERE deleted_at IS NULL`.
 - Hard deletes happen only: (a) after the documented retention period expires, (b) in response to a verified Right to Erasure request (Article 17), or (c) with explicit written approval from the data controller.
@@ -316,7 +303,7 @@ Any third-party service that receives personal data is a "data processor" under 
 ### Recovery Procedure
 If data loss or exposure occurs:
 1. **Stop the bleeding.** Immediately restrict database access to prevent further damage. Revoke compromised credentials. Do NOT delete evidence.
-2. **Assess scope.** What data was affected? How many individuals? What categories (names, emails, political opinions, financial)? When did the breach occur vs when was it discovered?
+2. **Assess scope.** What data was affected? How many individuals? What categories (names, emails, special-category data such as health, financial)? When did the breach occur vs when was it discovered?
 3. **Restore from backup** (if data loss). Use the most recent backup before the incident.
 4. **Gap analysis.** Identify data created between the backup and the incident. This may be unrecoverable.
 5. **Incident report.** Document what happened, root cause, scope, and remediation. Keep this document -- it's evidence of compliance.
@@ -331,10 +318,10 @@ Someone (you, Sentry, a user, Claude) discovers personal data may have been comp
 
 **Hour 0-1 -- Triage:**
 - What happened? (data loss, unauthorised access, exposure, corruption)
-- What data? (names, emails, political opinions, financial, electoral register)
+- What data? (names, emails, special-category data such as health, financial)
 - How many people affected? (estimate is acceptable at this stage)
 - Is the breach ongoing? If yes, stop it before anything else.
-- Is electoral register data involved? If yes, this is also a criminal matter -- take legal advice immediately.
+- Is special-category or otherwise legally sensitive data involved? If yes, take legal advice immediately.
 
 **Hour 1-4 -- Containment:**
 - Revoke compromised credentials
@@ -353,7 +340,7 @@ Someone (you, Sentry, a user, Claude) discovers personal data may have been comp
   - Nature of the breach
   - Categories and approximate number of individuals affected
   - Categories and approximate number of records affected
-  - Name and contact details of the data controller (you, until a party takes over)
+  - Name and contact details of the data controller (you, until controllership is formally handed over)
   - Likely consequences of the breach
   - Measures taken or proposed to address the breach
 - If you don't have all details, file what you have and supplement later. Missing the 72-hour window is worse than filing incomplete information.
@@ -364,15 +351,16 @@ Someone (you, Sentry, a user, Claude) discovers personal data may have been comp
 - Root cause analysis and prevention measures
 - Update this directive if the breach revealed a gap
 
-### GDPR Right to Erasure vs PPERA Retention Conflict
+### GDPR Right to Erasure vs Statutory Retention Conflict
 
-There is a genuine legal tension: GDPR Article 17 gives individuals the right to have their data deleted. But PPERA requires parties to retain donation records (s.71) and expenditure records (s.81) for specific periods.
+There can be a genuine legal tension: GDPR Article 17 gives individuals the right to have their data deleted. But some records may be subject to a statutory retention obligation (e.g. tax, accounting, or sector-specific record-keeping law) that requires them to be kept for a defined period.
 
-**Resolution:** GDPR Article 17(3)(b) provides an exemption from the right to erasure where processing is necessary "for compliance with a legal obligation." PPERA record-keeping IS a legal obligation. Therefore:
-- **Donation records:** Retain for the period required by PPERA (currently 6 years). The individual cannot demand deletion during this period. Document the legal basis: "Retention required under PPERA s.71 for Electoral Commission reporting."
-- **Expenditure records:** Same -- PPERA requires retention for EC reporting periods.
-- **All other personal data:** Right to erasure applies normally. If someone asks to be deleted, delete everything except what PPERA legally requires you to keep.
-- **After the PPERA retention period expires:** The legal basis for retention disappears. Delete the records.
+**Resolution:** GDPR Article 17(3)(b) provides an exemption from the right to erasure where processing is necessary "for compliance with a legal obligation." Where a statutory retention obligation applies, that IS a legal obligation. Therefore:
+- **Records under a statutory retention obligation:** Retain for the period the law requires. The individual cannot demand deletion during this period. Document the legal basis (which statute, which retention period, and why it applies).
+- **All other personal data:** Right to erasure applies normally. If someone asks to be deleted, delete everything except what you are legally required to keep.
+- **After the retention period expires:** The legal basis for retention disappears. Delete the records.
+
+Record the applicable retention obligations and periods in `data-governance.md`.
 
 ---
 
@@ -395,7 +383,7 @@ This is not just a workflow preference -- in a regulated data context, complex m
 - **Supabase Dashboard access bypasses RLS.** Dashboard credentials are superuser. Treat them as root access. Enable MFA. Do not share dashboard access with AI agents or CI.
 - **Vercel preview deployments share the same Vercel project.** Environment variable scoping (Production vs Preview) is the isolation mechanism. Verify scoping after any environment variable change.
 - **`pg_dump` output may contain secrets** if functions reference connection strings. Review dump files before committing them anywhere.
-- **Electoral register data** -- see "Electoral Register Data -- Criminal Liability" section above. Criminal offence, not just a fine. Any seed data that resembles real electoral data is a risk.
+- **Special-category or otherwise legally sensitive data** -- some datasets carry heightened obligations (additional access controls, separate storage, criminal liability for misuse under sector-specific law). Identify these early and document the applicable rules in `data-governance.md`. For political-campaign data specifically, see `directives/political-data.md` (political layer).
 
 ## Verification
 
@@ -428,7 +416,7 @@ This is not just a workflow preference -- in a regulated data context, complex m
 - [ ] ICO registration completed (if required)
 - [ ] Data Processing Agreements signed for all third-party processors
 - [ ] Data controller identity documented in legal-framework.md
-- [ ] PPERA retention periods documented for regulated records
+- [ ] Statutory retention periods documented for any regulated records subject to them
 
 ## Cross-References
 - `directives/data-compliance.md` -- GDPR/DPA 2018 legal requirements (complementary -- this directive covers technical enforcement, that one covers legal compliance)

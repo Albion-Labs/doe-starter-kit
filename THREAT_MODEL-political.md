@@ -1,8 +1,8 @@
-# Threat Model — Regulated-Sector Addendum
+# Threat Model — Political & Electoral Addendum
 
-Installed with the **regulated** capability layer. Extends `THREAT_MODEL.md` with sector-specific data classes and threats that carry statutory or criminal liability. Load alongside `directives/data-compliance.md` and `legal-framework.md`.
+Installed with the **political** capability layer. Extends `THREAT_MODEL.md` with electoral/political-campaign data classes and threats that carry statutory or criminal liability. Load alongside `directives/political-data.md`.
 
-Only install this layer for projects that actually handle regulated data. A generic project does not need it.
+Only install this layer for projects that handle UK electoral or political-campaign data. A normal personal-data project does not need it — `data-compliance.md` covers generic GDPR.
 
 ---
 
@@ -18,7 +18,7 @@ Classify any of the above as **RESTRICTED** in `THREAT_MODEL.md` terms: explicit
 
 ---
 
-## T7 (regulated): Electoral Register Misuse
+## T7 (political): Electoral Register Misuse
 
 **Risk:** Full electoral register data used for non-electoral purposes, merged with commercial data, or disclosed to unauthorised persons.
 **Likelihood:** Low if controls are followed.
@@ -37,7 +37,7 @@ Donation records subject to PPERA's 6-year retention cannot be erased on request
 
 ---
 
-## Incident response: regulated-data specifics
+## Incident response: political-data specifics
 
 These extend the generic flow in `directives/incident-response.md`:
 
@@ -49,7 +49,8 @@ These extend the generic flow in `directives/incident-response.md`:
 
 ## Cross-references
 - `THREAT_MODEL.md` -- the universal threat model this extends
-- `directives/data-compliance.md` -- GDPR, DPA 2018, PPERA compliance
+- `directives/political-data.md` -- electoral criminal-liability + campaign-finance retention
+- `directives/data-compliance.md` -- generic GDPR / DPA 2018 compliance
 - `directives/data-safety.md` -- technical enforcement of data protection
 - `legal-framework.md` -- legal obligations and review triggers
 - `directives/incident-response.md` -- the generic incident-response procedure

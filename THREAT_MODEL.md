@@ -177,4 +177,4 @@ Review this threat model when:
 - `directives/data-safety.md` -- Technical enforcement of data protection (data-handling layer)
 - `directives/data-compliance.md` -- Legal compliance, GDPR / DPA 2018 (regulated layer)
 - `directives/incident-response.md` -- Incident response procedure
-- `THREAT_MODEL-regulated.md` -- Sector-specific data classes, threats, and criminal-liability detail (regulated layer)
+- `THREAT_MODEL-political.md` -- Political-campaign data classes, threats, and criminal-liability detail (political layer)

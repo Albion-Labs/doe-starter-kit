@@ -424,3 +424,42 @@ def test_trigger_phrase_in_claude_md():
     assert "testing-strategy.md" in md, (
         "trigger row must still resolve to directives/testing-strategy.md"
     )
+
+
+# ── Political layer decoupling (#84): electoral content is opt-in ──────────
+
+import json as _json
+
+
+def test_normal_app_does_not_activate_political_layer():
+    """A DB + personal-data app that is NOT a political campaign must NOT get
+    the political layer — electoral/PPERA content lives only there."""
+    layers = doe_init.get_active_layers({
+        "project_type": "web", "has_database": True,
+        "has_personal_data": True, "is_political": False,
+    })
+    assert "political" not in layers
+    assert "data_handling" in layers and "regulated" in layers
+
+
+def test_political_app_activates_political_layer():
+    layers = doe_init.get_active_layers({
+        "project_type": "web", "has_database": True,
+        "has_personal_data": True, "is_political": True,
+    })
+    assert "political" in layers
+
+
+def test_political_content_only_in_political_layer():
+    """political-data.md + THREAT_MODEL-political.md must sit in the `political`
+    manifest layer and in no other layer."""
+    layers = _json.loads((PROJECT_ROOT / "manifest.json").read_text())["layers"]
+    pol = layers["political"]
+    assert "political-data.md" in pol["directives"]
+    assert "THREAT_MODEL-political.md" in pol["files"]
+    for name, content in layers.items():
+        if name == "political":
+            continue
+        flat = content.get("directives", []) + content.get("files", [])
+        assert "political-data.md" not in flat, f"leaked into {name}"
+        assert "THREAT_MODEL-political.md" not in flat, f"leaked into {name}"
