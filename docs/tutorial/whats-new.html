@@ -1059,6 +1059,25 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-69-0">
+          <div class="release-header">
+            <span class="version-badge">v1.69.0</span>
+            <span class="release-date">10 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Gives <code>doe init</code> an interactive face. The setup wizard&#x27;s question cards are now live: arrow keys (or <code>j</code>/<code>k</code>) move a green-highlighted selection that glides into place, numbers jump to an option, Enter chooses, and <code>esc</code>/<code>←</code> walks back through earlier answers — all redrawing in one screen region rather than scrolling a wall of prompts. The look is Albion &quot;Chalk &amp; Flint&quot; (the real <code>#41A56E</code> green + chalk + flint tokens from <code>html_builder.py</code>), opened by a one-time <code>DOE</code> wordmark. Nothing about the flow or the files produced changes; this is the same wizard, now navigable. It degrades cleanly: on a non-TTY (CI, pipes), a terminal too short, or where raw mode is unavailable (Windows), it falls back to exactly today&#x27;s numbered prompts.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">The engine is a single persistent-region renderer driven by a non-blocking key loop (stdlib <code>termios</code>/<code>tty</code>/<code>select</code> — no new dependencies, which matters because the wizard runs at bootstrap before a project&#x27;s deps exist). It lives entirely inside <code>execution/doe_init.py</code>, scoped to the init wizard only; the other DOE commands are untouched. Two design choices carry the robustness. First, <strong>the plain flow is the floor, not an afterthought:</strong> the original numbered cards were extracted verbatim into <code>_collect_config_plain()</code> and remain the guaranteed path; the live flow (<code>_collect_config_tui()</code>) is gated behind a <code>tui_available()</code> check (TTY + terminal height + raw-mode import) and, if anything fails to initialise, returns a sentinel that drops straight back to plain. Second, <strong>back-navigation is a real step machine:</strong> a step stack with skip predicates handles the wizard&#x27;s conditional branches (detection skips project-type, platform appears only for desktop/mobile, the data questions cascade), so going back lands on the previous *asked* question and re-deriving downstream answers just works. Rare/awkward inputs — the full framework list, platform multi-select, team usernames, free-text stacks — suspend the live region and reuse the existing plain prompts, then resume. The selection-glide and abort-confirm were validated as a throwaway spike before porting.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>execution/doe_init.py</code></strong> — interactive TUI layer for the init wizard: <code>_Tui</code> (persistent-region live engine with arrow-nav, number-jump, selection-glide motion, and an in-region <code>[y/N]</code> abort confirm), <code>tui_wordmark()</code>, <code>tui_available()</code> (capability + terminal-height guard), and <code>_collect_config_tui()</code> (a navigable step machine with back/abort). Albion Chalk &amp; Flint palette mirrors <code>global-scripts/html_builder.py</code>.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>execution/doe_init.py</code></strong> — <code>run_wizard()</code> now collects answers via the live flow when the terminal supports it, otherwise via <code>_collect_config_plain()</code> (the original numbered prompts, extracted unchanged). Both yield the same field set; the generated files and the rest of the flow are identical.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-68-2">
           <div class="release-header">
             <span class="version-badge">v1.68.2</span>
@@ -1142,6 +1161,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>June 2026 (1 release)</summary>
+
         <div class="release" id="v1-66-0">
           <div class="release-header">
             <span class="version-badge">v1.66.0</span>
@@ -1169,6 +1192,8 @@
             <li><strong><code>STATE.md</code></strong> — the <code><strong>DOE Role:</strong></code> line and its two explanatory comments.</li>
           </ul>
         </div>
+
+        </details>
 
         <details class="month-group">
 

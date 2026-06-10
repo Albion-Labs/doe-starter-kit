@@ -563,3 +563,91 @@ def test_backfill_runs_after_install_before_ci():
         "backfill must run before the CI/auto-commit step so the truthful "
         "STATE.md / ROADMAP.md land in the initial scaffolding commit"
     )
+
+
+# ── Interactive TUI layer (live wizard) ─────────────────────────────────
+
+def test_tui_unavailable_without_tty():
+    """pytest's stdout is not a TTY -> the live engine must decline so the
+    wizard uses the plain numbered flow."""
+    assert doe_init.tui_available(10) is False
+
+
+def test_collect_config_tui_falls_back_when_not_capable():
+    """Without a usable terminal, _collect_config_tui returns the sentinel so
+    run_wizard drops to the plain flow instead of crashing."""
+    state = {"framework_key": None, "framework_name": None,
+             "is_empty": True, "has_git": False}
+    result = doe_init._collect_config_tui(PROJECT_ROOT, PROJECT_ROOT, state)
+    assert result == "__not_capable__"
+
+
+def test_t_render_structure_and_content():
+    """A rendered card carries the title, stepper, body, options, recommended
+    star and selection caret (colour is off under pytest, so text is plain)."""
+    spec = {"title": "What are you building?", "step": 2, "total": 6,
+            "body": ["Pick one"],
+            "options": [("Web app", "fast", True), ("API", "", False)]}
+    lines = doe_init._t_render(spec, sel=0, wipe=1.0)
+    assert all(isinstance(ln, str) for ln in lines)
+    text = "\n".join(lines)
+    assert "What are you building?" in text
+    assert "2/6" in text
+    assert "Web app" in text and "API" in text
+    assert "Pick one" in text
+    assert "*" in text          # recommended marker
+    assert "▸" in text          # caret on the selected row
+
+
+def test_t_render_line_count_no_body():
+    """top, header, sep, N options, sep, hint, bot."""
+    spec = {"title": "T", "step": 1, "total": 3,
+            "options": [("a", "", False), ("b", "", False), ("c", "", False)]}
+    lines = doe_init._t_render(spec, 0, 1.0)
+    assert len(lines) == 1 + 1 + 1 + 3 + 1 + 1 + 1
+
+
+def test_wordmark_does_not_crash(capsys):
+    doe_init.tui_wordmark()
+    assert "DOE" in capsys.readouterr().out
+
+
+def test_collect_config_plain_shape(monkeypatch):
+    """The plain fallback returns exactly the field set run_wizard consumes."""
+    monkeypatch.setattr(doe_init, "card_project_type", lambda: ("web", ""))
+    monkeypatch.setattr(doe_init, "card_framework",
+                        lambda pt, show_all=False: ("nextjs", ""))
+    monkeypatch.setattr(doe_init, "card_setup",
+                        lambda: {"mode": "solo", "github_users": [], "security_owner": ""})
+    monkeypatch.setattr(doe_init, "card_data", lambda: (False, False, False))
+    state = {"framework_key": None, "framework_name": None,
+             "is_empty": True, "has_git": False}
+
+    cfg = doe_init._collect_config_plain(PROJECT_ROOT, PROJECT_ROOT, state)
+
+    assert set(cfg) == {
+        "project_type", "project_type_custom", "framework", "framework_custom",
+        "platform_targets", "collab", "has_database", "has_personal_data", "is_political",
+    }
+    assert cfg["project_type"] == "web" and cfg["framework"] == "nextjs"
+    assert cfg["collab"]["mode"] == "solo"
+
+
+def test_tui_and_plain_collectors_agree_on_fields():
+    """Both collectors must emit the same field set so run_wizard's config
+    build works regardless of which path ran. (tui dict is built from a literal
+    in source; assert the key set matches the plain collector's.)"""
+    plain_src = inspect.getsource(doe_init._collect_config_plain)
+    tui_src = inspect.getsource(doe_init._collect_config_tui)
+    for field in ("project_type", "framework", "platform_targets", "collab",
+                  "has_database", "has_personal_data", "is_political"):
+        assert f'"{field}"' in plain_src, f"plain collector missing {field}"
+        assert f'"{field}"' in tui_src, f"tui collector missing {field}"
+
+
+def test_run_wizard_branches_on_tui_availability():
+    """run_wizard must gate on tui_available and provide both collectors."""
+    src = inspect.getsource(doe_init.run_wizard)
+    assert "tui_available(" in src
+    assert "_collect_config_tui(" in src
+    assert "_collect_config_plain(" in src

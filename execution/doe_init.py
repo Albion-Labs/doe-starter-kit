@@ -613,11 +613,12 @@ class _Tui:
         self._termios = termios
         self._tty = tty
         self._fd = sys.stdin.fileno()
-        self._old = None
+        # Probe the terminal here so a non-tty fails at construction, where
+        # _collect_config_tui's try/except catches it and falls back to plain.
+        self._old = termios.tcgetattr(self._fd)
         self._region = {"n": 0, "init": False}
 
     def __enter__(self):
-        self._old = self._termios.tcgetattr(self._fd)
         self._tty.setcbreak(self._fd)
         sys.stdout.write("\x1b[?25l")   # hide cursor
         sys.stdout.flush()
@@ -639,10 +640,6 @@ class _Tui:
         sys.stdout.flush()
         self._region["n"] = len(lines)
         self._region["init"] = True
-
-    def clear_region(self):
-        """Erase the current region (used before printing a final summary)."""
-        self._draw([])
 
     def suspend(self):
         """Drop to cooked mode for an input() interlude below the region."""
@@ -708,31 +705,6 @@ class _Tui:
                     dirty = True
         except KeyboardInterrupt:
             return ("abort", None)
-
-
-def tui_select_plain(spec, initial=0):
-    """Numbered fallback for one card. Same return contract as run_card."""
-    rows = [top(), header(spec["title"]) if spec.get("step") is None else
-            header(spec["title"], f"step {spec.get('step')}/{spec.get('total')}"), sep()]
-    for bl in spec.get("body") or []:
-        rows.append(line(bl))
-    if spec.get("body"):
-        rows.append(line(""))
-    for n, (label, desc, rec) in enumerate(spec["options"], 1):
-        star = " *" if rec else ""
-        rows.append(line(f"[{n}] {label:<18} {desc}{star}"))
-    rows.append(bot())
-    print_card(rows)
-    valid = [str(n) for n in range(1, len(spec["options"]) + 1)]
-    while True:
-        raw = ask("> (number, b=back, q=quit): ", default=str(initial + 1)).strip().lower()
-        if raw == "q":
-            return ("abort", None)
-        if raw == "b":
-            return ("back", None)
-        if raw in valid:
-            return ("choose", int(raw) - 1)
-        print("  Enter a number, 'b' to go back, or 'q' to quit.")
 
 
 # ── Wizard cards ─────────────────────────────────────────────────────────
@@ -2014,6 +1986,255 @@ def backfill_from_history(project_dir, is_empty, kit_dir):
     return f"Backfilled {', '.join(rewrote)} from {n_commits} prior commit{plural}"
 
 
+# ── Config collection (live TUI flow + plain fallback) ───────────────────
+
+def _freetext(tui, prompt):
+    """Drop out of the live region for a single typed answer, then resume."""
+    tui.suspend()
+    try:
+        val = input(prompt).strip()
+    except (EOFError, KeyboardInterrupt):
+        val = ""
+    tui.resume()
+    return val
+
+
+def _run_step(step, tui, answers, state, kit_dir, project_dir, step_pos):
+    """Run one question step in the live region. Returns "next"|"back"|"abort".
+    Mutates `answers`. Rare branches (show-all frameworks, platform multi-select,
+    team usernames) drop to the existing plain prompts via suspend/resume."""
+    sp, tot = step_pos(step)
+    sel_mem = answers["_sel"]
+
+    if step == "project_type":
+        opts = [(label, "", False) for _key, label in PROJECT_TYPES]
+        res, idx = tui.run_card(
+            {"title": "What are you building?", "step": sp, "total": tot, "options": opts},
+            sel_mem.get("project_type", 0))
+        if res != "choose":
+            return res
+        sel_mem["project_type"] = idx
+        key = PROJECT_TYPES[idx][0]
+        answers["project_type"] = key
+        answers["project_type_custom"] = (
+            _freetext(tui, "  Describe your project type: ") if key == "other" else "")
+        return "next"
+
+    if step == "framework":
+        pt = answers["project_type"]
+        detected = state["framework_key"]
+        if detected:
+            name = state["framework_name"]
+            opts = [(f"Use {name}", "detected", True), ("Choose a different framework", "", False)]
+            res, idx = tui.run_card(
+                {"title": "FRAMEWORK", "step": sp, "total": tot,
+                 "body": [f"Detected: {name}"], "options": opts},
+                sel_mem.get("framework", 0))
+            if res != "choose":
+                return res
+            sel_mem["framework"] = idx
+            if idx == 0:
+                answers["framework"], answers["framework_custom"] = detected, ""
+            else:
+                tui.suspend()
+                fk, custom = card_framework(pt, show_all=True)
+                tui.resume()
+                answers["framework"], answers["framework_custom"] = fk, custom
+            return "next"
+        if pt == "other" or pt in _FREE_TEXT_TYPES:
+            answers["framework"] = "_other"
+            answers["framework_custom"] = _freetext(tui, "  Describe your framework/stack: ")
+            return "next"
+        raw_opts = _build_framework_options(pt, show_all=False)
+        keys, opts = [], []
+        for key, disp, desc in raw_opts:
+            rec = disp.endswith(" *")
+            keys.append(key)
+            opts.append((disp[:-2] if rec else disp, desc, rec))
+        keys.append("__showall__")
+        opts.append(("Show all frameworks", "", False))
+        res, idx = tui.run_card(
+            {"title": "FRAMEWORK", "step": sp, "total": tot, "options": opts},
+            sel_mem.get("framework", 0))
+        if res != "choose":
+            return res
+        sel_mem["framework"] = idx
+        key = keys[idx]
+        if key == "__showall__":
+            tui.suspend()
+            fk, custom = card_framework(pt, show_all=True)
+            tui.resume()
+            answers["framework"], answers["framework_custom"] = fk, custom
+        elif key == "_other":
+            answers["framework"] = "_other"
+            answers["framework_custom"] = _freetext(tui, "  Describe your framework/stack: ")
+        else:
+            answers["framework"], answers["framework_custom"] = key, ""
+        return "next"
+
+    if step == "platform":
+        tui.suspend()
+        answers["platform_targets"] = card_platform_targets()
+        tui.resume()
+        return "next"
+
+    if step == "setup":
+        opts = [("Just me", "solo", False), ("Team", "multiple contributors", False)]
+        res, idx = tui.run_card(
+            {"title": "SETUP", "step": sp, "total": tot,
+             "body": ["Is this just you, or does a team contribute?"], "options": opts},
+            sel_mem.get("setup", 0))
+        if res != "choose":
+            return res
+        sel_mem["setup"] = idx
+        if idx == 0:
+            answers["collab"] = {"mode": "solo", "github_users": [], "security_owner": ""}
+        else:
+            tui.suspend()
+            users_raw = input("  GitHub usernames (comma-separated): ").strip()
+            users = [u.strip() for u in users_raw.split(",") if u.strip()] or ["you"]
+            sec = input(f"  Who owns security reviews? (default: {users[0]}): ").strip() or users[0]
+            tui.resume()
+            answers["collab"] = {"mode": "team", "github_users": users, "security_owner": sec}
+        return "next"
+
+    # data cascade: data_db -> data_personal -> data_political
+    bodies = {
+        "data_db": ("DATA", ["Will your app store user data?",
+                             "(accounts, preferences, content they create)"]),
+        "data_personal": ("COMPLIANCE", ["Will it handle personal data?",
+                                         "(names, emails, addresses, opinions, health)",
+                                         "",
+                                         "Adds GDPR compliance directives + a DPIA template."]),
+        "data_political": ("POLITICAL / ELECTORAL", ["Is this a political or electoral",
+                                                     "campaign project?",
+                                                     "(electoral register, voter data, donations)",
+                                                     "",
+                                                     "Most projects: no. Adds criminal-liability",
+                                                     "and campaign-finance directives."]),
+    }
+    title, body = bodies[step]
+    opts = [("No", "", False), ("Yes", "", False)]
+    res, idx = tui.run_card(
+        {"title": title, "step": sp, "total": tot, "body": body, "options": opts},
+        sel_mem.get(step, 0))
+    if res != "choose":
+        return res
+    sel_mem[step] = idx
+    val = (idx == 1)
+    if step == "data_db":
+        answers["has_database"] = val
+        if not val:
+            answers["has_personal_data"] = answers["is_political"] = False
+    elif step == "data_personal":
+        answers["has_personal_data"] = val
+        if not val:
+            answers["is_political"] = False
+    else:
+        answers["is_political"] = val
+    return "next"
+
+
+def _collect_config_tui(kit_dir, project_dir, state):
+    """Live, navigable question flow. Returns the answers dict, or None on abort.
+    Assumes tui_available() already returned True."""
+    detected = state["framework_key"]
+    answers = {
+        "project_type": FRAMEWORK_PROJECT_TYPE.get(detected, "web") if detected else None,
+        "project_type_custom": "", "framework": None, "framework_custom": "",
+        "platform_targets": [], "collab": None,
+        "has_database": None, "has_personal_data": None, "is_political": None,
+        "_sel": {},
+    }
+    steps = ["project_type", "framework", "platform", "setup",
+             "data_db", "data_personal", "data_political"]
+
+    def skip(s):
+        if s == "project_type":
+            return bool(detected)
+        if s == "platform":
+            return answers["project_type"] not in ("desktop", "mobile")
+        if s == "data_personal":
+            return not answers["has_database"]
+        if s == "data_political":
+            return not answers["has_personal_data"]
+        return False
+
+    def step_pos(s):
+        vis = [x for x in steps if not skip(x)]
+        return (vis.index(s) + 1, len(vis)) if s in vis else (1, len(vis) or 1)
+
+    try:
+        tui = _Tui()
+    except Exception:
+        return "__not_capable__"
+
+    with tui:
+        i = 0
+        while i < len(steps):
+            if skip(steps[i]):
+                i += 1
+                continue
+            res = _run_step(steps[i], tui, answers, state, kit_dir, project_dir, step_pos)
+            if res == "abort":
+                return None
+            if res == "back":
+                j = i - 1
+                while j >= 0 and skip(steps[j]):
+                    j -= 1
+                if j >= 0:
+                    i = j
+                continue
+            i += 1
+
+    return {
+        "project_type": answers["project_type"],
+        "project_type_custom": answers["project_type_custom"],
+        "framework": answers["framework"],
+        "framework_custom": answers["framework_custom"],
+        "platform_targets": answers["platform_targets"],
+        "collab": answers["collab"] or {"mode": "solo", "github_users": [], "security_owner": ""},
+        "has_database": bool(answers["has_database"]),
+        "has_personal_data": bool(answers["has_personal_data"]),
+        "is_political": bool(answers["is_political"]),
+    }
+
+
+def _collect_config_plain(kit_dir, project_dir, state):
+    """Original numbered-prompt flow, unchanged. The guaranteed fallback."""
+    if state["framework_key"]:
+        project_type = FRAMEWORK_PROJECT_TYPE.get(state["framework_key"], "web")
+        project_type_custom = ""
+    else:
+        project_type, project_type_custom = card_project_type()
+
+    framework, framework_custom = None, ""
+    if state["framework_key"]:
+        if card_framework_confirm(state["framework_name"]):
+            framework = state["framework_key"]
+        else:
+            framework, framework_custom = card_framework(project_type, show_all=True)
+    elif project_type == "other" or project_type in _FREE_TEXT_TYPES:
+        custom = ask("  Describe your framework/stack: ")
+        framework, framework_custom = "_other", custom
+    else:
+        framework, framework_custom = card_framework(project_type)
+
+    platform_targets = []
+    if project_type in ("desktop", "mobile"):
+        platform_targets = card_platform_targets()
+
+    collab = card_setup()
+    has_database, has_personal_data, is_political = card_data()
+    return {
+        "project_type": project_type, "project_type_custom": project_type_custom,
+        "framework": framework, "framework_custom": framework_custom,
+        "platform_targets": platform_targets, "collab": collab,
+        "has_database": has_database, "has_personal_data": has_personal_data,
+        "is_political": is_political,
+    }
+
+
 # ── Main wizard flow ─────────────────────────────────────────────────────
 
 def run_wizard(kit_dir, project_dir):
@@ -2022,59 +2243,37 @@ def run_wizard(kit_dir, project_dir):
     detect_patterns = load_detect_patterns(kit_dir) or _FALLBACK_DETECT_PATTERNS
     state = detect_project_state(project_dir, detect_patterns)
 
-    # Card 0: Welcome
+    # Card 0: Welcome (wordmark above the detection card when interactive)
+    if _TTY:
+        tui_wordmark()
     card_welcome(kit_version, project_dir, state)
 
-    # Card 1: Project type (skip if framework auto-detected)
-    project_type = None
-    project_type_custom = ""
-    if state["framework_key"]:
-        # Auto-detected -- infer project type from framework
-        project_type = FRAMEWORK_PROJECT_TYPE.get(state["framework_key"], "web")
-    else:
-        project_type, project_type_custom = card_project_type()
+    # Collect answers: live arrow-nav flow when the terminal supports it,
+    # otherwise the plain numbered prompts. Both yield the same fields.
+    answers = None
+    if tui_available(20):
+        answers = _collect_config_tui(kit_dir, project_dir, state)
+        if answers == "__not_capable__":
+            answers = None
+        elif answers is None:
+            print("Aborted. No files were written.")
+            sys.exit(0)
+    if answers is None:
+        answers = _collect_config_plain(kit_dir, project_dir, state)
 
-    # Card 2: Framework
-    framework = None
-    framework_custom = ""
-    if state["framework_key"]:
-        accepted = card_framework_confirm(state["framework_name"])
-        if accepted:
-            framework = state["framework_key"]
-        else:
-            # User declined detection -- show full list, keep inferred type
-            framework, framework_custom = card_framework(project_type, show_all=True)
-    elif project_type == "other" or project_type in _FREE_TEXT_TYPES:
-        # "Other" type or type with no dedicated frameworks -- free-text directly
-        custom = ask("  Describe your framework/stack: ")
-        framework, framework_custom = "_other", custom
-    else:
-        framework, framework_custom = card_framework(project_type)
-
-    # Card 2b: Platform targets (desktop/mobile only)
-    platform_targets = []
-    if project_type in ("desktop", "mobile"):
-        platform_targets = card_platform_targets()
-
-    # Card 3: Solo/team
-    collab = card_setup()
-
-    # Card 4: Data questions
-    has_database, has_personal_data, is_political = card_data()
-
-    # Build config dict
+    collab = answers["collab"]
     config = {
-        "project_type": project_type,
-        "project_type_custom": project_type_custom,
-        "framework": framework,
-        "framework_custom": framework_custom,
+        "project_type": answers["project_type"],
+        "project_type_custom": answers["project_type_custom"],
+        "framework": answers["framework"],
+        "framework_custom": answers["framework_custom"],
         "collaboration_mode": collab["mode"],
         "github_users": collab["github_users"],
         "security_owner": collab["security_owner"],
-        "has_database": has_database,
-        "has_personal_data": has_personal_data,
-        "is_political": is_political,
-        "platform_targets": platform_targets,
+        "has_database": answers["has_database"],
+        "has_personal_data": answers["has_personal_data"],
+        "is_political": answers["is_political"],
+        "platform_targets": answers["platform_targets"],
         "detected_framework": state["framework_key"],
         "project_dir": str(project_dir),
         "kit_dir": str(kit_dir),

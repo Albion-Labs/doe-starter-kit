@@ -7,6 +7,25 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.69.0 (2026-06-10)
+<!-- hero -->
+Gives `doe init` an interactive face. The setup wizard's question cards are now live: arrow keys (or `j`/`k`) move a green-highlighted selection that glides into place, numbers jump to an option, Enter chooses, and `esc`/`←` walks back through earlier answers — all redrawing in one screen region rather than scrolling a wall of prompts. The look is Albion "Chalk & Flint" (the real `#41A56E` green + chalk + flint tokens from `html_builder.py`), opened by a one-time `DOE` wordmark. Nothing about the flow or the files produced changes; this is the same wizard, now navigable. It degrades cleanly: on a non-TTY (CI, pipes), a terminal too short, or where raw mode is unavailable (Windows), it falls back to exactly today's numbered prompts.
+<!-- /hero -->
+<!-- background -->
+The engine is a single persistent-region renderer driven by a non-blocking key loop (stdlib `termios`/`tty`/`select` — no new dependencies, which matters because the wizard runs at bootstrap before a project's deps exist). It lives entirely inside `execution/doe_init.py`, scoped to the init wizard only; the other DOE commands are untouched.
+
+Two design choices carry the robustness. First, **the plain flow is the floor, not an afterthought:** the original numbered cards were extracted verbatim into `_collect_config_plain()` and remain the guaranteed path; the live flow (`_collect_config_tui()`) is gated behind a `tui_available()` check (TTY + terminal height + raw-mode import) and, if anything fails to initialise, returns a sentinel that drops straight back to plain. Second, **back-navigation is a real step machine:** a step stack with skip predicates handles the wizard's conditional branches (detection skips project-type, platform appears only for desktop/mobile, the data questions cascade), so going back lands on the previous *asked* question and re-deriving downstream answers just works. Rare/awkward inputs — the full framework list, platform multi-select, team usernames, free-text stacks — suspend the live region and reuse the existing plain prompts, then resume. The selection-glide and abort-confirm were validated as a throwaway spike before porting.
+<!-- /background -->
+
+### Added
+- **`execution/doe_init.py`** — interactive TUI layer for the init wizard: `_Tui` (persistent-region live engine with arrow-nav, number-jump, selection-glide motion, and an in-region `[y/N]` abort confirm), `tui_wordmark()`, `tui_available()` (capability + terminal-height guard), and `_collect_config_tui()` (a navigable step machine with back/abort). Albion Chalk & Flint palette mirrors `global-scripts/html_builder.py`.
+
+### Changed
+- **`execution/doe_init.py`** — `run_wizard()` now collects answers via the live flow when the terminal supports it, otherwise via `_collect_config_plain()` (the original numbered prompts, extracted unchanged). Both yield the same field set; the generated files and the rest of the flow are identical.
+
+### Pull impact
+Re-run `setup.sh` / `/pull-doe` to get the new wizard. No behaviour change for existing projects, CI, or non-interactive use — the plain numbered prompts are unchanged and remain the automatic fallback.
+
 ## v1.68.2 (2026-06-10)
 <!-- hero -->
 Stops `doe init` from recording a false "First session" when DOE is scaffolded onto an **existing** repo. The wizard seeds the blank `_base` templates — STATE.md's "First session." line and an empty ROADMAP "## Complete" — and then auto-commits them, so adopting DOE onto a mature project (say, 40 commits in) left the session files claiming the project was greenfield. `/stand-up`, `/crack-on`, `/wrap` and `/sitrep` then trusted that lie and treated real, in-flight work as a fresh start. A new backfill step now rewrites those two files from real git history at adoption time, so the session commands start from the truth.
