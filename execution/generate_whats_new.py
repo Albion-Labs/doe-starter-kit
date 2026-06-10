@@ -902,7 +902,7 @@ def generate_page(entries):
       margin: 10px 0 14px;
       padding: 14px 18px;
       background: linear-gradient(135deg, var(--accent-light), var(--bg-card));
-      border-left: 4px solid var(--accent);
+      border-left: 3px solid var(--accent);
       border-radius: 0 var(--radius) var(--radius) 0;
     }}
     /* Summary label sits tight on the hero paragraph below it. */
@@ -914,7 +914,7 @@ def generate_page(entries):
       margin: 0 0 14px;
       padding: 14px 18px;
       background: var(--bg-card-hover);
-      border-left: 4px solid var(--text-muted);
+      border-left: 3px solid var(--text-muted);
       border-radius: 0 var(--radius) var(--radius) 0;
     }}
     .release {{
