@@ -902,7 +902,7 @@ def generate_page(entries):
       margin: 10px 0 14px;
       padding: 14px 18px;
       background: linear-gradient(135deg, var(--accent-light), var(--bg-card));
-      border-left: 3px solid var(--accent);
+      border-left: 4px solid var(--accent);
       border-radius: 0 var(--radius) var(--radius) 0;
     }}
     /* Summary label sits tight on the hero paragraph below it. */
@@ -914,7 +914,7 @@ def generate_page(entries):
       margin: 0 0 14px;
       padding: 14px 18px;
       background: var(--bg-card-hover);
-      border-left: 3px solid var(--text-muted);
+      border-left: 4px solid var(--text-muted);
       border-radius: 0 var(--radius) var(--radius) 0;
     }}
     .release {{
@@ -1120,14 +1120,6 @@ def generate_page(entries):
           <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
           <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
           <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Examples</div>
-          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
-          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
-          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
-          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
         </div>
 
         <div class="sidebar-section">
