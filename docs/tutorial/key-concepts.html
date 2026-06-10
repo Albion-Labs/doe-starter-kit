@@ -677,13 +677,6 @@
           <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
         </div>
 
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Examples</div>
-          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
-          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
-          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
-          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
-        </div>
 
         <div class="sidebar-section">
           <div class="sidebar-section-title">Reference</div>
@@ -1065,7 +1058,7 @@ Contract:
         <ul style="margin: 12px 0 12px 20px;">
           <li><strong>Step-marking enforcement</strong> &mdash; a commit with "Step 3" in the message is blocked unless <code>tasks/todo.md</code> is staged with the step marked <code>[x]</code>. No bypass without an explicit skip flag.</li>
           <li><strong>Secret detection</strong> &mdash; pre-commit scans staged files for patterns that look like API keys, tokens, or passwords. Blocks the commit with a clear error message.</li>
-          <li><strong>Review gate</strong> &mdash; PR creation is blocked on feature branches unless adversarial review artifacts exist. Forces review before shipping.</li>
+          <li><strong>Review gate</strong> &mdash; <em>at PR creation time</em>, <code>gh pr create</code> is blocked on feature branches unless adversarial review artifacts exist for the current commit. This is the first of several gates: CI, snagging, and merge approval gate the open PR afterwards (see the <a href="pr-workflow.html#review-gate">PR Workflow</a>).</li>
           <li><strong>Sign-off routing</strong> &mdash; features with unchecked <code>[manual]</code> items are blocked from moving to Done. They must go through Awaiting Sign-off first.</li>
           <li><strong>Main branch protection</strong> &mdash; direct commits to main/master are blocked locally. Work must go through feature branches and PRs.</li>
         </ul>

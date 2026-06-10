@@ -122,6 +122,8 @@ CLAUDE.md tells Claude to check these before starting work:
 
 All slash commands install to `~/.claude/commands/` so they work across every DOE project. They reference relative paths (`STATE.md`, `tasks/todo.md`, etc.) so they're project-agnostic.
 
+There are **33** commands in total (see `global-commands/` or run `/commands` for the full reference). The table below is a representative subset of the most-used ones.
+
 | Command | Purpose |
 |---------|---------|
 | `/stand-up` | Dual-mode: kick-off (no session) or daily status (mid-session) |
@@ -166,7 +168,11 @@ DURING WORK
 ├─→ .claude/settings.json → fires hooks before actions
 │   ├─→ protect_directives.py → blocks edits to existing SOPs
 │   ├─→ block_secrets_in_code.py → blocks API keys outside .env
-│   └─→ block_dangerous_commands.py → blocks force-push, rm -rf, etc.
+│   ├─→ block_dangerous_commands.py → blocks force-push, rm -rf, etc.
+│   ├─→ guard_kit_writes.py → blocks irreversible Bash ops on kit paths
+│   ├─→ enforce_review_gate.py → blocks gh pr create without a passing review
+│   ├─→ confirm_pr_merge.py → blocks gh pr merge until you approve
+│   └─→ block_unnecessary_admin_merge.py → blocks reflexive --admin merges
 ├─→ ~/.claude/settings.json → fires PostToolUse hooks (merged by setup.sh)
 │   ├─→ heartbeat.py → updates session heartbeat during waves
 │   └─→ context_monitor.py → warns when context is running low
@@ -294,20 +300,19 @@ PROJECT (lives in your repo, shared via git)
 MACHINE (lives on your computer, applies to all projects)
 ├── ~/.claude/CLAUDE.md          ← Universal learnings
 ├── ~/.claude/settings.json      ← Global settings (PostToolUse hooks merged by setup.sh)
-├── ~/.claude/commands/          ← Slash commands
-│   ├── stand-up.md
-│   ├── crack-on.md
-│   ├── wrap.md
-│   ├── sitrep.md
-│   ├── eod.md
-│   ├── audit.md
-│   ├── pitch.md
-│   ├── roast.md
-│   ├── sync-doe.md
-│   └── agent-status.md
+├── ~/.claude/commands/          ← Slash commands (all 33 — see global-commands/)
+│   ├── stand-up.md  crack-on.md  wrap.md  sitrep.md  eod.md  hq.md
+│   ├── audit.md  review.md  agent-verify.md  fact-check.md  snagging.md
+│   ├── code-trace.md  doe-health.md  test-suite.md  report-doe-bug.md
+│   ├── project-recap.md  diff-review.md  plan-review.md  generate-*.md
+│   ├── scope.md  pitch.md  roast.md  agent-launch.md  agent-status.md
+│   ├── pull-doe.md  sync-doe.md  request-doe-feature.md  commands.md
+│   └── codemap.md  worktree-create.md  worktree-remove.md
 ├── ~/.claude/hooks/
 │   ├── heartbeat.py
 │   └── context_monitor.py
 └── ~/.claude/scripts/
-    └── multi_agent.py
+    ├── multi_agent.py  build_hq.py  html_builder.py
+    ├── wrap_html.py  eod_html.py  dispatch_dag.py  run_snagging.py
+    └── record_review_result.py  persist_review_findings.py  doe_utils.py  check_tools_version.py
 ```

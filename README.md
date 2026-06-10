@@ -58,10 +58,10 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 - **4 custom agents** — Finder, Adversarial, Referee, ReadOnly for adversarial code review
 - **Context monitoring** — Warns at 60% context usage, stops at 80% for graceful handoff
 
-**Documentation (55 files)**
+**Documentation (50 files)**
 
-- **20 HTML tutorial pages** (`docs/tutorial/`) — Mintlify-style visual guides covering installation, first session, key concepts, commands, daily workflow, feature lifecycle, example apps, tips, and glossary
-- **33 markdown reference docs** (`docs/reference/`) — searchable reference for every command, concept, workflow, file format, and example app
+- **19 HTML tutorial pages** (`docs/tutorial/`) — Mintlify-style visual guides covering installation, first session, key concepts, commands, daily workflow, feature lifecycle, tips, and glossary
+- **29 markdown reference docs** (`docs/reference/`) — searchable reference for every command, concept, workflow, and file format
 
 **Guides**
 
@@ -112,4 +112,4 @@ The starter kit uses semantic versioning with GitHub releases. Every `/sync-doe`
 
 ## File Count
 
-Around 305 files across 49 directories. The structured counts above (directives, scripts, commands, docs, hooks, agents) are enforced against the tree by `test_methodology.py` (scenario `readme_claims_match_disk`), so they can't silently drift. See SYSTEM-MAP.md for the complete map.
+Around 300 files across 48 directories. The structured counts above (directives, scripts, commands, docs, hooks, agents) are enforced against the tree by `test_methodology.py` (scenario `readme_claims_match_disk`), so they can't silently drift. See SYSTEM-MAP.md for the complete map.

@@ -1130,13 +1130,6 @@
           <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
         </div>
 
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Examples</div>
-          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
-          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
-          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
-          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
-        </div>
 
         <div class="sidebar-section">
           <div class="sidebar-section-title">Reference</div>
@@ -1174,7 +1167,7 @@
               </marker>
             </defs>
 
-            <!-- Main flow: stand-up → [work] → sitrep → wrap → eod -->
+            <!-- Main flow: stand-up → [work] → review → wrap → eod -->
             <!-- stand-up box -->
             <rect x="10" y="50" width="104" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
             <text x="62" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/stand-up</text>
@@ -1183,9 +1176,9 @@
             <rect x="150" y="50" width="80" height="40" rx="8" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5"/>
             <text x="190" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="500" fill="#475569">work</text>
 
-            <!-- sitrep box -->
+            <!-- review box (required after writing code: pass, or fix until it passes) -->
             <rect x="266" y="50" width="90" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
-            <text x="311" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/sitrep</text>
+            <text x="311" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/review</text>
 
             <!-- wrap box -->
             <rect x="392" y="50" width="80" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
@@ -1195,7 +1188,7 @@
             <rect x="508" y="50" width="72" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
             <text x="544" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/eod</text>
 
-            <!-- hq box (below eod, weekly) -->
+            <!-- hq box (below eod: rolls up wraps + eods across all linked projects) -->
             <rect x="508" y="128" width="72" height="40" rx="8" fill="#FFF1F2" stroke="#F43F5E" stroke-width="1.5"/>
             <text x="544" y="153" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#F43F5E">/hq</text>
 
@@ -1209,17 +1202,25 @@
             <line x1="356" y1="70" x2="388" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
             <line x1="472" y1="70" x2="504" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-            <!-- sitrep loop back to work -->
+            <!-- review loops back to work until it passes -->
             <path d="M311,50 L311,22 L190,22 L190,46" fill="none" stroke="#6366F1" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
-            <text x="250" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#94A3B8">repeat</text>
+            <text x="250" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#94A3B8">fix until pass</text>
 
-            <!-- eod to hq (weekly, dashed) -->
+            <!-- eod to hq (dashed: aggregates across projects) -->
             <line x1="544" y1="90" x2="544" y2="124" stroke="#F43F5E" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-rose)"/>
-            <text x="562" y="113" font-family="-apple-system, sans-serif" font-size="10" fill="#94A3B8">weekly</text>
+            <text x="556" y="113" font-family="-apple-system, sans-serif" font-size="10" fill="#94A3B8">all projects</text>
 
             <!-- stand-up to crack-on (resume path) -->
             <line x1="62" y1="90" x2="62" y2="124" stroke="#10B981" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-muted)"/>
             <text x="80" y="113" font-family="-apple-system, sans-serif" font-size="10" fill="#94A3B8">resume</text>
+
+            <!-- sitrep box (optional mid-session check-in) -->
+            <rect x="150" y="128" width="90" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
+            <text x="195" y="153" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/sitrep</text>
+
+            <!-- work → sitrep (optional check-in during work) -->
+            <line x1="195" y1="90" x2="195" y2="124" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-muted)"/>
+            <text x="248" y="113" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#94A3B8">optional check-in</text>
 
             <!-- Legend -->
             <rect x="10" y="200" width="570" height="44" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
@@ -1237,7 +1238,8 @@
         <!-- 1. Session Lifecycle                                           -->
         <!-- ============================================================= -->
         <h2 id="lifecycle">Session Lifecycle</h2>
-        <p>These commands form the daily rhythm. Every session starts with <code>/stand-up</code> and ends with <code>/wrap</code>. Everything in between is yours to direct.</p>
+        <p>These commands form the daily rhythm. Start with <code>/stand-up</code> (get the lay of the land and approve the plan) or <code>/crack-on</code> (pick up where you left off and go, no approval needed), then work. <code>/sitrep</code> is an optional check-in when you want to see session progress.</p>
+        <p>The one step that isn&rsquo;t optional is <code>/review</code>: after you&rsquo;ve written code, you run it to confirm the work runs and satisfies its contracts &mdash; it either passes or you have Claude fix it until it does. Then <code>/wrap</code> saves your progress, notes, and context for the day; <code>/eod</code> gives a scorecard of the day; and <code>/hq</code> rolls your wraps and EODs up across every linked project. (<code>/review</code> is also the hard PR gate &mdash; <code>enforce_review_gate</code> blocks <code>gh pr create</code> until it passes; full details under <a href="#quality">Quality &amp; Review</a>.)</p>
 
         <!-- /stand-up -->
         <div class="cmd-entry">
@@ -2243,6 +2245,38 @@
           </div>
         </div>
 
+        <!-- /code-trace -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/code-trace</span>
+            <span class="cmd-origin doe">DOE</span>
+            <span class="cmd-summary">Traces execution paths through a module to find logic bugs by reading the code, not running it.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> After writing a tricky module, before integrating two pieces of code that have to agree on data shapes, or when something works in isolation but breaks when wired together.</p>
+            <p><strong>Modes:</strong></p>
+            <ul>
+              <li><strong>Single module</strong> &mdash; Reads one file in full, traces every branch of each function, and checks for null/empty inputs, out-of-bounds access, dead code, off-by-one errors, and silent failures.</li>
+              <li><strong>Integration</strong> (<code>--integration</code>) &mdash; Maps the module dependency graph and checks producer/consumer pairs for shape compatibility, consistent property names, and initialisation order.</li>
+              <li><strong>Full sweep</strong> (<code>--all</code>) &mdash; Runs single-module on every JS file, then integration.</li>
+            </ul>
+            <p><strong>What to expect:</strong> A numbered list of findings tagged <code>BUG</code>, <code>WARN</code>, or <code>INFO</code>, each with an approximate location, the impact, and a suggested fix. Mobile projects also get a static accessibility lint. If nothing's wrong, it reports the trace clean.</p>
+          </div>
+        </div>
+
+        <!-- /doe-health -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/doe-health</span>
+            <span class="cmd-origin doe">DOE</span>
+            <span class="cmd-summary">Runs the DOE methodology testing framework and reports whether the framework itself is behaving correctly.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> To confirm the DOE framework is intact and working as intended &mdash; after updating the kit, or when a command or hook is behaving unexpectedly.</p>
+            <p><strong>How it works:</strong> Runs <code>execution/test_methodology.py</code> across a set of scenarios. Pass <code>--quick</code> for a fast subset suited to CI, <code>--verbose</code> for per-scenario detail, or <code>--scenario &lt;name&gt;</code> to run a specific one. Any scenario that comes back <code>WARN</code> or <code>FAIL</code> is summarised so you know what needs attention.</p>
+          </div>
+        </div>
+
         <!-- ============================================================= -->
         <!-- 3. Visual Reports                                              -->
         <!-- ============================================================= -->
@@ -2436,6 +2470,64 @@
             <p><strong>When to use it:</strong> When joining a new project for the first time, or after significant structural changes. The codemap helps Claude understand the codebase faster in future sessions.</p>
             <p><strong>How it works:</strong> Scans the project's files, reads their contents, and builds a map of what each file does, key functions and signatures, dependencies between files, and entry points and data flow. Written to <code>.claude/codemap.md</code>.</p>
             <p>The file is for Claude's reference, but it's human-readable too &mdash; useful for onboarding or understanding unfamiliar parts of the project.</p>
+          </div>
+        </div>
+
+        <!-- /sync-doe -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/sync-doe</span>
+            <span class="cmd-origin doe">DOE</span>
+            <span class="cmd-summary">Pushes DOE improvements made in your project back up into the Starter Kit repo.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you've improved a command, hook, directive, or execution script while working in a project and want the change to land in the kit so every project benefits. This is the reverse of <code>/pull-doe</code>.</p>
+            <p><strong>How it works:</strong> A two-phase command. <strong>Phase 1</strong> diffs the syncable files, presents an analysis box for you to approve, then opens a PR against the kit with the translated changes, a CHANGELOG entry, and a version bump. <strong>Phase 2</strong> runs after that PR merges and handles the release machinery &mdash; stamping the tutorial docs, tagging the version, and publishing the GitHub release. Pre-flight checks confirm the kit's trunk worktree is on its default branch and the tree is clean before anything is written.</p>
+          </div>
+        </div>
+
+        <!-- /request-doe-feature -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/request-doe-feature</span>
+            <span class="cmd-origin doe">DOE</span>
+            <span class="cmd-summary">Submits a feature request for the DOE Starter Kit through a guided conversation.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you want a capability the framework doesn't have yet &mdash; a new command, a smarter hook, a better workflow &mdash; and want it on record for the kit maintainers.</p>
+            <p><strong>How it works:</strong> Walks you through a short five-phase conversation &mdash; the spark (what you want), the pain (your current workaround), and the picture (what using it would look like). It then silently scans the kit for overlapping features and searches existing issues for duplicates, sanitises your input (stripping secrets and project-specific paths), and files a structured, labelled GitHub Issue. If a close duplicate exists, it offers to add your perspective to that issue instead.</p>
+          </div>
+        </div>
+
+        <!-- /worktree-create -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/worktree-create</span>
+            <span class="cmd-origin doe">DOE</span>
+            <span class="cmd-summary">Creates a sibling git worktree for feature work, keeping the trunk on the default branch.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> When you want to work on a feature in isolation without disturbing your trunk worktree &mdash; for parallel sessions, or to keep wrap commits and kit operations landing cleanly on the default branch.</p>
+            <p><strong>How it works:</strong> Takes a single kebab-case feature slug (e.g. <code>framework-migration</code>) and creates branch <code>feature/&lt;slug&gt;</code> in a sibling directory at <code>&lt;project&gt;-&lt;slug&gt;/</code>, branched from the trunk's current HEAD. Pre-flight checks confirm you're running from the trunk worktree and that neither the branch nor the target path already exists.</p>
+            <div class="callout info">
+              <span class="callout-icon">&#9432;</span>
+              <div class="callout-body">
+                <strong>Scope of isolation:</strong> The sibling worktree gives <em>branch-level</em> isolation &mdash; each session keeps its own HEAD. <em>File-level</em> coordination still needs single-terminal discipline: shared docs (<code>STATE.md</code>, <code>todo.md</code>, <code>learnings.md</code>, <code>CLAUDE.md</code>) should be committed from one terminal at a time.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- /worktree-remove -->
+        <div class="cmd-entry">
+          <div class="cmd-header">
+            <span class="cmd-badge">/worktree-remove</span>
+            <span class="cmd-origin doe">DOE</span>
+            <span class="cmd-summary">Removes a sibling worktree once its feature work has shipped or been abandoned.</span>
+          </div>
+          <div class="cmd-detail">
+            <p><strong>When to use it:</strong> After a feature's PR has merged, or after you've decided to abandon the branch, to clean up the sibling worktree created by <code>/worktree-create</code>.</p>
+            <p><strong>How it works:</strong> Takes either the feature slug or a path to the worktree directory. Before removing, it refuses to touch the trunk worktree, checks for locks, warns about uncommitted changes, and warns if the branch hasn't been merged into the default &mdash; each prompting for explicit confirmation. After removal it offers an optional branch-cleanup step (safe delete for merged branches, force delete for unmerged ones) and confirms the remaining worktrees.</p>
           </div>
         </div>
 
