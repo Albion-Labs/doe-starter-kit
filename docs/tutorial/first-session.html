@@ -3,62 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <title>Your First Session — DOE Starter Kit</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg-body: #FFFFFF;
-      --bg-sidebar: #FAFAFA;
+      --bg-sidebar: #F7F7F5;
       --bg-card: #FFFFFF;
-      --bg-card-hover: #F8FAFC;
-      --bg-code: #0F172A;
-      --bg-callout-info: #EFF6FF;
-      --bg-callout-tip: #F0FDF4;
-      --bg-callout-warn: #FFFBEB;
-      --border: #E2E8F0;
-      --border-light: #F1F5F9;
-      --text-primary: #0F172A;
-      --text-secondary: #475569;
-      --text-muted: #64748B;
-      --text-sidebar: #334155;
-      --text-sidebar-active: #0F172A;
-      --accent: #6366F1;
-      --accent-light: #EEF2FF;
-      --accent-green: #10B981;
-      --accent-amber: #F59E0B;
-      --accent-blue: #3B82F6;
-      --accent-rose: #F43F5E;
+      --bg-card-hover: #F5F5F3;
+      --bg-code: #14171A;
+      --bg-callout-info: #F4F5F3;
+      --bg-callout-tip: #EAF3EC;
+      --bg-callout-warn: #F7F0E0;
+      --border: #E6E5E1;
+      --border-light: #F0EFEC;
+      --text-primary: #16181C;
+      --text-secondary: #5C6066;
+      --text-muted: #8E9095;
+      --text-sidebar: #5C6066;
+      --text-sidebar-active: #16181C;
+      --accent: #216E48;
+      --accent-light: #E7F1EB;
+      --accent-green: #2E8B57;
+      --accent-amber: #9A6B12;
+      --accent-blue: #5C6066;
+      --accent-rose: #B23A22;
       --sidebar-w: 260px;
-      --toc-w: 220px;
       --content-max: 720px;
+      --toc-w: 220px;
       --radius: 8px;
       --radius-lg: 12px;
-      --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
-      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
-      --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
-      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --shadow-card: 0 1px 2px rgba(20,23,26,0.04), 0 1px 2px rgba(20,23,26,0.06);
+      --shadow-card-hover: 0 4px 14px rgba(20,23,26,0.10);
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
     }
 
     [data-theme="dark"] {
-      --bg-body: #0B1120;
-      --bg-sidebar: #0F172A;
-      --bg-card: #1E293B;
-      --bg-card-hover: #243347;
-      --bg-code: #020617;
-      --bg-callout-info: #1E293B;
-      --bg-callout-tip: #1E293B;
-      --bg-callout-warn: #1E293B;
-      --border: #1E293B;
-      --border-light: #1E293B;
-      --text-primary: #F1F5F9;
-      --text-secondary: #94A3B8;
-      --text-muted: #64748B;
-      --text-sidebar: #94A3B8;
-      --text-sidebar-active: #F1F5F9;
-      --accent-light: #1E1B4B;
-      --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
-      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+      --bg-body: #14171A;
+      --bg-sidebar: #15191C;
+      --bg-card: #1B2024;
+      --bg-card-hover: #20262B;
+      --bg-code: #0F1214;
+      --bg-callout-info: #1B2024;
+      --bg-callout-tip: #15211A;
+      --bg-callout-warn: #241F14;
+      --border: #2A3138;
+      --border-light: #1F252A;
+      --text-primary: #E9ECE8;
+      --text-secondary: #8B9590;
+      --text-muted: #5E6872;
+      --text-sidebar: #8B9590;
+      --text-sidebar-active: #E9ECE8;
+      --accent: #41A56E;
+      --accent-light: #1E2A23;
+      --accent-green: #4FB97E;
+      --accent-amber: #D9A441;
+      --accent-blue: #8B9590;
+      --accent-rose: #E0654E;
+      --shadow-card: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-card-hover: 0 6px 18px rgba(0,0,0,0.45);
     }
 
     html { scroll-behavior: smooth; }
@@ -841,6 +849,154 @@
       .toc { display: none; }
       .content-area { padding-right: 0 !important; }
     }
+  
+    /* ALBION-DOC-THEME v2 */
+    /* ── typography → Albion scale (Inter, tight tracking) ── */
+    body { letter-spacing: -0.15px; }
+    .content { line-height: 1.65; }
+    .content h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.6px; }
+    .content h2 { font-size: 19px; font-weight: 700; letter-spacing: -0.4px; margin-top: 38px; }
+    .content h3 { font-size: 15px; font-weight: 650; letter-spacing: -0.2px; margin-top: 26px; }
+    .content p, .content li { color: var(--text-secondary); }
+    .content a { color: var(--accent); font-weight: 500; }
+    .content code {
+      font-family: var(--font-mono); font-size: 12.5px; color: var(--text-primary);
+      background: var(--bg-card-hover); border: 1px solid var(--border-light);
+      border-radius: 6px; padding: 1.5px 6px;
+    }
+
+    /* ── sidebar → Albion left-rail ── */
+    .sidebar { background: var(--bg-body); border-right: 1px solid var(--border-light); }
+    .sidebar-brand { font-weight: 700; font-size: 15px; letter-spacing: -0.2px; }
+    .sidebar-section { margin-bottom: 16px; }
+    .sidebar-section-title {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+      color: var(--text-muted); text-transform: none; padding: 14px 10px 6px;
+    }
+    .sidebar-link {
+      padding: 7px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500;
+      color: var(--text-sidebar); border-left: none !important;
+      transition: background .12s, color .12s;
+    }
+    .sidebar-link:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+    .sidebar-link.active {
+      background: var(--bg-card-hover) !important; color: var(--text-primary) !important;
+      font-weight: 600; border-left: none !important; box-shadow: none !important;
+    }
+    .sidebar-link.nested { font-size: 12.5px; padding-left: 24px; color: var(--text-muted); }
+
+    /* ── content cards → Albion .fcard ── */
+    .card-grid { gap: 14px; }
+    .m-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+      box-shadow: none; transition: border-color .15s, transform .15s, box-shadow .15s;
+    }
+    .m-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-card-hover); }
+    .m-card h4 { font-weight: 600; letter-spacing: -0.01em; }
+    .m-card p { color: var(--text-secondary); }
+    .card-icon {
+      border-radius: 8px;
+      background: var(--accent-light) !important; color: var(--accent) !important;
+    }
+    .card-icon.indigo, .card-icon.green, .card-icon.amber, .card-icon.blue, .card-icon.rose {
+      background: var(--accent-light) !important; color: var(--accent) !important;
+    }
+
+    /* ── callouts → Albion restraint (surface + border + tinted icon, no fills) ── */
+    .callout {
+      background: var(--bg-card) !important; border: 1px solid var(--border) !important;
+      border-radius: 10px; padding: 14px 16px; gap: 12px;
+    }
+    .callout .callout-body { color: var(--text-secondary) !important; }
+    .callout .callout-body strong, .callout strong { color: var(--text-primary) !important; }
+    .callout.tip { border-color: color-mix(in srgb, var(--accent) 26%, var(--border)) !important; }
+    .callout.tip .callout-icon { color: var(--accent) !important; }
+    .callout.info .callout-icon { color: var(--text-muted) !important; }
+    .callout.warn { border-color: color-mix(in srgb, var(--accent-amber) 40%, var(--border)) !important; }
+    .callout.warn .callout-icon { color: var(--accent-amber) !important; }
+
+    /* ── steps → Albion accent circle, neutral connector ── */
+    .step { border-left: 2px solid var(--border-light); }
+    .step-number { background: var(--accent); color: #fff; border-radius: 50%; box-shadow: none; }
+    .step h4 { font-weight: 600; }
+    .step p { color: var(--text-secondary); }
+
+    /* ── hero → Albion editorial (left-aligned, like .pagehead) ── */
+    .hero { text-align: left; padding: 6px 0 30px; }
+    .hero h1 { margin-left: 0; margin-right: 0; }
+    .hero .subtitle { text-align: left; margin: 14px 0 0; max-width: 640px; }
+
+    /* ── badges / chips → Albion mono chip ── */
+    .cmd-badge, .version-badge, .hero-badge, .layer-badge {
+      font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+      border-radius: 6px; padding: 2px 8px;
+      background: var(--accent-light); color: var(--accent); border: none;
+    }
+    .risk-badge, .impact-badge {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+      border-radius: 6px; padding: 3px 7px;
+    }
+
+    /* ── tabs → Albion pill group ── */
+    .env-tabs, .content-tabs {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 0;
+    }
+    .env-tab-btn, .content-tab-btn {
+      border-radius: 6px; font-size: 12.5px; font-weight: 500; color: var(--text-muted); border: none;
+    }
+    .env-tab-btn.active, .content-tab-btn.active {
+      background: var(--bg-card-hover); color: var(--text-primary);
+      box-shadow: inset 0 0 0 1px var(--border-light); border: none;
+    }
+
+    /* ── on-this-page TOC → Albion label ── */
+    .toc-title { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+    .toc-link { font-size: 12.5px; color: var(--text-muted); }
+    .toc-link:hover { color: var(--text-primary); }
+    .toc-link.active { color: var(--accent); border-color: var(--accent); font-weight: 500; }
+
+    /* ── code-block / mockup containers → Albion radius (interiors untouched) ── */
+    pre, .code-block, .terminal, .vscode-mockup, .terminal-window, .code-window {
+      border-radius: 12px;
+    }
+
+    /* ── tables → Albion hairline rows ── */
+    .content table { border-collapse: collapse; width: 100%; font-size: 13px; }
+    .content th {
+      text-align: left; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--text-muted); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--border);
+    }
+    .content td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); color: var(--text-secondary); vertical-align: top; }
+
+    /* ── glossary search / filter → Albion input + pill ── */
+    .search-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: 9px; }
+    .search-input { color: var(--text-primary); }
+    .filter-pill {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+      font-size: 12px; color: var(--text-muted); padding: 6px 12px;
+    }
+    .filter-pill.active { background: var(--bg-card-hover); color: var(--text-primary); box-shadow: inset 0 0 0 1px var(--border-light); }
+
+    /* ── straggler fixes: kill left-edge stripes, neutralise categorical badges ── */
+    .doe-callout { border-left: 1px solid var(--border) !important; }
+    .release-hero {
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border)) !important;
+      background: var(--bg-callout-tip) !important; border-radius: 10px;
+    }
+    .release-background { border: 1px solid var(--border) !important; background: var(--bg-card) !important; border-radius: 10px; }
+    .release h4.summary { color: var(--text-muted) !important; }
+    .layer-badge.universal, .layer-badge.public, .layer-badge.data, .layer-badge.regulated,
+    [data-theme="dark"] .layer-badge.universal, [data-theme="dark"] .layer-badge.public,
+    [data-theme="dark"] .layer-badge.data, [data-theme="dark"] .layer-badge.regulated {
+      background: var(--bg-card-hover) !important; color: var(--text-secondary) !important;
+    }
+    .badge-read, [data-theme="dark"] .badge-read {
+      background: var(--bg-card-hover) !important; color: var(--text-secondary) !important;
+    }
+
+    /* ── only show the right-hand TOC when there's room (was overlapping
+          the glossary filter-pills / wide content at ~1280px) ── */
+    @media (max-width: 1340px) { .toc { display: none !important; } }
   </style>
 </head>
 <body>
@@ -980,8 +1136,8 @@ claude</pre></div>
               Terminal
             </button>
             <button class="env-tab-btn" data-tab="vscode">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
-              VSCode
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+              IDE
             </button>
           </div>
 
@@ -1018,7 +1174,7 @@ claude</pre></div>
                   <span class="yellow"></span>
                   <span class="green"></span>
                 </div>
-                <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+                <div class="vscode-titlebar-text">my-project &mdash; IDE</div>
               </div>
               <div class="vscode-body">
                 <div class="vscode-activity-bar">
@@ -1128,8 +1284,8 @@ ingredient, and mark my favourites so I can find them quickly.</pre></div>
               Terminal
             </button>
             <button class="env-tab-btn" data-tab="vscode">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 0L24 3.6v16.8L17.5 24 0 18.6l17.5 5.4V0zM1.5 6.2L6.2 12 1.5 17.8l3.1 1.4L12 12 4.6 4.8z"/></svg>
-              VSCode
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+              IDE
             </button>
           </div>
 
@@ -1175,7 +1331,7 @@ ingredient, and mark my favourites so I can find them quickly.</pre></div>
                   <span class="yellow"></span>
                   <span class="green"></span>
                 </div>
-                <div class="vscode-titlebar-text">my-project &mdash; Visual Studio Code</div>
+                <div class="vscode-titlebar-text">my-project &mdash; IDE</div>
               </div>
               <div class="vscode-body">
                 <div class="vscode-activity-bar">
