@@ -947,11 +947,19 @@
     /* ── straggler fixes: kill left-edge stripes, neutralise categorical badges ── */
     .doe-callout { border-left: 1px solid var(--border) !important; }
     .release-hero {
-      border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border)) !important;
-      background: var(--bg-callout-tip) !important; border-radius: 10px;
+      border: none !important;
+      border-left: 4px solid var(--accent) !important;
+      background: linear-gradient(135deg, var(--accent-light), var(--bg-card)) !important;
+      border-radius: 0 var(--radius) var(--radius) 0 !important;
     }
-    .release-background { border: 1px solid var(--border) !important; background: var(--bg-card) !important; border-radius: 10px; }
-    .release h4.summary { color: var(--text-muted) !important; }
+    .release-background {
+      border: none !important;
+      border-left: 4px solid var(--accent-amber) !important;
+      background: var(--bg-callout-warn) !important;
+      border-radius: 0 var(--radius) var(--radius) 0 !important;
+    }
+    .release h4.summary { color: var(--accent) !important; }
+    .release h4.background { color: var(--accent-amber) !important; }
     .layer-badge.universal, .layer-badge.public, .layer-badge.data, .layer-badge.regulated,
     [data-theme="dark"] .layer-badge.universal, [data-theme="dark"] .layer-badge.public,
     [data-theme="dark"] .layer-badge.data, [data-theme="dark"] .layer-badge.regulated {
