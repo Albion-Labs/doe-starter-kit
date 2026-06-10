@@ -1611,6 +1611,93 @@ def get_kit_version(kit_dir):
     return "0.0.0"
 
 
+# ── History backfill (existing-repo adoption) ────────────────────────────
+
+def backfill_from_history(project_dir, is_empty, kit_dir):
+    """Rewrite freshly-seeded STATE.md + ROADMAP.md from real git history.
+
+    When DOE is scaffolded onto an EXISTING repo, the blank `_base` templates
+    seed STATE.md with "First session." and an empty ROADMAP "## Complete" --
+    so the session commands (/stand-up, /crack-on, /wrap, /sitrep) treat a
+    mature project as greenfield. This stamps the truth instead.
+
+    Gated on existing-project: no-op when `is_empty` (greenfield) or when the
+    directory has no git history (unborn HEAD / no commits). Idempotent and
+    non-destructive: a file is rewritten ONLY if it still byte-matches the
+    pristine template, so a STATE.md the user has since edited is never
+    clobbered, and a second init does nothing.
+
+    Returns a short status string for the caller, or None if nothing was done.
+    """
+    if is_empty:
+        return None
+    if not (project_dir / ".git").exists():
+        return None
+
+    # Commit count -- bail on unborn HEAD / no commits (nothing to backfill).
+    count_res = subprocess.run(
+        ["git", "rev-list", "--count", "HEAD"],
+        cwd=project_dir, capture_output=True, text=True,
+    )
+    if count_res.returncode != 0:
+        return None
+    try:
+        n_commits = int(count_res.stdout.strip())
+    except ValueError:
+        return None
+    if n_commits == 0:
+        return None
+
+    plural = "s" if n_commits != 1 else ""
+    head_subj = subprocess.run(
+        ["git", "log", "-1", "--pretty=%s"],
+        cwd=project_dir, capture_output=True, text=True,
+    ).stdout.strip() or "(no subject)"
+
+    templates_base = kit_dir / "templates" / "_base"
+    today = datetime.now().strftime("%d/%m/%y")
+    rewrote = []
+
+    # ── STATE.md: replace the "First session." stub with a truthful line ──
+    state_path = project_dir / "STATE.md"
+    state_tmpl = templates_base / "STATE.md"
+    if (state_path.exists() and state_tmpl.exists()
+            and state_path.read_text() == state_tmpl.read_text()):
+        adopted = (
+            f"Adopted DOE onto existing repo -- {n_commits} prior commit{plural}. "
+            f"Last work: {head_subj}.\n"
+            "Pre-DOE history lives in git log, not this file."
+        )
+        state_path.write_text(state_path.read_text().replace("First session.", adopted))
+        rewrote.append("STATE.md")
+
+    # ── ROADMAP.md: seed "## Complete" from git log (pointer + recent) ────
+    roadmap_path = project_dir / "ROADMAP.md"
+    roadmap_tmpl = templates_base / "ROADMAP.md"
+    if (roadmap_path.exists() and roadmap_tmpl.exists()
+            and roadmap_path.read_text() == roadmap_tmpl.read_text()):
+        log_res = subprocess.run(
+            ["git", "log", "--oneline", "--no-decorate", "-n", "8"],
+            cwd=project_dir, capture_output=True, text=True,
+        )
+        log_lines = [ln for ln in log_res.stdout.splitlines() if ln.strip()]
+        block = [f"\n*Pre-DOE history (adopted {today}) -- full detail in `git log`:*\n"]
+        block += [f"- {ln}" for ln in log_lines]
+        remaining = n_commits - len(log_lines)
+        if remaining > 0:
+            block.append(
+                f"- ...and {remaining} earlier commit{'s' if remaining != 1 else ''} "
+                "-- see `git log`."
+            )
+        new_roadmap = roadmap_path.read_text().rstrip("\n") + "\n" + "\n".join(block) + "\n"
+        roadmap_path.write_text(new_roadmap)
+        rewrote.append("ROADMAP.md")
+
+    if not rewrote:
+        return None
+    return f"Backfilled {', '.join(rewrote)} from {n_commits} prior commit{plural}"
+
+
 # ── Main wizard flow ─────────────────────────────────────────────────────
 
 def run_wizard(kit_dir, project_dir):
@@ -1693,6 +1780,14 @@ def run_wizard(kit_dir, project_dir):
 
     # Install files
     file_count = install_layer_files(config, kit_dir, project_dir)
+
+    # Backfill session-state files from real history when adopting DOE onto an
+    # existing repo, so the session commands don't treat a mature project as
+    # greenfield. No-op for new/empty projects. Runs BEFORE the CI step so the
+    # truthful STATE.md / ROADMAP.md land in the initial scaffolding commit.
+    backfill_msg = backfill_from_history(project_dir, config.get("is_empty", True), kit_dir)
+    if backfill_msg:
+        print(f"  {backfill_msg}")
 
     # CI + git + collaboration setup
     ci_count = setup_ci_git_collaboration(config, kit_dir, project_dir)

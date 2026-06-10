@@ -1059,6 +1059,21 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-68-2">
+          <div class="release-header">
+            <span class="version-badge">v1.68.2</span>
+            <span class="release-date">10 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Stops <code>doe init</code> from recording a false &quot;First session&quot; when DOE is scaffolded onto an <strong>existing</strong> repo. The wizard seeds the blank <code>_base</code> templates — STATE.md&#x27;s &quot;First session.&quot; line and an empty ROADMAP &quot;## Complete&quot; — and then auto-commits them, so adopting DOE onto a mature project (say, 40 commits in) left the session files claiming the project was greenfield. <code>/stand-up</code>, <code>/crack-on</code>, <code>/wrap</code> and <code>/sitrep</code> then trusted that lie and treated real, in-flight work as a fresh start. A new backfill step now rewrites those two files from real git history at adoption time, so the session commands start from the truth.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">The signal was already present and unused: <code>detect_project_state()</code> returns <code>has_git</code> / <code>is_empty</code> and the welcome card even prints &quot;Adding DOE alongside your existing code&quot; — but nothing fed that into how the state files were seeded. The fix adds <code>backfill_from_history()</code>, called in <code>run_wizard()</code> *after* the template copy and *before* <code>setup_ci_git_collaboration()</code> so the corrected files land in the initial scaffolding commit rather than as a follow-up. Two design constraints shaped it. <strong>Truth over cleverness:</strong> STATE.md&#x27;s &quot;Last Session&quot; becomes &quot;Adopted DOE onto existing repo — N prior commits. Last work: &lt;HEAD subject&gt;. Pre-DOE history lives in git log, not this file.&quot;, and ROADMAP &quot;## Complete&quot; is seeded with a <code>git log</code> pointer plus the most recent commits — the minimum bar is simply to stop the lie, not to reconstruct a full history. <strong>Never clobber:</strong> a file is rewritten only if it still byte-matches the pristine template, so a STATE.md the user has already edited is untouched and a second init is a no-op. Greenfield/empty projects are gated out entirely (<code>is_empty</code>), as are repos with an unborn HEAD (no commits) — their behaviour is unchanged.</p>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong><code>execution/doe_init.py</code></strong> — new <code>backfill_from_history(project_dir, is_empty, kit_dir)</code>, wired into <code>run_wizard()</code> between <code>install_layer_files()</code> and <code>setup_ci_git_collaboration()</code>. On an existing repo with commits it rewrites the freshly-seeded STATE.md (&quot;Last Session&quot;) and ROADMAP.md (&quot;## Complete&quot;) from <code>git rev-list</code> / <code>git log</code>. Idempotent and non-destructive (pristine-template match required); no-op on greenfield/empty dirs and on repos with no commits.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-68-1">
           <div class="release-header">
             <span class="version-badge">v1.68.1</span>
@@ -1155,6 +1170,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (16 releases)</summary>
+
         <div class="release" id="v1-65-1">
           <div class="release-header">
             <span class="version-badge">v1.65.1</span>
@@ -1174,10 +1193,6 @@
             <li><strong><code>.claude/settings.json</code></strong> — wires the new hook into <code>PreToolUse.Bash</code> at the end of the existing hook chain (runs after <code>confirm_pr_merge</code>, so the bordered-card flow fires first, then the admin-necessity check).</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (15 releases)</summary>
 
         <div class="release" id="v1-65-0">
           <div class="release-header">

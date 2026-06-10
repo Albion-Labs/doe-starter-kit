@@ -463,3 +463,103 @@ def test_political_content_only_in_political_layer():
         flat = content.get("directives", []) + content.get("files", [])
         assert "political-data.md" not in flat, f"leaked into {name}"
         assert "THREAT_MODEL-political.md" not in flat, f"leaked into {name}"
+
+
+# ── Existing-repo adoption: backfill_from_history (issue: false "First session") ──
+
+def _seed_templates(tmp_path):
+    """Copy the pristine _base STATE.md + ROADMAP.md into tmp_path, exactly as
+    install_layer_files would (byte-for-byte), so the backfill's idempotency
+    check sees a pristine seed."""
+    base = PROJECT_ROOT / "templates" / "_base"
+    (tmp_path / "STATE.md").write_text((base / "STATE.md").read_text())
+    (tmp_path / "ROADMAP.md").write_text((base / "ROADMAP.md").read_text())
+
+
+def _extra_commit(tmp_path, msg):
+    fname = msg.replace(" ", "_") + ".txt"
+    (tmp_path / fname).write_text("x\n")
+    subprocess.run(["git", "-C", str(tmp_path), "add", fname], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", msg],
+        check=True, capture_output=True,
+    )
+
+
+def test_backfill_rewrites_state_and_roadmap_on_existing_repo(tmp_path, monkeypatch):
+    """Existing repo with commits -> STATE.md loses 'First session', gains the
+    adopted line; ROADMAP '## Complete' becomes non-empty and points at git log."""
+    _init_isolated_repo(tmp_path, monkeypatch)
+    _commit_dummy(tmp_path, monkeypatch)            # commit 1: "init"
+    _extra_commit(tmp_path, "add feature y")         # commit 2 (HEAD)
+    _seed_templates(tmp_path)
+
+    msg = doe_init.backfill_from_history(tmp_path, is_empty=False, kit_dir=PROJECT_ROOT)
+
+    assert msg is not None and "2 prior commits" in msg
+
+    state = (tmp_path / "STATE.md").read_text()
+    assert "First session" not in state, "the false 'First session' lie must be gone"
+    assert "Adopted DOE onto existing repo" in state
+    assert "2 prior commits" in state
+    assert "add feature y" in state, "HEAD subject should be stamped as last work"
+
+    roadmap = (tmp_path / "ROADMAP.md").read_text()
+    complete = roadmap.split("## Complete", 1)[1]
+    assert "git log" in complete, "Complete section must point at git log"
+    assert "add feature y" in complete, "seeded log should include recent commits"
+
+
+def test_backfill_noop_on_greenfield(tmp_path, monkeypatch):
+    """Empty/greenfield dir (is_empty=True) -> unchanged blank template, even
+    though a .git dir exists. Behaviour for new projects must not change."""
+    _init_isolated_repo(tmp_path, monkeypatch)
+    _seed_templates(tmp_path)
+    before_state = (tmp_path / "STATE.md").read_text()
+    before_roadmap = (tmp_path / "ROADMAP.md").read_text()
+
+    msg = doe_init.backfill_from_history(tmp_path, is_empty=True, kit_dir=PROJECT_ROOT)
+
+    assert msg is None
+    assert (tmp_path / "STATE.md").read_text() == before_state
+    assert (tmp_path / "ROADMAP.md").read_text() == before_roadmap
+    assert "First session" in (tmp_path / "STATE.md").read_text()
+
+
+def test_backfill_noop_when_no_commits(tmp_path, monkeypatch):
+    """Repo with an unborn HEAD (no commits) -> nothing to backfill, template
+    left intact rather than erroring on `git rev-list`."""
+    _init_isolated_repo(tmp_path, monkeypatch)       # repo, zero commits
+    _seed_templates(tmp_path)
+
+    msg = doe_init.backfill_from_history(tmp_path, is_empty=False, kit_dir=PROJECT_ROOT)
+
+    assert msg is None
+    assert "First session" in (tmp_path / "STATE.md").read_text()
+
+
+def test_backfill_does_not_clobber_edited_state(tmp_path, monkeypatch):
+    """A STATE.md the user has since edited (no longer matches the template) is
+    never overwritten on a re-run / re-init."""
+    _init_isolated_repo(tmp_path, monkeypatch)
+    _commit_dummy(tmp_path, monkeypatch)
+    _seed_templates(tmp_path)
+    edited = "# Project State\n\nMy own notes -- do not touch.\n"
+    (tmp_path / "STATE.md").write_text(edited)
+
+    doe_init.backfill_from_history(tmp_path, is_empty=False, kit_dir=PROJECT_ROOT)
+
+    assert (tmp_path / "STATE.md").read_text() == edited, "edited STATE.md must be preserved"
+
+
+def test_backfill_runs_after_install_before_ci():
+    """Source-level invariant: run_wizard must call backfill_from_history AFTER
+    install_layer_files (templates exist to rewrite) and BEFORE
+    setup_ci_git_collaboration (whose auto-commit captures the truthful files)."""
+    src = inspect.getsource(doe_init.run_wizard)
+    assert "backfill_from_history(" in src
+    assert src.index("install_layer_files(") < src.index("backfill_from_history(")
+    assert src.index("backfill_from_history(") < src.index("setup_ci_git_collaboration("), (
+        "backfill must run before the CI/auto-commit step so the truthful "
+        "STATE.md / ROADMAP.md land in the initial scaffolding commit"
+    )
