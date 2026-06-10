@@ -207,14 +207,6 @@ hooks = settings.setdefault('hooks', {})
 # re-running setup is idempotent and adding a NEW command never duplicates an
 # existing one.
 WANTED = {
-    'PostToolUse': [
-        {'hooks': [
-            {'type': 'command', 'command': 'python3 ~/.claude/hooks/heartbeat.py',
-             'description': 'Update session heartbeat during active waves'},
-            {'type': 'command', 'command': 'python3 ~/.claude/hooks/context_monitor.py',
-             'description': 'Warn at 60% context usage, stop at 80%'},
-        ]}
-    ],
     'SessionStart': [
         {'matcher': 'startup', 'hooks': [
             {'type': 'command', 'command': 'python3 ~/.claude/scripts/check_tools_version.py',
@@ -329,7 +321,7 @@ fi
 
 # 7. Copy Quality Stack files (only if not already present in project)
 # Execution scripts for test orchestration, health checks, and verification
-QS_SCRIPTS="run_test_suite.py health_check.py verify_tests.py generate_test_checklist.py audit_claims.py"
+QS_SCRIPTS="run_test_suite.py health_check.py generate_test_checklist.py audit_claims.py"
 QS_SCRIPT_COUNT=0
 if [ -d "$SCRIPT_DIR/execution" ]; then
     for script in $QS_SCRIPTS; do

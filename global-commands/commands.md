@@ -2,7 +2,7 @@ Before showing the reference below, run a quick health check:
 
 1. **Version:** Run `cd ~/doe-starter-kit && git describe --tags --abbrev=0 2>/dev/null` to get the current kit version. If `~/doe-starter-kit` doesn't exist, show "DOE Kit: not installed — clone the repo and run `./setup.sh`".
 
-2. **Installation check:** List all `.md` files in `~/.claude/commands/` and compare against the 24 expected commands below. Report installed count (e.g. "24/24 commands installed" or "22/24 — missing: /audit, /review").
+2. **Installation check:** Derive the expected set from the kit itself — list `.md` files in `~/doe-starter-kit/global-commands/` (excluding README.md), then compare against the `.md` files installed in `~/.claude/commands/`. Report installed count against that derived total (e.g. "33/33 commands installed" or "31/33 — missing: /audit, /review"). Never hardcode the expected number — it drifts.
 
 3. **Update check:** Run `gh release view --repo Albion-Labs/doe-starter-kit --json tagName -q .tagName` to get the latest remote release version. Compare with the local version from step 1. If newer, show: "Update available: vX.Y.Z → run `cd ~/doe-starter-kit && git pull && ./setup.sh`". If current, show "up to date". If the command fails (offline, no gh CLI), skip silently and just show "update check: skipped (offline or gh CLI not available)".
 
@@ -10,14 +10,14 @@ Format the health check as a compact status block:
 
 ```
 DOE Kit v1.20.4 · up to date
-24/24 commands installed
+33/33 commands installed
 ```
 
 Or if issues are found:
 
 ```
 DOE Kit v1.20.4 (installed 06/03/26) · update available: v1.21.0
-22/24 commands installed — missing: /audit, /review
+31/33 commands installed — missing: /audit, /review
 → Run: cd ~/doe-starter-kit && git pull && ./setup.sh
 ```
 
@@ -27,7 +27,7 @@ Then show the full reference below.
 
 # Slash Commands
 
-Quick reference for all 24 `/commands`. These are global — install once with `./setup.sh`, available in every project. `/stand-up` is context-aware — it detects whether a session is active and adapts its output accordingly.
+Quick reference for the kit's `/commands` (the live list is `global-commands/` in the kit). These are global — install once with `./setup.sh`, available in every project. `/stand-up` is context-aware — it detects whether a session is active and adapts its output accordingly.
 
 ---
 
