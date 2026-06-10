@@ -7,6 +7,30 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.68.0 (2026-06-10)
+<!-- hero -->
+Closes the loop on stale global tools. The kit's global tools (`~/.claude/scripts/*.py`, `~/.claude/commands/*.md`) are copies installed by `setup.sh` — a kit release does NOT update them in place, so they sat on the old version until you re-ran setup, silently (the v1.67.0 Chalk & Flint release exposed this: the kit shipped the new look but `/wrap` kept rendering the old one). Now `setup.sh` stamps the installed version, a single freshness check compares it to the kit, and **two surfaces** nudge you when you're behind — a SessionStart hook at the start of every session and the `/wrap` kit-status step at the end. Both are silent when you're current. A new `setup.sh --tools-only` is the one-command fix the nudge points at.
+<!-- /hero -->
+<!-- background -->
+The gap was structural: the machine kept no record of what version its global tools were, and nothing ever compared that to the kit. `setup.sh` even computed the kit version at install time and threw it away. So a release could land in the kit and never reach the tools that actually run — exactly what happened with Chalk & Flint.
+
+The design turns on one non-obvious constraint: **a stale tool can't announce its own staleness.** A check living inside `wrap_html.py` would be missing from the very (old) `wrap_html.py` that needs to report itself out of date, so it could never fire. The detector has to sit outside the tools it watches. That rules out "warn from the generator" and points at an independent watcher: a SessionStart hook (installed once, stable, compares the install stamp to the kit on every session) plus the `/wrap` prompt step (which the model runs regardless of how stale the generators are). Both call **one** shared script — there is no duplicated comparison logic, and the nudge prints nothing unless you are genuinely behind.
+
+Detection is local and offline: the install stamp (`~/.claude/.doe-tools-version`) records the version and the kit checkout path; the check runs `git describe --tags` in that checkout. This catches the common case precisely — you pulled the kit but didn't re-install. The fix it recommends, `setup.sh --tools-only`, re-installs only the global scripts + commands + the stamp and skips hooks/settings, so it is fast and sidesteps the settings.json hook-merge churn. One caveat, inherent to any "tell me I'm stale" feature: the watcher itself has to be installed once (a single normal `setup.sh` for this release) before it can start nudging — after that it is self-maintaining, and will even flag when it is itself behind.
+<!-- /background -->
+
+### Added
+- **`global-scripts/check_tools_version.py`** — the single freshness check both surfaces call. Reads the install stamp, compares its version against `git describe --tags` in the stamped kit checkout, and prints one actionable line only when behind (numeric semver compare, not lexical). Silent and exit-0 on anything odd (no stamp, kit moved, git missing) so it can never block a session.
+- **`setup.sh` — install stamp** (`~/.claude/.doe-tools-version`: version + kit path) written on every full install and on `--tools-only`, and a **SessionStart hook** registered in `~/.claude/settings.json` that runs the freshness check at session start (idempotent, deduped by command string).
+- **`setup.sh --tools-only`** (alias `--scripts-only`) — fast path that re-installs only the global scripts + commands + stamp and exits, leaving hooks/settings untouched. The command the staleness nudge tells you to run.
+- **`tests/execution/test_tools_version.py`** — pins the numeric version comparison, stamp parsing, and silent-unless-behind behaviour.
+
+### Changed
+- **`global-commands/wrap.md`** — the Step 6 DOE Kit sync check now also runs `check_tools_version.py` and surfaces its line (when non-empty) in the wrap output: the end-of-session half of the same check the SessionStart hook runs at the start.
+
+### Pull impact
+Run `bash ~/doe-starter-kit/setup.sh` once after pulling this release to install the SessionStart hook + freshness check and write the first stamp. From then on, a kit version bump you haven't installed will nudge you (at session start and in `/wrap`) with the one-line fix `bash ~/doe-starter-kit/setup.sh --tools-only`.
+
 ## v1.67.0 (2026-06-09)
 <!-- hero -->
 Bakes the locked Albion "Chalk & Flint" design system into the kit's whole HTML report family. All four generators — `/wrap`, `/eod`, the HQ dashboard, and the manual test checklist — now render in one two-pole system: warm **chalk** (light) and green-tinted **flint** (dark, the default for tooling), bound by a single Albion green accent reserved for positive/live/primary. Inter for everything, JetBrains Mono for code-ish tokens only, HugeIcons stroke glyphs in section headers, a 6/8/12 radius scale, and a sun/moon sliding toggle that cross-fades the two poles. `html_builder.py` is now the single source of tokens and chrome; the four generators consume it instead of each carrying its own palette. Same content, new skin. Closes #72.
