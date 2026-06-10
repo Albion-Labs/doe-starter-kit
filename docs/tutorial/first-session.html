@@ -931,9 +931,9 @@
 
         <!-- The Session Rhythm -->
         <h2 id="rhythm">The Session Rhythm</h2>
-        <p>Every DOE <a href="glossary.html#session">session</a> follows the same three-beat rhythm. Once you've done it a few times, it becomes second nature.</p>
+        <p>Every DOE <a href="glossary.html#session">session</a> follows the same rhythm. Once you've done it a few times, it becomes second nature.</p>
 
-        <div class="card-grid cols-3">
+        <div class="card-grid">
           <div class="m-card" style="cursor: default; text-align: center;">
             <div class="card-icon indigo" style="margin: 0 auto 12px;">
               <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -947,6 +947,13 @@
             </div>
             <h4>Describe &amp; Build</h4>
             <p>Tell Claude what you want in plain English. Review the plan, then build.</p>
+          </div>
+          <div class="m-card" style="cursor: default; text-align: center;">
+            <div class="card-icon blue" style="margin: 0 auto 12px;">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
+            <h4>Review</h4>
+            <p>After the code's written, <code>/review</code> confirms it runs and meets its contracts &mdash; the gate before you ship.</p>
           </div>
           <div class="m-card" style="cursor: default; text-align: center;">
             <div class="card-icon green" style="margin: 0 auto 12px;">
@@ -1112,6 +1119,8 @@ ingredient, and mark my favourites so I can find them quickly.</pre></div>
 
         <p>You can talk to Claude throughout this process. Ask questions, change direction, or tell it to skip something. It's a conversation, not a one-way instruction.</p>
 
+        <p>Once the code is written, run <code>/review</code>. It runs an adversarial pass that confirms the code works and satisfies its contracts &mdash; it passes, or you have Claude fix it until it does. This is the one step the rhythm requires before you <code>/wrap</code>, and it's the same gate that blocks <code>gh pr create</code> until a passing review is recorded.</p>
+
         <!-- Wrapping Up -->
         <h2 id="wrapping">Wrapping Up</h2>
         <p>When you're done for the day (or just need a break), run:</p>
@@ -1270,11 +1279,12 @@ ingredient, and mark my favourites so I can find them quickly.</pre></div>
           <li><strong>Followed the plan</strong> &mdash; worked through steps in order, never jumping ahead</li>
           <li><strong>Verified contracts</strong> &mdash; ran automated checks after each step to prove the work actually functions</li>
           <li><strong>Committed after each step</strong> &mdash; created atomic save points so any step can be reverted independently</li>
+          <li><strong>Reviewed the code</strong> &mdash; <code>/review</code> ran an adversarial pass confirming the work runs and meets its contracts (and gates any pull request)</li>
           <li><strong>Updated session stats</strong> &mdash; tracked duration, commits, and progress</li>
           <li><strong>Saved state</strong> &mdash; wrote everything to STATE.md so the next session picks up seamlessly</li>
         </ul>
 
-        <p>This is the rhythm every session follows: <strong>stand-up, build, wrap</strong>. The more sessions you run, the richer your project's memory becomes &mdash; and the more effectively Claude can build on previous work.</p>
+        <p>This is the rhythm every session follows: <strong>stand-up, build, review, wrap</strong>. The more sessions you run, the richer your project's memory becomes &mdash; and the more effectively Claude can build on previous work.</p>
 
         <!-- Sessions and State -->
         <h2 id="state">Sessions and State</h2>

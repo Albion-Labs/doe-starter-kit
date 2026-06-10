@@ -794,17 +794,17 @@ Wave Status &mdash; wave-20260315-1430
           <li class="step">
             <div class="step-number">5</div>
             <h4>Agents complete &mdash; coordinator merges</h4>
-            <p>When all agents are done, run <code>--complete</code> to verify each agent&rsquo;s work. Each agent creates a pull request from their feature branch, then <code>--merge</code> brings all changes back into the main branch. Three features built in the time it takes to build one.</p>
+            <p>Each agent runs <code>multi_agent.py --complete &lt;taskId&gt;</code> in its own worktree to verify and mark its task. Once every task reports complete, the coordinator runs <code>--merge</code> to bring all completed worktrees back into the main branch in the defined merge order. No per-agent pull requests &mdash; three features built in the time it takes to build one.</p>
           </li>
         </ol>
 
         <!-- ── The Merge Process ── -->
         <h2 id="merge">The Merge Process</h2>
 
-        <p>When agents finish their work, the coordinator brings everything together in two steps.</p>
+        <p>When agents finish their work, the wave wraps up in two steps &mdash; each agent verifies its own task, then the coordinator merges.</p>
 
-        <h3>Step 1: Verify with <code>--complete</code></h3>
-        <p>Run <code>--complete</code> from the coordinator terminal. This re-runs each agent&rsquo;s contract criteria to confirm everything still passes. If an agent&rsquo;s work fails verification, you&rsquo;ll see which criteria failed and can fix them before merging.</p>
+        <h3>Step 1: Each agent verifies with <code>--complete &lt;taskId&gt;</code></h3>
+        <p>Inside its own worktree, each agent runs <code>multi_agent.py --complete &lt;taskId&gt;</code> to re-run that task&rsquo;s contract criteria and mark it complete. If a task fails verification, the agent sees which criteria failed and fixes them before the wave merges.</p>
 
         <h3>Step 2: Merge with <code>--merge</code></h3>
         <p>Once all agents pass verification, run <code>--merge</code> to bring their changes into the main branch. The coordinator then updates shared files &mdash; marking steps complete in <code>todo.md</code>, recording any learnings, and updating <code>STATE.md</code>.</p>
@@ -816,14 +816,12 @@ Wave Status &mdash; wave-20260315-1430
             <span class="terminal-dot green"></span>
             <span class="terminal-title">Coordinator Terminal</span>
           </div>
-          <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">--complete</span>
-
-Verifying agent work...
+          <pre><span class="t-comment"># Each agent has already run --complete in its own worktree:</span>
   Agent 1 (search):   4/4 criteria pass
   Agent 2 (filters):  5/5 criteria pass
   Agent 3 (sort):     3/3 criteria pass
 
-All agents verified. Ready to merge.
+All tasks complete. Ready to merge.
 
 <span class="t-prompt">&gt;</span> <span class="t-cmd">--merge</span>
 
@@ -875,7 +873,7 @@ Wave complete. 3 steps merged successfully.</pre>
         <div class="callout warn">
           <span class="callout-icon">&#9888;</span>
           <div class="callout-body">
-            <strong>Forgetting to verify before merge.</strong> Always run <code>--complete</code> before <code>--merge</code>. Merging unverified work can introduce bugs that are harder to track down after the worktrees are cleaned up.
+            <strong>Forgetting to verify before merge.</strong> Each agent must run <code>--complete &lt;taskId&gt;</code> in its worktree before the coordinator runs <code>--merge</code>. Merging unverified work can introduce bugs that are harder to track down after the worktrees are cleaned up.
           </div>
         </div>
 

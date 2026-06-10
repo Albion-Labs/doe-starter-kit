@@ -108,7 +108,7 @@ The DOE Starter Kit is a collection of files that set up the framework in your p
 **Option 1: Clone from GitHub (recommended)**
 
 ```
-git clone https://github.com/yourusername/doe-starter-kit.git my-project
+git clone https://github.com/Albion-Labs/doe-starter-kit.git my-project
 cd my-project
 ```
 
@@ -116,7 +116,7 @@ This creates a new folder called `my-project` with all the DOE files inside. You
 
 **Option 2: Download as a ZIP**
 
-Go to the GitHub repository page, click the green "Code" button, select "Download ZIP", and unzip it wherever you want your project to live.
+Go to the [Albion-Labs/doe-starter-kit](https://github.com/Albion-Labs/doe-starter-kit) repository page, click the green "Code" button, select "Download ZIP", and unzip it wherever you want your project to live.
 
 ### 7. Run the setup script
 

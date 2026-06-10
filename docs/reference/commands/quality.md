@@ -175,3 +175,75 @@ A failing test tells you exactly what broke, so you can fix it before the proble
 ```
 
 This file is for Claude's reference, but it's human-readable too. Useful for onboarding or for understanding unfamiliar parts of the project.
+
+---
+
+## /code-trace
+
+**What it does:** Reads source code and reasons about its correctness path by path — tracing inputs through transforms to outputs, following every branch, and flagging logic bugs. This is the probabilistic layer of verification: it catches problems by reading and reasoning, not by running a compiler.
+
+**When to use it:** When you want a careful read of a module's logic, or to catch "works alone, broken together" bugs across module boundaries. It's also run automatically as part of `/snagging` on feature files.
+
+**Modes:**
+
+- **Single module** (`/code-trace <file>`) — Traces one module deeply: reads the full file, maps every exported function, follows each branch, and checks for null/undefined inputs, empty collections, out-of-bounds access, dead code, off-by-one errors, silent failures, and unexpected mutation of inputs.
+- **Integration** (`/code-trace --integration`) — Traces data flow across module boundaries: checks producer/consumer shape compatibility, consistent property names, settings consistency, and initialization order.
+- **Full sweep** (`/code-trace --all`) — Runs single-module mode on every JS file, then integration.
+
+**What to expect:** A numbered list of findings tagged by severity:
+
+```
+1. [BUG] filter_regions() — empty input returns all rows
+   Location: execution/filters.py:45 (approximate)
+   Impact: SQL query matches everything when `regions` is []
+   Fix: add an early return for empty input
+```
+
+Severity tags are `BUG` (wrong results), `WARN` (risky pattern), and `INFO` (style/clarity). If nothing is found, it reports "Code trace clean — no issues found."
+
+---
+
+## /snagging
+
+**What it does:** Generates (or regenerates) the manual test checklist for the current feature, folding in automated test results when available. It's the pre-merge verification gate — the snagging checklist must be completed before a feature branch PR is merged to main.
+
+**When to use it:** When a feature is feature-complete and you're getting ready to merge. It identifies the current in-progress feature (or a named one via `/snagging <Feature Name>`), surfaces its unchecked `[manual]` items, and bundles automated checks alongside them.
+
+**What it runs:**
+
+- **PR staleness & conflict checks** — Warns if your branch is behind `main` or if open PRs touch overlapping files.
+- **Automated test suite** — Runs the health check and contract verification (and the Playwright/Maestro suite) when `execution/run_test_suite.py` is present.
+- **Code trace** — Always runs a `/code-trace` over the feature's files and folds the findings into the checklist.
+- **Chrome verification** (optional) — When Chrome MCP is enabled, auto-verifies DOM, console, and layout `[manual]` items.
+
+**What to expect:** A summary card plus a browser-opened checklist of remaining manual items:
+
+```
+┌──────────────────────────────────────────────────┐
+│  TEST CHECKLIST -- [Feature name]                │
+├──────────────────────────────────────────────────┤
+│  Manual checks:  N items (M remaining for user)  │
+│  Auto-verified:  N tests (or "skipped")          │
+│  Bugs surfaced:  N (or none)                     │
+│  Checklist:      open in browser                 │
+└──────────────────────────────────────────────────┘
+```
+
+Work through the manual items, paste the exported results back, and Claude fixes any failures and regenerates.
+
+---
+
+## /doe-health
+
+**What it does:** Runs the DOE methodology testing framework — a suite of scenarios that check the DOE harness itself is behaving correctly.
+
+**When to use it:** When you want to confirm the DOE framework is healthy, or as part of a quality gate. Unlike `/audit` (which checks your project), `/doe-health` tests DOE's own methodology.
+
+**Arguments:**
+
+- No arguments — runs all scenarios
+- `--quick` — a fast subset suitable for CI
+- `--verbose` — detailed output per scenario
+- `--scenario <name>` — runs a specific scenario
+
+**How it works:** Runs `python3 execution/test_methodology.py`. Each scenario reports PASS, WARN, or FAIL; any WARN or FAIL is summarised so you know what needs attention.

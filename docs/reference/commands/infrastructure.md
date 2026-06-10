@@ -35,6 +35,20 @@ The update is non-destructive. If you've customised a file that the update also 
 
 ---
 
+## /sync-doe
+
+**What it does:** Pushes universal DOE improvements from your project back to the starter kit — the reverse direction of `/pull-doe`.
+
+**When to use it:** When you've made a genuinely universal improvement (a new command, a fixed hook, a better directive) while working in a project and want it to land in the kit so every other project can pull it.
+
+**How it works:** It's a two-phase command. Phase 1 diffs the syncable files between your project and `~/doe-starter-kit`, strips out all project-specific content (names, paths, data, examples), bumps the version, updates the changelog, and opens a PR against `Albion-Labs/doe-starter-kit` for review. Phase 2 runs after that PR merges and does the release machinery on `main` — stamps the tutorial docs, tags the version, and cuts the GitHub release.
+
+**What to expect:** Before anything is written, it presents an analysis box summarising which file diffs are universal vs project-specific and a recommendation. Nothing is committed without your sign-off. Once approved, it opens the PR and stops; re-run `/sync-doe` (or reply "merged") after merging to trigger the release.
+
+Use `/pull-doe` to pull kit updates the other way — into your project.
+
+---
+
 ## /commands
 
 **What it does:** Shows all available slash commands, their status, and version information.
@@ -111,12 +125,39 @@ This is a read-only, feel-good command. It doesn't change anything — it just s
 
 ---
 
+## /report-doe-bug
+
+**What it does:** Reports a bug in the DOE framework itself — a command, hook, script, or directive that behaves incorrectly.
+
+**When to use it:** When something in the kit (not your own project code) is broken or misbehaving and you want it tracked and fixed.
+
+**How it works:** It's triage-first. It gathers context (your account plus a reconstruction from the conversation), captures the environment, then runs a series of gates: a version check (is this already fixed in a newer kit version?), a user-error check (is this actually a usage mistake rather than a framework bug?), and a duplicate search against existing issues. Only if all gates pass does it draft, sanitise, and file a GitHub issue on `Albion-Labs/doe-starter-kit`.
+
+**What to expect:** A short back-and-forth — project type, severity, reproducibility — followed by bordered cards for the environment, each gate result, and a draft issue. Output is sanitised aggressively (keys, secrets, paths, emails stripped) because the repo is shared. Nothing is filed without your approval.
+
+---
+
+## /request-doe-feature
+
+**What it does:** Files a feature request for the DOE starter kit as a GitHub issue.
+
+**When to use it:** When you want a new capability in the kit — a command, a directive, a hook, a docs improvement — and want it captured for the maintainers.
+
+**How it works:** A short conversational flow: what you'd like (the spark), the current workaround (the pain), and what using it would look like (the picture). It then silently scans for overlapping existing features and duplicate issues, categorises the request for labelling, and sanitises your input before drafting.
+
+**What to expect:** A bordered draft box summarising the problem, current workaround, desired outcome, and any overlap detected, with suggested labels. On your approval it files the issue on `Albion-Labs/doe-starter-kit`; if GitHub is unreachable it falls back to a local file and tells you where it saved.
+
+---
+
 ## When to Use These Commands
 
 | Situation | Command |
 |-----------|---------|
 | "Is my framework up to date?" | `/pull-doe` |
+| "Push my kit improvement back to the kit" | `/sync-doe` |
 | "What commands do I have?" | `/commands` |
 | "Show me the big picture" | `/hq` |
+| "Something in the kit is broken" | `/report-doe-bug` |
+| "I want a new kit feature" | `/request-doe-feature` |
 
-These are maintenance commands — you won't use them every session. `/commands` is useful when getting started. `/pull-doe` is worth running every week or two. `/hq` whenever you want perspective.
+These are maintenance commands — you won't use them every session. `/commands` is useful when getting started. `/pull-doe` is worth running every week or two, and `/sync-doe` when you've made a universal improvement worth sharing back. `/report-doe-bug` and `/request-doe-feature` are for when the kit itself needs fixing or extending. `/hq` whenever you want perspective.

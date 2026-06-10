@@ -3,7 +3,7 @@
 Every feature follows the same lifecycle, from a vague idea to a shipped, verified result. This page walks through each stage so you know what to expect and what your role is at each point.
 
 ```
-Idea → Plan → Queue → Current → Build → Verify → Ship → Awaiting Sign-off → Done → Retro
+Idea → Plan → Queue → Current → Build → Verify → Review → Ship → Awaiting Sign-off → Done → Retro
 ```
 
 ---
@@ -63,9 +63,11 @@ This is your chance to catch visual issues early, before later steps build on to
 
 For smaller features, this checkpoint is skipped and all manual checks are presented at the end.
 
-## 6. Housekeeping
+## 6. Review and housekeeping
 
-Before the feature is complete, there's a housekeeping step that handles:
+Once the code is written, `/review` runs an adversarial pass over the full feature diff — it confirms the code runs and satisfies its contracts. This is required: the review has to pass, or Claude fixes the issues and re-runs until it does. It's also the hard gate before shipping — the `enforce_review_gate.py` hook blocks `gh pr create` until a passing review is recorded for the current commit.
+
+With review passed, a housekeeping step handles:
 
 - **Changelog entry** — a human-readable record of what changed in this version
 - **Version bump** — the final version number for the feature
@@ -114,6 +116,8 @@ Current            Feature moves to active work
 Build              Each step: build → verify → fix → commit
   ↓
 Verify             Mid-feature checkpoint for big features, final sign-off for all
+  ↓
+Review             /review — adversarial pass; required, pass or fix until it does (PR gate)
   ↓
 Ship               Changelog, version bump, roadmap update
   ↓

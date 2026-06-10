@@ -1,6 +1,6 @@
 # Session Lifecycle Commands
 
-These five commands form the daily rhythm of working with Claude Code in a DOE project. Think of them as clocking in, doing the work, checking progress, clocking out, and reviewing your day.
+These commands form the daily rhythm of working with Claude Code in a DOE project. Think of them as clocking in, doing the work, reviewing what you built, clocking out, and reviewing your day. One step the rhythm requires: after writing code, run `/review` (an adversarial review documented in [Quality & Verification](quality.md)) before you `/wrap` — it confirms the code runs and satisfies its contracts, and it's the hard gate that blocks `gh pr create` until a passing review is recorded.
 
 ---
 
@@ -167,13 +167,16 @@ A normal day looks like this:
                      (or just say "go" to start the next step)
 /sitrep            ← Quick progress check
                    ← Keep building — describe what you want
+/review            ← Required after writing code: confirms it runs and
+                     satisfies its contracts (also the PR gate)
 /wrap              ← Close the session
 
 (break, come back later — context lost)
 
 /crack-on          ← Resume where you left off, no ceremony
+/review            ← Required after writing code
 /wrap              ← Close the session
 /eod               ← See everything you did today
 ```
 
-You don't have to follow this exactly — these are tools, not rules. But `/stand-up` at the start and `/wrap` at the end are the two that matter most for keeping the project's memory intact. `/crack-on` is there for when you need to resume after an interruption without repeating the full stand-up.
+You don't have to follow this exactly — these are tools, not rules. But `/review` is required after writing code (it passes, or you have Claude fix until it does), and `/stand-up` at the start and `/wrap` at the end are the ones that keep the project's memory intact. `/crack-on` is there for when you need to resume after an interruption without repeating the full stand-up.
