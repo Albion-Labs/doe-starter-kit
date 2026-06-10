@@ -189,24 +189,49 @@
     }
 
     /* ── Dark mode button ── */
-    .theme-btn {
+    /* -- Theme Toggle (sun/moon sliding pill) -- */
+    .theme-toggle {
       position: fixed;
       top: 14px;
       right: 14px;
       z-index: 200;
-      width: 36px;
-      height: 36px;
-      background: var(--bg-card);
+      display: inline-flex;
+      align-items: center;
+      width: 62px;
+      height: 30px;
+      padding: 0;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 999px;
+      background: var(--bg-card-hover);
       cursor: pointer;
-      font-size: 16px;
+      box-shadow: var(--shadow-card);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .theme-toggle .tt-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      transition: transform .34s cubic-bezier(.34,1.18,.5,1);
+    }
+    .theme-toggle .tt-ic {
+      position: relative;
+      z-index: 1;
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s, border-color 0.2s;
+      height: 100%;
     }
-    .theme-btn:hover { background: var(--bg-card-hover); }
+    .theme-toggle .tt-ic svg { width: 14px; height: 14px; transition: transform .34s cubic-bezier(.34,1.18,.5,1); }
+    .theme-toggle .tt-sun svg { color: #fff; }
+    .theme-toggle .tt-moon svg { color: var(--text-muted); }
+    [data-theme="dark"] .theme-toggle .tt-thumb { transform: translateX(32px); }
+    [data-theme="dark"] .theme-toggle .tt-moon svg { color: #fff; }
+    [data-theme="dark"] .theme-toggle .tt-sun svg { color: var(--text-muted); transform: rotate(-35deg); }
 
     /* ── Sidebar overlay (mobile) ── */
     .sidebar-overlay {
@@ -750,7 +775,7 @@
   </button>
 
   <!-- Dark mode toggle -->
-  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+  <button class="theme-toggle" id="themeBtn" aria-label="Toggle dark mode"><span class="tt-thumb"></span><span class="tt-ic tt-sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.1 5.1l1.4 1.4M17.5 17.5l1.4 1.4M18.9 5.1l-1.4 1.4M6.5 17.5l-1.4 1.4"/></svg></span><span class="tt-ic tt-moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a6.6 6.6 0 0 0 11 11Z"/></svg></span></button>
 
   <!-- Sidebar overlay -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -950,17 +975,17 @@ Wave Status &mdash; wave-20260315-1430
           <li class="step">
             <div class="step-number">5</div>
             <h4>Agents complete &mdash; coordinator merges</h4>
-            <p>When all agents are done, run <code>--complete</code> to verify each agent&rsquo;s work. Each agent creates a pull request from their feature branch, then <code>--merge</code> brings all changes back into the main branch. Three features built in the time it takes to build one.</p>
+            <p>Each agent runs <code>multi_agent.py --complete &lt;taskId&gt;</code> in its own worktree to verify and mark its task. Once every task reports complete, the coordinator runs <code>--merge</code> to bring all completed worktrees back into the main branch in the defined merge order. No per-agent pull requests &mdash; three features built in the time it takes to build one.</p>
           </li>
         </ol>
 
         <!-- ── The Merge Process ── -->
         <h2 id="merge">The Merge Process</h2>
 
-        <p>When agents finish their work, the coordinator brings everything together in two steps.</p>
+        <p>When agents finish their work, the wave wraps up in two steps &mdash; each agent verifies its own task, then the coordinator merges.</p>
 
-        <h3>Step 1: Verify with <code>--complete</code></h3>
-        <p>Run <code>--complete</code> from the coordinator terminal. This re-runs each agent&rsquo;s contract criteria to confirm everything still passes. If an agent&rsquo;s work fails verification, you&rsquo;ll see which criteria failed and can fix them before merging.</p>
+        <h3>Step 1: Each agent verifies with <code>--complete &lt;taskId&gt;</code></h3>
+        <p>Inside its own worktree, each agent runs <code>multi_agent.py --complete &lt;taskId&gt;</code> to re-run that task&rsquo;s contract criteria and mark it complete. If a task fails verification, the agent sees which criteria failed and fixes them before the wave merges.</p>
 
         <h3>Step 2: Merge with <code>--merge</code></h3>
         <p>Once all agents pass verification, run <code>--merge</code> to bring their changes into the main branch. The coordinator then updates shared files &mdash; marking steps complete in <code>todo.md</code>, recording any learnings, and updating <code>STATE.md</code>.</p>
@@ -972,14 +997,12 @@ Wave Status &mdash; wave-20260315-1430
             <span class="terminal-dot green"></span>
             <span class="terminal-title">Coordinator Terminal</span>
           </div>
-          <pre><span class="t-prompt">&gt;</span> <span class="t-cmd">--complete</span>
-
-Verifying agent work...
+          <pre><span class="t-comment"># Each agent has already run --complete in its own worktree:</span>
   Agent 1 (search):   4/4 criteria pass
   Agent 2 (filters):  5/5 criteria pass
   Agent 3 (sort):     3/3 criteria pass
 
-All agents verified. Ready to merge.
+All tasks complete. Ready to merge.
 
 <span class="t-prompt">&gt;</span> <span class="t-cmd">--merge</span>
 
@@ -1031,7 +1054,7 @@ Wave complete. 3 steps merged successfully.</pre>
         <div class="callout warn">
           <span class="callout-icon">&#9888;</span>
           <div class="callout-body">
-            <strong>Forgetting to verify before merge.</strong> Always run <code>--complete</code> before <code>--merge</code>. Merging unverified work can introduce bugs that are harder to track down after the worktrees are cleaned up.
+            <strong>Forgetting to verify before merge.</strong> Each agent must run <code>--complete &lt;taskId&gt;</code> in its worktree before the coordinator runs <code>--merge</code>. Merging unverified work can introduce bugs that are harder to track down after the worktrees are cleaned up.
           </div>
         </div>
 
@@ -1074,10 +1097,8 @@ Wave complete. 3 steps merged successfully.</pre>
       function applyTheme(dark) {
         if (dark) {
           html.setAttribute('data-theme', 'dark');
-          btn.innerHTML = '&#9788;';
         } else {
           html.removeAttribute('data-theme');
-          btn.innerHTML = '&#9789;';
         }
       }
 

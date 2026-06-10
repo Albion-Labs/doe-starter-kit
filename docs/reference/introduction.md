@@ -12,11 +12,11 @@ DOE solves this by giving every session a beginning (stand-up), a middle (struct
 
 ## Who is DOE for?
 
-DOE is for anyone building software with Claude Code. That includes:
+DOE is Albion-Labs' **internal operating harness** for AI-assisted development with Claude Code — shared with and maintained by the team, not a public starter kit. It runs across Albion-Labs projects and brings the same engineering discipline to every one of them:
 
-- **First-time builders** who have never written code before but want to create something real. DOE provides the structure you don't yet know you need — it catches mistakes before they become problems.
-- **People learning to code** who want to build projects while picking up programming concepts along the way. DOE's organised approach means you can always understand what Claude did and why.
-- **Experienced developers** who want to move faster with AI assistance without sacrificing the engineering discipline they already value. DOE formalises the practices that make AI coding sessions productive instead of chaotic.
+- **Structured sessions** that give Albion-Labs project work a beginning, a middle, and an end — so context is never lost between sessions and progress is always recoverable.
+- **Consistent practices** across the team's codebases, whatever the stack (Next.js, Vite, Python, Go, Flutter, or static HTML), so anyone picking up a project finds the same rhythm and guardrails.
+- **Engineering discipline at AI speed**, formalising the habits — commit per step, verify before delivering, review before shipping — that keep AI-assisted work productive instead of chaotic.
 
 ## What you'll learn from these docs
 

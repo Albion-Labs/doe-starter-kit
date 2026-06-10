@@ -8,7 +8,7 @@ Think of it like a meeting. You arrive, do focused work, and before you leave yo
 
 ## The Session Lifecycle
 
-Every session has four phases, though not all of them are required every time.
+Every session moves through these phases, though not all of them are required every time.
 
 ### 1. Start — Orient and Plan
 
@@ -24,15 +24,23 @@ Then it shows you where things stand and proposes a plan for this session. You m
 
 `/stand-up` gives you the full briefing and waits for your approval before doing anything. `/crack-on` is for resuming after an interruption — when context was lost (you had to `/clear`, came back after a break, started a new conversation) and you want Claude to refamiliarise itself with the current task and immediately start building without ceremony or sign-off.
 
-### 2. Work — Build and Review
+### 2. Work — Build
 
-This is the bulk of the session. You tell Claude what to do, it builds, you review. The cycle repeats as many times as needed.
+This is the bulk of the session. You tell Claude what to do and it builds. The cycle repeats as many times as needed.
 
 After each completed piece of work, Claude commits the changes to git. This is like auto-saving a game after each level — if something goes wrong later, you can roll back to any previous save point without losing everything.
 
 Each commit is atomic: one task, one commit, one clear message describing what changed. This makes the project history easy to read and easy to undo if needed.
 
-### 3. Check — Mid-Session Status
+### 3. Review — Confirm It Works
+
+**Command:** `/review`
+
+`/review` is required after you've written code. It runs an adversarial review of the feature diff, confirming the code actually runs and satisfies its contracts. Either it passes, or you have Claude fix the issues until it does.
+
+It's also the hard gate before opening a pull request: the `enforce_review_gate.py` hook blocks `gh pr create` until a passing `/review` has been recorded for the current HEAD. There's no shipping around it — write code, run `/review`, fix until it passes, then ship.
+
+### 4. Check — Mid-Session Status
 
 **Command:** `/sitrep`
 
@@ -40,7 +48,7 @@ This is optional but useful during longer sessions. `/sitrep` gives you a snapsh
 
 You might use this after Claude has completed a few tasks and you want to confirm everything looks right before moving on.
 
-### 4. End — Save and Close
+### 5. End — Save and Close
 
 **Command:** `/wrap`
 

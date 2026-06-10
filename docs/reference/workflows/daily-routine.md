@@ -25,7 +25,13 @@ DOE works best with a consistent rhythm. This page maps out what a typical day l
 
 4. **Build.** Tell Claude what you want to work on in plain English, or just say "go" / "let's build step 2" to start on the next planned step. (If you've been interrupted mid-session and need to resume — context loss, `/clear`, came back after a break — run `/crack-on` instead, which skips the briefing and picks up where you left off immediately.)
 
-5. **Wrap up when you're done:**
+5. **Review your work:**
+   ```
+   /review
+   ```
+   This is required after writing code. It runs an adversarial review confirming the code actually runs and satisfies its contracts — it passes, or Claude fixes issues until it does. `/review` is also the hard PR gate: `enforce_review_gate.py` blocks `gh pr create` until a passing review is recorded for the current HEAD.
+
+6. **Wrap up when you're done:**
    ```
    /wrap
    ```
@@ -38,7 +44,7 @@ DOE works best with a consistent rhythm. This page maps out what a typical day l
 The rhythm is always the same:
 
 ```
-/stand-up → work → /wrap
+/stand-up → work → /review (required after writing code) → /wrap
 ```
 
 Each session picks up exactly where the last one left off. The stand-up card reflects the latest state, including anything that changed in previous sessions that day.
@@ -102,4 +108,4 @@ These are the habits that make the biggest difference:
 
 **Check the stand-up card.** Don't skip past it. It often surfaces things you'd miss — a stale blocker, a forgotten decision, a task that's been sitting in the queue too long. Two minutes of reading saves twenty minutes of confusion.
 
-**Trust the rhythm.** Stand-up, build, wrap. It feels like overhead the first few times, but it pays for itself quickly. The system gets smarter about your project with every session, and that only works if it has clean state to work from.
+**Trust the rhythm.** Stand-up, build, review, wrap. It feels like overhead the first few times, but it pays for itself quickly. The system gets smarter about your project with every session, and that only works if it has clean state to work from.

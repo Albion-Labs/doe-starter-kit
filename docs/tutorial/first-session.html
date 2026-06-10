@@ -189,24 +189,49 @@
     }
 
     /* ── Dark mode button ── */
-    .theme-btn {
+    /* -- Theme Toggle (sun/moon sliding pill) -- */
+    .theme-toggle {
       position: fixed;
       top: 14px;
       right: 14px;
       z-index: 200;
-      width: 36px;
-      height: 36px;
-      background: var(--bg-card);
+      display: inline-flex;
+      align-items: center;
+      width: 62px;
+      height: 30px;
+      padding: 0;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: 999px;
+      background: var(--bg-card-hover);
       cursor: pointer;
-      font-size: 16px;
+      box-shadow: var(--shadow-card);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .theme-toggle .tt-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      transition: transform .34s cubic-bezier(.34,1.18,.5,1);
+    }
+    .theme-toggle .tt-ic {
+      position: relative;
+      z-index: 1;
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s, border-color 0.2s;
+      height: 100%;
     }
-    .theme-btn:hover { background: var(--bg-card-hover); }
+    .theme-toggle .tt-ic svg { width: 14px; height: 14px; transition: transform .34s cubic-bezier(.34,1.18,.5,1); }
+    .theme-toggle .tt-sun svg { color: #fff; }
+    .theme-toggle .tt-moon svg { color: var(--text-muted); }
+    [data-theme="dark"] .theme-toggle .tt-thumb { transform: translateX(32px); }
+    [data-theme="dark"] .theme-toggle .tt-moon svg { color: #fff; }
+    [data-theme="dark"] .theme-toggle .tt-sun svg { color: var(--text-muted); transform: rotate(-35deg); }
 
     /* ── Sidebar overlay (mobile) ── */
     .sidebar-overlay {
@@ -1007,7 +1032,7 @@
   </button>
 
   <!-- Dark mode toggle -->
-  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">&#9789;</button>
+  <button class="theme-toggle" id="themeBtn" aria-label="Toggle dark mode"><span class="tt-thumb"></span><span class="tt-ic tt-sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.6"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.1 5.1l1.4 1.4M17.5 17.5l1.4 1.4M18.9 5.1l-1.4 1.4M6.5 17.5l-1.4 1.4"/></svg></span><span class="tt-ic tt-moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a6.6 6.6 0 0 0 11 11Z"/></svg></span></button>
 
   <!-- Sidebar overlay -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -1087,9 +1112,9 @@
 
         <!-- The Session Rhythm -->
         <h2 id="rhythm">The Session Rhythm</h2>
-        <p>Every DOE <a href="glossary.html#session">session</a> follows the same three-beat rhythm. Once you've done it a few times, it becomes second nature.</p>
+        <p>Every DOE <a href="glossary.html#session">session</a> follows the same rhythm. Once you've done it a few times, it becomes second nature.</p>
 
-        <div class="card-grid cols-3">
+        <div class="card-grid">
           <div class="m-card" style="cursor: default; text-align: center;">
             <div class="card-icon indigo" style="margin: 0 auto 12px;">
               <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -1103,6 +1128,13 @@
             </div>
             <h4>Describe &amp; Build</h4>
             <p>Tell Claude what you want in plain English. Review the plan, then build.</p>
+          </div>
+          <div class="m-card" style="cursor: default; text-align: center;">
+            <div class="card-icon blue" style="margin: 0 auto 12px;">
+              <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
+            <h4>Review</h4>
+            <p>After the code's written, <code>/review</code> confirms it runs and meets its contracts &mdash; the gate before you ship.</p>
           </div>
           <div class="m-card" style="cursor: default; text-align: center;">
             <div class="card-icon green" style="margin: 0 auto 12px;">
@@ -1268,6 +1300,8 @@ ingredient, and mark my favourites so I can find them quickly.</pre></div>
 
         <p>You can talk to Claude throughout this process. Ask questions, change direction, or tell it to skip something. It's a conversation, not a one-way instruction.</p>
 
+        <p>Once the code is written, run <code>/review</code>. It runs an adversarial pass that confirms the code works and satisfies its contracts &mdash; it passes, or you have Claude fix it until it does. This is the one step the rhythm requires before you <code>/wrap</code>, and it's the same gate that blocks <code>gh pr create</code> until a passing review is recorded.</p>
+
         <!-- Wrapping Up -->
         <h2 id="wrapping">Wrapping Up</h2>
         <p>When you're done for the day (or just need a break), run:</p>
@@ -1426,11 +1460,12 @@ ingredient, and mark my favourites so I can find them quickly.</pre></div>
           <li><strong>Followed the plan</strong> &mdash; worked through steps in order, never jumping ahead</li>
           <li><strong>Verified contracts</strong> &mdash; ran automated checks after each step to prove the work actually functions</li>
           <li><strong>Committed after each step</strong> &mdash; created atomic save points so any step can be reverted independently</li>
+          <li><strong>Reviewed the code</strong> &mdash; <code>/review</code> ran an adversarial pass confirming the work runs and meets its contracts (and gates any pull request)</li>
           <li><strong>Updated session stats</strong> &mdash; tracked duration, commits, and progress</li>
           <li><strong>Saved state</strong> &mdash; wrote everything to STATE.md so the next session picks up seamlessly</li>
         </ul>
 
-        <p>This is the rhythm every session follows: <strong>stand-up, build, wrap</strong>. The more sessions you run, the richer your project's memory becomes &mdash; and the more effectively Claude can build on previous work.</p>
+        <p>This is the rhythm every session follows: <strong>stand-up, build, review, wrap</strong>. The more sessions you run, the richer your project's memory becomes &mdash; and the more effectively Claude can build on previous work.</p>
 
         <!-- Sessions and State -->
         <h2 id="state">Sessions and State</h2>
@@ -1505,10 +1540,8 @@ showing all recipes. Next: implement favourites.</pre></div>
       function applyTheme(dark) {
         if (dark) {
           html.setAttribute('data-theme', 'dark');
-          btn.innerHTML = '&#9788;';
         } else {
           html.removeAttribute('data-theme');
-          btn.innerHTML = '&#9789;';
         }
       }
 

@@ -43,16 +43,16 @@ You don't need to write code or use special syntax. Just type what you want in p
 For example:
 
 ```
-I want to build a recipe book app where I can add recipes with a title,
-ingredients list, and method. I want to search recipes by name or ingredient,
-and mark my favourites so I can find them quickly.
+I want to build a personal budget tracker where I can log expenses with a
+date, amount, and category. I want to filter expenses by category and see
+monthly totals so I can find where my money goes quickly.
 ```
 
 The more detail you give, the better the result. But you don't need to know technical details — Claude figures out the implementation. Focus on describing what you want as a user.
 
 Other good starting prompts:
 
-- "Build me a personal budget tracker where I can log expenses, categorise them, and see monthly totals"
+- "Build me a reading list app where I can add books, mark them as read, and rate them"
 - "I need a simple website for my photography portfolio with a gallery page and a contact form"
 - "Create a tool that reads a CSV file of student grades and produces a summary report"
 
@@ -69,6 +69,8 @@ Once you describe what you want, Claude follows a structured process:
 4. **Builds step by step** — Claude works through the plan one step at a time. After each step, it verifies the work against the success criteria.
 
 5. **Commits after each step** — every completed step gets saved as a Git commit. This is your safety net. If step 5 breaks something, you can go back to the state after step 4 without losing anything. Each commit is like a save point in a game — clearly labelled so you know exactly what it contains.
+
+6. **Reviews the work** — once the code is written, run `/review`. This is an adversarial review of the feature diff that confirms the code actually runs and satisfies its contracts. It either passes, or you have Claude fix the issues and re-run until it does. `/review` is required after writing code — it's also the gate that has to pass before opening a pull request.
 
 You can talk to Claude throughout this process. Ask questions, change direction, or tell it to skip something. It's a conversation, not a one-way instruction.
 
@@ -115,10 +117,11 @@ In this first session, you:
 2. **Described what you wanted** in plain English
 3. **Reviewed Claude's plan** before any building started
 4. **Watched Claude build** step by step, with each step committed as a save point
-5. **Checked progress** with `/sitrep` whenever you needed a status update
-6. **Wrapped up** with `/wrap` to save your position and session memory
+5. **Reviewed the work** with `/review` to confirm the code runs and satisfies its contracts
+6. **Checked progress** with `/sitrep` whenever you needed a status update
+7. **Wrapped up** with `/wrap` to save your position and session memory
 
-This is the rhythm every session follows: stand-up, build, wrap. The more sessions you run, the richer your project's memory becomes — and the more effectively Claude can build on previous work.
+This is the rhythm every session follows: stand-up, build, review, wrap. The more sessions you run, the richer your project's memory becomes — and the more effectively Claude can build on previous work.
 
 Your project now has its first commits, a task tracker with progress recorded, and session memory that will carry forward. Next time you start a session, Claude will know everything that happened today.
 
