@@ -14,5 +14,5 @@
 # filenames). Review before committing -- remove brittle or project-specific ones.
 #
 # To bootstrap from existing contracts:
-#   python3 execution/bootstrap_invariants.py          # preview
-#   python3 execution/bootstrap_invariants.py --write  # append to this file
+#   python3 migrations/bootstrap_invariants.py          # preview
+#   python3 migrations/bootstrap_invariants.py --write  # append to this file
