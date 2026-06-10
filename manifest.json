@@ -54,7 +54,8 @@
         "generate-visual-plan.md", "generate-web-diagram.md", "hq.md",
         "pitch.md", "plan-review.md", "project-recap.md",
         "pull-doe.md", "report-doe-bug.md", "request-doe-feature.md",
-        "roast.md", "scope.md", "sync-doe.md", "test-suite.md"
+        "roast.md", "scope.md", "sync-doe.md", "test-suite.md",
+        "worktree-create.md", "worktree-remove.md"
       ],
       "github": [
         "workflows/doe-ci.yml",
@@ -95,7 +96,9 @@
     "persist_review_findings.py",
     "doe_utils.py",
     "multi_agent.py",
-    "build_hq.py"
+    "build_hq.py",
+    "html_builder.py",
+    "check_tools_version.py"
   ],
   "triggers": [
     {"situation": "Planning/scoping", "directive": "planning-rules.md", "layer": "universal"},

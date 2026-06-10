@@ -764,13 +764,6 @@
           <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
         </div>
 
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Examples</div>
-          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
-          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
-          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
-          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
-        </div>
 
         <div class="sidebar-section">
           <div class="sidebar-section-title">Reference</div>
@@ -792,7 +785,7 @@
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">Workflows</p>
         <h1>PR Workflow</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">
-          How features move from your branch to main through Pull Requests, CI checks, and snagging gates. Merging to main deploys to staging &mdash; production requires a separate promotion step.
+          How features move from your branch to main through a stack of gates &mdash; adversarial review, Pull Requests, CI checks, snagging, and merge approval. Merging to main deploys to staging &mdash; production requires a separate promotion step.
         </p>
 
         <!-- ── Section 1: What is a PR Workflow? ── -->
@@ -811,17 +804,21 @@
         </p>
 
         <p>
-          Before the merge happens, <strong>Continuous Integration</strong> (CI) runs automatically. CI is a set of
+          DOE wraps this with a <strong>stack of gates</strong>, not a single check. Before the PR even exists, an
+          <strong>adversarial review</strong> of the full diff must be on record &mdash; a hook blocks <code>gh pr create</code>
+          until it is. Once the PR is open, <strong>Continuous Integration</strong> (CI) runs automatically: a set of
           automated checks &mdash; linting, testing, performance audits &mdash; that verify your code meets the project's
-          quality standards. If any check fails, you fix the issue on your branch, push again, and CI re-runs. The main
-          branch never sees broken code.
+          quality standards. If any check fails, you fix the issue on your branch, push again, and CI re-runs. A
+          <strong>snagging</strong> checklist then covers what automation cannot, and the merge itself needs
+          <strong>explicit approval</strong>. The main branch never sees broken or unreviewed code.
         </p>
 
         <div class="callout tip">
           <span class="callout-icon">i</span>
           <div class="callout-body">
-            <strong>Think of it like an airlock.</strong> Your feature branch is the outer chamber. CI and snagging
-            are the pressure checks. Only when everything passes does the inner door (main) open.
+            <strong>Think of it like an airlock.</strong> Your feature branch is the outer chamber. Adversarial review
+            is the gate that lets you open the PR; CI and snagging are the pressure checks; merge approval is the final
+            confirmation. Only when every layer passes does the inner door (main) open.
           </div>
         </div>
 
@@ -850,19 +847,21 @@
             <div class="pf-break-line"></div>
           </div>
           <div class="pr-flow-row">
+            <span class="pf-block rose">/review</span>
+            <span class="pf-arrow">&rarr;</span>
             <span class="pf-block amber">gh pr create</span>
             <span class="pf-arrow">&rarr;</span>
             <span class="pf-block amber">CI runs</span>
             <span class="pf-arrow">&rarr;</span>
             <span class="pf-block rose">snagging</span>
             <span class="pf-arrow">&rarr;</span>
-            <span class="pf-block green">merge to main</span>
+            <span class="pf-block green">approve + merge</span>
           </div>
           <div class="pf-legend">
             <div class="pf-legend-item"><span class="pf-legend-dot branch"></span> Build phase</div>
-            <div class="pf-legend-item"><span class="pf-legend-dot ci"></span> Review phase</div>
-            <div class="pf-legend-item"><span class="pf-legend-dot gate"></span> Quality gate</div>
-            <div class="pf-legend-item"><span class="pf-legend-dot merge"></span> Merge</div>
+            <div class="pf-legend-item"><span class="pf-legend-dot gate"></span> Review &amp; quality gates</div>
+            <div class="pf-legend-item"><span class="pf-legend-dot ci"></span> CI</div>
+            <div class="pf-legend-item"><span class="pf-legend-dot merge"></span> Approve &amp; merge</div>
           </div>
         </div>
 
@@ -886,14 +885,24 @@
           </li>
           <li class="step">
             <div class="step-number">3</div>
-            <h4>Open a Pull Request</h4>
+            <h4>Adversarial review (before the PR)</h4>
             <p>
-              At feature completion (the retro step), a Pull Request is created via <code>gh pr create</code>.
-              The PR description summarises what changed, links to the plan, and lists any manual verification items.
+              At feature completion, <code>/review</code> runs an adversarial pass over the full diff and records a
+              review artifact for the current HEAD. The <code>enforce_review_gate.py</code> hook blocks
+              <code>gh pr create</code> on feature branches until that artifact exists &mdash; so review happens before
+              the PR, not after. (Hotfix bypass: <code>SKIP_REVIEW_GATE=1</code>.)
             </p>
           </li>
           <li class="step">
             <div class="step-number">4</div>
+            <h4>Open a Pull Request</h4>
+            <p>
+              Once review is on record, a Pull Request is created via <code>gh pr create</code>.
+              The PR description summarises what changed, links to the plan, and lists any manual verification items.
+            </p>
+          </li>
+          <li class="step">
+            <div class="step-number">5</div>
             <h4>CI runs automatically</h4>
             <p>
               As soon as the PR is created, Continuous Integration kicks in. It auto-detects your project's
@@ -901,19 +910,22 @@
             </p>
           </li>
           <li class="step">
-            <div class="step-number">5</div>
+            <div class="step-number">6</div>
             <h4>Snagging checklist</h4>
             <p>
               The snagging checklist verifies manual items that automated tests cannot cover &mdash; visual
-              layout, interaction feel, print rendering. This is the final quality gate before merge.
+              layout, interaction feel, print rendering. This is the final pre-merge quality gate.
             </p>
           </li>
           <li class="step">
-            <div class="step-number">6</div>
-            <h4>Merge to main</h4>
+            <div class="step-number">7</div>
+            <h4>Approve and merge to main</h4>
             <p>
-              When CI passes and snagging is complete, the PR merges. The feature branch is deleted.
-              Main is always stable and always deployable. Merging here auto-deploys to staging &mdash; production is a separate manual step.
+              When CI passes and snagging is complete, the merge needs explicit approval &mdash;
+              <code>confirm_pr_merge.py</code> blocks <code>gh pr merge</code> until you sign off, and
+              <code>block_unnecessary_admin_merge.py</code> stops reflexive <code>--admin</code> overrides. Once approved,
+              the PR merges and the feature branch is deleted. Main is always stable and always deployable. Merging here
+              auto-deploys to staging &mdash; production is a separate manual step.
             </p>
           </li>
         </ol>
@@ -966,7 +978,37 @@
           </div>
         </div>
 
-        <!-- ── Section 4: Continuous Integration ── -->
+        <!-- ── Section 4: Review Gate ── -->
+        <h2 id="review-gate">The Review Gate (Before the PR)</h2>
+
+        <p>
+          The first gate in the stack fires <em>before</em> the Pull Request is ever opened. At feature completion,
+          the <code>/review</code> command runs an <a href="key-concepts.html#adversarial-review">adversarial review</a>
+          over the full diff &mdash; separate agents look for problems, challenge each other's findings, and record a
+          review artifact tied to the current commit (HEAD).
+        </p>
+
+        <p>
+          A deterministic hook, <code>enforce_review_gate.py</code>, then enforces it: on feature branches, it
+          <strong>blocks <code>gh pr create</code></strong> until a review artifact exists for the current HEAD. You
+          cannot open a PR with unreviewed code. This means review is a precondition for the PR, not an afterthought
+          buried in it.
+        </p>
+
+        <div class="callout warn">
+          <span class="callout-icon">!</span>
+          <div class="callout-body">
+            <strong>The bypass is for hotfixes only.</strong> Setting <code>SKIP_REVIEW_GATE=1</code> lets an urgent
+            fix skip the gate, but it is the exception &mdash; the default path requires review before the PR opens.
+          </div>
+        </div>
+
+        <p>
+          Everything that follows &mdash; CI, snagging, merge approval &mdash; gates the <em>open</em> PR before it
+          can merge. The review gate is simply the layer that lets the PR exist in the first place.
+        </p>
+
+        <!-- ── Section 5: Continuous Integration ── -->
         <h2 id="ci">Continuous Integration</h2>
 
         <p>
@@ -1119,7 +1161,10 @@
         <h2 id="merge">The Merge</h2>
 
         <p>
-          When all CI checks pass and every snagging item is ticked off, the PR is ready to merge. Here is what
+          When all CI checks pass and every snagging item is ticked off, the PR is ready to merge &mdash; but the merge
+          still needs <strong>explicit approval</strong>. <code>confirm_pr_merge.py</code> blocks
+          <code>gh pr merge</code> until you sign off, and <code>block_unnecessary_admin_merge.py</code> prevents
+          reflexive <code>--admin</code> overrides that would bypass the open checks. Once you approve, here is what
           happens:
         </p>
 
@@ -1131,7 +1176,7 @@
         </ol>
 
         <p>
-          The key principle: <strong>main is always stable</strong>. Every commit on main has passed CI and snagging. Main deploys to staging automatically &mdash; production only changes when you explicitly promote.
+          The key principle: <strong>main is always stable</strong>. Every commit on main has cleared the full gate stack &mdash; adversarial review, CI, snagging, and merge approval. Main deploys to staging automatically &mdash; production only changes when you explicitly promote.
           You can deploy main at any time with confidence.
         </p>
 
@@ -1196,7 +1241,7 @@
               <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 01-9 9"/></svg>
             </div>
             <h4>Multi-agent wave</h4>
-            <p>Multiple agents on parallel branches. Each owns distinct files. PRs merge sequentially after CI and snagging pass.</p>
+            <p>Multiple agents on parallel branches. Each owns distinct files. Each PR clears review, CI, and snagging, then merges sequentially with approval.</p>
           </div>
         </div>
 
@@ -1222,6 +1267,7 @@
       <a href="#what-is-pr" class="toc-link">What is a PR Workflow?</a>
       <a href="#pr-cycle" class="toc-link">The DOE PR Cycle</a>
       <a href="#feature-branches" class="toc-link">Feature Branches</a>
+      <a href="#review-gate" class="toc-link">The Review Gate</a>
       <a href="#ci" class="toc-link">Continuous Integration</a>
       <a href="#snagging" class="toc-link">Snagging as Pre-Merge Gate</a>
       <a href="#merge" class="toc-link">The Merge</a>

@@ -1123,14 +1123,6 @@ def generate_page(entries):
         </div>
 
         <div class="sidebar-section">
-          <div class="sidebar-section-title">Examples</div>
-          <a class="sidebar-link" href="example-apps.html#recipe">Recipe Book</a>
-          <a class="sidebar-link" href="example-apps.html#fitness">Fitness Tracker</a>
-          <a class="sidebar-link" href="example-apps.html#events">Events Board</a>
-          <a class="sidebar-link" href="example-apps.html#dashboard">Team Dashboard</a>
-        </div>
-
-        <div class="sidebar-section">
           <div class="sidebar-section-title">Reference</div>
           <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
           <a class="sidebar-link" href="migration-guide.html">Migration Guide</a>
