@@ -883,6 +883,21 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-68-1">
+          <div class="release-header">
+            <span class="version-badge">v1.68.1</span>
+            <span class="release-date">10 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Fixes worktree sessions registering as separate projects in the cross-project dashboard. <code>/wrap</code>&#x27;s registry step recorded the project name from the current directory&#x27;s basename, so a <code>/wrap</code> run inside a git worktree (<code>&lt;project&gt;/.claude/worktrees/&lt;name&gt;</code>) filed the session under the *worktree* name (e.g. <code>z1-console-mvp</code>) instead of the parent project (<code>proof</code>). The dashboard dedups projects by name, so the worktree surfaced as its own project beside its parent. The registry update now strips <code>/.claude/worktrees/&lt;name&gt;</code> and attributes the session to the parent project, so worktree work rolls up under one project.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">DOE worktrees always live at <code>&lt;project&gt;/.claude/worktrees/&lt;name&gt;</code> (the v1.63.0 convention). When <code>/wrap</code> ran from inside one, the line <code>existing.update({&#x27;name&#x27;: Path(root).name, ...})</code> took the worktree directory&#x27;s basename as the project name. With the dashboard keying projects by name, a parent and its worktree became two entries — the parent&#x27;s session history and the worktree&#x27;s diverged into separate cards even though they are one project&#x27;s work. Step 0a&#x27;s &quot;trunk-worktree switch&quot; already intends wrap bookkeeping (stats.json, session JSON, registry) to run from the trunk worktree, which would have recorded the parent name — but that switch is skipped for single-worktree projects and was not applied in older sessions, so worktree entries accumulated. The registry-line fix is the robust catch-all: regardless of whether the trunk switch fired, a <code>cwd</code> under <code>/.claude/worktrees/</code> is attributed to the parent. Idempotent — repeated wraps from the parent and any of its worktrees all collapse to one registry entry.</p>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>global-commands/wrap.md</code></strong> — the project-registry step now detects a worktree <code>cwd</code> (<code>/.claude/worktrees/</code> in the resolved path) and rolls the session up to the parent project root for both the <code>path</code> and <code>name</code> fields, instead of registering the worktree as a standalone project.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-68-0">
           <div class="release-header">
             <span class="version-badge">v1.68.0</span>
@@ -984,6 +999,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (15 releases)</summary>
+
         <div class="release" id="v1-65-0">
           <div class="release-header">
             <span class="version-badge">v1.65.0</span>
@@ -1002,10 +1021,6 @@
             <li><strong><code>directives/kit-development.md</code> → <code>## Release mechanics</code></strong> — rewritten to describe the auto-release workflow as the canonical path. Old &quot;manual after PR merge&quot; rationale replaced with the empirical drift case from v1.64.1. New sub-sections: &quot;What the workflow does&quot;, &quot;Why automatic&quot;, &quot;When to bypass automation&quot; (disable workflow via Actions UI for cases where you want to merge without auto-releasing), &quot;Manual fallback (if automation is broken)&quot;. Manual fallback retains tag-first ordering and <code>SKIP_MAIN_PROTECTION=1</code> on the commit (correcting the prior block which had <code>SKIP_MAIN_PROTECTION=1</code> on the wrong step and used a broken sed range for release-notes extraction).</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (14 releases)</summary>
 
         <div class="release" id="v1-64-1">
           <div class="release-header">

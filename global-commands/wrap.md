@@ -101,7 +101,8 @@ Do this BEFORE committing stats.json.
 
 Commit stats.json with message: "Update session stats" and push.
 
-Register this project in the global project registry (for `/archive-global`):
+Register this project in the global project registry (for `/archive-global`).
+**Worktree-aware:** a DOE worktree lives at `<project>/.claude/worktrees/<name>`. Attribute the session to the **parent project**, not the worktree, so worktree work rolls up under one project in the dashboard instead of fragmenting into a separate `<name>` entry. (Combined with Step 0a's trunk-worktree switch, which already routes wrap bookkeeping to the trunk, this keeps the registry correct even when that switch is skipped.)
 ```bash
 python3 -c "
 import json
@@ -110,6 +111,9 @@ from datetime import datetime
 reg = Path.home() / '.claude' / 'project-registry.json'
 data = json.loads(reg.read_text()) if reg.exists() else {'projects': []}
 root = str(Path.cwd().resolve())
+marker = '/.claude/worktrees/'
+if marker in root:
+    root = root.split(marker)[0]  # roll a worktree session up to its parent project
 existing = next((p for p in data['projects'] if p.get('path') == root), {})
 data['projects'] = [p for p in data['projects'] if p.get('path') != root]
 existing.update({'path': root, 'name': Path(root).name, 'lastUpdated': datetime.now().strftime('%Y-%m-%d')})

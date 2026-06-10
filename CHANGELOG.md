@@ -7,6 +7,22 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.68.1 (2026-06-10)
+<!-- hero -->
+Fixes worktree sessions registering as separate projects in the cross-project dashboard. `/wrap`'s registry step recorded the project name from the current directory's basename, so a `/wrap` run inside a git worktree (`<project>/.claude/worktrees/<name>`) filed the session under the *worktree* name (e.g. `z1-console-mvp`) instead of the parent project (`proof`). The dashboard dedups projects by name, so the worktree surfaced as its own project beside its parent. The registry update now strips `/.claude/worktrees/<name>` and attributes the session to the parent project, so worktree work rolls up under one project.
+<!-- /hero -->
+<!-- background -->
+DOE worktrees always live at `<project>/.claude/worktrees/<name>` (the v1.63.0 convention). When `/wrap` ran from inside one, the line `existing.update({'name': Path(root).name, ...})` took the worktree directory's basename as the project name. With the dashboard keying projects by name, a parent and its worktree became two entries — the parent's session history and the worktree's diverged into separate cards even though they are one project's work.
+
+Step 0a's "trunk-worktree switch" already intends wrap bookkeeping (stats.json, session JSON, registry) to run from the trunk worktree, which would have recorded the parent name — but that switch is skipped for single-worktree projects and was not applied in older sessions, so worktree entries accumulated. The registry-line fix is the robust catch-all: regardless of whether the trunk switch fired, a `cwd` under `/.claude/worktrees/` is attributed to the parent. Idempotent — repeated wraps from the parent and any of its worktrees all collapse to one registry entry.
+<!-- /background -->
+
+### Changed
+- **`global-commands/wrap.md`** — the project-registry step now detects a worktree `cwd` (`/.claude/worktrees/` in the resolved path) and rolls the session up to the parent project root for both the `path` and `name` fields, instead of registering the worktree as a standalone project.
+
+### Pull impact
+Re-run `setup.sh` / `/pull-doe` to receive the updated `/wrap` command. Existing fragmented registry entries (a worktree already listed as its own project in `~/.claude/project-registry.json`) are not auto-merged — they roll up the next time you `/wrap` from the parent, or you can remove the stray worktree entry by hand.
+
 ## v1.68.0 (2026-06-10)
 <!-- hero -->
 Closes the loop on stale global tools. The kit's global tools (`~/.claude/scripts/*.py`, `~/.claude/commands/*.md`) are copies installed by `setup.sh` — a kit release does NOT update them in place, so they sat on the old version until you re-ran setup, silently (the v1.67.0 Chalk & Flint release exposed this: the kit shipped the new look but `/wrap` kept rendering the old one). Now `setup.sh` stamps the installed version, a single freshness check compares it to the kit, and **two surfaces** nudge you when you're behind — a SessionStart hook at the start of every session and the `/wrap` kit-status step at the end. Both are silent when you're current. A new `setup.sh --tools-only` is the one-command fix the nudge points at.
