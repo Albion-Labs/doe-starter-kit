@@ -144,8 +144,6 @@ Multi-agent files install to machine-level locations via `setup.sh`. They use `P
 | File | Goes to | Purpose |
 |------|---------|---------|
 | multi_agent.py | `~/.claude/scripts/` | Wave management, task claiming, session registry, heartbeats, merge protocol, cost tracking. All state in `.tmp/waves/`. Accepts `--project-root DIR` override. |
-| heartbeat.py | `~/.claude/hooks/` | PostToolUse: updates session heartbeat every 30s during active waves |
-| context_monitor.py | `~/.claude/hooks/` | PostToolUse: warns at 60% context usage, stops at 80% for graceful handoff |
 
 ## How they feed into each other
 
@@ -173,9 +171,6 @@ DURING WORK
 │   ├─→ enforce_review_gate.py → blocks gh pr create without a passing review
 │   ├─→ confirm_pr_merge.py → blocks gh pr merge until you approve
 │   └─→ block_unnecessary_admin_merge.py → blocks reflexive --admin merges
-├─→ ~/.claude/settings.json → fires PostToolUse hooks (merged by setup.sh)
-│   ├─→ heartbeat.py → updates session heartbeat during waves
-│   └─→ context_monitor.py → warns when context is running low
 ├─→ .githooks/pre-commit → runs fast claim audit before every commit
 │
 ├─→ execution/ → Claude runs scripts instead of inline code
@@ -258,20 +253,16 @@ PROJECT (lives in your repo, shared via git)
 │       └── tdd-and-debugging.md
 ├── execution/
 │   ├── audit_claims.py
-│   ├── bootstrap_invariants.py
 │   ├── check_contract.py
 │   ├── check_plan_freshness.py
 │   ├── generate_test_checklist.py
 │   ├── health_check.py
 │   ├── lint_todo.py
-│   ├── logger.py
 │   ├── quality_gate.py
 │   ├── run_test_suite.py
-│   ├── scan_docs.py
 │   ├── slack_notify.py
 │   ├── test_methodology.py
 │   ├── verify.py
-│   ├── verify_tests.py
 │   └── wrap_stats.py
 ├── .claude/
 │   ├── settings.json          ← hook configuration (PreToolUse + PostToolUse)
@@ -308,9 +299,6 @@ MACHINE (lives on your computer, applies to all projects)
 │   ├── scope.md  pitch.md  roast.md  agent-launch.md  agent-status.md
 │   ├── pull-doe.md  sync-doe.md  request-doe-feature.md  commands.md
 │   └── codemap.md  worktree-create.md  worktree-remove.md
-├── ~/.claude/hooks/
-│   ├── heartbeat.py
-│   └── context_monitor.py
 └── ~/.claude/scripts/
     ├── multi_agent.py  build_hq.py  html_builder.py
     ├── wrap_html.py  eod_html.py  dispatch_dag.py  run_snagging.py

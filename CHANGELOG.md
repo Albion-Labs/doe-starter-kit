@@ -7,6 +7,56 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.70.0 (2026-06-11)
+<!-- hero -->
+Phase 0 of the v2.0 "Lean Core + Proof-of-Life" plan: deletes four orphaned execution scripts nothing invokes (including `scan_docs.py`, which required a manifest file that has never existed in the repo's history), stops installing the two global PostToolUse hooks that spawned Python on every tool call, and retires the manual Step 11 release walkthrough that raced the auto-release workflow. Pure subtraction -- no behaviour any project relies on changes.
+<!-- /hero -->
+<!-- background -->
+A full-kit review found three classes of silent rot the kit's own checks never caught: never-alive controls (`scan_docs.py` shipped without its required manifest input and could never have run), natively-superseded machinery (custom context monitoring vs Claude Code's native `/context` and auto-compaction), and never-loaded content. Phase 0 takes only the no-judgement-call cuts; the full plan -- a liveness ledger for every control, fault-injection CI coverage for every gate, docs-site generation from markdown -- lives at `.claude/plans/doe-v2-lean-proof-of-life.md` and lands across subsequent releases.
+<!-- /background -->
+
+### Added
+- **global-scripts/gist_sync.py** -- adopted into the kit. `/wrap` and `/eod` have depended on this script at `~/.claude/scripts/` since the HQ feature shipped, but it was never versioned in the kit -- an invisible drift point, now closed.
+- **.claude/plans/doe-v2-lean-proof-of-life.md** -- the v2.0 plan: cut list, docs-site generation design, proof-of-life doctrine, sequencing, and resolved decisions.
+
+### Changed
+- **setup.sh** -- no longer registers `heartbeat.py` / `context_monitor.py` as global PostToolUse hooks. They fired on every tool call in every session: the heartbeat serves only active waves, and context monitoring is native to Claude Code (`/context`, auto-compaction). The hook files remain shipped (inert) until the wave-stack phase of the v2.0 plan lands.
+- **directives/starter-kit-sync.md** -- Step 11 is now post-merge verification and cleanup only: `auto-release.yml` owns the release (regenerate, stamp, tag, GitHub release) on merge to main. The retired manual walkthrough used the opposite tag ordering to the workflow and would race it if both ran.
+- **directives/delivery-rules.md** -- dropped the "run `scan_docs.py` after sync" trigger (script removed, see Removed).
+- **global-commands/commands.md** -- the installation check now derives the expected command count from `global-commands/` instead of a hardcoded "24" (the kit ships 33; the hardcoded count had drifted by nine).
+- **global-commands/pull-doe.md** -- Quality Stack comparison list drops `verify_tests.py`.
+- **.githooks/pre-commit** -- removed dead `tests/security/` exclusion filters (directory removed, see Removed).
+- **README.md / SYSTEM-MAP.md / manifest.json** -- counts and listings updated for the removals and moves.
+- **tests/execution/doe_init_integration.py** -- relocated from `execution/test_doe_init.py` (same-basename trap with the pytest file `tests/execution/test_doe_init.py`). Deliberately not named `test_*.py`: it is a script-style runner that executes at import time and must not be collected by pytest. Internal path resolution updated for the new location.
+- **migrations/bootstrap_invariants.py** -- relocated from `execution/`; it is a one-time v1.49 migration tool and no longer ships in the universal layer.
+
+### Removed
+- **execution/scan_docs.py** -- required `docs/docs-manifest.json`, which has never existed in git history; the script has never successfully run anywhere it shipped.
+- **execution/stamp_kit_version.py** -- zero references anywhere in the repo; superseded by `stamp_tutorial_version.py`.
+- **execution/logger.py** -- imported by nothing.
+- **execution/verify_tests.py** -- installed by setup but never executed, documented, or used as a contract target.
+- **tests/security/** -- fixture files consumed by nothing (superseded by `tests/claude_hooks/` and `proof/corpus/`).
+- **proof/live/index.html** -- unreferenced by any script, doc, or workflow.
+
+### Pull impact
+Machines that ran earlier setups still carry the two stale global hook registrations (`setup.sh` merge only adds, never removes). Remove them with:
+
+```bash
+python3 - <<'PYMIG'
+import json, pathlib
+p = pathlib.Path.home() / ".claude" / "settings.json"
+s = json.loads(p.read_text())
+pt = s.get("hooks", {}).get("PostToolUse", [])
+s["hooks"]["PostToolUse"] = [e for e in pt if not any(
+    "heartbeat.py" in h.get("command", "") or "context_monitor.py" in h.get("command", "")
+    for h in e.get("hooks", []))]
+p.write_text(json.dumps(s, indent=2) + "\n")
+print("removed stale PostToolUse registrations")
+PYMIG
+```
+
+Projects that pull the kit: the five relocated/removed scripts are no longer in the universal layer; stale copies in a project's `execution/` are harmless and can be deleted on the next `/pull-doe`.
+
 ## v1.69.0 (2026-06-10)
 <!-- hero -->
 Gives `doe init` an interactive face. The setup wizard's question cards are now live: arrow keys (or `j`/`k`) move a green-highlighted selection that glides into place, numbers jump to an option, Enter chooses, and `esc`/`←` walks back through earlier answers — all redrawing in one screen region rather than scrolling a wall of prompts. The look is Albion "Chalk & Flint" (the real `#41A56E` green + chalk + flint tokens from `html_builder.py`), opened by a one-time `DOE` wordmark. Nothing about the flow or the files produced changes; this is the same wizard, now navigable. It degrades cleanly: on a non-TTY (CI, pipes), a terminal too short, or where raw mode is unavailable (Windows), it falls back to exactly today's numbered prompts.
