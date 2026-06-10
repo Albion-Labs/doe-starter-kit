@@ -10,9 +10,11 @@ and outputs a config dict for subsequent installation steps.
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -417,6 +419,320 @@ def detect_project_state(project_dir, detect_patterns=None):
         "framework_key": framework_key,
         "framework_name": framework_name,
     }
+
+
+# ── Interactive TUI layer (init wizard only) ─────────────────────────────
+#
+# A live, coloured, arrow-navigable card engine layered ON TOP of the plain
+# card flow. One persistent screen region redraws in place, so moving and
+# going back feel like one screen rather than a printed trail. Selection
+# motion: the highlight wipes in from the left. Degrades cleanly to numbered
+# input() when stdout isn't a TTY, the terminal is too short, or raw mode is
+# unavailable (Windows / CI). Albion "Chalk & Flint" palette -- tokens mirror
+# global-scripts/html_builder.py (#41A56E dark-mode green, chalk, flint).
+
+_TTY = sys.stdout.isatty() and sys.stdin.isatty()
+_NO_COLOR = os.environ.get("NO_COLOR") is not None
+_TERM_NAME = os.environ.get("TERM", "")
+_COLOR = _TTY and not _NO_COLOR and _TERM_NAME != "dumb"
+_TRUE = _COLOR and os.environ.get("COLORTERM", "") in ("truecolor", "24bit")
+
+_GREEN = (65, 165, 110)    # #41A56E -- the single Albion green (dark-mode)
+_SEL_BG = (30, 42, 35)     # #1E2A23 -- selection background (dark accent-light)
+_SEL_FG = (246, 244, 238)  # #F6F4EE -- chalk, text on the selection
+_FLINT = (139, 149, 144)   # #8B9590 -- muted flint, borders + dim text
+
+_RESET = "\x1b[0m" if _COLOR else ""
+_BOLD = "\x1b[1m" if _COLOR else ""
+_DIM = "\x1b[2m" if _COLOR else ""
+_G16 = "\x1b[92m" if _COLOR else ""   # 16-colour green fallback
+
+
+def _fg(r, g, b):
+    return f"\x1b[38;2;{r};{g};{b}m" if _TRUE else ""
+
+
+def _bg(r, g, b):
+    return f"\x1b[48;2;{r};{g};{b}m" if _TRUE else ""
+
+
+def _grn(s):
+    return ((_fg(*_GREEN) if _TRUE else _G16) + s + _RESET) if _COLOR else s
+
+
+def _flt(s):
+    return ((_fg(*_FLINT) if _TRUE else _DIM) + s + _RESET) if _COLOR else s
+
+
+def _dm(s):
+    return (_DIM + s + _RESET) if _COLOR else s
+
+
+def _tbord(ch):
+    if _TRUE:
+        return _fg(*_FLINT) + ch + _RESET
+    return (_DIM + ch + _RESET) if _COLOR else ch
+
+
+def _t_top():
+    return _tbord("┌" + "─" * W + "┐")
+
+
+def _t_sep():
+    return _tbord("├" + "─" * W + "┤")
+
+
+def _t_bot():
+    return _tbord("└" + "─" * W + "┘")
+
+
+def _t_wrap(inner):
+    return _tbord("│") + inner + _tbord("│")
+
+
+def _t_fit(s):
+    return s[:W].ljust(W)
+
+
+def _t_header(title, step, total):
+    dots = "●" * step + "○" * max(total - step, 0)
+    stepper = f"{dots} {step}/{total}" if total else ""
+    left = "  " + title
+    gap = W - len(left) - len(stepper) - 1
+    plain = _t_fit(left + " " * max(gap, 1) + stepper + " ")
+    if not _COLOR:
+        return _t_wrap(plain)
+    styled = _BOLD + plain[:len(left)] + _RESET
+    for ch in plain[len(left):]:
+        styled += _grn(ch) if ch == "●" else _flt(ch)
+    return _t_wrap(styled)
+
+
+def _t_option(label, desc, rec, selected, wipe):
+    mark = "▸" if selected else " "
+    text = f"  {mark} {label:<18} {desc}"
+    text = text[:W - 2].ljust(W - 2)
+    plain = _t_fit(text + " " + ("*" if rec else " "))
+    if not _COLOR:
+        return _t_wrap(plain)
+    if selected and _TRUE:
+        k = max(0, min(W, int(round(W * wipe))))
+        lit = _bg(*_SEL_BG) + _fg(*_SEL_FG) + _BOLD + plain[:k] + _RESET
+        rest = (_fg(*_FLINT) + plain[k:] + _RESET) if k < W else ""
+        return _t_wrap(lit + rest)
+    if selected:
+        return _t_wrap(_BOLD + _G16 + plain + _RESET)
+    body, star = plain[:-1], plain[-1]
+    return _t_wrap(_flt(body) + (_grn(star) if rec else _flt(star)))
+
+
+def _t_body(text):
+    return _t_wrap(_flt(_t_fit("  " + text)))
+
+
+def _t_hint(text="  ↑↓ move   1-9 jump   ⏎ choose   esc back   q quit"):
+    return _t_wrap(_flt(_t_fit(text)))
+
+
+def _t_render(spec, sel, wipe):
+    """Render a card spec -> list of styled lines. spec keys: title, step,
+    total, options [(label, desc, rec)], body [str] | None, hint bool."""
+    lines = [_t_top(), _t_header(spec["title"], spec.get("step", 0), spec.get("total", 0)), _t_sep()]
+    for bl in spec.get("body") or []:
+        lines.append(_t_body(bl))
+    if spec.get("body"):
+        lines.append(_t_wrap(_t_fit("")))
+    for i, (label, desc, rec) in enumerate(spec["options"]):
+        lines.append(_t_option(label, desc, rec, i == sel, wipe))
+    lines.append(_t_sep())
+    if spec.get("hint", True):
+        lines.append(_t_hint())
+    lines.append(_t_bot())
+    return lines
+
+
+def _t_confirm_overlay():
+    prompt = "  Abort setup? Nothing has been written.  "
+    return [_t_wrap(_t_fit("")), _flt(prompt) + _grn("y") + _flt(" / ") + "N"]
+
+
+def _term_rows():
+    try:
+        return shutil.get_terminal_size((80, 24)).lines
+    except Exception:
+        return 24
+
+
+def tui_available(card_lines):
+    """True if the live engine can run AND a card of `card_lines` height fits
+    with headroom. Otherwise callers use the numbered fallback."""
+    if not _TTY:
+        return False
+    try:
+        import termios  # noqa: F401
+        import tty  # noqa: F401
+    except Exception:
+        return False
+    return _term_rows() >= card_lines + 4
+
+
+def tui_wordmark():
+    """One-time DOE wordmark. Gradient sweep on truecolor, plain otherwise."""
+    text, tag = "◢◤ DOE", "directive · orchestration · execution"
+    if not _COLOR:
+        print(text + "\n" + tag + "\n")
+        return
+    if not _TRUE:
+        print(_G16 + _BOLD + text + _RESET + "\n" + _dm(tag) + "\n")
+        return
+    for step in range(len(text) + 3):
+        buf = ""
+        for j, ch in enumerate(text):
+            if j <= step - 2:
+                buf += _fg(*_GREEN) + _BOLD + ch + _RESET
+            elif j <= step:
+                buf += _fg(200, 220, 200) + _BOLD + ch + _RESET
+            else:
+                buf += _fg(*_FLINT) + ch + _RESET
+        sys.stdout.write("\r" + buf)
+        sys.stdout.flush()
+        time.sleep(0.018)
+    sys.stdout.write("\r" + _fg(*_GREEN) + _BOLD + text + _RESET + "\n")
+    print(_dm(tag) + "\n")
+
+
+class _Tui:
+    """Owns raw mode + one persistent screen region for the whole interactive
+    run, so consecutive cards redraw in place. Use as a context manager."""
+
+    DURATION = 0.14   # selection-glide seconds
+
+    def __init__(self):
+        import termios
+        import tty
+        self._termios = termios
+        self._tty = tty
+        self._fd = sys.stdin.fileno()
+        self._old = None
+        self._region = {"n": 0, "init": False}
+
+    def __enter__(self):
+        self._old = self._termios.tcgetattr(self._fd)
+        self._tty.setcbreak(self._fd)
+        sys.stdout.write("\x1b[?25l")   # hide cursor
+        sys.stdout.flush()
+        return self
+
+    def __exit__(self, *exc):
+        sys.stdout.write("\x1b[?25h")   # show cursor
+        sys.stdout.flush()
+        if self._old is not None:
+            self._termios.tcsetattr(self._fd, self._termios.TCSADRAIN, self._old)
+        return False
+
+    def _draw(self, lines):
+        out = ""
+        if self._region["init"] and self._region["n"]:
+            out += f"\x1b[{self._region['n']}A\x1b[0J"   # up N, clear to end
+        out += "".join(ln + "\n" for ln in lines)
+        sys.stdout.write(out)
+        sys.stdout.flush()
+        self._region["n"] = len(lines)
+        self._region["init"] = True
+
+    def clear_region(self):
+        """Erase the current region (used before printing a final summary)."""
+        self._draw([])
+
+    def suspend(self):
+        """Drop to cooked mode for an input() interlude below the region."""
+        sys.stdout.write("\x1b[?25h")
+        sys.stdout.flush()
+        if self._old is not None:
+            self._termios.tcsetattr(self._fd, self._termios.TCSADRAIN, self._old)
+
+    def resume(self):
+        """Re-enter raw mode; the next card starts a fresh region here."""
+        self._tty.setcbreak(self._fd)
+        sys.stdout.write("\x1b[?25l")
+        sys.stdout.flush()
+        self._region = {"n": 0, "init": False}
+
+    def run_card(self, spec, initial=0):
+        """Run one card in the persistent region. Returns one of
+        ("choose", idx) | ("back", None) | ("abort", None)."""
+        import select as _select
+        n_opts = len(spec["options"])
+        sel = max(0, min(initial, n_opts - 1))
+        sel_t0 = time.monotonic() - 1.0    # no glide on first paint
+        mode = "nav"
+        dirty = True
+        try:
+            while True:
+                now = time.monotonic()
+                wipe = min(1.0, (now - sel_t0) / self.DURATION)
+                if dirty or wipe < 1.0:
+                    lines = _t_render(spec, sel, wipe)
+                    if mode == "confirm":
+                        lines = lines + _t_confirm_overlay()
+                    self._draw(lines)
+                    dirty = False
+                r, _, _ = _select.select([self._fd], [], [], 0.03)
+                if not r:
+                    continue
+                data = os.read(self._fd, 16)
+                if mode == "confirm":
+                    if data in (b"y", b"Y"):
+                        return ("abort", None)
+                    mode = "nav"
+                    dirty = True
+                    continue
+                prev = sel
+                if data in (b"\x1b[A", b"\x1bOA", b"k"):
+                    sel = (sel - 1) % n_opts
+                elif data in (b"\x1b[B", b"\x1bOB", b"j"):
+                    sel = (sel + 1) % n_opts
+                elif data in (b"\r", b"\n"):
+                    return ("choose", sel)
+                elif data in (b"\x1b", b"\x1b[D", b"b"):
+                    return ("back", None)
+                elif data in (b"q", b"\x03"):
+                    mode = "confirm"
+                    dirty = True
+                elif data.isdigit():
+                    idx = int(data) - 1
+                    if 0 <= idx < n_opts:
+                        sel = idx            # jump highlight only
+                if sel != prev:
+                    sel_t0 = now
+                    dirty = True
+        except KeyboardInterrupt:
+            return ("abort", None)
+
+
+def tui_select_plain(spec, initial=0):
+    """Numbered fallback for one card. Same return contract as run_card."""
+    rows = [top(), header(spec["title"]) if spec.get("step") is None else
+            header(spec["title"], f"step {spec.get('step')}/{spec.get('total')}"), sep()]
+    for bl in spec.get("body") or []:
+        rows.append(line(bl))
+    if spec.get("body"):
+        rows.append(line(""))
+    for n, (label, desc, rec) in enumerate(spec["options"], 1):
+        star = " *" if rec else ""
+        rows.append(line(f"[{n}] {label:<18} {desc}{star}"))
+    rows.append(bot())
+    print_card(rows)
+    valid = [str(n) for n in range(1, len(spec["options"]) + 1)]
+    while True:
+        raw = ask("> (number, b=back, q=quit): ", default=str(initial + 1)).strip().lower()
+        if raw == "q":
+            return ("abort", None)
+        if raw == "b":
+            return ("back", None)
+        if raw in valid:
+            return ("choose", int(raw) - 1)
+        print("  Enter a number, 'b' to go back, or 'q' to quit.")
 
 
 # ── Wizard cards ─────────────────────────────────────────────────────────
