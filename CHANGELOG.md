@@ -7,6 +7,22 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.68.2 (2026-06-10)
+<!-- hero -->
+Stops `doe init` from recording a false "First session" when DOE is scaffolded onto an **existing** repo. The wizard seeds the blank `_base` templates — STATE.md's "First session." line and an empty ROADMAP "## Complete" — and then auto-commits them, so adopting DOE onto a mature project (say, 40 commits in) left the session files claiming the project was greenfield. `/stand-up`, `/crack-on`, `/wrap` and `/sitrep` then trusted that lie and treated real, in-flight work as a fresh start. A new backfill step now rewrites those two files from real git history at adoption time, so the session commands start from the truth.
+<!-- /hero -->
+<!-- background -->
+The signal was already present and unused: `detect_project_state()` returns `has_git` / `is_empty` and the welcome card even prints "Adding DOE alongside your existing code" — but nothing fed that into how the state files were seeded. The fix adds `backfill_from_history()`, called in `run_wizard()` *after* the template copy and *before* `setup_ci_git_collaboration()` so the corrected files land in the initial scaffolding commit rather than as a follow-up.
+
+Two design constraints shaped it. **Truth over cleverness:** STATE.md's "Last Session" becomes "Adopted DOE onto existing repo — N prior commits. Last work: <HEAD subject>. Pre-DOE history lives in git log, not this file.", and ROADMAP "## Complete" is seeded with a `git log` pointer plus the most recent commits — the minimum bar is simply to stop the lie, not to reconstruct a full history. **Never clobber:** a file is rewritten only if it still byte-matches the pristine template, so a STATE.md the user has already edited is untouched and a second init is a no-op. Greenfield/empty projects are gated out entirely (`is_empty`), as are repos with an unborn HEAD (no commits) — their behaviour is unchanged.
+<!-- /background -->
+
+### Fixed
+- **`execution/doe_init.py`** — new `backfill_from_history(project_dir, is_empty, kit_dir)`, wired into `run_wizard()` between `install_layer_files()` and `setup_ci_git_collaboration()`. On an existing repo with commits it rewrites the freshly-seeded STATE.md ("Last Session") and ROADMAP.md ("## Complete") from `git rev-list` / `git log`. Idempotent and non-destructive (pristine-template match required); no-op on greenfield/empty dirs and on repos with no commits.
+
+### Pull impact
+Affects new `doe init` runs only — no change to already-scaffolded projects. Re-run `setup.sh` / `/pull-doe` to receive the updated wizard. If you previously adopted DOE onto an existing repo and your STATE.md still says "First session.", edit that one line by hand (the backfill only runs at init time and will not retroactively touch an existing install).
+
 ## v1.68.1 (2026-06-10)
 <!-- hero -->
 Fixes worktree sessions registering as separate projects in the cross-project dashboard. `/wrap`'s registry step recorded the project name from the current directory's basename, so a `/wrap` run inside a git worktree (`<project>/.claude/worktrees/<name>`) filed the session under the *worktree* name (e.g. `z1-console-mvp`) instead of the parent project (`proof`). The dashboard dedups projects by name, so the worktree surfaced as its own project beside its parent. The registry update now strips `/.claude/worktrees/<name>` and attributes the session to the parent project, so worktree work rolls up under one project.
