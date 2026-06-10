@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-KIT = Path.home() / "doe-starter-kit"
+KIT = Path(__file__).resolve().parents[2]  # repo root: tests this checkout, not a hardcoded ~/doe-starter-kit (worktree/CI-safe)
 HOOK = KIT / ".claude" / "hooks" / "enforce_review_gate.py"
 
 # Runtime-built trigger to keep this file's bytes out of any literal scan.

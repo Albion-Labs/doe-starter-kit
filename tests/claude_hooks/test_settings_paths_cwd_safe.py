@@ -31,7 +31,7 @@ import re
 import subprocess
 from pathlib import Path
 
-KIT = Path.home() / "doe-starter-kit"
+KIT = Path(__file__).resolve().parents[2]  # repo root: tests this checkout, not a hardcoded ~/doe-starter-kit (worktree/CI-safe)
 SETTINGS = KIT / ".claude" / "settings.json"
 
 

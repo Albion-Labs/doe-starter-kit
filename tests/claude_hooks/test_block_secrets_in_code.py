@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-KIT = Path.home() / "doe-starter-kit"
+KIT = Path(__file__).resolve().parents[2]  # repo root: tests this checkout, not a hardcoded ~/doe-starter-kit (worktree/CI-safe)
 HOOK = KIT / ".claude" / "hooks" / "block_secrets_in_code.py"
 
 # Build the secret-shaped sample at runtime so this test file's bytes don't
