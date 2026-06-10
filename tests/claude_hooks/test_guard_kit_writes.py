@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-KIT = Path.home() / "doe-starter-kit"
+KIT = Path(__file__).resolve().parents[2]  # repo root: tests this checkout, not a hardcoded ~/doe-starter-kit (worktree/CI-safe)
 HOOK = KIT / ".claude" / "hooks" / "guard_kit_writes.py"
 
 
