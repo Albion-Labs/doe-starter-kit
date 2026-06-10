@@ -883,6 +883,28 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-68-0">
+          <div class="release-header">
+            <span class="version-badge">v1.68.0</span>
+            <span class="release-date">10 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Closes the loop on stale global tools. The kit&#x27;s global tools (<code>~/.claude/scripts/*.py</code>, <code>~/.claude/commands/*.md</code>) are copies installed by <code>setup.sh</code> — a kit release does NOT update them in place, so they sat on the old version until you re-ran setup, silently (the v1.67.0 Chalk &amp; Flint release exposed this: the kit shipped the new look but <code>/wrap</code> kept rendering the old one). Now <code>setup.sh</code> stamps the installed version, a single freshness check compares it to the kit, and <strong>two surfaces</strong> nudge you when you&#x27;re behind — a SessionStart hook at the start of every session and the <code>/wrap</code> kit-status step at the end. Both are silent when you&#x27;re current. A new <code>setup.sh --tools-only</code> is the one-command fix the nudge points at.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">The gap was structural: the machine kept no record of what version its global tools were, and nothing ever compared that to the kit. <code>setup.sh</code> even computed the kit version at install time and threw it away. So a release could land in the kit and never reach the tools that actually run — exactly what happened with Chalk &amp; Flint. The design turns on one non-obvious constraint: <strong>a stale tool can&#x27;t announce its own staleness.</strong> A check living inside <code>wrap_html.py</code> would be missing from the very (old) <code>wrap_html.py</code> that needs to report itself out of date, so it could never fire. The detector has to sit outside the tools it watches. That rules out &quot;warn from the generator&quot; and points at an independent watcher: a SessionStart hook (installed once, stable, compares the install stamp to the kit on every session) plus the <code>/wrap</code> prompt step (which the model runs regardless of how stale the generators are). Both call <strong>one</strong> shared script — there is no duplicated comparison logic, and the nudge prints nothing unless you are genuinely behind. Detection is local and offline: the install stamp (<code>~/.claude/.doe-tools-version</code>) records the version and the kit checkout path; the check runs <code>git describe --tags</code> in that checkout. This catches the common case precisely — you pulled the kit but didn&#x27;t re-install. The fix it recommends, <code>setup.sh --tools-only</code>, re-installs only the global scripts + commands + the stamp and skips hooks/settings, so it is fast and sidesteps the settings.json hook-merge churn. One caveat, inherent to any &quot;tell me I&#x27;m stale&quot; feature: the watcher itself has to be installed once (a single normal <code>setup.sh</code> for this release) before it can start nudging — after that it is self-maintaining, and will even flag when it is itself behind.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong><code>global-scripts/check_tools_version.py</code></strong> — the single freshness check both surfaces call. Reads the install stamp, compares its version against <code>git describe --tags</code> in the stamped kit checkout, and prints one actionable line only when behind (numeric semver compare, not lexical). Silent and exit-0 on anything odd (no stamp, kit moved, git missing) so it can never block a session.</li>
+            <li><strong><code>setup.sh</code> — install stamp</strong> (<code>~/.claude/.doe-tools-version</code>: version + kit path) written on every full install and on <code>--tools-only</code>, and a <strong>SessionStart hook</strong> registered in <code>~/.claude/settings.json</code> that runs the freshness check at session start (idempotent, deduped by command string).</li>
+            <li><strong><code>setup.sh --tools-only</code></strong> (alias <code>--scripts-only</code>) — fast path that re-installs only the global scripts + commands + stamp and exits, leaving hooks/settings untouched. The command the staleness nudge tells you to run.</li>
+            <li><strong><code>tests/execution/test_tools_version.py</code></strong> — pins the numeric version comparison, stamp parsing, and silent-unless-behind behaviour.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong><code>global-commands/wrap.md</code></strong> — the Step 6 DOE Kit sync check now also runs <code>check_tools_version.py</code> and surfaces its line (when non-empty) in the wrap output: the end-of-session half of the same check the SessionStart hook runs at the start.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-67-0">
           <div class="release-header">
             <span class="version-badge">v1.67.0</span>
@@ -981,6 +1003,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>May 2026 (14 releases)</summary>
+
         <div class="release" id="v1-64-1">
           <div class="release-header">
             <span class="version-badge">v1.64.1</span>
@@ -993,10 +1019,6 @@
             <li><strong><code>.gitignore</code></strong> — added <code>.claude/worktrees/</code> next to the existing <code>.claude/projects/</code> entry. Claude Code&#x27;s <code>EnterWorktree</code> tool creates a git worktree under <code>.claude/worktrees/&lt;name&gt;/</code> for background-agent isolation; without an ignore line the directory shows as untracked in every <code>git status</code>. Pattern is additive and harmless for projects that never trigger <code>EnterWorktree</code> (no directory ever created, ignore line matches nothing).</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>May 2026 (13 releases)</summary>
 
         <div class="release" id="v1-64-0">
           <div class="release-header">

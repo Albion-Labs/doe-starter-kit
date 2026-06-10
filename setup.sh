@@ -16,6 +16,17 @@ HOOKS_DST="$HOME/.claude/hooks"
 SCRIPTS_SRC="$SCRIPT_DIR/global-scripts"
 SCRIPTS_DST="$HOME/.claude/scripts"
 SETTINGS_FILE="$HOME/.claude/settings.json"
+TOOLS_STAMP="$HOME/.claude/.doe-tools-version"
+
+# Flags. --tools-only (alias --scripts-only) re-installs ONLY the global tools
+# (scripts + commands) + the version stamp, skipping hooks/settings/project files.
+# It's the fast, safe updater the freshness nudge points at (no hook-merge churn).
+TOOLS_ONLY=0
+for arg in "$@"; do
+    case "$arg" in
+        --tools-only|--scripts-only) TOOLS_ONLY=1 ;;
+    esac
+done
 
 # Get kit version from latest git tag (fall back to "unknown")
 KIT_VERSION=$(cd "$SCRIPT_DIR" && git describe --tags --abbrev=0 2>/dev/null || echo "unknown")
@@ -41,6 +52,48 @@ backup_then_copy() {
     cp -f "$src" "$dst"
 }
 
+# write_tools_stamp — record what kit version produced the installed global tools,
+# and where the kit checkout lives, so the freshness check can compare without a
+# network call. Read by global-scripts/check_tools_version.py.
+write_tools_stamp() {
+    python3 - "$KIT_VERSION" "$SCRIPT_DIR" "$TODAY" "$TOOLS_STAMP" <<'PYEOF'
+import json, os, sys
+version, kit_path, installed, stamp = sys.argv[1:5]
+os.makedirs(os.path.dirname(stamp), exist_ok=True)
+with open(stamp, "w", encoding="utf-8") as f:
+    json.dump({"version": version, "kit_path": kit_path, "installed": installed},
+              f, indent=2)
+    f.write("\n")
+PYEOF
+}
+
+# --- Tools-only fast path ---
+# Re-install just the global tools (commands + scripts) and refresh the stamp,
+# then exit before touching hooks/settings/project files. This is what the
+# staleness nudge tells you to run after a kit release.
+if [ "$TOOLS_ONLY" = "1" ]; then
+    mkdir -p "$COMMANDS_DST" "$SCRIPTS_DST"
+    c=0; s=0
+    for f in "$COMMANDS_SRC"/*.md; do
+        [ -f "$f" ] || continue
+        fname=$(basename "$f")
+        [ "$fname" = "README.md" ] && continue
+        backup_then_copy "$f" "$COMMANDS_DST/$fname" commands
+        c=$((c + 1))
+    done
+    for f in "$SCRIPTS_SRC"/*.py; do
+        [ -f "$f" ] || continue
+        backup_then_copy "$f" "$SCRIPTS_DST/$(basename "$f")" scripts
+        s=$((s + 1))
+    done
+    write_tools_stamp
+    if [ "$BACKUP_COUNT" -gt 0 ]; then
+        echo "ℹ  Backed up $BACKUP_COUNT customised file(s) to $BACKUP_DIR"
+    fi
+    echo "✓ $c commands + $s scripts updated to DOE Kit $KIT_VERSION (tools-only; hooks/settings unchanged)"
+    exit 0
+fi
+
 # --- Wizard delegation ---
 # If this is a new or non-DOE project, run the init wizard instead of blind-copy setup.
 if [ ! -f "CLAUDE.md" ] || [ ! -d "directives" ]; then
@@ -57,6 +110,7 @@ fi
 mkdir -p "$COMMANDS_DST"
 COMMAND_COUNT=0
 for f in "$COMMANDS_SRC"/*.md; do
+    [ -f "$f" ] || continue
     fname=$(basename "$f")
     # Skip README.md — it's the GitHub directory readme, not a command
     if [ "$fname" = "README.md" ]; then
@@ -148,26 +202,39 @@ if settings_path.exists():
         pass
 
 hooks = settings.setdefault('hooks', {})
-post_hooks = hooks.get('PostToolUse', [])
 
-GLOBAL_HOOKS = [
-    {
-        'hooks': [
+# Desired global hooks, keyed by event. Dedup is by exact command string, so
+# re-running setup is idempotent and adding a NEW command never duplicates an
+# existing one.
+WANTED = {
+    'PostToolUse': [
+        {'hooks': [
             {'type': 'command', 'command': 'python3 ~/.claude/hooks/heartbeat.py',
              'description': 'Update session heartbeat during active waves'},
             {'type': 'command', 'command': 'python3 ~/.claude/hooks/context_monitor.py',
              'description': 'Warn at 60% context usage, stop at 80%'},
-        ]
-    }
-]
+        ]}
+    ],
+    'SessionStart': [
+        {'matcher': 'startup', 'hooks': [
+            {'type': 'command', 'command': 'python3 ~/.claude/scripts/check_tools_version.py',
+             'description': 'Nudge when DOE global tools are behind the kit'},
+        ]}
+    ],
+}
 
-global_cmds = {h['command'] for entry in GLOBAL_HOOKS for h in entry.get('hooks', [])}
-existing_cmds = {h.get('command', '') for entry in post_hooks for h in entry.get('hooks', [])}
+changed = False
+for event, wanted_entries in WANTED.items():
+    existing = hooks.get(event, [])
+    wanted_cmds = {h['command'] for e in wanted_entries for h in e['hooks']}
+    existing_cmds = {h.get('command', '') for e in existing for h in e.get('hooks', [])}
+    if not wanted_cmds.issubset(existing_cmds):
+        cleaned = [e for e in existing if not any(h.get('command', '') in wanted_cmds for h in e.get('hooks', []))]
+        cleaned.extend(wanted_entries)
+        hooks[event] = cleaned
+        changed = True
 
-if not global_cmds.issubset(existing_cmds):
-    cleaned = [e for e in post_hooks if not any(h.get('command', '') in global_cmds for h in e.get('hooks', []))]
-    cleaned.extend(GLOBAL_HOOKS)
-    hooks['PostToolUse'] = cleaned
+if changed:
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     settings_path.write_text(json.dumps(settings, indent=2) + '\n')
     print('  ✓ Global hooks merged into ~/.claude/settings.json')
@@ -344,7 +411,9 @@ if [ -f "$SCRIPT_DIR/.github/pull_request_template.md" ] && [ ! -f ".github/pull
     echo "✓ PR template installed to .github/"
 fi
 
-# 10. Summary
+# 10. Stamp the installed tools version (powers the staleness nudge) + summary
+write_tools_stamp
+
 echo ""
 echo "✓ $COMMAND_COUNT commands installed to ~/.claude/commands/"
 echo "✓ $HOOK_COUNT global hooks installed to ~/.claude/hooks/"
