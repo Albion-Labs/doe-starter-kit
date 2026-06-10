@@ -10,9 +10,11 @@ and outputs a config dict for subsequent installation steps.
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -417,6 +419,292 @@ def detect_project_state(project_dir, detect_patterns=None):
         "framework_key": framework_key,
         "framework_name": framework_name,
     }
+
+
+# ── Interactive TUI layer (init wizard only) ─────────────────────────────
+#
+# A live, coloured, arrow-navigable card engine layered ON TOP of the plain
+# card flow. One persistent screen region redraws in place, so moving and
+# going back feel like one screen rather than a printed trail. Selection
+# motion: the highlight wipes in from the left. Degrades cleanly to numbered
+# input() when stdout isn't a TTY, the terminal is too short, or raw mode is
+# unavailable (Windows / CI). Albion "Chalk & Flint" palette -- tokens mirror
+# global-scripts/html_builder.py (#41A56E dark-mode green, chalk, flint).
+
+_TTY = sys.stdout.isatty() and sys.stdin.isatty()
+_NO_COLOR = os.environ.get("NO_COLOR") is not None
+_TERM_NAME = os.environ.get("TERM", "")
+_COLOR = _TTY and not _NO_COLOR and _TERM_NAME != "dumb"
+_TRUE = _COLOR and os.environ.get("COLORTERM", "") in ("truecolor", "24bit")
+
+_GREEN = (65, 165, 110)    # #41A56E -- the single Albion green (dark-mode)
+_SEL_BG = (30, 42, 35)     # #1E2A23 -- selection background (dark accent-light)
+_SEL_FG = (246, 244, 238)  # #F6F4EE -- chalk, text on the selection
+_FLINT = (139, 149, 144)   # #8B9590 -- muted flint, borders + dim text
+
+_RESET = "\x1b[0m" if _COLOR else ""
+_BOLD = "\x1b[1m" if _COLOR else ""
+_DIM = "\x1b[2m" if _COLOR else ""
+_G16 = "\x1b[92m" if _COLOR else ""   # 16-colour green fallback
+
+
+def _fg(r, g, b):
+    return f"\x1b[38;2;{r};{g};{b}m" if _TRUE else ""
+
+
+def _bg(r, g, b):
+    return f"\x1b[48;2;{r};{g};{b}m" if _TRUE else ""
+
+
+def _grn(s):
+    return ((_fg(*_GREEN) if _TRUE else _G16) + s + _RESET) if _COLOR else s
+
+
+def _flt(s):
+    return ((_fg(*_FLINT) if _TRUE else _DIM) + s + _RESET) if _COLOR else s
+
+
+def _dm(s):
+    return (_DIM + s + _RESET) if _COLOR else s
+
+
+def _tbord(ch):
+    if _TRUE:
+        return _fg(*_FLINT) + ch + _RESET
+    return (_DIM + ch + _RESET) if _COLOR else ch
+
+
+def _t_top():
+    return _tbord("┌" + "─" * W + "┐")
+
+
+def _t_sep():
+    return _tbord("├" + "─" * W + "┤")
+
+
+def _t_bot():
+    return _tbord("└" + "─" * W + "┘")
+
+
+def _t_wrap(inner):
+    return _tbord("│") + inner + _tbord("│")
+
+
+def _t_fit(s):
+    return s[:W].ljust(W)
+
+
+def _t_header(title, step, total):
+    dots = "●" * step + "○" * max(total - step, 0)
+    stepper = f"{dots} {step}/{total}" if total else ""
+    left = "  " + title
+    gap = W - len(left) - len(stepper) - 1
+    plain = _t_fit(left + " " * max(gap, 1) + stepper + " ")
+    if not _COLOR:
+        return _t_wrap(plain)
+    styled = _BOLD + plain[:len(left)] + _RESET
+    for ch in plain[len(left):]:
+        styled += _grn(ch) if ch == "●" else _flt(ch)
+    return _t_wrap(styled)
+
+
+def _t_option(label, desc, rec, selected, wipe):
+    mark = "▸" if selected else " "
+    text = f"  {mark} {label:<18} {desc}"
+    text = text[:W - 2].ljust(W - 2)
+    plain = _t_fit(text + " " + ("*" if rec else " "))
+    if not _COLOR:
+        return _t_wrap(plain)
+    if selected and _TRUE:
+        k = max(0, min(W, int(round(W * wipe))))
+        lit = _bg(*_SEL_BG) + _fg(*_SEL_FG) + _BOLD + plain[:k] + _RESET
+        rest = (_fg(*_FLINT) + plain[k:] + _RESET) if k < W else ""
+        return _t_wrap(lit + rest)
+    if selected:
+        return _t_wrap(_BOLD + _G16 + plain + _RESET)
+    body, star = plain[:-1], plain[-1]
+    return _t_wrap(_flt(body) + (_grn(star) if rec else _flt(star)))
+
+
+def _t_body(text):
+    return _t_wrap(_flt(_t_fit("  " + text)))
+
+
+def _t_hint(text="  ↑↓ move   1-9 jump   ⏎ choose   esc back   q quit"):
+    return _t_wrap(_flt(_t_fit(text)))
+
+
+def _t_render(spec, sel, wipe):
+    """Render a card spec -> list of styled lines. spec keys: title, step,
+    total, options [(label, desc, rec)], body [str] | None, hint bool."""
+    lines = [_t_top(), _t_header(spec["title"], spec.get("step", 0), spec.get("total", 0)), _t_sep()]
+    for bl in spec.get("body") or []:
+        lines.append(_t_body(bl))
+    if spec.get("body"):
+        lines.append(_t_wrap(_t_fit("")))
+    for i, (label, desc, rec) in enumerate(spec["options"]):
+        lines.append(_t_option(label, desc, rec, i == sel, wipe))
+    lines.append(_t_sep())
+    if spec.get("hint", True):
+        lines.append(_t_hint())
+    lines.append(_t_bot())
+    return lines
+
+
+def _t_confirm_overlay():
+    prompt = "  Abort setup? Nothing has been written.  "
+    return [_t_wrap(_t_fit("")), _flt(prompt) + _grn("y") + _flt(" / ") + "N"]
+
+
+def _term_rows():
+    try:
+        return shutil.get_terminal_size((80, 24)).lines
+    except Exception:
+        return 24
+
+
+def tui_available(card_lines):
+    """True if the live engine can run AND a card of `card_lines` height fits
+    with headroom. Otherwise callers use the numbered fallback."""
+    if not _TTY:
+        return False
+    try:
+        import termios  # noqa: F401
+        import tty  # noqa: F401
+    except Exception:
+        return False
+    return _term_rows() >= card_lines + 4
+
+
+def tui_wordmark():
+    """One-time DOE wordmark. Gradient sweep on truecolor, plain otherwise."""
+    text, tag = "◢◤ DOE", "directive · orchestration · execution"
+    if not _COLOR:
+        print(text + "\n" + tag + "\n")
+        return
+    if not _TRUE:
+        print(_G16 + _BOLD + text + _RESET + "\n" + _dm(tag) + "\n")
+        return
+    for step in range(len(text) + 3):
+        buf = ""
+        for j, ch in enumerate(text):
+            if j <= step - 2:
+                buf += _fg(*_GREEN) + _BOLD + ch + _RESET
+            elif j <= step:
+                buf += _fg(200, 220, 200) + _BOLD + ch + _RESET
+            else:
+                buf += _fg(*_FLINT) + ch + _RESET
+        sys.stdout.write("\r" + buf)
+        sys.stdout.flush()
+        time.sleep(0.018)
+    sys.stdout.write("\r" + _fg(*_GREEN) + _BOLD + text + _RESET + "\n")
+    print(_dm(tag) + "\n")
+
+
+class _Tui:
+    """Owns raw mode + one persistent screen region for the whole interactive
+    run, so consecutive cards redraw in place. Use as a context manager."""
+
+    DURATION = 0.14   # selection-glide seconds
+
+    def __init__(self):
+        import termios
+        import tty
+        self._termios = termios
+        self._tty = tty
+        self._fd = sys.stdin.fileno()
+        # Probe the terminal here so a non-tty fails at construction, where
+        # _collect_config_tui's try/except catches it and falls back to plain.
+        self._old = termios.tcgetattr(self._fd)
+        self._region = {"n": 0, "init": False}
+
+    def __enter__(self):
+        self._tty.setcbreak(self._fd)
+        sys.stdout.write("\x1b[?25l")   # hide cursor
+        sys.stdout.flush()
+        return self
+
+    def __exit__(self, *exc):
+        sys.stdout.write("\x1b[?25h")   # show cursor
+        sys.stdout.flush()
+        if self._old is not None:
+            self._termios.tcsetattr(self._fd, self._termios.TCSADRAIN, self._old)
+        return False
+
+    def _draw(self, lines):
+        out = ""
+        if self._region["init"] and self._region["n"]:
+            out += f"\x1b[{self._region['n']}A\x1b[0J"   # up N, clear to end
+        out += "".join(ln + "\n" for ln in lines)
+        sys.stdout.write(out)
+        sys.stdout.flush()
+        self._region["n"] = len(lines)
+        self._region["init"] = True
+
+    def suspend(self):
+        """Drop to cooked mode for an input() interlude below the region."""
+        sys.stdout.write("\x1b[?25h")
+        sys.stdout.flush()
+        if self._old is not None:
+            self._termios.tcsetattr(self._fd, self._termios.TCSADRAIN, self._old)
+
+    def resume(self):
+        """Re-enter raw mode; the next card starts a fresh region here."""
+        self._tty.setcbreak(self._fd)
+        sys.stdout.write("\x1b[?25l")
+        sys.stdout.flush()
+        self._region = {"n": 0, "init": False}
+
+    def run_card(self, spec, initial=0):
+        """Run one card in the persistent region. Returns one of
+        ("choose", idx) | ("back", None) | ("abort", None)."""
+        import select as _select
+        n_opts = len(spec["options"])
+        sel = max(0, min(initial, n_opts - 1))
+        sel_t0 = time.monotonic() - 1.0    # no glide on first paint
+        mode = "nav"
+        dirty = True
+        try:
+            while True:
+                now = time.monotonic()
+                wipe = min(1.0, (now - sel_t0) / self.DURATION)
+                if dirty or wipe < 1.0:
+                    lines = _t_render(spec, sel, wipe)
+                    if mode == "confirm":
+                        lines = lines + _t_confirm_overlay()
+                    self._draw(lines)
+                    dirty = False
+                r, _, _ = _select.select([self._fd], [], [], 0.03)
+                if not r:
+                    continue
+                data = os.read(self._fd, 16)
+                if mode == "confirm":
+                    if data in (b"y", b"Y"):
+                        return ("abort", None)
+                    mode = "nav"
+                    dirty = True
+                    continue
+                prev = sel
+                if data in (b"\x1b[A", b"\x1bOA", b"k"):
+                    sel = (sel - 1) % n_opts
+                elif data in (b"\x1b[B", b"\x1bOB", b"j"):
+                    sel = (sel + 1) % n_opts
+                elif data in (b"\r", b"\n"):
+                    return ("choose", sel)
+                elif data in (b"\x1b", b"\x1b[D", b"b"):
+                    return ("back", None)
+                elif data in (b"q", b"\x03"):
+                    mode = "confirm"
+                    dirty = True
+                elif data.isdigit():
+                    idx = int(data) - 1
+                    if 0 <= idx < n_opts:
+                        sel = idx            # jump highlight only
+                if sel != prev:
+                    sel_t0 = now
+                    dirty = True
+        except KeyboardInterrupt:
+            return ("abort", None)
 
 
 # ── Wizard cards ─────────────────────────────────────────────────────────
@@ -1698,6 +1986,255 @@ def backfill_from_history(project_dir, is_empty, kit_dir):
     return f"Backfilled {', '.join(rewrote)} from {n_commits} prior commit{plural}"
 
 
+# ── Config collection (live TUI flow + plain fallback) ───────────────────
+
+def _freetext(tui, prompt):
+    """Drop out of the live region for a single typed answer, then resume."""
+    tui.suspend()
+    try:
+        val = input(prompt).strip()
+    except (EOFError, KeyboardInterrupt):
+        val = ""
+    tui.resume()
+    return val
+
+
+def _run_step(step, tui, answers, state, kit_dir, project_dir, step_pos):
+    """Run one question step in the live region. Returns "next"|"back"|"abort".
+    Mutates `answers`. Rare branches (show-all frameworks, platform multi-select,
+    team usernames) drop to the existing plain prompts via suspend/resume."""
+    sp, tot = step_pos(step)
+    sel_mem = answers["_sel"]
+
+    if step == "project_type":
+        opts = [(label, "", False) for _key, label in PROJECT_TYPES]
+        res, idx = tui.run_card(
+            {"title": "What are you building?", "step": sp, "total": tot, "options": opts},
+            sel_mem.get("project_type", 0))
+        if res != "choose":
+            return res
+        sel_mem["project_type"] = idx
+        key = PROJECT_TYPES[idx][0]
+        answers["project_type"] = key
+        answers["project_type_custom"] = (
+            _freetext(tui, "  Describe your project type: ") if key == "other" else "")
+        return "next"
+
+    if step == "framework":
+        pt = answers["project_type"]
+        detected = state["framework_key"]
+        if detected:
+            name = state["framework_name"]
+            opts = [(f"Use {name}", "detected", True), ("Choose a different framework", "", False)]
+            res, idx = tui.run_card(
+                {"title": "FRAMEWORK", "step": sp, "total": tot,
+                 "body": [f"Detected: {name}"], "options": opts},
+                sel_mem.get("framework", 0))
+            if res != "choose":
+                return res
+            sel_mem["framework"] = idx
+            if idx == 0:
+                answers["framework"], answers["framework_custom"] = detected, ""
+            else:
+                tui.suspend()
+                fk, custom = card_framework(pt, show_all=True)
+                tui.resume()
+                answers["framework"], answers["framework_custom"] = fk, custom
+            return "next"
+        if pt == "other" or pt in _FREE_TEXT_TYPES:
+            answers["framework"] = "_other"
+            answers["framework_custom"] = _freetext(tui, "  Describe your framework/stack: ")
+            return "next"
+        raw_opts = _build_framework_options(pt, show_all=False)
+        keys, opts = [], []
+        for key, disp, desc in raw_opts:
+            rec = disp.endswith(" *")
+            keys.append(key)
+            opts.append((disp[:-2] if rec else disp, desc, rec))
+        keys.append("__showall__")
+        opts.append(("Show all frameworks", "", False))
+        res, idx = tui.run_card(
+            {"title": "FRAMEWORK", "step": sp, "total": tot, "options": opts},
+            sel_mem.get("framework", 0))
+        if res != "choose":
+            return res
+        sel_mem["framework"] = idx
+        key = keys[idx]
+        if key == "__showall__":
+            tui.suspend()
+            fk, custom = card_framework(pt, show_all=True)
+            tui.resume()
+            answers["framework"], answers["framework_custom"] = fk, custom
+        elif key == "_other":
+            answers["framework"] = "_other"
+            answers["framework_custom"] = _freetext(tui, "  Describe your framework/stack: ")
+        else:
+            answers["framework"], answers["framework_custom"] = key, ""
+        return "next"
+
+    if step == "platform":
+        tui.suspend()
+        answers["platform_targets"] = card_platform_targets()
+        tui.resume()
+        return "next"
+
+    if step == "setup":
+        opts = [("Just me", "solo", False), ("Team", "multiple contributors", False)]
+        res, idx = tui.run_card(
+            {"title": "SETUP", "step": sp, "total": tot,
+             "body": ["Is this just you, or does a team contribute?"], "options": opts},
+            sel_mem.get("setup", 0))
+        if res != "choose":
+            return res
+        sel_mem["setup"] = idx
+        if idx == 0:
+            answers["collab"] = {"mode": "solo", "github_users": [], "security_owner": ""}
+        else:
+            tui.suspend()
+            users_raw = input("  GitHub usernames (comma-separated): ").strip()
+            users = [u.strip() for u in users_raw.split(",") if u.strip()] or ["you"]
+            sec = input(f"  Who owns security reviews? (default: {users[0]}): ").strip() or users[0]
+            tui.resume()
+            answers["collab"] = {"mode": "team", "github_users": users, "security_owner": sec}
+        return "next"
+
+    # data cascade: data_db -> data_personal -> data_political
+    bodies = {
+        "data_db": ("DATA", ["Will your app store user data?",
+                             "(accounts, preferences, content they create)"]),
+        "data_personal": ("COMPLIANCE", ["Will it handle personal data?",
+                                         "(names, emails, addresses, opinions, health)",
+                                         "",
+                                         "Adds GDPR compliance directives + a DPIA template."]),
+        "data_political": ("POLITICAL / ELECTORAL", ["Is this a political or electoral",
+                                                     "campaign project?",
+                                                     "(electoral register, voter data, donations)",
+                                                     "",
+                                                     "Most projects: no. Adds criminal-liability",
+                                                     "and campaign-finance directives."]),
+    }
+    title, body = bodies[step]
+    opts = [("No", "", False), ("Yes", "", False)]
+    res, idx = tui.run_card(
+        {"title": title, "step": sp, "total": tot, "body": body, "options": opts},
+        sel_mem.get(step, 0))
+    if res != "choose":
+        return res
+    sel_mem[step] = idx
+    val = (idx == 1)
+    if step == "data_db":
+        answers["has_database"] = val
+        if not val:
+            answers["has_personal_data"] = answers["is_political"] = False
+    elif step == "data_personal":
+        answers["has_personal_data"] = val
+        if not val:
+            answers["is_political"] = False
+    else:
+        answers["is_political"] = val
+    return "next"
+
+
+def _collect_config_tui(kit_dir, project_dir, state):
+    """Live, navigable question flow. Returns the answers dict, or None on abort.
+    Assumes tui_available() already returned True."""
+    detected = state["framework_key"]
+    answers = {
+        "project_type": FRAMEWORK_PROJECT_TYPE.get(detected, "web") if detected else None,
+        "project_type_custom": "", "framework": None, "framework_custom": "",
+        "platform_targets": [], "collab": None,
+        "has_database": None, "has_personal_data": None, "is_political": None,
+        "_sel": {},
+    }
+    steps = ["project_type", "framework", "platform", "setup",
+             "data_db", "data_personal", "data_political"]
+
+    def skip(s):
+        if s == "project_type":
+            return bool(detected)
+        if s == "platform":
+            return answers["project_type"] not in ("desktop", "mobile")
+        if s == "data_personal":
+            return not answers["has_database"]
+        if s == "data_political":
+            return not answers["has_personal_data"]
+        return False
+
+    def step_pos(s):
+        vis = [x for x in steps if not skip(x)]
+        return (vis.index(s) + 1, len(vis)) if s in vis else (1, len(vis) or 1)
+
+    try:
+        tui = _Tui()
+    except Exception:
+        return "__not_capable__"
+
+    with tui:
+        i = 0
+        while i < len(steps):
+            if skip(steps[i]):
+                i += 1
+                continue
+            res = _run_step(steps[i], tui, answers, state, kit_dir, project_dir, step_pos)
+            if res == "abort":
+                return None
+            if res == "back":
+                j = i - 1
+                while j >= 0 and skip(steps[j]):
+                    j -= 1
+                if j >= 0:
+                    i = j
+                continue
+            i += 1
+
+    return {
+        "project_type": answers["project_type"],
+        "project_type_custom": answers["project_type_custom"],
+        "framework": answers["framework"],
+        "framework_custom": answers["framework_custom"],
+        "platform_targets": answers["platform_targets"],
+        "collab": answers["collab"] or {"mode": "solo", "github_users": [], "security_owner": ""},
+        "has_database": bool(answers["has_database"]),
+        "has_personal_data": bool(answers["has_personal_data"]),
+        "is_political": bool(answers["is_political"]),
+    }
+
+
+def _collect_config_plain(kit_dir, project_dir, state):
+    """Original numbered-prompt flow, unchanged. The guaranteed fallback."""
+    if state["framework_key"]:
+        project_type = FRAMEWORK_PROJECT_TYPE.get(state["framework_key"], "web")
+        project_type_custom = ""
+    else:
+        project_type, project_type_custom = card_project_type()
+
+    framework, framework_custom = None, ""
+    if state["framework_key"]:
+        if card_framework_confirm(state["framework_name"]):
+            framework = state["framework_key"]
+        else:
+            framework, framework_custom = card_framework(project_type, show_all=True)
+    elif project_type == "other" or project_type in _FREE_TEXT_TYPES:
+        custom = ask("  Describe your framework/stack: ")
+        framework, framework_custom = "_other", custom
+    else:
+        framework, framework_custom = card_framework(project_type)
+
+    platform_targets = []
+    if project_type in ("desktop", "mobile"):
+        platform_targets = card_platform_targets()
+
+    collab = card_setup()
+    has_database, has_personal_data, is_political = card_data()
+    return {
+        "project_type": project_type, "project_type_custom": project_type_custom,
+        "framework": framework, "framework_custom": framework_custom,
+        "platform_targets": platform_targets, "collab": collab,
+        "has_database": has_database, "has_personal_data": has_personal_data,
+        "is_political": is_political,
+    }
+
+
 # ── Main wizard flow ─────────────────────────────────────────────────────
 
 def run_wizard(kit_dir, project_dir):
@@ -1706,59 +2243,37 @@ def run_wizard(kit_dir, project_dir):
     detect_patterns = load_detect_patterns(kit_dir) or _FALLBACK_DETECT_PATTERNS
     state = detect_project_state(project_dir, detect_patterns)
 
-    # Card 0: Welcome
+    # Card 0: Welcome (wordmark above the detection card when interactive)
+    if _TTY:
+        tui_wordmark()
     card_welcome(kit_version, project_dir, state)
 
-    # Card 1: Project type (skip if framework auto-detected)
-    project_type = None
-    project_type_custom = ""
-    if state["framework_key"]:
-        # Auto-detected -- infer project type from framework
-        project_type = FRAMEWORK_PROJECT_TYPE.get(state["framework_key"], "web")
-    else:
-        project_type, project_type_custom = card_project_type()
+    # Collect answers: live arrow-nav flow when the terminal supports it,
+    # otherwise the plain numbered prompts. Both yield the same fields.
+    answers = None
+    if tui_available(20):
+        answers = _collect_config_tui(kit_dir, project_dir, state)
+        if answers == "__not_capable__":
+            answers = None
+        elif answers is None:
+            print("Aborted. No files were written.")
+            sys.exit(0)
+    if answers is None:
+        answers = _collect_config_plain(kit_dir, project_dir, state)
 
-    # Card 2: Framework
-    framework = None
-    framework_custom = ""
-    if state["framework_key"]:
-        accepted = card_framework_confirm(state["framework_name"])
-        if accepted:
-            framework = state["framework_key"]
-        else:
-            # User declined detection -- show full list, keep inferred type
-            framework, framework_custom = card_framework(project_type, show_all=True)
-    elif project_type == "other" or project_type in _FREE_TEXT_TYPES:
-        # "Other" type or type with no dedicated frameworks -- free-text directly
-        custom = ask("  Describe your framework/stack: ")
-        framework, framework_custom = "_other", custom
-    else:
-        framework, framework_custom = card_framework(project_type)
-
-    # Card 2b: Platform targets (desktop/mobile only)
-    platform_targets = []
-    if project_type in ("desktop", "mobile"):
-        platform_targets = card_platform_targets()
-
-    # Card 3: Solo/team
-    collab = card_setup()
-
-    # Card 4: Data questions
-    has_database, has_personal_data, is_political = card_data()
-
-    # Build config dict
+    collab = answers["collab"]
     config = {
-        "project_type": project_type,
-        "project_type_custom": project_type_custom,
-        "framework": framework,
-        "framework_custom": framework_custom,
+        "project_type": answers["project_type"],
+        "project_type_custom": answers["project_type_custom"],
+        "framework": answers["framework"],
+        "framework_custom": answers["framework_custom"],
         "collaboration_mode": collab["mode"],
         "github_users": collab["github_users"],
         "security_owner": collab["security_owner"],
-        "has_database": has_database,
-        "has_personal_data": has_personal_data,
-        "is_political": is_political,
-        "platform_targets": platform_targets,
+        "has_database": answers["has_database"],
+        "has_personal_data": answers["has_personal_data"],
+        "is_political": answers["is_political"],
+        "platform_targets": answers["platform_targets"],
         "detected_framework": state["framework_key"],
         "project_dir": str(project_dir),
         "kit_dir": str(kit_dir),
