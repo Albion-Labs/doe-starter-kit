@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <title>Commands — DOE Starter Kit</title>
+  <link id="favicon" rel="icon" type="image/png" href="favicon-light.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1335,83 +1337,82 @@
         <!-- Session Lifecycle Flow Diagram -->
         <div class="lifecycle-flow">
           <h3>Session Lifecycle</h3>
-          <svg class="flow-svg" viewBox="0 0 610 254" xmlns="http://www.w3.org/2000/svg" aria-label="Command flowchart showing session lifecycle">
+          <svg class="flow-svg" viewBox="0 0 610 254" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font)" aria-label="Command flowchart showing session lifecycle">
             <defs>
               <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                <path d="M0,0 L8,3 L0,6 Z" fill="#6366F1"/>
+                <path d="M0,0 L8,3 L0,6 Z" style="fill:var(--accent)"/>
               </marker>
               <marker id="arrow-muted" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                <path d="M0,0 L8,3 L0,6 Z" fill="#94A3B8"/>
+                <path d="M0,0 L8,3 L0,6 Z" style="fill:var(--text-muted)"/>
               </marker>
-              <marker id="arrow-rose" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-                <path d="M0,0 L8,3 L0,6 Z" fill="#F43F5E"/>
+              <marker id="arrow-gold" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L8,3 L0,6 Z" style="fill:var(--accent-amber)"/>
               </marker>
             </defs>
 
-            <!-- Main flow: stand-up → [work] → review → wrap → eod -->
-            <!-- stand-up box -->
-            <rect x="10" y="50" width="104" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
-            <text x="62" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/stand-up</text>
+            <!-- Main flow: stand-up → [work] → review → wrap → eod. Green = command, gold = the required gate, grey = passive/optional. -->
+            <!-- stand-up box (green: primary command) -->
+            <rect x="10" y="50" width="104" height="40" rx="8" stroke-width="1.5" style="fill:var(--accent-light);stroke:var(--accent)"/>
+            <text x="62" y="75" text-anchor="middle" font-size="13" font-weight="600" style="fill:var(--accent)">/stand-up</text>
 
-            <!-- work box -->
-            <rect x="150" y="50" width="80" height="40" rx="8" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.5"/>
-            <text x="190" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="500" fill="#475569">work</text>
+            <!-- work box (grey: passive) -->
+            <rect x="150" y="50" width="80" height="40" rx="8" stroke-width="1.5" style="fill:var(--border-light);stroke:var(--border)"/>
+            <text x="190" y="75" text-anchor="middle" font-size="13" font-weight="500" style="fill:var(--text-muted)">work</text>
 
-            <!-- review box (required after writing code: pass, or fix until it passes) -->
-            <rect x="266" y="50" width="90" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
-            <text x="311" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/review</text>
+            <!-- review box (GOLD: the one required gate — pass, or fix until it passes) -->
+            <rect x="266" y="50" width="90" height="40" rx="8" stroke-width="2" style="fill:var(--bg-callout-warn);stroke:var(--accent-amber)"/>
+            <text x="311" y="75" text-anchor="middle" font-size="13" font-weight="700" style="fill:var(--accent-amber)">/review</text>
 
-            <!-- wrap box -->
-            <rect x="392" y="50" width="80" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
-            <text x="432" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/wrap</text>
+            <!-- wrap box (green: primary command) -->
+            <rect x="392" y="50" width="80" height="40" rx="8" stroke-width="1.5" style="fill:var(--accent-light);stroke:var(--accent)"/>
+            <text x="432" y="75" text-anchor="middle" font-size="13" font-weight="600" style="fill:var(--accent)">/wrap</text>
 
-            <!-- eod box -->
-            <rect x="508" y="50" width="72" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
-            <text x="544" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/eod</text>
+            <!-- eod box (green: primary command) -->
+            <rect x="508" y="50" width="72" height="40" rx="8" stroke-width="1.5" style="fill:var(--accent-light);stroke:var(--accent)"/>
+            <text x="544" y="75" text-anchor="middle" font-size="13" font-weight="600" style="fill:var(--accent)">/eod</text>
 
-            <!-- hq box (below eod: rolls up wraps + eods across all linked projects) -->
-            <rect x="508" y="128" width="72" height="40" rx="8" fill="#FFF1F2" stroke="#F43F5E" stroke-width="1.5"/>
-            <text x="544" y="153" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#F43F5E">/hq</text>
+            <!-- hq box (green command, branch: rolls up wraps + eods across all linked projects) -->
+            <rect x="508" y="128" width="72" height="40" rx="8" stroke-width="1.5" style="fill:var(--accent-light);stroke:var(--accent)"/>
+            <text x="544" y="153" text-anchor="middle" font-size="13" font-weight="600" style="fill:var(--accent)">/hq</text>
 
-            <!-- crack-on box (below stand-up, resume path) -->
-            <rect x="10" y="128" width="104" height="40" rx="8" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
-            <text x="62" y="153" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#10B981">/crack-on</text>
+            <!-- crack-on box (green command, resume branch) -->
+            <rect x="10" y="128" width="104" height="40" rx="8" stroke-width="1.5" style="fill:var(--accent-light);stroke:var(--accent)"/>
+            <text x="62" y="153" text-anchor="middle" font-size="13" font-weight="600" style="fill:var(--accent)">/crack-on</text>
 
-            <!-- Main flow arrows -->
-            <line x1="114" y1="70" x2="146" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
-            <line x1="230" y1="70" x2="262" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
-            <line x1="356" y1="70" x2="388" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
-            <line x1="472" y1="70" x2="504" y2="70" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <!-- Main flow arrows (green) -->
+            <line x1="114" y1="70" x2="146" y2="70" stroke-width="1.5" style="stroke:var(--accent)" marker-end="url(#arrow)"/>
+            <line x1="230" y1="70" x2="262" y2="70" stroke-width="1.5" style="stroke:var(--accent)" marker-end="url(#arrow)"/>
+            <line x1="356" y1="70" x2="388" y2="70" stroke-width="1.5" style="stroke:var(--accent)" marker-end="url(#arrow)"/>
+            <line x1="472" y1="70" x2="504" y2="70" stroke-width="1.5" style="stroke:var(--accent)" marker-end="url(#arrow)"/>
 
-            <!-- review loops back to work until it passes -->
-            <path d="M311,50 L311,22 L190,22 L190,46" fill="none" stroke="#6366F1" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
-            <text x="250" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#94A3B8">fix until pass</text>
+            <!-- review loops back to work until it passes (gold) -->
+            <path d="M311,50 L311,22 L190,22 L190,46" fill="none" stroke-width="1.4" stroke-dasharray="5,3" style="stroke:var(--accent-amber)" marker-end="url(#arrow-gold)"/>
+            <text x="250" y="16" text-anchor="middle" font-size="11" font-weight="600" style="fill:var(--accent-amber)">fix until pass</text>
 
-            <!-- eod to hq (dashed: aggregates across projects) -->
-            <line x1="544" y1="90" x2="544" y2="124" stroke="#F43F5E" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-rose)"/>
-            <text x="556" y="113" font-family="-apple-system, sans-serif" font-size="10" fill="#94A3B8">all projects</text>
+            <!-- eod to hq (grey dashed: aggregates across projects) -->
+            <line x1="544" y1="90" x2="544" y2="124" stroke-width="1.2" stroke-dasharray="5,3" style="stroke:var(--text-muted)" marker-end="url(#arrow-muted)"/>
+            <text x="556" y="113" font-size="10" style="fill:var(--text-muted)">all projects</text>
 
-            <!-- stand-up to crack-on (resume path) -->
-            <line x1="62" y1="90" x2="62" y2="124" stroke="#10B981" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-muted)"/>
-            <text x="80" y="113" font-family="-apple-system, sans-serif" font-size="10" fill="#94A3B8">resume</text>
+            <!-- stand-up to crack-on (grey dashed: resume) -->
+            <line x1="62" y1="90" x2="62" y2="124" stroke-width="1.2" stroke-dasharray="5,3" style="stroke:var(--text-muted)" marker-end="url(#arrow-muted)"/>
+            <text x="80" y="113" font-size="10" style="fill:var(--text-muted)">resume</text>
 
-            <!-- sitrep box (optional mid-session check-in) -->
-            <rect x="150" y="128" width="90" height="40" rx="8" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5"/>
-            <text x="195" y="153" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#6366F1">/sitrep</text>
+            <!-- sitrep box (grey: optional mid-session check-in) -->
+            <rect x="150" y="128" width="90" height="40" rx="8" stroke-width="1.5" style="fill:var(--border-light);stroke:var(--border)"/>
+            <text x="195" y="153" text-anchor="middle" font-size="13" font-weight="600" style="fill:var(--text-muted)">/sitrep</text>
 
-            <!-- work → sitrep (optional check-in during work) -->
-            <line x1="195" y1="90" x2="195" y2="124" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-muted)"/>
-            <text x="248" y="113" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#94A3B8">optional check-in</text>
+            <!-- work → sitrep (grey dashed: optional check-in) -->
+            <line x1="195" y1="90" x2="195" y2="124" stroke-width="1.2" stroke-dasharray="5,3" style="stroke:var(--text-muted)" marker-end="url(#arrow-muted)"/>
+            <text x="248" y="113" text-anchor="middle" font-size="10" style="fill:var(--text-muted)">optional check-in</text>
 
             <!-- Legend -->
-            <rect x="10" y="200" width="570" height="44" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
-            <line x1="32" y1="222" x2="66" y2="222" stroke="#6366F1" stroke-width="1.5" marker-end="url(#arrow)"/>
-            <text x="76" y="226" font-family="-apple-system, sans-serif" font-size="12" fill="#475569">Session flow</text>
-            <line x1="190" y1="222" x2="224" y2="222" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-muted)"/>
-            <text x="234" y="226" font-family="-apple-system, sans-serif" font-size="12" fill="#475569">Optional / branching</text>
-            <rect x="393" y="213" width="46" height="18" rx="4" fill="#F0FDF4" stroke="#10B981" stroke-width="1"/>
-            <text x="416" y="226" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#10B981">green</text>
-            <text x="447" y="226" font-family="-apple-system, sans-serif" font-size="12" fill="#475569">= resume path</text>
+            <rect x="10" y="200" width="570" height="44" rx="8" style="fill:var(--border-light);stroke:var(--border)" stroke-width="1"/>
+            <line x1="32" y1="222" x2="66" y2="222" stroke-width="1.5" style="stroke:var(--accent)" marker-end="url(#arrow)"/>
+            <text x="76" y="226" font-size="12" style="fill:var(--text-secondary)">Session flow</text>
+            <line x1="206" y1="222" x2="240" y2="222" stroke-width="1.2" stroke-dasharray="5,3" style="stroke:var(--text-muted)" marker-end="url(#arrow-muted)"/>
+            <text x="250" y="226" font-size="12" style="fill:var(--text-secondary)">Optional / branch</text>
+            <rect x="410" y="213" width="20" height="18" rx="4" stroke-width="1.5" style="fill:var(--bg-callout-warn);stroke:var(--accent-amber)"/>
+            <text x="440" y="226" font-size="12" style="fill:var(--text-secondary)">Required gate (review)</text>
           </svg>
         </div>
 
@@ -2803,6 +2804,8 @@
       var html = document.documentElement;
 
       function applyTheme(dark) {
+        var fav = document.getElementById('favicon');
+        if (fav) fav.href = dark ? 'favicon-dark.png' : 'favicon-light.png';
         if (dark) {
           html.setAttribute('data-theme', 'dark');
         } else {

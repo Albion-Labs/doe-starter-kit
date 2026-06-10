@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <title>PR Workflow — DOE Starter Kit</title>
+  <link id="favicon" rel="icon" type="image/png" href="favicon-light.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -610,14 +612,9 @@
       font-family: var(--font);
       font-weight: 500;
     }
-    .pf-block.green { background: #059669; }
-    .pf-block.amber { background: #D97706; }
-    .pf-block.rose  { background: #E11D48; }
-    [data-theme="dark"] .pf-block { background: #4F46E5; }
-    [data-theme="dark"] .pf-block.green { background: #047857; }
-    [data-theme="dark"] .pf-block.amber { background: #B45309; }
-    [data-theme="dark"] .pf-block.rose  { background: #BE123C; }
-    [data-theme="dark"] .pf-block.muted { background: #1E293B; color: var(--text-secondary); }
+    .pf-block.gate { background: var(--accent-amber); color: #fff; }
+    [data-theme="dark"] .pf-block.gate { color: #1F1A0E; }
+    [data-theme="dark"] .pf-block.muted { background: var(--border); color: var(--text-secondary); }
     .pf-arrow {
       color: var(--text-muted);
       font-size: 14px;
@@ -663,10 +660,9 @@
       height: 8px;
       border-radius: 50%;
     }
-    .pf-legend-dot.branch { background: var(--accent); }
-    .pf-legend-dot.ci     { background: #D97706; }
-    .pf-legend-dot.gate   { background: #E11D48; }
-    .pf-legend-dot.merge  { background: #059669; }
+    .pf-legend-dot.flow { background: var(--accent); }
+    .pf-legend-dot.gate { background: var(--accent-amber); }
+    .pf-legend-dot.auto { background: var(--text-muted); }
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
@@ -1028,21 +1024,20 @@
             <div class="pf-break-line"></div>
           </div>
           <div class="pr-flow-row">
-            <span class="pf-block rose">/review</span>
+            <span class="pf-block gate">/review</span>
             <span class="pf-arrow">&rarr;</span>
-            <span class="pf-block amber">gh pr create</span>
+            <span class="pf-block">gh pr create</span>
             <span class="pf-arrow">&rarr;</span>
-            <span class="pf-block amber">CI runs</span>
+            <span class="pf-block muted">CI runs</span>
             <span class="pf-arrow">&rarr;</span>
-            <span class="pf-block rose">snagging</span>
+            <span class="pf-block gate">snagging</span>
             <span class="pf-arrow">&rarr;</span>
-            <span class="pf-block green">approve + merge</span>
+            <span class="pf-block">approve + merge</span>
           </div>
           <div class="pf-legend">
-            <div class="pf-legend-item"><span class="pf-legend-dot branch"></span> Build phase</div>
-            <div class="pf-legend-item"><span class="pf-legend-dot gate"></span> Review &amp; quality gates</div>
-            <div class="pf-legend-item"><span class="pf-legend-dot ci"></span> CI</div>
-            <div class="pf-legend-item"><span class="pf-legend-dot merge"></span> Approve &amp; merge</div>
+            <div class="pf-legend-item"><span class="pf-legend-dot flow"></span> Flow / actions</div>
+            <div class="pf-legend-item"><span class="pf-legend-dot gate"></span> Quality gate (review, snagging)</div>
+            <div class="pf-legend-item"><span class="pf-legend-dot auto"></span> CI (automatic)</div>
           </div>
         </div>
 
@@ -1464,6 +1459,8 @@
       var html = document.documentElement;
 
       function applyTheme(dark) {
+        var fav = document.getElementById('favicon');
+        if (fav) fav.href = dark ? 'favicon-dark.png' : 'favicon-light.png';
         if (dark) {
           html.setAttribute('data-theme', 'dark');
         } else {
