@@ -33,27 +33,33 @@ OUT = PROOF / "out" / "scorecard.json"
 ENFORCEMENT = {"block": "blocked", "flag": "flagged", "miss": "none"}
 
 # Escape-valve env vars are scrubbed before every hook invocation: an
-# inherited shell override must never silently green a fault.
+# inherited shell override must never silently green a fault. GIT_* vars are
+# scrubbed too -- an ambient GIT_DIR makes `git -C <non-git-dir>` succeed
+# against the OUTER repo, silently inverting fail-closed faults (F15), and
+# global git config (e.g. commit.gpgsign) must not leak into fixtures.
 ESCAPE_VALVES = ("SKIP_KIT_GUARD", "SKIP_REVIEW_GATE", "BYPASS_BLOCK",
                  "ALLOW_MERGE", "SKIP_MAIN_PROTECTION")
 
 
-def _run_hook(hook_file, event, env_extra=None):
+def _scrubbed_env(env_extra=None):
+    env = {k: v for k, v in os.environ.items()
+           if k not in ESCAPE_VALVES and not k.startswith("GIT_")}
+    if env_extra:
+        env.update(env_extra)
+    return env
+
+
+def _run_hook(hook_file, event, env_extra=None, cwd=None):
     path = HOOKS / hook_file
     if not path.exists():
         return None, f"gate script missing: {path}"
-    env = dict(os.environ)
-    for k in ESCAPE_VALVES:
-        env.pop(k, None)
-    if env_extra:
-        env.update(env_extra)
     try:
         # cwd is anchored to the kit so relative-path checks inside hooks
         # (e.g. protect_directives' existence test) are deterministic
         # regardless of where run.py is invoked from.
         p = subprocess.run([sys.executable, str(path)], input=json.dumps(event),
                            capture_output=True, text=True, timeout=30,
-                           cwd=str(KIT), env=env)
+                           cwd=cwd or str(KIT), env=_scrubbed_env(env_extra))
     except (OSError, subprocess.SubprocessError) as ex:
         return None, f"invoke error: {ex}"
     out = (p.stdout or "").strip()
@@ -99,35 +105,57 @@ def _run_filescan(inject, check_name):
 
 def _git(tmp, *args):
     subprocess.run(["git", "-C", str(tmp), *args], capture_output=True,
-                   text=True, timeout=15, check=True)
+                   text=True, timeout=15, check=True,
+                   env=_scrubbed_env({"GIT_CONFIG_GLOBAL": "/dev/null",
+                                      "GIT_CONFIG_SYSTEM": "/dev/null"}))
 
 
 def _fire_hook_value(fa, value, benign=False):
     ti = dict(fa.get("input_extra", {}))
     ti[fa["input_field"]] = value
     event = {"tool_name": fa["tool_name"], "tool_input": ti}
-    gf = fa.get("git_fixture")
-    if not gf:
-        return _run_hook(fa["hook"], event)
-    # Hooks that read git state via $CLAUDE_PROJECT_DIR get a disposable
-    # fixture: a branch name means a one-commit repo checked out on that
-    # branch; null means a plain non-git directory (exercises the
-    # fail-closed arm).
-    branch = gf["benign_branch"] if benign else gf["fault_branch"]
-    tmp = Path(tempfile.mkdtemp(prefix="doe-proof-git-"))
+    env_extra, cwd, tmps = {}, None, []
     try:
-        if branch is not None:
-            try:
-                _git(tmp, "init", "-q")
-                _git(tmp, "-c", "user.email=proof@doe", "-c", "user.name=proof",
-                     "commit", "--allow-empty", "-q", "-m", "fixture")
-                _git(tmp, "checkout", "-q", "-b", branch)
-            except (OSError, subprocess.SubprocessError) as ex:
-                return None, f"git fixture setup failed: {ex}"
+        # gh_shim: hooks that would call the gh CLI get a PATH-front shim
+        # that always exits 1 -- the fail-closed arm is exercised with zero
+        # network, identically with/without gh installed or authed.
+        if fa.get("gh_shim"):
+            shim = Path(tempfile.mkdtemp(prefix="doe-proof-shim-"))
+            tmps.append(shim)
+            gh = shim / "gh"
+            gh.write_text("#!/bin/sh\necho 'proof shim: gh unavailable' >&2\nexit 1\n")
+            gh.chmod(0o755)
+            env_extra["PATH"] = f"{shim}:{os.environ.get('PATH', '')}"
+        # neutral_cwd: run the hook from a disposable directory instead of
+        # the kit, so cwd-sensitive arms (guard_kit_writes' cwd-inside-kit
+        # branch) cannot mask the pattern arm under test.
+        if fa.get("neutral_cwd"):
+            ncwd = Path(tempfile.mkdtemp(prefix="doe-proof-cwd-"))
+            tmps.append(ncwd)
+            cwd = str(ncwd)
+        # git_fixture: hooks that read git state via $CLAUDE_PROJECT_DIR get
+        # a disposable fixture: a branch name means a one-commit repo checked
+        # out on that branch; null means a plain non-git directory
+        # (exercises the fail-closed arm).
+        gf = fa.get("git_fixture")
+        if gf:
+            branch = gf["benign_branch"] if benign else gf["fault_branch"]
+            tmp = Path(tempfile.mkdtemp(prefix="doe-proof-git-"))
+            tmps.append(tmp)
+            if branch is not None:
+                try:
+                    _git(tmp, "init", "-q")
+                    _git(tmp, "-c", "user.email=proof@doe", "-c", "user.name=proof",
+                         "commit", "--allow-empty", "-q", "-m", "fixture")
+                    _git(tmp, "checkout", "-q", "-b", branch)
+                except (OSError, subprocess.SubprocessError) as ex:
+                    return None, f"git fixture setup failed: {ex}"
+            env_extra["CLAUDE_PROJECT_DIR"] = str(tmp)
         return _run_hook(fa["hook"], event,
-                         env_extra={"CLAUDE_PROJECT_DIR": str(tmp)})
+                         env_extra=env_extra or None, cwd=cwd)
     finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+        for d in tmps:
+            shutil.rmtree(d, ignore_errors=True)
 
 
 def _fire(fa, benign=False):

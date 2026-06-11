@@ -186,7 +186,8 @@
         "starter-kit"
       ],
       "expect": "block",
-      "covered": true
+      "covered": true,
+      "neutral_cwd": true
     },
     {
       "id": "F11",
@@ -210,7 +211,8 @@
       ],
       "expect": "block",
       "covered": true,
-      "note": "Path-mention pattern (environment-independent); the cwd-inside-kit arm additionally fires when run from a kit checkout."
+      "note": "Run from a neutral cwd so the path-mention pattern is the arm under test in every environment; the cwd-inside-kit arm would otherwise mask it when run from a kit checkout.",
+      "neutral_cwd": true
     },
     {
       "id": "F12",
@@ -254,7 +256,8 @@
       ],
       "expect": "block",
       "covered": true,
-      "note": "Exercises the deterministic fail-closed arm: PR 999999 cannot be queried (missing auth, no network, or nonexistent PR) so the hook must block rather than allow. The CLEAN/UNKNOWN/BLOCKED arms need a live API and are not corpus-testable."
+      "note": "Deterministic fail-closed arm: a PATH-front gh shim always exits 1, so the hook's state query fails identically everywhere (no network, no auth dependence) and the hook must block. The CLEAN/UNKNOWN/BLOCKED arms need a live API and are not corpus-testable.",
+      "gh_shim": true
     },
     {
       "id": "F14",
