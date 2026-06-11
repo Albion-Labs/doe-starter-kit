@@ -173,7 +173,7 @@ v2.0 = lean + proof-of-life → **v2.1 = Senior Mode** → **v2.2 = Steward Mode
 | # | Delivers |
 |---|---|
 | 1 | `proof/` corpus extended: every blocking hook + every methodology scenario gets ≥1 must-catch fault + a benign twin; proof runs in `doe-ci.yml` on every kit PR. Pure addition, low risk. |
-| 2 | `doe_gate.py` dispatcher (one spawn per event instead of 4–7), liveness ledger (`~/.claude/doe-telemetry/gate-fires.jsonl`, evaluated vs blocked), directive-read telemetry, **enforce_review_gate worktree fix** (lands here since the file is open anyway, with a worktree regression test), `tests/claude_hooks/` rework. 1–2 sessions; protected by PR 1's fault net. |
+| 2 | `doe_gate.py` dispatcher (one spawn per event instead of 4–7) + **session telemetry spine (implements #78's core)**: one local-first JSONL event stream, gate evaluations (evaluated vs blocked) + directive loads as first event types. **Fixes #107** (review-gate worktree bug) with regression test. `tests/claude_hooks/` rework. 1–2 sessions; protected by PR 1's fault net. |
 | 3–4 | Docs generator: `build_docs.py` + single template/CSS extracted from `generate_whats_new.py`, 2 pilot pages verified by screenshot-diff; then full prune-during conversion, `nav.json`, `stamp_tutorial_version.py` deleted, build wired into `auto-release.yml`. 2–3 sessions. |
 | 5 | Wave-stack deletion + command pruning (stand-up merge, report-doe-bug trim, codemap/project-recap/worktree-cmd removal). Mechanical; decisions already made. |
 | 6 | Structural merges: shared `doe_checks.py`, bug/feature-request merge, `execution/_lib.py`, directive consolidation per the overlap map. 1–2 sessions. |
@@ -182,9 +182,9 @@ v2.0 = lean + proof-of-life → **v2.1 = Senior Mode** → **v2.2 = Steward Mode
 ### v2.1 — Senior Mode (~5–6 sessions)
 | # | Delivers |
 |---|---|
-| 8 | Standing-orders directive (small; immediate effect on every subsequent build, including PRs 9–13). |
+| 8 | Standing-orders directive + language-pack mechanism (#73) carrying anti-monolith content (#74): universal judgement layer plus per-language binding of best-practices at init. |
 | 9–10 | PRD engine: `/scope` rebuild → `docs/prd/<feature>.md`; success criteria compile to todo.md contracts; XY-problem duty in planning-rules. The centrepiece — 2 sessions (design + build). |
-| 11 | Project-class launch gates: `doe init` records class; class-keyed delivery checklist; hard gate for user-data/payments classes. |
+| 11 | Project-class launch gates: `doe init` records class; class-keyed delivery checklist; hard gate for user-data/payments classes. Folds in the init backlog: transactional abort (#67), AGENTS.md mirror (#66), wizard prompt auto-derivation (#30). |
 | 12 | Evidence packs: delivery artifact via `html_builder` (tests, checks, screenshots, decision log) — closes the loop against the PRD. |
 | 13 | Risk tiers + second-opinion ritual: blast-radius declaration in plans/PRs; dangerous tier requires independent fresh-context review, recorded. |
 
@@ -196,3 +196,35 @@ v2.0 = lean + proof-of-life → **v2.1 = Senior Mode** → **v2.2 = Steward Mode
 | 16 | Perimeter checklist + data stewardship + plain-English incident runbook (directives, init defaults, annual audit command). |
 
 **Cadence:** at a few sessions a week, v2.0 completes in ~2 weeks, v2.1 in ~2 more, v2.2 in ~1–2 — call it 4–6 weeks to a kit that is lean, self-verifying, senior-opinionated, and on stewardship autopilot, with `/cull` firing on its own 30-day clock thereafter. Every PR follows the Phase 0 pattern: worktree, scoped contract first (planning-rules), tests in the same PR, CHANGELOG when releasable, merge = release.
+
+---
+
+## Outstanding-issue reconciliation (audited 2026-06-11)
+
+The plan was drafted from the full-kit review; this section reconciles it against every open kit issue so the backlog and the plan are one thing.
+
+### Absorbed into the plan (close via the implementing PR)
+| Issue | Disposition |
+|---|---|
+| **#78 telemetry spine** (keystone for #24/#28/#65) | **PR 2 implements its core.** The liveness ledger IS the spine: one local-first JSONL event stream; gate evaluations + directive loads are the first event types, command usage next. Design PR 2's schema as #78's schema, not a parallel log. |
+| **#107 review-gate worktree bug** | Fixed in PR 2 (`fixes #107`), with a worktree regression test. |
+| **#35 auto doc sync** | Structurally solved by PRs 3–4 (docs generated from markdown inside `auto-release.yml` — freshness becomes impossible to lose). Close on PR 4 merge. |
+| **#24 kit-bloat audit** | This plan IS #24 executed: the review + Phase 0 + PRs 5–6 do the cutting; PR 7's `/cull` delivers its literal acceptance criteria (per-directive load-rate, <20% = candidate). Close pointing here; measured load-rates land with PR 7. |
+| **#28 output evals (binary YES/NO sub-criteria)** | Criteria *format* absorbed into the PRD engine (PRs 9–10): PRD success criteria are authored as binary sub-criteria that compile into contracts. The cross-session rolling pass-rate eval stays parked until the spine (PR 2) has months of data — its own stated trigger. |
+| **#73 language packs + #74 anti-monolith content** | Slot into v2.1 PR 8: standing orders is the universal judgement layer; language packs are its per-language delivery mechanism (bind `best-practices/` + anti-monolith ceilings to detected framework at init). |
+| **#67 init transactional abort, #66 AGENTS.md mirror, #30 wizard prompt auto-derivation** | All three fold into PR 11 (the init-touching PR): stage-to-.tmp atomic install, AGENTS.md mirror, derive ~4 of 7 wizard fields. |
+| **#70 auto-/review on step completion** | Revisit at PR 13 (risk tiers): auto-review on *dangerous-tier* steps is the proof-of-life-compliant version of this (a hook with a reason to fire), and the dispatcher (PR 2) makes the event wiring cheap. |
+
+### Obsoleted / recommend closing now (William to ratify)
+| Issue | Why |
+|---|---|
+| **#25 persistent cross-session memory** | Native Claude Code auto-memory shipped after this was filed and provides the local-first layer; STATE.md/learnings.md remain the project-level state. Absorption doctrine: close as native-superseded. Revisit only if external-source ingestion (meetings/Slack) becomes a real need. |
+| **#17 Conventional Commits adoption** | Substantially shipped in v1.56–v1.57 (commit-msg validation, git-conventions.md, CLAUDE.md section, CC self-dogfood). Residue: warn→block mode flip (one-line decision, take any time) and auto-changelog-from-commits — which now CONFLICTS with the hand-written hero contract in kit-development.md and should not be built. Close with residual note. |
+
+### Parked with explicit triggers
+| Issue | Trigger to revive |
+|---|---|
+| **#65 comparative DOE-value benchmark** | After v2.0 ships: the spine (PR 2) + extended `proof/` (PR 1) provide the substrate; the DOE-on/off comparative suite in a separate repo becomes Steward-era work and doubles as model-release regression detection. |
+| **#69 Slack/CI playbook** | CONFLICT with lean doctrine: the plan deletes `integrations.md` (unused — its own Tradeoff line says skip for solo work) while #69 asks for more Slack docs. Park until any project actually wires Slack notifications — no reader, no docs. |
+| **#27 performance directive** | Standing orders (PR 8) covers the 80% ("make it work → right → fast"); revive the full Doodlestein workflow only when a real perf incident triggers it. |
+| **#26 cross-project asset registry** | Addressed by plugin packaging (WS4, v2.1+) — distribution is the registry. |
