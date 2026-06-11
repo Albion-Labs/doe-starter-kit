@@ -20,7 +20,7 @@ Usage:
   python3 run.py --json     # also print the scorecard JSON
   python3 run.py --self-test
 """
-import hashlib, json, os, shutil, subprocess, sys, tempfile
+import hashlib, json, os, re, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
 PROOF = Path(__file__).resolve().parent
@@ -110,9 +110,21 @@ def _git(tmp, *args):
                                       "GIT_CONFIG_SYSTEM": "/dev/null"}))
 
 
+def _assign_field(ti, field, value):
+    """Assign value at input_field. Flat names assign directly; the indexed
+    form 'name[i].sub' reaches into a list-of-dicts field (MultiEdit edits)."""
+    m = re.fullmatch(r"(\w+)\[(\d+)\]\.(\w+)", field)
+    if m:
+        ti[m.group(1)][int(m.group(2))][m.group(3)] = value
+    else:
+        ti[field] = value
+
+
 def _fire_hook_value(fa, value, benign=False):
-    ti = dict(fa.get("input_extra", {}))
-    ti[fa["input_field"]] = value
+    # Deep copy: indexed assignment must not leak the assembled trigger value
+    # back into the shared manifest dict between the fault and benign arms.
+    ti = json.loads(json.dumps(fa.get("input_extra", {})))
+    _assign_field(ti, fa["input_field"], value)
     event = {"tool_name": fa["tool_name"], "tool_input": ti}
     env_extra, cwd, tmps = {}, None, []
     try:

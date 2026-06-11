@@ -310,6 +310,63 @@
       "expect": "block",
       "covered": true,
       "note": "Fail-closed arm: $CLAUDE_PROJECT_DIR pointing at a non-git directory must block, never silently pass. Known false-positive overlap with worktree checkouts is kit issue #107 (fix scheduled in v2.0 PR 2); this fault pins the fail-closed contract that fix must preserve."
+    },
+    {
+      "id": "F16",
+      "class": "secret-in-edit",
+      "gate": "block_secrets_in_code",
+      "enforcement": "block",
+      "method": "hook",
+      "hook": "block_secrets_in_code.py",
+      "tool_name": "Edit",
+      "input_field": "new_string",
+      "input_extra": {
+        "file_path": "config.py",
+        "old_string": "AWS_KEY = \"\""
+      },
+      "value_parts": [
+        "AWS_KEY = \"AKIAIOSF",
+        "ODNN7EXAMPLE\""
+      ],
+      "benign_value_parts": [
+        "AWS_REGION = \"eu-west-2\""
+      ],
+      "expect": "block",
+      "covered": true,
+      "note": "Edit-tool arm: the secret arrives in new_string, not content. Pins the v1.71.3 fix for the gap where only content/file_text were scanned and Edit passed silently."
+    },
+    {
+      "id": "F17",
+      "class": "secret-in-multiedit",
+      "gate": "block_secrets_in_code",
+      "enforcement": "block",
+      "method": "hook",
+      "hook": "block_secrets_in_code.py",
+      "tool_name": "MultiEdit",
+      "input_field": "edits[1].new_string",
+      "input_extra": {
+        "file_path": "config.py",
+        "edits": [
+          {
+            "old_string": "GREETING = \"hi\"",
+            "new_string": "GREETING = \"hello\""
+          },
+          {
+            "old_string": "GITHUB_TOKEN = \"\"",
+            "new_string": ""
+          }
+        ]
+      },
+      "value_parts": [
+        "GITHUB_TOKEN = \"ghp_0123456789abcdef",
+        "ghijklmnopqrstuvwxyzABCD\""
+      ],
+      "benign_value_parts": [
+        "GITHUB_REPO = \"example/repo\""
+      ],
+      "expect": "block",
+      "covered": true,
+      "note": "MultiEdit arm: secret in edits[1].new_string behind a benign first edit -- exercises the per-edit scan, not just edits[0]. run.py assigns indexed input_field paths like edits[1].new_string."
     }
   ]
 }

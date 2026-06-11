@@ -1,11 +1,12 @@
 """Hook: Block writes that contain potential API keys or secrets.
 
-Covers Edit/Write/MultiEdit (content + file_path check) AND Bash commands
-that redirect secret-shaped strings into a file (`echo SECRET=… >> .env.local`,
-`cat > config <<EOF SECRET=… EOF`, etc.). The only file allowed to hold
-secrets is the local `.env`; every other `.env.*` variant is blocked
-outright. Bash redirections targeting any path receive the same secret-
-pattern scan.
+Covers Edit/Write/MultiEdit (every written field: Write `content`/`file_text`,
+Edit `new_string`, MultiEdit `edits[].new_string` — plus the file_path check)
+AND Bash commands that redirect secret-shaped strings into a file
+(`echo SECRET=… >> .env.local`, `cat > config <<EOF SECRET=… EOF`, etc.).
+The only file allowed to hold secrets is the local `.env`; every other
+`.env.*` variant is blocked outright. Bash redirections targeting any path
+receive the same secret-pattern scan.
 """
 import json
 import re
@@ -55,6 +56,24 @@ def _basename(path):
     return path.rsplit("/", 1)[-1] if "/" in path else path
 
 
+def _written_content(tool_input):
+    """Every byte the tool would write: Write's content/file_text, Edit's
+    new_string, MultiEdit's edits[].new_string. old_string is deliberately
+    excluded — it is existing file content, and scanning it would block the
+    edit that REMOVES a secret from a file."""
+    pieces = [
+        tool_input.get("content", "") or "",
+        tool_input.get("file_text", "") or "",
+        tool_input.get("new_string", "") or "",
+    ]
+    edits = tool_input.get("edits")
+    if isinstance(edits, list):
+        for edit in edits:
+            if isinstance(edit, dict):
+                pieces.append(edit.get("new_string", "") or "")
+    return "\n".join(p for p in pieces if p)
+
+
 def _scan_blocked_env_variant(command):
     """Return the matched .env.* variant if the command writes to one."""
     for variant in BLOCKED_ENV_VARIANTS:
@@ -74,7 +93,7 @@ def main():
 
     # ── Edit/Write/MultiEdit branch ──────────────────────────────
     if tool_name in WRITE_TOOLS:
-        content = tool_input.get("content", "") or tool_input.get("file_text", "") or ""
+        content = _written_content(tool_input)
         path = tool_input.get("file_path", "") or tool_input.get("path", "") or ""
         basename = _basename(path)
 

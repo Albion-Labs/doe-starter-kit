@@ -83,6 +83,63 @@ def test_multiedit_ordinary_file_allows():
     assert decision["decision"] == "allow"
 
 
+# --- Edit/MultiEdit branch: written-field scan (v1.71.3 gap fix) ---
+# Before v1.71.3 only content/file_text were scanned; a secret arriving in
+# Edit new_string or MultiEdit edits[].new_string passed silently. Corpus
+# faults F16/F17 pin the same contract at the proof layer.
+
+def test_edit_secret_in_new_string_blocks():
+    decision = _run({"tool_name": "Edit", "tool_input": {
+        "file_path": "src/config.ts",
+        "old_string": "const API = '';",
+        "new_string": f"const API = {SECRET_SAMPLE!r};",
+    }})
+    assert decision["decision"] == "block"
+
+
+def test_edit_benign_new_string_allows():
+    decision = _run({"tool_name": "Edit", "tool_input": {
+        "file_path": "src/config.ts",
+        "old_string": "const FOO = 'bar';",
+        "new_string": "const FOO = 'baz';",
+    }})
+    assert decision["decision"] == "allow"
+
+
+def test_edit_secret_only_in_old_string_allows():
+    """Removing a secret from a file must not be blocked: old_string is
+    existing content, not content being written."""
+    decision = _run({"tool_name": "Edit", "tool_input": {
+        "file_path": "src/config.ts",
+        "old_string": f"const API = {SECRET_SAMPLE!r};",
+        "new_string": "const API = process.env.API_KEY;",
+    }})
+    assert decision["decision"] == "allow"
+
+
+def test_multiedit_secret_in_second_edit_blocks():
+    """The per-edit scan must reach every edit, not just edits[0]."""
+    decision = _run({"tool_name": "MultiEdit", "tool_input": {
+        "file_path": "src/config.ts",
+        "edits": [
+            {"old_string": "const A = 1;", "new_string": "const A = 2;"},
+            {"old_string": "const API = '';", "new_string": f"const API = {SECRET_SAMPLE!r};"},
+        ],
+    }})
+    assert decision["decision"] == "block"
+
+
+def test_multiedit_benign_edits_allow():
+    decision = _run({"tool_name": "MultiEdit", "tool_input": {
+        "file_path": "src/config.ts",
+        "edits": [
+            {"old_string": "const A = 1;", "new_string": "const A = 2;"},
+            {"old_string": "const B = 1;", "new_string": "const B = 2;"},
+        ],
+    }})
+    assert decision["decision"] == "allow"
+
+
 # --- Bash branch ---
 
 def test_bash_redirect_to_dot_env_local_blocks():
