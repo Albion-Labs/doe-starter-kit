@@ -32,9 +32,16 @@ def main():
         if m not in METHODS:
             errs.append(f"{fid}: bad method {m!r}")
         if m == "hook":
-            for k in ("hook", "tool_name", "input_field", "value_parts"):
+            for k in ("hook", "tool_name", "input_field", "value_parts", "benign_value_parts"):
                 if k not in f:
                     errs.append(f"{fid}: hook fault missing '{k}'")
+            gf = f.get("git_fixture")
+            if gf is not None and (
+                not isinstance(gf, dict)
+                or "fault_branch" not in gf
+                or "benign_branch" not in gf
+            ):
+                errs.append(f"{fid}: git_fixture must carry fault_branch and benign_branch")
         if m in ("filescan", "filescan-miss") and "inject" not in f:
             errs.append(f"{fid}: filescan fault missing 'inject'")
     if errs:
