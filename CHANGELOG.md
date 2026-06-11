@@ -7,6 +7,25 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.71.2 (2026-06-11)
+<!-- hero -->
+Two PostToolUse hooks -- `check_plan_freshness_hook.py` and `copy_plan_to_project.py` -- have been dead since they shipped: both compared `tool_name` against lowercase strings ("read", "write"/"edit") while real events carry "Read"/"Write"/"Edit", so every invocation took the early-exit path. Same casing class as the v1.59.0 matcher fix. Both now fire; the freshness hook is also anchored to `$CLAUDE_PROJECT_DIR` (script path AND subprocess cwd) per the v1.62.2/v1.63.0 hardening, and both follow the v1.61.3 silent no-opinion convention. First-ever regression tests added for each.
+<!-- /hero -->
+<!-- background -->
+Found by a project-side audit (the unanchored subprocess) -- reading the hook to verify that report surfaced the worse never-alive casing bug, and a sweep of the remaining PostToolUse hooks caught the second instance. This is the third never-alive specimen this release line (after `scan_docs.py` and the original `guard_kit_writes` matchers), which is the empirical case for the v2.0 liveness ledger: advisory hooks have no fault corpus to catch them, so per-evaluation telemetry is the only sensor that would have noticed two hooks producing zero output for their entire lives.
+<!-- /background -->
+
+### Fixed
+- **.claude/hooks/check_plan_freshness_hook.py** -- tool_name comparison fixed to "Read" (was lowercase, never matched); freshness subprocess anchored to `$CLAUDE_PROJECT_DIR` for both the script path and `cwd=` (was a relative path with no cwd, silently failing under shell drift); relative plan paths resolve against the project root; silent `sys.exit(0)` no-opinion; warnings surface as plain stdout.
+- **.claude/hooks/copy_plan_to_project.py** -- tool_name comparison fixed to ("Write", "Edit", "MultiEdit"); plain-text message output; silent no-opinion path.
+
+### Added
+- **tests/claude_hooks/test_check_plan_freshness_hook.py** -- 7 tests: stale-plan warning surfaces on a real Read event, fresh plan silent, non-Read/non-plan silent, relative path anchors to project root not shell cwd, missing checker silent, no legacy "{}" output.
+- **tests/claude_hooks/test_copy_plan_to_project.py** -- 4 tests with isolated HOME: Write/Edit/MultiEdit copy home plans into the project, Read and non-plan paths no-op.
+
+### Pull impact
+Projects carry both hooks in `.claude/hooks/`. They were inert, so no behaviour was lost -- but after `/pull-doe`, plan-freshness warnings and plan auto-copy START working for the first time. If the inline freshness warnings prove noisy in practice, that is new signal to tune, not a regression.
+
 ## v1.71.1 (2026-06-11)
 <!-- hero -->
 Fixes the `enforce_review_gate` false-positive class (issue #107) that could block ALL PR creation from a session: the hook now resolves the branch before -- and independently of -- HEAD, so zero-commit repos and worktree checkouts on non-feature branches pass through instead of tripping the fail-closed arm, and the trigger matches an actual invocation at a statement position instead of the phrase anywhere in the command string (which fired on PR bodies and issue comments that merely mentioned PR creation).
