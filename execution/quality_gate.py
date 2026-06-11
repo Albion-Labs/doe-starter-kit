@@ -25,6 +25,10 @@ CHECKPOINT_SCENARIOS = [
     "agent_definition_integrity",
 ]
 
+# Every name here must exist in test_methodology.py's SCENARIOS registry —
+# an unknown name makes test_methodology exit 2 and the gate can never pass
+# (v1.49.1–v1.71.2 shipped two phantom names; --pre-retro was unrunnable the
+# whole time). Pinned by tests/execution/test_quality_gate.py.
 PRE_RETRO_SCENARIOS = [
     "router_coverage",
     "rule_completeness",
@@ -34,8 +38,6 @@ PRE_RETRO_SCENARIOS = [
     "cross_reference_consistency",
     "agent_definition_integrity",
     "plan_vs_actual",
-    "invariant_regression",
-    "completed_feature_hygiene",
 ]
 
 
