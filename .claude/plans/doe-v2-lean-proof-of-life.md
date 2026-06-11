@@ -144,7 +144,7 @@ Not in v2.0 scope. When taken: package the global layer (commands/hooks/scripts/
 
 The founding goal, stated plainly: a non-technical operator produces code a professional wouldn't be embarrassed by, by saying non-technical things and having the system do the right technical thing. v2.0's verification rails are the foundation (the AI's claims get checked); Senior Mode adds the judgement layer. Design constraint: **the model already has the senior's knowledge — the kit supplies the standing orders and the moments of application.** Policy, not essays. Every component must pass the proof-of-life bar (trigger + liveness evidence) before it counts as shipped.
 
-- **5a. Intent translation.** Rebuild `/scope` as structured elicitation: plain-English decision menus (recommended default first, trade-offs stated in operator terms, "Other" always available), output is a brief that records every technical decision AND its rationale in plain English. Add an **XY-problem duty** to planning-rules: before building the asked-for solution, confirm it solves the underlying problem; push back when it doesn't.
+- **5a. PRD engine (intent translation).** Rebuild `/scope` as structured elicitation: plain-English decision menus (recommended default first, trade-offs stated in operator terms), producing a lightweight PRD at `docs/prd/<feature>.md` -- problem, users, decisions + rationale in plain English, and **success criteria**. The success criteria compile into the existing contract system (todo.md `Verify:` lines), and the evidence pack (5d) closes the loop against the PRD at delivery: what was promised, what was proven. Add an **XY-problem duty** to planning-rules: before building the asked-for solution, confirm it solves the underlying problem; push back when it doesn't.
 - **5b. Standing orders.** ONE directive (≤150 lines, policy form): when options exist choose the boring one; when scope is ambiguous choose the smaller one; when security trades against convenience choose security; no abstraction before the third use; model the data before the UI; vet every new dependency (maintenance, adoption, last release) before install; make it work → make it right → make it fast, in that order; flag each judgement call made on the operator's behalf.
 - **5c. Production-readiness gates by project class.** `doe init` records the class (static site / app without user data / app with user data / app handling money). `delivery-rules` gains a class-keyed launch checklist; the dangerous classes gate shipping the way the DPIA already gates personal data. A senior's "you can't launch without X," encoded.
 - **5d. Evidence packs.** Every feature delivery ends with an artifact a non-expert can read: tests green, security checks, screenshots of the working thing, and the plain-English decisions log from 5a. Generalises the `proof/` scorecard pattern from sales artifact to delivery norm.
@@ -163,4 +163,36 @@ The founding goal has a blind spot: it says "produce code," but most of a 20-yea
 
 ## Revised sequencing
 
-v2.0 = lean + proof-of-life (Phases 0–6 above) → **v2.1 = Senior Mode** → **v2.2 = Steward Mode**. Order is deliberate: judgement and stewardship layers are only trustworthy on top of rails that provably fire. Plugin packaging (WS4) slots wherever convenient from v2.1 onward.
+v2.0 = lean + proof-of-life → **v2.1 = Senior Mode** → **v2.2 = Steward Mode**. Order is deliberate: judgement and stewardship layers are only trustworthy on top of rails that provably fire. Plugin packaging (WS4) slots wherever convenient from v2.1 onward.
+
+**One re-order inside v2.0: fault coverage (old Phase 2) now lands BEFORE the dispatcher refactor (old Phase 1).** Refactoring every guardrail hook without a fault net is the exact failure mode that killed `guard_kit_writes` for 8 releases. The corpus is the net, so it goes first — the plan's own TDD-for-guardrails doctrine, applied to building the plan.
+
+## Implementation map (one PR per row, one session each unless noted)
+
+### v2.0 — remaining (~6–8 sessions)
+| # | Delivers |
+|---|---|
+| 1 | `proof/` corpus extended: every blocking hook + every methodology scenario gets ≥1 must-catch fault + a benign twin; proof runs in `doe-ci.yml` on every kit PR. Pure addition, low risk. |
+| 2 | `doe_gate.py` dispatcher (one spawn per event instead of 4–7), liveness ledger (`~/.claude/doe-telemetry/gate-fires.jsonl`, evaluated vs blocked), directive-read telemetry, **enforce_review_gate worktree fix** (lands here since the file is open anyway, with a worktree regression test), `tests/claude_hooks/` rework. 1–2 sessions; protected by PR 1's fault net. |
+| 3–4 | Docs generator: `build_docs.py` + single template/CSS extracted from `generate_whats_new.py`, 2 pilot pages verified by screenshot-diff; then full prune-during conversion, `nav.json`, `stamp_tutorial_version.py` deleted, build wired into `auto-release.yml`. 2–3 sessions. |
+| 5 | Wave-stack deletion + command pruning (stand-up merge, report-doe-bug trim, codemap/project-recap/worktree-cmd removal). Mechanical; decisions already made. |
+| 6 | Structural merges: shared `doe_checks.py`, bug/feature-request merge, `execution/_lib.py`, directive consolidation per the overlap map. 1–2 sessions. |
+| 7 | `/cull` v1 + caps (one-in-one-out, CLAUDE.md ≤150 enforced) + `review-by:` sunsets + `scenario_liveness`. **Calendar-gated: ≥30 days of ledger data after PR 2 lands.** v2.0 ships here. |
+
+### v2.1 — Senior Mode (~5–6 sessions)
+| # | Delivers |
+|---|---|
+| 8 | Standing-orders directive (small; immediate effect on every subsequent build, including PRs 9–13). |
+| 9–10 | PRD engine: `/scope` rebuild → `docs/prd/<feature>.md`; success criteria compile to todo.md contracts; XY-problem duty in planning-rules. The centrepiece — 2 sessions (design + build). |
+| 11 | Project-class launch gates: `doe init` records class; class-keyed delivery checklist; hard gate for user-data/payments classes. |
+| 12 | Evidence packs: delivery artifact via `html_builder` (tests, checks, screenshots, decision log) — closes the loop against the PRD. |
+| 13 | Risk tiers + second-opinion ritual: blast-radius declaration in plans/PRs; dangerous tier requires independent fresh-context review, recorded. |
+
+### v2.2 — Steward Mode (~3–4 sessions)
+| # | Delivers |
+|---|---|
+| 14 | Observability by default: init/deploy wires Sentry + uptime + alerting; "deployed without monitoring = not done" enters delivery-rules. |
+| 15 | Maintenance heartbeat: scheduled fleet-patrol cloud agent (deps/security audit, cert + domain expiry, billing anomalies, backup-restore test) reporting to HQ. |
+| 16 | Perimeter checklist + data stewardship + plain-English incident runbook (directives, init defaults, annual audit command). |
+
+**Cadence:** at a few sessions a week, v2.0 completes in ~2 weeks, v2.1 in ~2 more, v2.2 in ~1–2 — call it 4–6 weeks to a kit that is lean, self-verifying, senior-opinionated, and on stewardship autopilot, with `/cull` firing on its own 30-day clock thereafter. Every PR follows the Phase 0 pattern: worktree, scoped contract first (planning-rules), tests in the same PR, CHANGELOG when releasable, merge = release.
