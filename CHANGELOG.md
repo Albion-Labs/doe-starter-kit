@@ -7,6 +7,22 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.71.1 (2026-06-11)
+<!-- hero -->
+Fixes the `enforce_review_gate` false-positive class (issue #107) that could block ALL PR creation from a session: the hook now resolves the branch before -- and independently of -- HEAD, so zero-commit repos and worktree checkouts on non-feature branches pass through instead of tripping the fail-closed arm, and the trigger matches an actual invocation at a statement position instead of the phrase anywhere in the command string (which fired on PR bodies and issue comments that merely mentioned PR creation).
+<!-- /hero -->
+<!-- background -->
+Root cause, established while building v1.71.0: the hook anchored to `$CLAUDE_PROJECT_DIR` and ran `branch --show-current` and `rev-parse HEAD` in a single try-block. A project dir that is a git repo with an unborn HEAD (zero commits) fails `rev-parse HEAD` while `branch --show-current` succeeds -- and the combined failure took the fail-closed path, blocking PR creation for ANY repo the session touched. The cross-project `cd` guard only rescued commands that started with `cd`, so any chained prefix defeated it. The fix preserves both fail-closed contracts pinned by the v1.71.0 proof corpus: F15 (unreadable git state blocks) and F14 (feature branch without a review artifact blocks) were re-verified against the fixed hook before merge -- the fault net doing the job it shipped for.
+<!-- /background -->
+
+### Fixed
+- **.claude/hooks/enforce_review_gate.py** -- branch-first git-state resolution (unborn-HEAD repos and worktrees on non-feature branches exit silently; feature branches with no commits get a precise reason instead of "could not determine git state"); statement-position trigger regex with env-prefix tolerance replaces the substring match.
+
+### Added
+- **tests/claude_hooks/test_enforce_review_gate.py** -- 8 regression tests: unborn-HEAD repo (non-feature allows, feature blocks with precise reason), non-git dir fail-closed (F15 parity), worktree checkouts (non-feature allows, feature gates with the review reason), quoted-phrase non-invocation, chained-command and env-prefixed invocations still gated. Test runner also scrubs an inherited `CLAUDE_PROJECT_DIR`.
+
+### Pull impact
+Projects carry this hook at `.claude/hooks/enforce_review_gate.py`. Stale copies keep the old false-positive behaviour until the next `/pull-doe`; machines hitting "Could not determine git state" on unrelated PR creation should pull promptly or copy the fixed hook directly.
 ## v1.71.0 (2026-06-11)
 <!-- hero -->
 The proof harness now exercises **every blocking guardrail hook in the kit** and runs on **every PR**. Eight new corpus faults cover `protect_directives` (both branches), `guard_kit_writes` (recursive removal + force-push), `confirm_pr_merge`, `block_unnecessary_admin_merge` (fail-closed arm), and `enforce_review_gate` (feature-branch gate + fail-closed arm) -- each paired with a benign twin the gate must NOT fire on -- and the proof CI job loses its `proof/`-only path scoping, so a guardrail that silently stops firing turns the next PR red instead of shipping. PR 1 of the v2.0 proof-of-life implementation map.
