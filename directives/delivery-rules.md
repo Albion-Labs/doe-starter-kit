@@ -108,7 +108,6 @@ These triggers apply during delivery (absorbed from the original CLAUDE.md trigg
 - Reviewing changes before commit -> suggest `/diff-review`
 - Running `/wrap` -> run `python3 execution/health_check.py`, include in wrap summary
 - Feature's final code step with unchecked [manual] items -> read `directives/manual-testing.md`, run `python3 execution/generate_test_checklist.py`
-- Syncing DOE or updating framework version -> run `python3 execution/scan_docs.py` after sync
 - Returning after absence -> suggest `/project-recap`
 
 ## Common Delivery Commands

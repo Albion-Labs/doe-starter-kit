@@ -7,9 +7,9 @@ infrastructure patterns, runs them against the current codebase, and
 generates a candidate tests/invariants.txt.
 
 Usage:
-    python3 execution/bootstrap_invariants.py              # show report
-    python3 execution/bootstrap_invariants.py --write      # append new invariants to file
-    python3 execution/bootstrap_invariants.py --dry-run    # show what --write would add
+    python3 migrations/bootstrap_invariants.py              # show report
+    python3 migrations/bootstrap_invariants.py --write      # append new invariants to file
+    python3 migrations/bootstrap_invariants.py --dry-run    # show what --write would add
 """
 
 import argparse

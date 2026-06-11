@@ -47,7 +47,7 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 - **CLAUDE.md** — 7 operating rules, progressive disclosure triggers, guardrails
 - **STATE.md** — Session memory (blockers, current position)
 - **37 directives** — SOPs for planning, building, delivery, security, testing, architecture, and more
-- **25 execution scripts** — Verification, auditing, scoring, test orchestration, and quality gates
+- **19 execution scripts** — Verification, auditing, scoring, test orchestration, and quality gates
 - **Audit system** — Automated false-positive detection with pre-commit hook
 - **Multi-agent coordination** — Wave management, task claiming, heartbeats, merge protocol for parallel Claude Code sessions (`/agent-status` dashboard). Installs globally to `~/.claude/scripts/` and `~/.claude/hooks/`.
 - **33 slash commands** — session lifecycle, quality checks, visual tools, multi-agent, utilities, and infrastructure (see below)
@@ -56,7 +56,6 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 - **Git hooks** — Pre-commit claim audit, commit message cleanup, pre-push methodology check
 - **7 guardrail hooks** — block secrets, protect directives, block dangerous commands, guard kit writes, enforce review gate, confirm PR merge, block unnecessary admin-merge. These are **accident-prevention** (catching a careless paste), **not a security boundary** — they are string-matched denylists that a determined actor can phrase around.
 - **4 custom agents** — Finder, Adversarial, Referee, ReadOnly for adversarial code review
-- **Context monitoring** — Warns at 60% context usage, stops at 80% for graceful handoff
 
 **Documentation (50 files)**
 

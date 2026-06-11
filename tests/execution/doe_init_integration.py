@@ -5,6 +5,11 @@ Tests doe init across 6 frameworks (Next.js, Python, Go, Flutter, Vite,
 Static HTML) for both new-project (empty directory) and existing-project paths.
 Verifies CLAUDE.md generation, file installation, manifest consistency,
 .doe-version stamping, collaboration modes, and capability layers.
+
+Script-style runner (not pytest): run manually with
+    python3 tests/execution/doe_init_integration.py
+Deliberately NOT named test_*.py -- module-level execution would run the
+whole suite at pytest collection time.
 """
 
 import io
@@ -15,7 +20,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "execution"))
 
 from doe_init import (
     detect_framework,
@@ -30,7 +35,7 @@ from doe_init import (
     PROJECT_TYPES,
 )
 
-KIT_DIR = Path(__file__).resolve().parent.parent
+KIT_DIR = Path(__file__).resolve().parent.parent.parent
 ACTUAL_KIT = Path.home() / "doe-starter-kit"
 TIER1_FRAMEWORKS = ["nextjs", "python", "go", "flutter", "vite", "static"]
 

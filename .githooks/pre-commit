@@ -144,13 +144,12 @@ fi
 # Catches: innerHTML, eval, new Function(), document.write,
 # insertAdjacentHTML, outerHTML, dangerouslySetInnerHTML, v-html) and
 # Python injection (shell=True, os.system, os.popen, pickle.loads, yaml.load).
-# Skips tests/security/ directory (deliberate test fixtures).
 # Skip with: SKIP_XSS_CHECK=1 git commit -m '...'
 
 if [ "${SKIP_XSS_CHECK:-0}" != "1" ]; then
     SEC_FOUND=0
-    ALL_CODE_JS=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.(js|jsx|ts|tsx)$' | grep -v 'tests/security/' || true)
-    ALL_CODE_PY=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.py$' | grep -v 'tests/security/' || true)
+    ALL_CODE_JS=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.(js|jsx|ts|tsx)$' || true)
+    ALL_CODE_PY=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\.py$' || true)
 
     # JS/TS DOM injection + code execution patterns
     if [ -n "$ALL_CODE_JS" ]; then

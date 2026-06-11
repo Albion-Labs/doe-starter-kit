@@ -42,7 +42,7 @@ If the output is non-empty, the sync MUST stop and surface every dirty path with
 
 ### Step 0.7: Detect pending release (resume mode)
 
-`/sync-doe` is a two-phase command: **Phase 1** (Steps 1-10) opens a PR with the editorial changes (translated diff, CHANGELOG, version bump). **Phase 2** (Step 11) does the post-merge release machinery (tutorial stamp, tag, GitHub release) on main. State between phases lives at `~/doe-starter-kit/.tmp/.sync-doe-pending-release.json`.
+`/sync-doe` is a two-phase command: **Phase 1** (Steps 1-10) opens a PR with the editorial changes (translated diff, CHANGELOG, version bump). **Phase 2** (Step 11) verifies the automatic release (`auto-release.yml` fires on merge) and cleans up. State between phases lives at `~/doe-starter-kit/.tmp/.sync-doe-pending-release.json`.
 
 At the start of every `/sync-doe` invocation (after Step 0.5), check for the state file:
 
@@ -274,7 +274,7 @@ In those cases, note "No migration manifest needed (additive release)" in the CH
 
 ### Step 10: Open the PR (Phase 1)
 
-After Steps 1–9.5 prepare the kit-side changes (translated diff, CHANGELOG entry, version bump in version files, migration manifest if applicable), commit them on a feature branch in the kit and open a PR. **No tutorial stamp, no tag, no GitHub release in Phase 1** — those happen in Step 11 after the PR merges.
+After Steps 1–9.5 prepare the kit-side changes (translated diff, CHANGELOG entry, version bump in version files, migration manifest if applicable), commit them on a feature branch in the kit and open a PR. **No tutorial stamp, no tag, no GitHub release in Phase 1** — `auto-release.yml` performs those automatically when the PR merges (see Step 11).
 
 The branch + PR is the editorial review surface. The maintainer reviews the diff, the CHANGELOG entry, and the version bump on GitHub before any of it lands on main.
 
@@ -299,7 +299,7 @@ git commit -m "sync: from ${PROJECT_NAME} — [one-line summary of what changed]
 git push -u origin "$BRANCH"
 ```
 
-The Phase 1 commit message does NOT contain a version tag (`vX.Y.Z`) — it's a `sync:` prefix, which the kit's `commit-msg` step-mark hook does not match against. **No `SKIP_STEP_MARK_CHECK=1` needed in Phase 1.** (Phase 2's stamp commit DOES have a version tag and DOES need the bypass — see Step 11.)
+The Phase 1 commit message does NOT contain a version tag (`vX.Y.Z`) — it's a `sync:` prefix, which the kit's `commit-msg` step-mark hook does not match against. **No `SKIP_STEP_MARK_CHECK=1` needed in Phase 1.** (The auto-release workflow's stamp commit runs on a GitHub runner where `.githooks/` are not active, so no bypass is needed anywhere.)
 
 Open the PR. The body is a heredoc with **single-quoted delimiter** (`<<'PRBODY'`) so `$VARS` are NOT expanded by Bash — Claude substitutes the placeholders before invoking:
 
@@ -353,88 +353,23 @@ Tell the user:
 
 > "PR #N opened: \<URL\>. Review and merge it on GitHub. Reply 'merged' (or run `/sync-doe` again later) to release."
 
-**Phase 1 ends here.** The state file persists. Phase 2 runs when the user confirms the PR merged (Step 11). The Step 6 stash (if any) is dropped in Phase 2 after the release succeeds — keeping it in place during the open-PR window means a buyer-remorse "abandon" path can `git stash pop` to restore the pre-sync state.
+**Phase 1 ends here.** The state file persists. Phase 2 (post-merge verification and cleanup, Step 11) runs when the user confirms the PR merged. The Step 6 stash (if any) is dropped in Phase 2 after the release is verified — keeping it in place during the open-PR window means a buyer-remorse "abandon" path can `git stash pop` to restore the pre-sync state.
 
-### Step 11: Release after merge (Phase 2)
+### Step 11: After the merge (Phase 2)
 
-Phase 2 runs only after the PR opened in Step 10 has merged on `origin/main`. Step 0.7 (resume detection) routes here when the state file is present and `gh pr view` reports the PR as `MERGED`. In the conversational case (same session, user replies "merged"), the same routing applies — verify the PR state via `gh` before running, then proceed.
+Releases are **automatic**: `auto-release.yml` fires when the merge lands on `main` -- it regenerates `whats-new.html`, stamps the tutorial docs, commits, tags, and creates the GitHub release. See `kit-development.md` ## Release mechanics. Phase 2 is post-merge verification and cleanup only. Step 0.7 (resume detection) routes here when the state file is present and `gh pr view` reports the PR as `MERGED`.
 
-**Pre-flight: verify PR merged.** Check `gh` exit code first — a transient `gh` failure (auth, rate limit, network) must not be conflated with "PR not merged":
-
-```bash
-STATE=~/doe-starter-kit/.tmp/.sync-doe-pending-release.json
-PR_NUMBER=$(python3 -c "import json; print(json.load(open('$STATE'))['prNumber'])")
-VERSION=$(python3 -c "import json; print(json.load(open('$STATE'))['version'])")
-
-# Verify gh succeeds first; only then trust the state value
-PR_STATE=$(gh pr view "$PR_NUMBER" --repo Albion-Labs/doe-starter-kit --json state --jq .state) \
-  || { echo "gh pr view failed; cannot verify PR state. Aborting Phase 2."; exit 1; }
-
-[ "$PR_STATE" = "MERGED" ] \
-  || { echo "PR #$PR_NUMBER state is '$PR_STATE' (not MERGED). Aborting Phase 2."; exit 1; }
-```
-
-**Run each command as a SEPARATE Bash tool call** — same exit-code rationale as Step 10.
-
-**Pull the merged main:**
+**Verify the release happened** (allow the workflow a minute or two):
 
 ```bash
-cd ~/doe-starter-kit
-git checkout main
-git pull origin main
-# main now has the merged PR (translated content + CHANGELOG entry + version bump in version files).
-# Tutorial docs are still stamped to the PREVIOUS version — Phase 2 fixes that.
+git -C ~/doe-starter-kit fetch --tags origin
+VERSION=$(grep -m1 -oE '^## v[0-9]+\.[0-9]+\.[0-9]+' ~/doe-starter-kit/CHANGELOG.md | cut -d' ' -f2)
+git -C ~/doe-starter-kit rev-parse "refs/tags/$VERSION" >/dev/null 2>&1 && echo "released $VERSION" || echo "NOT RELEASED -- check the auto-release run in GitHub Actions"
 ```
 
-**Idempotency check** — Phase 2 may be resumed after a partial failure (e.g., `gh release create` flaked after the tag was pushed). Detect prior progress and skip already-done steps:
+If the workflow failed it opens an issue labelled `release-automation` describing where it stopped. Use the manual fallback in `kit-development.md` ## Release mechanics only when automation is genuinely broken -- never run it alongside a healthy workflow (the two use opposite tag orderings and will race).
 
-```bash
-TAG_EXISTS=$(git rev-parse "$VERSION" 2>/dev/null && echo 1 || echo 0)
-RELEASE_EXISTS=$(gh release view "$VERSION" --repo Albion-Labs/doe-starter-kit >/dev/null 2>&1 && echo 1 || echo 0)
-echo "Tag exists: $TAG_EXISTS · Release exists: $RELEASE_EXISTS"
-```
-
-**Stamp + commit (skip if tag already exists — the stamp commit was already made on a previous attempt):**
-
-```bash
-if [ "$TAG_EXISTS" = "0" ]; then
-  python3 ~/doe-starter-kit/execution/generate_whats_new.py
-  python3 ~/doe-starter-kit/execution/stamp_tutorial_version.py "$VERSION"
-  git add -A
-  git diff --staged --stat
-  # Show diff, wait for user sign-off
-  SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1 git commit -m "chore(stamp): $VERSION"
-fi
-```
-
-Both env vars on the stamp commit are required:
-- `SKIP_MAIN_PROTECTION=1` — the kit repo's `.githooks/pre-commit` refuses direct-to-main by default. **The post-merge tutorial stamp is the one operation where direct-to-main is expected** — the editorial work went through the PR in Phase 1. The bypass scope is narrower than the pre-Phase-2 design (stamp commit only, not the full release content).
-- `SKIP_STEP_MARK_CHECK=1` — the commit message contains a version tag `(vX.Y.Z)` which triggers the step-mark hook.
-
-**Tag, push tag, push commit (in that order — see universal learning on the pre-push tutorial-docs-version gate):**
-
-```bash
-if [ "$TAG_EXISTS" = "0" ]; then
-  git tag "$VERSION"
-  git push origin "$VERSION"          # tag first — tag-only pushes don't trip the docs-version gate
-  SKIP_MAIN_PROTECTION=1 git push     # commit — pre-push gate sees tag=$VERSION, docs=$VERSION, passes
-fi
-```
-
-The order matters: pushing the commit before pushing the tag means the gate compares stamped docs to the OLD tag and refuses the push. The fix-up cost (force-push, manual unstuck) is large; the prevention cost (one extra Bash call in the right order) is zero.
-
-**Create the GitHub release (skip if already exists):**
-
-```bash
-if [ "$RELEASE_EXISTS" = "0" ]; then
-  gh release create "$VERSION" \
-    --repo Albion-Labs/doe-starter-kit \
-    --title "$VERSION — [short description]" \
-    --notes "[CHANGELOG entry content, copied from the PR body]"
-fi
-```
-
-**Drop the safety stash from Step 6** (if used) — release succeeded, no rollback needed:
+**Drop the pre-sync stash** (kept during the open-PR window so an "abandon" path could restore):
 
 ```bash
 git stash list | grep -q "Pre-sync backup" && git stash drop
