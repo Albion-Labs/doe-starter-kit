@@ -11,19 +11,17 @@ def main():
     path = tool_input.get("file_path", "") or tool_input.get("path", "")
 
     home_plans = str(Path.home() / ".claude" / "plans")
-    if tool_name in ("write", "edit") and path.startswith(home_plans) and path.endswith(".md"):
+    # v1.71.2: tool names are capitalised in real events ("Write"/"Edit"/
+    # "MultiEdit") -- the original lowercase comparison meant this hook never
+    # fired since it shipped (same casing class as the v1.59.0 matcher fix).
+    if tool_name in ("Write", "Edit", "MultiEdit") and path.startswith(home_plans) and path.endswith(".md"):
         src = Path(path)
         if src.exists():
             PROJECT_PLANS.mkdir(parents=True, exist_ok=True)
             dest = PROJECT_PLANS / src.name
             shutil.copy2(str(src), str(dest))
-            print(json.dumps({
-                "message": f"Auto-copied plan to project: .claude/plans/{src.name}"
-            }))
-        else:
-            print(json.dumps({}))
-    else:
-        print(json.dumps({}))
+            print(f"Auto-copied plan to project: .claude/plans/{src.name}")
+    sys.exit(0)
 
 if __name__ == "__main__":
     main()
