@@ -57,11 +57,6 @@
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block_secrets_in_code.py\"",
             "description": "Block secrets outside .env"
-          },
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_kit_writes.py\"",
-            "description": "Block direct writes to ~/doe-starter-kit"
           }
         ]
       },
@@ -76,7 +71,7 @@
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_kit_writes.py\"",
-            "description": "Block direct kit writes via Bash (cp, git commit, etc.)"
+            "description": "Block irreversible kit Bash ops (recursive removal, force-push to kit main)"
           },
           {
             "type": "command",
