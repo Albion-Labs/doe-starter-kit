@@ -90,9 +90,9 @@ def _check_gh_available():
 def scan_existing(description):
     """Scan ~/doe-starter-kit for overlap with the described feature.
 
-    Checks file names, CLAUDE.md, commands/, and directives/ for content
-    related to the description. Returns a list of potentially overlapping
-    files and features.
+    Checks file names, CLAUDE.md, global-commands/, .claude/commands/, and
+    directives/ for content related to the description. Returns a list of
+    potentially overlapping files and features.
     """
     result = {
         "doe_kit_exists": DOE_KIT_PATH.is_dir(),
@@ -112,12 +112,16 @@ def scan_existing(description):
 
     matches = []
 
-    # Paths to scan
+    # Paths to scan. Command docs live in global-commands/ (distributed to
+    # ~/.claude/commands) and .claude/commands/ (project-level) — there is
+    # no top-level commands/ dir; scanning one meant duplicate detection
+    # never matched a command (liveness audit A6).
     scan_targets = [
         (DOE_KIT_PATH / "CLAUDE.md", "CLAUDE.md"),
         *[
             (p, str(p.relative_to(DOE_KIT_PATH)))
-            for p in sorted((DOE_KIT_PATH / "commands").glob("*"))
+            for cmd_dir in ("global-commands", ".claude/commands")
+            for p in sorted((DOE_KIT_PATH / cmd_dir).glob("*.md"))
             if p.is_file()
         ],
         *[
@@ -529,7 +533,8 @@ def main():
         "--scan-existing", metavar="DESCRIPTION",
         help=(
             "Scan ~/doe-starter-kit for overlap with the described feature. "
-            "Checks file names, CLAUDE.md, commands/, directives/."
+            "Checks file names, CLAUDE.md, global-commands/, "
+            ".claude/commands/, directives/."
         ),
     )
     group.add_argument(
