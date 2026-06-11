@@ -151,6 +151,11 @@ def _fire_hook_value(fa, value, benign=False):
                 except (OSError, subprocess.SubprocessError) as ex:
                     return None, f"git fixture setup failed: {ex}"
             env_extra["CLAUDE_PROJECT_DIR"] = str(tmp)
+            # Ceiling stops git's upward discovery at the fixture's parent:
+            # without it, a TMPDIR nested inside any git repo makes
+            # `git -C <non-git-fixture>` resolve the ENCLOSING repo and
+            # silently invert the fail-closed arm.
+            env_extra["GIT_CEILING_DIRECTORIES"] = str(tmp.parent)
         return _run_hook(fa["hook"], event,
                          env_extra=env_extra or None, cwd=cwd)
     finally:
@@ -223,9 +228,13 @@ def run():
             "enforcement": ENFORCEMENT.get(fa.get("expect"), "unknown"),
             "injected": 1, "caught": 1 if caught else 0,
         })
-        # measured false-positive arm: run the benign counterpart, expect no fire
+        # measured false-positive arm: run the benign counterpart, expect no fire.
+        # None means the arm ERRORED (fixture setup, missing gate) -- recorded
+        # loudly rather than passing as "no fire".
         bfired, bdetail = _fire(fa, benign=True)
-        if bfired:
+        if bfired is None:
+            results[-1]["benign_error"] = bdetail
+        elif bfired:
             fp_fired += 1
             fp_detail.append(f"{fa['id']} false-fired on benign input ({bdetail})")
     injected = len(faults)
@@ -282,6 +291,8 @@ def main(argv):
                 problems.append(f"covered fault {r['id']} NOT caught -- {r['detail']}")
             if r.get("expect") == "miss" and r["caught"]:
                 problems.append(f"fault {r['id']} expected MISS but was caught")
+            if r.get("benign_error"):
+                problems.append(f"benign arm of {r['id']} errored -- {r['benign_error']}")
         if fp["fired"] != 0:
             problems.append("MEASURED false-positive(s): " + "; ".join(fp["detail"]))
         v = subprocess.run([sys.executable, str(PROOF / "schema" / "validate.py"), str(OUT)],
