@@ -38,7 +38,8 @@
         "check_plan_freshness.py",
         "run_test_suite.py",
         "slack_notify.py",
-        "check_pending_prs.py"
+        "check_pending_prs.py",
+        "audit_sync.py"
       ],
       "hooks": ["pre-commit", "commit-msg", "pre-push"],
       "commands": [

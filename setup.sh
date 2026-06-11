@@ -321,7 +321,7 @@ fi
 
 # 7. Copy Quality Stack files (only if not already present in project)
 # Execution scripts for test orchestration, health checks, and verification
-QS_SCRIPTS="run_test_suite.py health_check.py generate_test_checklist.py audit_claims.py"
+QS_SCRIPTS="run_test_suite.py health_check.py generate_test_checklist.py audit_claims.py audit_sync.py"
 QS_SCRIPT_COUNT=0
 if [ -d "$SCRIPT_DIR/execution" ]; then
     for script in $QS_SCRIPTS; do
@@ -377,12 +377,16 @@ else
     echo "✓ Quality Stack files already present (not overwritten)"
 fi
 
-# 8. Copy CI workflow (only if not already present)
+# 8. Copy CI workflows (only if not already present) — scoped to the
+# manifest's "github" lists, mirroring doe_init.py. Blind-copying
+# .github/workflows/*.yml leaked kit-internal workflows into consumer
+# projects (auto-release.yml would tag/release them; proof.yml goes red
+# in any project without proof/).
 CI_COUNT=0
 if [ -d "$SCRIPT_DIR/.github/workflows" ]; then
-    for f in "$SCRIPT_DIR"/.github/workflows/*.yml; do
+    for fname in $(python3 "$SCRIPT_DIR/execution/list_distributable_workflows.py" "$SCRIPT_DIR/manifest.json" 2>/dev/null); do
+        f="$SCRIPT_DIR/.github/workflows/$fname"
         [ -f "$f" ] || continue
-        fname=$(basename "$f")
         if [ ! -f ".github/workflows/$fname" ]; then
             mkdir -p .github/workflows
             cp "$f" ".github/workflows/$fname"
