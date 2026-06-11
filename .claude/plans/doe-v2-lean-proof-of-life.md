@@ -137,3 +137,30 @@ Not in v2.0 scope. When taken: package the global layer (commands/hooks/scripts/
 | 6 | First `/cull` with ≥30 days of ledger + instate caps/sunsets (3c–d) | Closes the loop; v2.0 ships here |
 
 **Net effect:** ~88k → ~42k tracked lines; 6–9 python spawns per Bash call → 1–2; three drift classes (CSS copies, duplicated checks, triple-maintained prose) eliminated structurally; every surviving control CI-fault-proven or ledger-visible; kept-on-faith items (`/eod`, Flutter/Go, political layer) face data at the first cull.
+
+---
+
+## Workstream 5 — Senior Mode (build-time judgement) · target v2.1
+
+The founding goal, stated plainly: a non-technical operator produces code a professional wouldn't be embarrassed by, by saying non-technical things and having the system do the right technical thing. v2.0's verification rails are the foundation (the AI's claims get checked); Senior Mode adds the judgement layer. Design constraint: **the model already has the senior's knowledge — the kit supplies the standing orders and the moments of application.** Policy, not essays. Every component must pass the proof-of-life bar (trigger + liveness evidence) before it counts as shipped.
+
+- **5a. Intent translation.** Rebuild `/scope` as structured elicitation: plain-English decision menus (recommended default first, trade-offs stated in operator terms, "Other" always available), output is a brief that records every technical decision AND its rationale in plain English. Add an **XY-problem duty** to planning-rules: before building the asked-for solution, confirm it solves the underlying problem; push back when it doesn't.
+- **5b. Standing orders.** ONE directive (≤150 lines, policy form): when options exist choose the boring one; when scope is ambiguous choose the smaller one; when security trades against convenience choose security; no abstraction before the third use; model the data before the UI; vet every new dependency (maintenance, adoption, last release) before install; make it work → make it right → make it fast, in that order; flag each judgement call made on the operator's behalf.
+- **5c. Production-readiness gates by project class.** `doe init` records the class (static site / app without user data / app with user data / app handling money). `delivery-rules` gains a class-keyed launch checklist; the dangerous classes gate shipping the way the DPIA already gates personal data. A senior's "you can't launch without X," encoded.
+- **5d. Evidence packs.** Every feature delivery ends with an artifact a non-expert can read: tests green, security checks, screenshots of the working thing, and the plain-English decisions log from 5a. Generalises the `proof/` scorecard pattern from sales artifact to delivery norm.
+- **5e. Risk tiers.** Every plan and PR states its blast radius in plain English — routine / careful / dangerous (touches auth, money, data deletion, or the public internet). Drives 5f.
+- **5f. Second-opinion ritual.** Dangerous-tier changes require an independent fresh-context review before merge (native code review or cross-model review, result recorded). The builder never grades its own homework on the things that can really hurt.
+
+## Workstream 6 — Steward Mode (run-time; the senior's other half) · target v2.2
+
+The founding goal has a blind spot: it says "produce code," but most of a 20-year senior's value shows up AFTER shipping — monitoring, maintenance, security posture, cost control, recovery. For a non-technical operator this is the deepest unknown-unknown: shipped software rots silently. Claude Code's scheduled agents make this genuinely automatable now — this is where "senior dev on automode" becomes literal.
+
+- **6a. Observability by default.** Init/deploy wires error monitoring (Sentry), an uptime check, and alerting for every deployed project. Rule: deployed without monitoring = not done. You should learn the site is broken from an alert, never from a user.
+- **6b. Maintenance heartbeat.** A scheduled monthly fleet patrol (cloud agent) across all projects: dependency + security audit, certificate/domain expiry, billing anomaly review, backup-restore test, report delivered to HQ. The boring senior chores, on cron.
+- **6c. Perimeter checklist.** Operator account hygiene, one-time + annual: 2FA on GitHub/Vercel/registrar/email (the registrar matters — domain hijack is game over), least-privilege API tokens, key rotation, billing alerts on every paid service.
+- **6d. Data stewardship.** Staging-by-default for any project with a database; never test against production data; migrations must state their rollback; a backup that has never been restore-tested does not count as a backup.
+- **6e. Incident runbook (plain English).** "The site is down": how it's detected, first 15 minutes of triage, how to roll back a deploy, where the status pages are. The non-GDPR sibling of incident-response.md.
+
+## Revised sequencing
+
+v2.0 = lean + proof-of-life (Phases 0–6 above) → **v2.1 = Senior Mode** → **v2.2 = Steward Mode**. Order is deliberate: judgement and stewardship layers are only trustworthy on top of rails that provably fire. Plugin packaging (WS4) slots wherever convenient from v2.1 onward.
