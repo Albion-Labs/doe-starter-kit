@@ -19,6 +19,13 @@ Checks (feature/* branches only):
    current HEAD -- stale reviews are rejected.
 
 Skip: SKIP_REVIEW_GATE=1
+
+v1.71.1 (issue #107): branch is resolved before (and independently of)
+HEAD, so unborn-HEAD repos and worktrees on non-feature branches pass
+through instead of tripping the fail-closed arm; the trigger matches an
+actual `gh pr create` invocation at a statement position rather than the
+phrase anywhere in the command string. The fail-closed block for
+unreadable git state is retained and pinned by proof corpus fault F15.
 """
 import json
 import os
@@ -77,7 +84,15 @@ def main():
     tool_input = event.get("tool_input", {})
     command = tool_input.get("command", "")
 
-    if "gh pr create" not in command:
+    # v1.71.1: match an actual invocation at a statement position (start of
+    # command or after a separator), optionally preceded by env-var
+    # assignments. The previous substring match also fired on the PHRASE
+    # appearing inside quoted text -- PR bodies, issue comments, heredoc
+    # documentation -- gating commands that create no PR at all.
+    if not re.search(
+        r'(?:^|[\n;&|])\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*gh\s+pr\s+create\b',
+        command,
+    ):
         sys.exit(0)
 
     if os.environ.get("SKIP_REVIEW_GATE") == "1":
@@ -94,21 +109,25 @@ def main():
             if target_real != cwd_real and not target_real.startswith(cwd_real + os.sep):
                 sys.exit(0)
 
+    # Anchor git invocations to $CLAUDE_PROJECT_DIR so the hook stays
+    # cwd-safe (v1.63.0).
+    #
+    # v1.71.1 (issue #107): resolve the BRANCH first, on its own.
+    # `git branch --show-current` succeeds on unborn-HEAD repos (zero
+    # commits) and in worktrees (.git is a file), where `rev-parse HEAD`
+    # does not. Pre-fix, both ran in one try-block and ANY failure --
+    # including a project dir that is a zero-commit repo while the PR
+    # targets a different repo entirely -- blocked ALL PR creation.
+    project_root = str(_project_root())
     try:
-        # Anchor git invocations to $CLAUDE_PROJECT_DIR so the hook stays
-        # cwd-safe (v1.63.0). Pre-fix, these inherited the agent shell's
-        # cwd; a subdir cd would still find the project's .git/ via
-        # upward search, but a foreign cwd (or a directory outside the
-        # project tree) would fail to find git state and the hook would
-        # block with a misleading "could not determine git state" error.
-        project_root = str(_project_root())
         branch = subprocess.check_output(
-            ["git", "-C", project_root, "branch", "--show-current"], text=True
+            ["git", "-C", project_root, "branch", "--show-current"],
+            text=True, stderr=subprocess.DEVNULL,
         ).strip()
-        head_sha = subprocess.check_output(
-            ["git", "-C", project_root, "rev-parse", "HEAD"], text=True
-        ).strip()
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, OSError):
+        # Fail-closed contract (pinned by proof corpus fault F15): a project
+        # dir with no readable git state at all blocks rather than silently
+        # passing -- the gate cannot know what it is gating.
         print(json.dumps({
             "decision": "block",
             "reason": (
@@ -119,11 +138,28 @@ def main():
         }))
         return
 
-    # Only gate feature branches. Housekeeping/wrap/other branches pass freely.
-    is_feature_branch = branch.startswith("feature/")
-
-    if not is_feature_branch:
+    # Only gate feature branches. Housekeeping/wrap/fix/other branches --
+    # and detached HEAD (empty string) -- pass freely, with no need for a
+    # resolvable HEAD commit.
+    if not branch.startswith("feature/"):
         sys.exit(0)
+
+    # feature/* only: HEAD is required to verify review freshness.
+    try:
+        head_sha = subprocess.check_output(
+            ["git", "-C", project_root, "rev-parse", "HEAD"],
+            text=True, stderr=subprocess.DEVNULL,
+        ).strip()
+    except (subprocess.CalledProcessError, OSError):
+        print(json.dumps({
+            "decision": "block",
+            "reason": (
+                "GUARDRAIL: feature branch has no commits -- cannot verify "
+                "a review against HEAD. Commit the work, run /review, then "
+                "create the PR. Skip: SKIP_REVIEW_GATE=1"
+            ),
+        }))
+        return
 
     # Gate 1: All steps must be complete (no mid-feature PRs)
     steps_ok, steps_msg = check_steps_complete()

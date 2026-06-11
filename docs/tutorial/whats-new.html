@@ -1059,6 +1059,25 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-71-1">
+          <div class="release-header">
+            <span class="version-badge">v1.71.1</span>
+            <span class="release-date">11 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Fixes the <code>enforce_review_gate</code> false-positive class (issue #107) that could block ALL PR creation from a session: the hook now resolves the branch before &mdash; and independently of &mdash; HEAD, so zero-commit repos and worktree checkouts on non-feature branches pass through instead of tripping the fail-closed arm, and the trigger matches an actual invocation at a statement position instead of the phrase anywhere in the command string (which fired on PR bodies and issue comments that merely mentioned PR creation).</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">Root cause, established while building v1.71.0: the hook anchored to <code>$CLAUDE_PROJECT_DIR</code> and ran <code>branch --show-current</code> and <code>rev-parse HEAD</code> in a single try-block. A project dir that is a git repo with an unborn HEAD (zero commits) fails <code>rev-parse HEAD</code> while <code>branch --show-current</code> succeeds &mdash; and the combined failure took the fail-closed path, blocking PR creation for ANY repo the session touched. The cross-project <code>cd</code> guard only rescued commands that started with <code>cd</code>, so any chained prefix defeated it. The fix preserves both fail-closed contracts pinned by the v1.71.0 proof corpus: F15 (unreadable git state blocks) and F14 (feature branch without a review artifact blocks) were re-verified against the fixed hook before merge &mdash; the fault net doing the job it shipped for.</p>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong>.claude/hooks/enforce_review_gate.py</strong> &mdash; branch-first git-state resolution (unborn-HEAD repos and worktrees on non-feature branches exit silently; feature branches with no commits get a precise reason instead of &quot;could not determine git state&quot;); statement-position trigger regex with env-prefix tolerance replaces the substring match.</li>
+          </ul>
+          <h4>Added</h4>
+          <ul>
+            <li><strong>tests/claude_hooks/test_enforce_review_gate.py</strong> &mdash; 8 regression tests: unborn-HEAD repo (non-feature allows, feature blocks with precise reason), non-git dir fail-closed (F15 parity), worktree checkouts (non-feature allows, feature gates with the review reason), quoted-phrase non-invocation, chained-command and env-prefixed invocations still gated. Test runner also scrubs an inherited <code>CLAUDE_PROJECT_DIR</code>.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-70-0">
           <div class="release-header">
             <span class="version-badge">v1.70.0</span>
@@ -1145,6 +1164,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>June 2026 (3 releases)</summary>
+
         <div class="release" id="v1-68-0">
           <div class="release-header">
             <span class="version-badge">v1.68.0</span>
@@ -1166,10 +1189,6 @@
             <li><strong><code>global-commands/wrap.md</code></strong> — the Step 6 DOE Kit sync check now also runs <code>check_tools_version.py</code> and surfaces its line (when non-empty) in the wrap output: the end-of-session half of the same check the SessionStart hook runs at the start.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>June 2026 (2 releases)</summary>
 
         <div class="release" id="v1-67-0">
           <div class="release-header">
