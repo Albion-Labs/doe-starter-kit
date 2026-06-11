@@ -31,10 +31,29 @@ def main():
         m = f.get("method")
         if m not in METHODS:
             errs.append(f"{fid}: bad method {m!r}")
+        if "covered" not in f or not isinstance(f.get("covered"), bool):
+            errs.append(f"{fid}: 'covered' must be present and boolean")
+        expected_enf = {"block": "block", "flag": "flag", "miss": "none"}.get(f.get("expect"))
+        if expected_enf and f.get("enforcement") != expected_enf:
+            errs.append(f"{fid}: enforcement {f.get('enforcement')!r} disagrees with expect {f.get('expect')!r}")
         if m == "hook":
-            for k in ("hook", "tool_name", "input_field", "value_parts"):
+            for k in ("hook", "tool_name", "input_field", "value_parts", "benign_value_parts"):
                 if k not in f:
                     errs.append(f"{fid}: hook fault missing '{k}'")
+            gf = f.get("git_fixture")
+            if gf is not None:
+                if (not isinstance(gf, dict)
+                        or "fault_branch" not in gf
+                        or "benign_branch" not in gf):
+                    errs.append(f"{fid}: git_fixture must carry fault_branch and benign_branch")
+                else:
+                    for k in ("fault_branch", "benign_branch"):
+                        v = gf[k]
+                        if v is not None and not isinstance(v, str):
+                            errs.append(f"{fid}: git_fixture.{k} must be a string or null")
+            for flag in ("gh_shim", "neutral_cwd"):
+                if flag in f and not isinstance(f[flag], bool):
+                    errs.append(f"{fid}: '{flag}' must be boolean")
         if m in ("filescan", "filescan-miss") and "inject" not in f:
             errs.append(f"{fid}: filescan fault missing 'inject'")
     if errs:

@@ -46,3 +46,20 @@ FORMAT RULES (Claude: follow these when updating this file)
 <!-- Code-complete features with unchecked [manual] contracts. User tests, reports pass/fail. Moves to Done when all [manual] are [x]. -->
 
 ## Done
+
+### Proof fault net — full guardrail-hook coverage [INFRA] (v1.71.0)
+PR 1 of the v2.0 plan (.claude/plans/doe-v2-lean-proof-of-life.md ## Implementation map). Every blocking hook gets at least one must-catch fault + a benign twin in proof/corpus, and the proof job runs on every kit PR so a silently-dead gate turns CI red.
+
+1. [x] Harness: deterministic hook invocation (kit-anchored cwd, escape-valve + GIT_* env scrub, git-fixture support, gh-shim + neutral-cwd fixtures) -> v1.71.0 *(completed 01:41 11/06/26)*
+  Contract:
+  - [x] [auto] Existing corpus still green under new harness. Verify: run: python3 proof/run.py --self-test
+2. [x] Corpus: F08-F15 faults + benign twins covering protect_directives (both branches), guard_kit_writes (rm + force-push), confirm_pr_merge, block_unnecessary_admin_merge (fail-closed arm), enforce_review_gate (feature-branch gate + fail-closed arm) -> v1.71.0 *(completed 01:41 11/06/26)*
+  Contract:
+  - [x] [auto] Corpus well-formed. Verify: run: python3 proof/corpus_check.py
+  - [x] [auto] All covered faults caught, zero measured false positives. Verify: run: python3 proof/run.py --self-test
+3. [x] CI: proof job runs on every push to main and every PR (path scoping removed) -> v1.71.0 *(completed 01:41 11/06/26)*
+  Contract:
+  - [x] [auto] Workflow no longer path-scoped. Verify: file: .github/workflows/proof.yml contains pull_request:
+4. [x] Docs + release: proof README + TODO counts, CHANGELOG v1.71.0 entry, whats-new regenerated -> v1.71.0 *(completed 01:41 11/06/26)*
+  Contract:
+  - [x] [auto] Changelog entry present. Verify: file: CHANGELOG.md contains ## v1.71.0

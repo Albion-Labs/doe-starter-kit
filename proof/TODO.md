@@ -24,7 +24,7 @@ HQ reads the PK-0 schema across projects. Listed only to fix the interface bound
 Schema v1.0 (additive-only) + dependency-free validator + 2 examples. Negative-control broken scorecard correctly rejected.
 
 ### PK-1 — Fault-injection harness  *(12e1722)*
-Synthetic fixture + 7-fault corpus; `run.py` invokes the REAL unmodified kit gates; 6/6 covered classes caught, F07 honest miss (86%), control 0/7.
+Synthetic fixture + 15-fault corpus; `run.py` invokes the REAL unmodified kit gates; 14/14 covered classes caught, F07 honest miss (93%), control 0/15.
 
 ### PK-2 — HTML scorecard + reproduction  *(1c41d62)*
 `render.py` self-contained themed card; `README.md` reproduction/audit guide; provenance (gate sha256 + kit commit); `sample/` reference card.

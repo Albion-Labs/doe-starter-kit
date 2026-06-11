@@ -1,12 +1,15 @@
 name: DOE Proof
 
-# Re-runs the gate-efficacy benchmark as a regression gate. Scoped to proof/ so
-# it never interferes with the kit's normal CI.
+# Re-runs the gate-efficacy benchmark as a regression gate. Runs on EVERY
+# push to main and EVERY PR (v1.71.0): the corpus exercises the real
+# guardrail hooks, so a hook regression anywhere in the kit must turn this
+# red. The old proof/**-only path scoping meant a hook change could ship
+# without the proof job ever running — the exact silent-death class
+# (guard_kit_writes, v1.51–v1.58) the harness exists to catch.
 on:
   push:
-    paths: ["proof/**", ".github/workflows/proof.yml"]
+    branches: [main]
   pull_request:
-    paths: ["proof/**", ".github/workflows/proof.yml"]
 
 jobs:
   proof:
