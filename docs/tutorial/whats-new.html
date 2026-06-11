@@ -1059,6 +1059,28 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-71-0">
+          <div class="release-header">
+            <span class="version-badge">v1.71.0</span>
+            <span class="release-date">11 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">The proof harness now exercises <strong>every blocking guardrail hook in the kit</strong> and runs on <strong>every PR</strong>. Eight new corpus faults cover <code>protect_directives</code> (both branches), <code>guard_kit_writes</code> (recursive removal + force-push), <code>confirm_pr_merge</code>, <code>block_unnecessary_admin_merge</code> (fail-closed arm), and <code>enforce_review_gate</code> (feature-branch gate + fail-closed arm) &mdash; each paired with a benign twin the gate must NOT fire on &mdash; and the proof CI job loses its <code>proof/</code>-only path scoping, so a guardrail that silently stops firing turns the next PR red instead of shipping. PR 1 of the v2.0 proof-of-life implementation map.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">The motivating incident is documented in <code>guard_kit_writes</code>&#x27; own docstring: its file-guard shipped silently non-functional for 8 releases (v1.51-v1.58, lowercase matchers) and nothing noticed, because the only thing verifying hooks was their own existence. The next kit phase rewires all hooks into a single dispatcher &mdash; exactly the kind of refactor that produces this failure mode &mdash; so the fault net lands first. The harness gained three determinism guarantees to support the new faults: hook invocations are anchored to the kit root (relative-path existence checks resolve identically everywhere), escape-valve env vars (<code>SKIP_KIT_GUARD</code>, <code>SKIP_REVIEW_GATE</code>, <code>BYPASS_BLOCK</code>, <code>ALLOW_MERGE</code>, <code>SKIP_MAIN_PROTECTION</code>) are scrubbed before every invocation so an inherited shell override can never green a fault, and hooks that read git state via <code>$CLAUDE_PROJECT_DIR</code> get disposable git fixtures (a one-commit repo on a named branch, or a non-git directory to pin the fail-closed contract). F15 deliberately pins the review gate&#x27;s fail-closed behaviour that the issue #107 worktree fix must preserve.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong>proof/corpus/manifest.json</strong> &mdash; faults F08-F15 with benign twins: directive-edit + directive-bash-write (<code>protect_directives</code>), kit-recursive-removal + kit-force-push (<code>guard_kit_writes</code>), unconfirmed-merge (<code>confirm_pr_merge</code>), reflexive-admin-merge fail-closed arm (<code>block_unnecessary_admin_merge</code>), unreviewed-feature-pr + review-gate-no-git-state (<code>enforce_review_gate</code>). Corpus: 7 -&gt; 15 faults, 14 covered classes.</li>
+            <li><strong>proof/run.py</strong> &mdash; <code>git_fixture</code> support for <code>$CLAUDE_PROJECT_DIR</code>-anchored hooks; escape-valve env scrub; kit-anchored hook cwd; provenance now derived from the manifest so it can never lag the corpus.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong>.github/workflows/proof.yml</strong> &mdash; runs on every push to main and every PR (path scoping removed). A hook regression anywhere in the kit now turns the proof job red.</li>
+            <li><strong>proof/corpus_check.py</strong> &mdash; validates <code>benign_value_parts</code> and the new <code>git_fixture</code> field.</li>
+            <li><strong>proof/README.md</strong> &mdash; expected results updated (14/14 covered caught, 0/15 false positives, headline 93%).</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-70-0">
           <div class="release-header">
             <span class="version-badge">v1.70.0</span>
@@ -1145,6 +1167,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>June 2026 (3 releases)</summary>
+
         <div class="release" id="v1-68-0">
           <div class="release-header">
             <span class="version-badge">v1.68.0</span>
@@ -1166,10 +1192,6 @@
             <li><strong><code>global-commands/wrap.md</code></strong> — the Step 6 DOE Kit sync check now also runs <code>check_tools_version.py</code> and surfaces its line (when non-empty) in the wrap output: the end-of-session half of the same check the SessionStart hook runs at the start.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>June 2026 (2 releases)</summary>
 
         <div class="release" id="v1-67-0">
           <div class="release-header">

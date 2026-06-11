@@ -20,7 +20,7 @@ python3 run.py                       # writes out/scorecard.json
 python3 render.py out/scorecard.json out/scorecard.html
 ```
 
-Expected: **6/6 covered classes caught** (4 BLOCKED + 2 FLAGGED), **0/7 measured false-positives**, control 0/7 by construction, headline **86%**.
+Expected: **14/14 covered classes caught** (12 BLOCKED + 2 FLAGGED), **0/15 measured false-positives**, control 0/15 by construction, headline **93%**. As of v1.71.0 the corpus exercises **every blocking guardrail hook in the kit** (secrets, dangerous commands, directive protection, kit writes, merge confirmation, admin-merge, review gate), so a hook that silently stops firing turns CI red.
 
 ## Recreate it yourself (2 minutes)
 
@@ -79,7 +79,7 @@ clone at that commit, run, and you must get the same result.
 - **DORA metrics carry a `basis: PROXY` flag** — they're git-commit-message heuristics, not deploy telemetry.
 - **No cost is invented:** money figures are intentionally omitted. The only cost basis we would surface is real model token-usage x published per-token prices.
 
-## Why 86% and not 100%?
+## Why 93% and not 100%?
 
 One planted defect (`F07`) is a behavioural logic bug that **no static gate can catch** —
 it needs a test or a human. We show it as an honest miss so you can see exactly where

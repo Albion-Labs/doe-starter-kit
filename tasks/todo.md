@@ -2,7 +2,28 @@
 <!--
 FORMAT RULES (Claude: follow these when updating this file)
 - This file tracks immediate work only. Long-term roadmap lives elsewhere.
-- Sections: ## Current (one active feature), ## Queue (approved, not started), ## Awaiting Sign-off (code complete, manual contracts pending user test), ## Done (all contracts verified, keep for audit)
+- Sections: ## Current
+
+## Proof fault net — full guardrail-hook coverage [INFRA] (v1.71.x)
+PR 1 of the v2.0 plan (.claude/plans/doe-v2-lean-proof-of-life.md ## Implementation map). Every blocking hook gets at least one must-catch fault + a benign twin in proof/corpus, and the proof job runs on every kit PR so a silently-dead gate turns CI red.
+
+1. [x] Harness: deterministic hook invocation (kit-anchored cwd, escape-valve env scrub, git-fixture support for $CLAUDE_PROJECT_DIR hooks) -> v1.71.0 *(completed 01:41 11/06/26)*
+  Contract:
+  - [x] [auto] Existing corpus still green under new harness. Verify: run: python3 proof/run.py --self-test
+2. [x] Corpus: F08-F15 faults + benign twins covering protect_directives (both branches), guard_kit_writes (rm + force-push), confirm_pr_merge, block_unnecessary_admin_merge (fail-closed arm), enforce_review_gate (feature-branch gate + fail-closed arm) -> v1.71.0 *(completed 01:41 11/06/26)*
+  Contract:
+  - [x] [auto] Corpus well-formed. Verify: run: python3 proof/corpus_check.py
+  - [x] [auto] All covered faults caught, zero measured false positives. Verify: run: python3 proof/run.py --self-test
+3. [x] CI: proof job runs on every push to main and every PR (path scoping removed) -> v1.71.0 *(completed 01:41 11/06/26)*
+  Contract:
+  - [x] [auto] Workflow no longer path-scoped. Verify: file: .github/workflows/proof.yml contains pull_request:
+4. [x] Docs + release: proof README counts, CHANGELOG v1.71.0 entry, whats-new regenerated -> v1.71.0 *(completed 01:41 11/06/26)*
+  Contract:
+  - [x] [auto] Changelog entry present. Verify: file: CHANGELOG.md contains ## v1.71.0
+ (one active feature), ## Queue (approved, not started), ## Awaiting Sign-off (code complete, manual contracts pending user test), ## Done
+
+#
+ (all contracts verified, keep for audit)
 - Each feature gets a heading, short description, and numbered steps
 - Each feature heading includes a type tag: [APP] for changes users see, [INFRA] for tooling/workflow/dev improvements. Example: ### Election History [APP] (v0.9.x). Data work that produces user-visible output is [APP]. Data work that only improves dev workflow is [INFRA].
 - Complex features (3+ steps): link to the full design in .claude/plans/ — e.g. "Plan: .claude/plans/feature-name.md"
@@ -18,7 +39,7 @@ FORMAT RULES (Claude: follow these when updating this file)
   Format:
   N. [ ] Step name -> vX.Y.Z
     Contract:
-    - [ ] [auto] Description. Verify: [executable pattern]
+    - [x] [auto] Description. Verify: [executable pattern]
     - [ ] [manual] Description of what the human should check
     Agent cannot mark the step done until all contract items pass /agent-verify.
   **`[auto]` criteria** must use one of these executable Verify: patterns:
