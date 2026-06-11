@@ -23,6 +23,22 @@ Root cause, established while building v1.71.0: the hook anchored to `$CLAUDE_PR
 
 ### Pull impact
 Projects carry this hook at `.claude/hooks/enforce_review_gate.py`. Stale copies keep the old false-positive behaviour until the next `/pull-doe`; machines hitting "Could not determine git state" on unrelated PR creation should pull promptly or copy the fixed hook directly.
+## v1.71.0 (2026-06-11)
+<!-- hero -->
+The proof harness now exercises **every blocking guardrail hook in the kit** and runs on **every PR**. Eight new corpus faults cover `protect_directives` (both branches), `guard_kit_writes` (recursive removal + force-push), `confirm_pr_merge`, `block_unnecessary_admin_merge` (fail-closed arm), and `enforce_review_gate` (feature-branch gate + fail-closed arm) -- each paired with a benign twin the gate must NOT fire on -- and the proof CI job loses its `proof/`-only path scoping, so a guardrail that silently stops firing turns the next PR red instead of shipping. PR 1 of the v2.0 proof-of-life implementation map.
+<!-- /hero -->
+<!-- background -->
+The motivating incident is documented in `guard_kit_writes`' own docstring: its file-guard shipped silently non-functional for 8 releases (v1.51-v1.58, lowercase matchers) and nothing noticed, because the only thing verifying hooks was their own existence. The next kit phase rewires all hooks into a single dispatcher -- exactly the kind of refactor that produces this failure mode -- so the fault net lands first. The harness gained three determinism guarantees to support the new faults: hook invocations are anchored to the kit root (relative-path existence checks resolve identically everywhere), escape-valve env vars (`SKIP_KIT_GUARD`, `SKIP_REVIEW_GATE`, `BYPASS_BLOCK`, `ALLOW_MERGE`, `SKIP_MAIN_PROTECTION`) **and all `GIT_*` vars** are scrubbed before every invocation -- an inherited shell override can never green a fault, and an ambient `GIT_DIR` can no longer invert a fail-closed fault by making `git -C <non-git-dir>` resolve the outer repo -- and hooks that read git state via `$CLAUDE_PROJECT_DIR` get disposable, config-isolated git fixtures (a one-commit repo on a named branch, or a non-git directory to pin the fail-closed contract). Hooks that would call the gh CLI get a PATH-front shim that always fails, so fail-closed arms are exercised with zero network; cwd-sensitive hooks run from a neutral directory so one detection arm cannot mask another. These guarantees were adversarially reviewed: both environment attacks (gpg-signing global config, ambient GIT_DIR) were reproduced against the first draft and are now pinned. F15 deliberately pins the review gate's fail-closed behaviour that the issue #107 worktree fix must preserve.
+<!-- /background -->
+
+### Added
+- **proof/corpus/manifest.json** -- faults F08-F15 with benign twins: directive-edit + directive-bash-write (`protect_directives`), kit-recursive-removal + kit-force-push (`guard_kit_writes`), unconfirmed-merge (`confirm_pr_merge`), reflexive-admin-merge fail-closed arm (`block_unnecessary_admin_merge`), unreviewed-feature-pr + review-gate-no-git-state (`enforce_review_gate`). Corpus: 7 -> 15 faults, 14 covered classes.
+- **proof/run.py** -- `git_fixture`, `gh_shim`, and `neutral_cwd` fixture support; escape-valve + `GIT_*` env scrub; config-isolated fixture git; kit-anchored hook cwd; provenance now derived from the manifest so it can never lag the corpus.
+
+### Changed
+- **.github/workflows/proof.yml** -- runs on every push to main and every PR (path scoping removed). A hook regression anywhere in the kit now turns the proof job red.
+- **proof/corpus_check.py** -- validates `benign_value_parts` and the new `git_fixture` field.
+- **proof/README.md** -- expected results updated (14/14 covered caught, 0/15 false positives, headline 93%).
 
 ## v1.70.0 (2026-06-11)
 <!-- hero -->

@@ -20,7 +20,7 @@ python3 run.py                       # writes out/scorecard.json
 python3 render.py out/scorecard.json out/scorecard.html
 ```
 
-Expected: **6/6 covered classes caught** (4 BLOCKED + 2 FLAGGED), **0/7 measured false-positives**, control 0/7 by construction, headline **86%**.
+Expected: **14/14 covered classes caught** (12 BLOCKED + 2 FLAGGED), **0/15 measured false-positives**, control 0/15 by construction, headline **93%**. As of v1.71.0 the corpus exercises **every blocking guardrail hook in the kit** (secrets, dangerous commands, directive protection, kit writes, merge confirmation, admin-merge, review gate), so a hook that silently stops firing turns CI red.
 
 ## Recreate it yourself (2 minutes)
 
@@ -64,22 +64,22 @@ clone at that commit, run, and you must get the same result.
 2. **Break a gate.** Temporarily edit one of the gate scripts to do nothing, re-run, and
    watch the catch-rate fall. That fall is the proof the gate was doing real work.
 3. **Check the false-positive arm (measured).** Each gate is also run against a *benign*
-   counterpart input and must NOT fire — the scorecard's `falsePositives` is 0/7, measured,
+   counterpart input and must NOT fire — the scorecard's `falsePositives` is 0/15, measured,
    proving the gates discriminate rather than always-fire.
 4. **Mind the enforcement level.** BLOCKED = hard-stopped by a hook; FLAGGED = detected by an
    advisory check (non-blocking). The card shows them separately so a flag is never sold as a
-   block. Control (0/7) is *by construction* — vanilla tooling has none of these gates — and is
+   block. Control (0/15) is *by construction* — vanilla tooling has none of these gates — and is
    labelled as such, not dressed up as a measured experiment.
 
 ## Honesty guardrails baked in
 
-- **Blocked vs flagged:** 4 of the 6 catches are hard blocks; 2 are advisory flags. Shown separately.
+- **Blocked vs flagged:** 12 of the 14 catches are hard blocks; 2 are advisory flags. Shown separately.
 - **False-positives are measured** (benign inputs), not assumed.
 - **Control is labelled "by construction"**, not presented as a measurement.
 - **DORA metrics carry a `basis: PROXY` flag** — they're git-commit-message heuristics, not deploy telemetry.
 - **No cost is invented:** money figures are intentionally omitted. The only cost basis we would surface is real model token-usage x published per-token prices.
 
-## Why 86% and not 100%?
+## Why 93% and not 100%?
 
 One planted defect (`F07`) is a behavioural logic bug that **no static gate can catch** —
 it needs a test or a human. We show it as an honest miss so you can see exactly where
