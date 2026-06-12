@@ -200,18 +200,22 @@ SCAN_PROFILES = {
 }
 
 
-def _get_scan_profile():
-    """Get scan profile based on projectType from tests/config.json."""
+def _project_type():
+    """Read projectType from tests/config.json (default html-app)."""
     config_path = ROOT / "tests" / "config.json"
-    project_type = "html-app"
     if config_path.exists():
         try:
             with open(config_path) as f:
                 cfg = json.load(f)
-            project_type = cfg.get("projectType", "html-app") or "html-app"
+            return cfg.get("projectType", "html-app") or "html-app"
         except (json.JSONDecodeError, OSError):
             pass
-    return SCAN_PROFILES.get(project_type, SCAN_PROFILES["html-app"])
+    return "html-app"
+
+
+def _get_scan_profile():
+    """Get scan profile based on projectType from tests/config.json."""
+    return SCAN_PROFILES.get(_project_type(), SCAN_PROFILES["html-app"])
 
 
 # ---------------------------------------------------------------------------
@@ -345,6 +349,32 @@ def run_universal_checks():
     """Run all universal checks. Returns list of result dicts."""
     results = []
 
+    # Scan coverage disclosure. The file-scan checks below report OK on an
+    # EMPTY file list, so a mismatched projectType (profile paths that don't
+    # exist in this repo) used to produce permanent vacuous green — the kit
+    # itself "passed" while scanning zero files (liveness audit B1). 0 files
+    # scanned is a WARN, never a silent pass.
+    profile = _get_scan_profile()
+    files = _js_files()
+    existing = [p for p in profile["paths"] if (ROOT / p).exists()]
+    if files:
+        results.append({
+            "name": "Scan coverage",
+            "status": "OK",
+            "detail": f"{len(files)} file(s) scanned under {', '.join(existing)}",
+        })
+    else:
+        results.append({
+            "name": "Scan coverage",
+            "status": "WARN",
+            "detail": (
+                f"0 files scanned — projectType '{_project_type()}' paths "
+                f"({', '.join(profile['paths'])}) are missing or empty, so the "
+                "stub/TODO/empty-function checks below are vacuous. Set the "
+                "correct projectType in tests/config.json."
+            ),
+        })
+
     # Stubs
     stub_hits = check_stubs()
     if stub_hits:
@@ -457,7 +487,14 @@ def run_project_checks():
 
     config = load_health_config()
     if config is None:
-        return [{"name": "tests/health.json", "status": "FAIL", "detail": "File not found"}]
+        # No health.json is a declared absence, not a failure: projects opt
+        # into project checks by adding the file. A permanent FAIL here just
+        # normalises ignoring a red check (liveness audit B10). Disclosed SKIP.
+        return [{
+            "name": "tests/health.json",
+            "status": "SKIP",
+            "detail": "not present — project checks skipped (add tests/health.json to enable)",
+        }]
     if "error" in config:
         return [{"name": "tests/health.json", "status": "FAIL", "detail": config["error"]}]
 
