@@ -5,6 +5,9 @@ Four parallel execution-verified audits (hooks, invocation chains, prose referen
 ## Tally update
 Never-alive specimens now total **NINE**: scan_docs.py, guard_kit_writes matchers (v1.51–58), check_plan_freshness_hook, copy_plan_to_project (both fixed v1.71.2), **+ five new**: hook-templates/{python,javascript}.json (double-fatal), context_monitor.py (wrong event field), global-hooks/pre-commit (installed by nothing), quality_gate --pre-retro (phantom scenarios), doe_feature_request duplicate-scan (wrong directory).
 
+## Specimen 13 (2026-06-13, found at PR-C merge time) — kit pytest suite run by no CI job
+**MUST land with v2.0 PR 2** (user-confirmed). The `python-test` job in `doe-ci.yml` gates on `has_pytest`, derived from grepping a root `requirements.txt`/`pyproject.toml` — neither of which the kit repo has ever had. `has_pytest=false` since inception → the kit's own 366-test pytest suite is run by NO GitHub CI job (batches A/B/C all merged with "Python Tests: skipping"). It runs only locally (`.venv`) and via test_methodology's `execution_script_tests` scenario on dev machines — the exact "run by nothing" class the PR 2 ledger automates detection of (same class as B9's doe_init_integration). Candidate fix is one line — add a root `requirements.txt` containing `pytest` (flips the existing python-test job live for the kit) — but `doe-ci.yml` ships universally to consumers, so the distribution angle (and whether the suite is Linux-green) is decided in PR 2 scoping, not hot-fixed at merge time.
+
 ---
 
 ## PR A — `fix/v1.71.3-liveness-batch-1` (urgent: security + broken gates + my regression)
