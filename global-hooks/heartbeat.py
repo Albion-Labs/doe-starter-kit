@@ -30,9 +30,9 @@ def main():
     # Accept and discard stdin (hook protocol requires it)
     json.load(sys.stdin)
 
-    # Quick exit: no wave active
+    # Quick exit: no wave active. Silent exit 0 is the no-opinion
+    # convention -- a bare `{}` on stdout is not a hook response.
     if not SESSIONS_FILE.exists():
-        print(json.dumps({}))
         return
 
     # Per-terminal marker using Claude Code PID (stable across hook invocations)
@@ -44,7 +44,6 @@ def main():
         try:
             last = float(marker.read_text().strip())
             if now - last < HEARTBEAT_INTERVAL:
-                print(json.dumps({}))
                 return
         except (ValueError, OSError):
             pass
@@ -65,8 +64,6 @@ def main():
             pass
 
     subprocess.run(cmd, cwd=str(MAIN_ROOT), capture_output=True, text=True)
-
-    print(json.dumps({}))
 
 
 if __name__ == "__main__":

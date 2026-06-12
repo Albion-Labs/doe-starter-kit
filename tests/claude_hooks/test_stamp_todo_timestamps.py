@@ -90,6 +90,26 @@ def test_process_skips_unchecked():
     assert n == 0
 
 
+def test_process_stamps_lettered_step():
+    """Lettered sub-steps (1a., 2b.) are counted as steps by lint_todo's
+    regexes (\\d+[a-d]?\\.) — the stamp hook must stamp them too (C7)."""
+    mod = _load_hook_module()
+    now = datetime(2026, 5, 13, 14, 30)
+    text = "1a. [x] Lettered sub-step → v0.1.0"
+    out, n = mod.process(text, now)
+    assert n == 1
+    assert out == "1a. [x] Lettered sub-step → v0.1.0 *(completed 14:30 13/05/26)*"
+
+
+def test_process_lettered_step_idempotent():
+    mod = _load_hook_module()
+    now = datetime(2026, 5, 13, 14, 30)
+    text = "2b. [x] Already stamped *(completed 09:15 12/05/26)*"
+    out, n = mod.process(text, now)
+    assert n == 0
+    assert out == text
+
+
 def test_process_stamps_indented_unnumbered():
     """Audit regex matches `  [x] foo` (indented, no number). Mirror it."""
     mod = _load_hook_module()

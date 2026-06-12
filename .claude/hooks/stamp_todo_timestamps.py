@@ -6,8 +6,10 @@ append *(completed HH:MM DD/MM/YY)* to the end of the line. Idempotent --
 already-stamped lines are skipped.
 
 Mirrors the regexes used by execution/audit_claims.py so what we stamp is
-exactly what the CI audit (check_task_format) accepts. If audit regexes
-change, this hook must update in lockstep.
+exactly what the CI audit (check_task_format) accepts, PLUS lettered
+sub-steps (1a., 2b.) which lint_todo's step regexes (\\d+[a-d]?\\.) count
+as steps. If audit or lint regexes change, this hook must update in
+lockstep.
 
 Closes the most common CI-failure class: [x] without timestamp -> FAIL.
 Missing version tag is WARN-only in the audit and is intentionally NOT
@@ -25,10 +27,12 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Mirror execution/audit_claims.py exactly. If those regexes change, this
-# hook must update in lockstep.
+# Superset of execution/audit_claims.py's _TASK_DONE_RE: the optional
+# step prefix also accepts a letter suffix (1a.) to match lint_todo's
+# \d+[a-d]?\. step convention. If those regexes change, this hook must
+# update in lockstep.
 _TASK_DONE_RE = re.compile(
-    r"^[\s]*(?:\d+\.\s*)?\[x\]\s*(.+)",
+    r"^[\s]*(?:\d+[a-d]?\.\s*)?\[x\]\s*(.+)",
     re.IGNORECASE,
 )
 _TIMESTAMP_RE = re.compile(

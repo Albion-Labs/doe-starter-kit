@@ -17,13 +17,17 @@ HOOK = KIT / ".claude" / "hooks" / "protect_directives.py"
 DTOK = "direc" + "tives"
 
 
-def _run(payload):
+def _run(payload, env=None):
+    base_env = os.environ.copy()
+    if env:
+        base_env.update(env)
     result = subprocess.run(
         ["python3", str(HOOK)],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
         cwd="/tmp",
+        env=base_env,
     )
     assert result.returncode == 0, result.stderr
     out = result.stdout.strip()
@@ -57,6 +61,31 @@ def test_edit_non_directive_file_allows(tmp_path):
     target = tmp_path / "ordinary.md"
     target.write_text("hi")
     decision = _run({"tool_name": "Edit", "tool_input": {"file_path": str(target)}})
+    assert decision["decision"] == "allow"
+
+
+def test_edit_existing_directive_relative_path_blocks():
+    """Relative-path false-pass edge (liveness audit C7): when the tool
+    passes a relative file_path and the hook's cwd is not the project root,
+    Path(path).exists() is False and an edit to an EXISTING directive
+    slipped through. The existence check must anchor relative paths to
+    CLAUDE_PROJECT_DIR."""
+    rel = DTOK + "/architectural-invariants.md"
+    assert (KIT / rel).exists(), "test anchor missing"
+    decision = _run(
+        {"tool_name": "Edit", "tool_input": {"file_path": rel}},
+        env={"CLAUDE_PROJECT_DIR": str(KIT)},
+    )
+    assert decision["decision"] == "block"
+
+
+def test_write_new_directive_relative_path_allows():
+    """A relative path that does NOT exist under the project root is still a
+    new-directive creation — allowed."""
+    decision = _run(
+        {"tool_name": "Write", "tool_input": {"file_path": DTOK + "/never-existed.md"}},
+        env={"CLAUDE_PROJECT_DIR": str(KIT)},
+    )
     assert decision["decision"] == "allow"
 
 
