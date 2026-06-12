@@ -112,7 +112,7 @@ These triggers apply during delivery (absorbed from the original CLAUDE.md trigg
 
 ## Common Delivery Commands
 ```bash
-python3 execution/build.py              # Rebuild monolith HTML from src/
+python3 execution/build.py              # Rebuild monolith HTML from src/ (project-specific example -- the kit ships no build.py)
 python3 execution/verify.py             # Run contract verification
 python3 execution/health_check.py       # Health check (--quick --json)
 python3 execution/audit_claims.py       # Audit governed docs (--hook --json)
