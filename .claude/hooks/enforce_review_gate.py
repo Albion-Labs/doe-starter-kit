@@ -18,7 +18,12 @@ Checks (feature/* branches only):
    execution/record_review_result.py). Must exist and reviewed_sha must match
    current HEAD -- stale reviews are rejected.
 
-Skip: SKIP_REVIEW_GATE=1
+Bypass (human-only): export SKIP_REVIEW_GATE=1 in the shell before
+launching the session. The hook reads the env var only -- an inline
+`SKIP_REVIEW_GATE=1 gh pr create` assignment never reaches the hook
+(hooks are siblings of the Bash tool, not children), and
+block_dangerous_commands blocks the AI from writing that assignment
+anyway (ASSIGNMENT list, v1.60.1).
 
 v1.71.1 (issue #107): branch is resolved before (and independently of)
 HEAD, so unborn-HEAD repos and worktrees on non-feature branches pass
@@ -133,7 +138,8 @@ def main():
             "reason": (
                 "GUARDRAIL: Could not determine git state. "
                 "Blocking PR creation as a precaution. "
-                "Skip: SKIP_REVIEW_GATE=1"
+                "Bypass (human-only): export SKIP_REVIEW_GATE=1 "
+                "in the shell before launching the session."
             ),
         }))
         return
@@ -156,7 +162,8 @@ def main():
             "reason": (
                 "GUARDRAIL: feature branch has no commits -- cannot verify "
                 "a review against HEAD. Commit the work, run /review, then "
-                "create the PR. Skip: SKIP_REVIEW_GATE=1"
+                "create the PR. Bypass (human-only): export SKIP_REVIEW_GATE=1 "
+                "in the shell before launching the session."
             ),
         }))
         return
@@ -169,7 +176,8 @@ def main():
             "reason": (
                 f"GUARDRAIL: {steps_msg}. "
                 "No mid-feature PRs -- PRs are created at retro only. "
-                "Skip: SKIP_REVIEW_GATE=1"
+                "Bypass (human-only): export SKIP_REVIEW_GATE=1 "
+                "in the shell before launching the session."
             ),
         }))
         return
@@ -185,7 +193,8 @@ def main():
             "decision": "block",
             "reason": (
                 "GUARDRAIL: Adversarial review required before creating PR. "
-                "Run /review first. Skip: SKIP_REVIEW_GATE=1"
+                "Run /review first. Bypass (human-only): export SKIP_REVIEW_GATE=1 "
+                "in the shell before launching the session."
             ),
         }))
         return
@@ -198,7 +207,8 @@ def main():
             "decision": "block",
             "reason": (
                 "GUARDRAIL: Review artifact is corrupted. "
-                "Re-run /review. Skip: SKIP_REVIEW_GATE=1"
+                "Re-run /review. Bypass (human-only): export SKIP_REVIEW_GATE=1 "
+                "in the shell before launching the session."
             ),
         }))
         return
@@ -209,7 +219,8 @@ def main():
             "reason": (
                 f"GUARDRAIL: Review is stale (reviewed {reviewed_sha[:8]}, "
                 f"HEAD is {head_sha[:8]}). Re-run /review. "
-                "Skip: SKIP_REVIEW_GATE=1"
+                "Bypass (human-only): export SKIP_REVIEW_GATE=1 "
+                "in the shell before launching the session."
             ),
         }))
         return

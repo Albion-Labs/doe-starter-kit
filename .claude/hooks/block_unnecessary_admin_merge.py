@@ -154,9 +154,11 @@ def main() -> None:
             f"GUARDRAIL: PR #{pr_number} is BLOCKED. Non-passing items:\n"
             f"{failing}\n\n"
             f"Verify --admin is the right tool (e.g., unrelated CI breakage, "
-            f"urgent ship). If so, the human must set BYPASS_BLOCK=1 in their "
-            f"shell to authorise:\n"
-            f"  BYPASS_BLOCK=1 ALLOW_MERGE=1 gh pr merge {pr_number} --admin --merge"
+            f"urgent ship). If so, the HUMAN must export BYPASS_BLOCK=1 in "
+            f"the shell BEFORE launching the session (an inline "
+            f"BYPASS_BLOCK=1 assignment is itself blocked by "
+            f"block_dangerous_commands), then re-run:\n"
+            f"  ALLOW_MERGE=1 gh pr merge {pr_number} --admin --merge"
         )
         return
 

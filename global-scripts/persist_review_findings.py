@@ -4,12 +4,13 @@ Called by Finder/Adversarial/Referee agents as their mandatory final action.
 record_review_result.py checks these files exist before recording a PASS.
 """
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Worktree-safe: always write to main project root's .tmp/ regardless of cwd.
+# Worktree-safe: always write to the project root's .tmp/ regardless of cwd.
 # Adversarial runs with isolation: worktree, so cwd would otherwise be the
 # worktree path, causing the downstream review gate to miss the artifact.
 _SCRIPTS_DIR = Path.home() / ".claude" / "scripts"
@@ -20,6 +21,18 @@ try:
 except ImportError:
     def resolve_project_root():
         return Path.cwd(), Path.cwd()
+
+
+def _artifact_root():
+    """v1.71.3: same resolution order as record_review_result.py and the
+    gate reader (enforce_review_gate.py) -- $CLAUDE_PROJECT_DIR first, then
+    the main project root (worktree-safe), then cwd. All three must agree
+    or the recorder can't find findings the subagents persisted."""
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    if project_dir:
+        return Path(project_dir)
+    main_root, _ = resolve_project_root()
+    return main_root
 
 
 def main():
@@ -37,15 +50,15 @@ def main():
 
     findings = sys.argv[2]
 
+    root = _artifact_root()
     branch = subprocess.check_output(
-        ["git", "branch", "--show-current"], text=True
+        ["git", "-C", str(root), "branch", "--show-current"], text=True
     ).strip()
     sha = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], text=True
+        ["git", "-C", str(root), "rev-parse", "HEAD"], text=True
     ).strip()
 
-    main_root, _ = resolve_project_root()
-    artifact = main_root / ".tmp" / f"review-{role}-{branch}.json"
+    artifact = root / ".tmp" / f"review-{role}-{branch}.json"
     artifact.parent.mkdir(parents=True, exist_ok=True)
     artifact.write_text(json.dumps({
         "role": role,

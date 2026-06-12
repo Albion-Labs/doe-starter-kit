@@ -6,14 +6,39 @@ enforce_review_gate.py checks before allowing gh pr create.
 Requires Finder subagent findings as proof-of-work -- refuses to
 record PASS/PASS_WITH_NOTES unless .tmp/review-finder-{branch}.json
 exists, has the correct SHA, and was written within the last 30 min.
+
+Anchoring (v1.71.3): the gate READER (enforce_review_gate.py) resolves
+branch and artifact against $CLAUDE_PROJECT_DIR; this WRITER must match
+or a passed review blocks under cwd drift (bare `git branch` + relative
+.tmp/ land the artifact wherever the shell happens to be).
 """
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 STALE_MINUTES = 30
+
+_SCRIPTS_DIR = Path.home() / ".claude" / "scripts"
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+try:
+    from doe_utils import resolve_project_root
+except ImportError:
+    def resolve_project_root():
+        return Path.cwd(), Path.cwd()
+
+
+def _artifact_root():
+    """Same resolution order as the gate reader: $CLAUDE_PROJECT_DIR first,
+    then the main project root (worktree-safe), then cwd."""
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    if project_dir:
+        return Path(project_dir)
+    main_root, _ = resolve_project_root()
+    return main_root
 
 
 def main():
@@ -29,14 +54,15 @@ def main():
         print(f"Invalid verdict: {verdict}. Must be PASS, PASS_WITH_NOTES, or FAIL.")
         sys.exit(1)
 
+    root = _artifact_root()
     branch = subprocess.check_output(
-        ["git", "branch", "--show-current"], text=True
+        ["git", "-C", str(root), "branch", "--show-current"], text=True
     ).strip()
     head_sha = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], text=True
+        ["git", "-C", str(root), "rev-parse", "HEAD"], text=True
     ).strip()
 
-    artifact = Path(".tmp") / f"review-passed-{branch}.json"
+    artifact = root / ".tmp" / f"review-passed-{branch}.json"
 
     if verdict == "FAIL":
         artifact.unlink(missing_ok=True)
@@ -44,7 +70,7 @@ def main():
         return
 
     # --- Proof-of-work: require Finder subagent findings ---
-    finder_file = Path(".tmp") / f"review-finder-{branch}.json"
+    finder_file = root / ".tmp" / f"review-finder-{branch}.json"
 
     if not finder_file.exists():
         print(

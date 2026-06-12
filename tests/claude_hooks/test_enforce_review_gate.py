@@ -112,6 +112,19 @@ def test_feature_branch_without_review_artifact_blocks(tmp_path):
     assert "review" in decision["reason"].lower() or "step" in decision["reason"].lower()
 
 
+def test_block_reason_advertises_working_bypass_only(tmp_path):
+    """v1.71.3 (liveness audit A10): the hook reads SKIP_REVIEW_GATE from
+    os.environ only, so the reason must direct the human to export it
+    before launching the session — advertising the inline form was a
+    bypass that could never work (and block_dangerous_commands forbids
+    the AI writing the assignment anyway)."""
+    repo = _init_repo(tmp_path, "feature/new-thing-v1.0.0")
+    decision = _run(f"{GH_PR_CREATE} --title foo", cwd=repo)
+    assert decision["decision"] == "block"
+    assert "export SKIP_REVIEW_GATE=1" in decision["reason"]
+    assert "Skip: SKIP_REVIEW_GATE" not in decision["reason"]
+
+
 def test_feature_branch_with_incomplete_steps_blocks(tmp_path):
     repo = _init_repo(tmp_path, "feature/new-thing-v1.0.0")
     todo = repo / "tasks"
