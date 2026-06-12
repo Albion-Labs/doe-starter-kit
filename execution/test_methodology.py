@@ -348,8 +348,10 @@ def scenario_review_discipline(verbose: bool = False):
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return _result("PASS", "git unavailable — skipping (informational)", vlines)
 
-    # Look for review-related commits
-    review_keywords = ["review", "snagging", "audit", "adversarial", "diff-review", "pr:", "merge"]
+    # Look for review-related commits. "merge" is deliberately NOT a keyword:
+    # on a PR-workflow repo every 'Merge pull request' commit would count as
+    # review evidence, making the no-review WARN unfalsifiable (audit B8).
+    review_keywords = ["review", "snagging", "audit", "adversarial", "diff-review", "pr:"]
     review_commits = [
         c for c in commits
         if any(kw in c.lower() for kw in review_keywords)
@@ -822,6 +824,7 @@ def scenario_scale_consistency(verbose: bool = False):
     expected_headings = {"solo", "informal parallel", "formal parallel"}
 
     files_with_scale = []
+    checked = 0
     inconsistent = []
 
     for d in sorted(directives_dir.rglob("*.md")):
@@ -833,9 +836,13 @@ def scenario_scale_consistency(verbose: bool = False):
             for h in expected_headings:
                 if f"## {h}" in text or f"### {h}" in text:
                     headings.add(h)
-            if headings and headings != expected_headings:
-                missing = expected_headings - headings
-                inconsistent.append(f"{d.name}: missing headings {missing}")
+            # Only files that USE scale headings are comparable; the rest
+            # merely discuss scale in prose and have nothing to check.
+            if headings:
+                checked += 1
+                if headings != expected_headings:
+                    missing = expected_headings - headings
+                    inconsistent.append(f"{d.name}: missing headings {missing}")
 
     vlines.append(f"  Files discussing scale: {len(files_with_scale)}")
     for f in files_with_scale:
@@ -845,7 +852,15 @@ def scenario_scale_consistency(verbose: bool = False):
 
     if inconsistent:
         return _result("WARN", f"{len(inconsistent)} files with inconsistent scale headings", vlines)
-    return _result("PASS", f"{len(files_with_scale)} files use consistent scale terminology", vlines)
+    # Honest coverage label (liveness audit B8): the heading comparison only
+    # applies to files that have scale headings at all — claiming all
+    # scale-DISCUSSING files "use consistent terminology" overstated the check.
+    return _result(
+        "PASS",
+        f"{checked} of {len(files_with_scale)} scale-discussing files have "
+        "headings to compare — all consistent",
+        vlines,
+    )
 
 
 # ════════════════════════════════════════════════════════════
