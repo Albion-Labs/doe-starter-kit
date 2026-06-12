@@ -7,6 +7,32 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.71.5 (2026-06-12)
+<!-- hero -->
+Batch 2 of the kit-wide liveness audit: ends the era of checkers that are green over nothing. `health_check` no longer passes while scanning zero files; the three ROADMAP parsers see the live bullet format for the first time (with release tags accepted as shipped-evidence); `verify.py` loud-fails malformed contracts it used to silently skip; the proof harness refuses an empty corpus and non-repo metrics paths; and the 358-check doe-init integration suite — which had been run by nothing and had silently broken — is fixed and wired into CI.
+<!-- /hero -->
+<!-- background -->
+The theme across all ten findings is the same failure mode: a checker whose input drifted away (a scan path that stopped existing, a ROADMAP format that changed, a prompt added to the code under test) degrades GREEN, not red, because "no findings" and "nothing checked" produce the same output. Every fix here adds the disclosure that distinguishes them — scan counts, parse counts, coverage labels — plus a WARN/FAIL when the count is zero. The doe-init integration suite is the cautionary specimen: deliberately not pytest-collected (script-style by design), it was run by nothing, and while unwatched doe_init gained an interactive confirm that killed the suite at EOF stdin with a bare exit 1 — discovered only because this batch went to wire it into CI. Two checkers got sharper evidence to stay honest at full strength: roadmap consistency accepts a release tag as shipped-evidence (repos that ship via PR+tag clear todo.md per release), and review_discipline drops "merge" from its keywords (every PR merge counted as review evidence, making the no-review warning unfalsifiable).
+<!-- /background -->
+
+### Fixed
+- **execution/health_check.py** -- a leading "Scan coverage" row discloses the scanned-file count; 0 files scanned (mismatched projectType, missing profile paths) is a WARN naming the profile and the fix, never a silent pass. Full mode: a missing `tests/health.json` is a disclosed SKIP (it's opt-in), not a permanent FAIL; a corrupt one still FAILs.
+- **execution/audit_claims.py + execution/test_methodology.py (plan_vs_actual)** -- ROADMAP ## Complete parsers handle the live `- **Name (vX.Y.Z)** [TAG]` bullet format alongside the legacy `###` headings; parse counts are disclosed and a non-empty section parsing to 0 entries WARNs as format drift. Roadmap consistency additionally accepts a release tag or version-bearing commit as shipped-evidence. Kit result: 10/10 entries verified (was 0 parsed).
+- **execution/audit_claims.py (discover_version)** -- all three strategies had dead formats (retired STATE.md label, unicode-arrow-only todo regex, legacy ROADMAP form); now format-tolerant with the latest release tag as final fallback. First non-unknown result in the function's life.
+- **execution/test_methodology.py (report_generator_styling)** -- `generate_whats_new.py` joins the scan list and WARNs honestly instead of the scenario claiming "all 4 generators clean" while omitting the one known offender. Full html_builder port deferred to the docs phase (recorded in the findings doc).
+- **execution/test_methodology.py + execution/audit_claims.py (dag_validation)** -- candidate chain includes `global-scripts/` (the live copy); the DAG validated for the first time anywhere.
+- **execution/verify.py** -- `[auto]` criteria without a `Verify:` pattern loud-fail the step check (MALFORMED CONTRACT, exit 1, naming each offender) instead of being silently filtered out; the contract parser no longer terminates at the first non-dash line, which silently dropped every criterion below wrapped prose.
+- **proof/run.py + proof/metrics.py** -- `--self-test` fails on an empty corpus (0 injected was vacuously green standalone); `metrics.py --repo` validates the path is a git repo before reporting (a garbage path used to print perfect 0%/0% with exit 0).
+- **execution/test_methodology.py (scale_consistency, review_discipline)** -- PASS text states actual heading-comparison coverage (3 of 6 scale-discussing files on the kit); "merge" removed from review-evidence keywords.
+- **tests/execution/doe_init_integration.py + .github/workflows/doe-ci.yml** -- the suite's sandbox helpers answer interactive prompts so doe_init's scaffolding-commit confirm can't kill it at EOF stdin; runs green (358/358) and gets its own DOE CI step.
+
+### Added
+- **tests** -- `tests/execution/test_proof_guards.py` (empty corpus red, garbage repo refused, real repo accepted); B1/B10 cases in `test_health_check.py`; B2/B4 parser + evidence cases in `test_audit_claims.py`; B6 contract cases in `test_verify.py`. The vacuous-input fixtures are the red arms: each must WARN/FAIL where the old code passed.
+- **.claude/plans/audit-2026-06-11-liveness-findings.md** -- the audit findings doc is now tracked (was an untracked local file), with PR-B resolutions and the B3 deferral recorded in place.
+
+### Pull impact
+All changed scripts ship in the universal `execution/` layer — `/pull-doe` picks them up. Two behaviour notes for consumer projects: (1) a mismatched `projectType` in `tests/config.json` now surfaces as a health-check WARN instead of vacuous green — that WARN is new signal, not a regression; fix the projectType. (2) `verify.py --check-step` now exits 1 on `[auto]` criteria lacking `Verify:` patterns — previously those silently skipped; fix the contract or mark items `[manual]`.
+
 ## v1.71.4 (2026-06-12)
 <!-- hero -->
 Kills the recurring "Could not determine git state" false positive that blocked ALL `gh pr create` from sessions whose `$CLAUDE_PROJECT_DIR` is not a git repo (background jobs anchor it to `$HOME`; cross-repo sessions point it elsewhere) -- the issue #107 class that has now bitten multiple live sessions. The review gate resolves git state from the first candidate that has any: the project dir, then the event's `cwd` (the shell the command actually runs in); the fail-closed block survives only when neither resolves.
