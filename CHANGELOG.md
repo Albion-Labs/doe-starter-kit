@@ -7,6 +7,43 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.71.6 (2026-06-13)
+<!-- hero -->
+Batch 3 (final) of the kit-wide liveness audit: distribution wiring and stale maps. The never-alive hook templates and the orphan global pre-commit hook are deleted; four installed-but-unversioned global artifacts are adopted into the manifest so `/pull-doe` actually ships them; four small hook edges are fixed with red-first regression tests; and documentation whose staleness had teeth is corrected — headlined by a CHANGELOG header that documented a heading format auto-release cannot parse, primed to kill releases if anyone "corrected" entries to match it.
+<!-- /hero -->
+<!-- background -->
+The recurring specimen in this batch is the installed-but-unversioned artifact: a file that lives in `~/.claude/scripts/` or `~/.claude/commands/` on the machine that built it, gets referenced by kit commands (`wrap.md` invoked an archive builder the kit never shipped — under a name that exists nowhere), but is in no manifest, so a fresh install silently lacks it. All four known members of the class (`gist_sync.py`, `build_global_archive.py`, `clone-site.md`, plus the never-distributed `parallel-worktrees.md` directive) are now versioned and manifest-listed. The remaining deferrals are deliberate: `heartbeat.py`/`context_monitor.py` stay until Phase 4 deletes the wave stack in one coherent change, and the PostToolUse output protocol lands with v2.0 PR 2's gate dispatcher, which standardises hook output delivery wholesale.
+<!-- /background -->
+
+### Added
+- **global-scripts/build_global_archive.py** — the portfolio/session archive builder, previously installed-but-unversioned at `~/.claude/scripts/`; now versioned and in manifest `global_scripts`.
+- **global-commands/clone-site.md** — pixel-perfect website extraction & clone protocol, previously installed-but-unversioned at `~/.claude/commands/`; adopted into the kit (command counts 33 → 34).
+- **tests/claude_hooks/test_block_unnecessary_admin_merge.py** — hermetic regression suite for the admin-merge hook (stub `gh` on PATH records query cwd and returns canned merge states; no network, no real PRs).
+- **tests/claude_hooks/test_global_hooks_no_opinion.py** — enforces the silent-exit-0 no-opinion convention for every remaining global hook.
+
+### Changed
+- **manifest.json** — `gist_sync.py` + `build_global_archive.py` added to `global_scripts` (doe_init never installed gist_sync); `parallel-worktrees.md` added to the universal directives layer (the worktree template and doe_init's own output point at it); `clone-site.md` added to universal commands.
+- **CHANGELOG.md** — the format line now documents the heading form auto-release actually parses (`## vX.Y.Z (YYYY-MM-DD)`); the bracketed keep-a-changelog form it claimed would silently kill releases if entries were "corrected" to match it.
+- **SYSTEM-MAP.md** — listings completed: 4 missing hooks (guard_kit_writes, block_unnecessary_admin_merge, stamp_todo_timestamps, check_completed_feature), gist_sync + build_global_archive in the machine-level scripts tree, git-conventions/kit-development/parallel-worktrees in the directives tree, clone-site in the commands listing.
+- **docs/tutorial/hooks.md** — `SKIP_PENDING_PR_CHECK=1` documented alongside the other pre-commit skip flags.
+- **global-commands/wrap.md** — names `build_global_archive.py`; the `build_session_archive.py` it referenced exists nowhere.
+- **global-commands/request-doe-feature.md** — the gh-failure fallback invocation now shows the required path argument (`--fallback <json_path>`).
+- **directives/delivery-rules.md** — the bare `build.py` listing in Common Delivery Commands is qualified as a project-specific example (the kit ships no build.py). Applied as a user-approved exact-diff script per the protect_directives procedure.
+
+### Fixed
+- **.claude/hooks/stamp_todo_timestamps.py** — stamps lettered sub-steps (`1a.`) that lint_todo's step regexes already count; they were never stamped.
+- **.claude/hooks/protect_directives.py** — relative `file_path` existence checks anchor to `$CLAUDE_PROJECT_DIR`; under cwd drift, an edit to an existing directive previously false-passed as new-file creation.
+- **.claude/hooks/block_unnecessary_admin_merge.py** — the trigger no longer spans `&&`/`|` into unrelated chained statements, and `gh` queries run in the command's target repo (event cwd plus a leading `cd X &&` prefix) instead of the hook process cwd.
+- **global-hooks/heartbeat.py**, **global-hooks/context_monitor.py** — legacy `{}` no-opinion stdout replaced with silent exit 0 (the `{}` form is not a hook response).
+
+### Removed
+- **hook-templates/** (python.json, javascript.json, universal.json) — never-alive: the first two used a `$CLAUDE_TOOL_INPUT` protocol that has never existed; universal.json carried the lowercase matchers behind the v1.51–58 guard_kit_writes incident. The CUSTOMIZATION.md section pointing at them goes too.
+- **global-hooks/pre-commit** — orphan installed by nothing (setup.sh copies only `*.py` from global-hooks/), drifting ancestor of `.githooks/pre-commit`.
+- **doe-ci.yml Lighthouse advisory step** — never-alive: gated on `execution/lighthouse.sh`, which no kit install ever shipped; its dead `has_web`/`web_changed` wiring, artifact upload and PR-comment row removed with it. The secret-scan message also stops pointing at `.secretignore`, a mechanism nothing reads.
+
+### Pull impact
+Run `/pull-doe` then a full `bash setup.sh` (not `--tools-only`) to receive the adopted global tools and the hook fixes — background-job sessions execute the `~/.claude/hooks` mirror copies, which only a full setup.sh run refreshes.
+
 ## v1.71.5 (2026-06-12)
 <!-- hero -->
 Batch 2 of the kit-wide liveness audit: ends the era of checkers that are green over nothing. `health_check` no longer passes while scanning zero files; the three ROADMAP parsers see the live bullet format for the first time (with release tags accepted as shipped-evidence); `verify.py` loud-fails malformed contracts it used to silently skip; the proof harness refuses an empty corpus and non-repo metrics paths; and the 358-check doe-init integration suite — which had been run by nothing and had silently broken — is fixed and wired into CI.

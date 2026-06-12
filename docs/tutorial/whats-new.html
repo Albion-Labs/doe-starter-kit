@@ -1059,6 +1059,47 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-71-6">
+          <div class="release-header">
+            <span class="version-badge">v1.71.6</span>
+            <span class="release-date">13 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Batch 3 (final) of the kit-wide liveness audit: distribution wiring and stale maps. The never-alive hook templates and the orphan global pre-commit hook are deleted; four installed-but-unversioned global artifacts are adopted into the manifest so <code>/pull-doe</code> actually ships them; four small hook edges are fixed with red-first regression tests; and documentation whose staleness had teeth is corrected — headlined by a CHANGELOG header that documented a heading format auto-release cannot parse, primed to kill releases if anyone &quot;corrected&quot; entries to match it.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">The recurring specimen in this batch is the installed-but-unversioned artifact: a file that lives in <code>~/.claude/scripts/</code> or <code>~/.claude/commands/</code> on the machine that built it, gets referenced by kit commands (<code>wrap.md</code> invoked an archive builder the kit never shipped — under a name that exists nowhere), but is in no manifest, so a fresh install silently lacks it. All four known members of the class (<code>gist_sync.py</code>, <code>build_global_archive.py</code>, <code>clone-site.md</code>, plus the never-distributed <code>parallel-worktrees.md</code> directive) are now versioned and manifest-listed. The remaining deferrals are deliberate: <code>heartbeat.py</code>/<code>context_monitor.py</code> stay until Phase 4 deletes the wave stack in one coherent change, and the PostToolUse output protocol lands with v2.0 PR 2&#x27;s gate dispatcher, which standardises hook output delivery wholesale.</p>
+          <h4>Added</h4>
+          <ul>
+            <li><strong>global-scripts/build_global_archive.py</strong> — the portfolio/session archive builder, previously installed-but-unversioned at <code>~/.claude/scripts/</code>; now versioned and in manifest <code>global_scripts</code>.</li>
+            <li><strong>global-commands/clone-site.md</strong> — pixel-perfect website extraction &amp; clone protocol, previously installed-but-unversioned at <code>~/.claude/commands/</code>; adopted into the kit (command counts 33 → 34).</li>
+            <li><strong>tests/claude_hooks/test_block_unnecessary_admin_merge.py</strong> — hermetic regression suite for the admin-merge hook (stub <code>gh</code> on PATH records query cwd and returns canned merge states; no network, no real PRs).</li>
+            <li><strong>tests/claude_hooks/test_global_hooks_no_opinion.py</strong> — enforces the silent-exit-0 no-opinion convention for every remaining global hook.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong>manifest.json</strong> — <code>gist_sync.py</code> + <code>build_global_archive.py</code> added to <code>global_scripts</code> (doe_init never installed gist_sync); <code>parallel-worktrees.md</code> added to the universal directives layer (the worktree template and doe_init&#x27;s own output point at it); <code>clone-site.md</code> added to universal commands.</li>
+            <li><strong>CHANGELOG.md</strong> — the format line now documents the heading form auto-release actually parses (<code>## vX.Y.Z (YYYY-MM-DD)</code>); the bracketed keep-a-changelog form it claimed would silently kill releases if entries were &quot;corrected&quot; to match it.</li>
+            <li><strong>SYSTEM-MAP.md</strong> — listings completed: 4 missing hooks (guard_kit_writes, block_unnecessary_admin_merge, stamp_todo_timestamps, check_completed_feature), gist_sync + build_global_archive in the machine-level scripts tree, git-conventions/kit-development/parallel-worktrees in the directives tree, clone-site in the commands listing.</li>
+            <li><strong>docs/tutorial/hooks.md</strong> — <code>SKIP_PENDING_PR_CHECK=1</code> documented alongside the other pre-commit skip flags.</li>
+            <li><strong>global-commands/wrap.md</strong> — names <code>build_global_archive.py</code>; the <code>build_session_archive.py</code> it referenced exists nowhere.</li>
+            <li><strong>global-commands/request-doe-feature.md</strong> — the gh-failure fallback invocation now shows the required path argument (<code>--fallback &lt;json_path&gt;</code>).</li>
+            <li><strong>directives/delivery-rules.md</strong> — the bare <code>build.py</code> listing in Common Delivery Commands is qualified as a project-specific example (the kit ships no build.py). Applied as a user-approved exact-diff script per the protect_directives procedure.</li>
+          </ul>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong>.claude/hooks/stamp_todo_timestamps.py</strong> — stamps lettered sub-steps (<code>1a.</code>) that lint_todo&#x27;s step regexes already count; they were never stamped.</li>
+            <li><strong>.claude/hooks/protect_directives.py</strong> — relative <code>file_path</code> existence checks anchor to <code>$CLAUDE_PROJECT_DIR</code>; under cwd drift, an edit to an existing directive previously false-passed as new-file creation.</li>
+            <li><strong>.claude/hooks/block_unnecessary_admin_merge.py</strong> — the trigger no longer spans <code>&amp;&amp;</code>/<code>|</code> into unrelated chained statements, and <code>gh</code> queries run in the command&#x27;s target repo (event cwd plus a leading <code>cd X &amp;&amp;</code> prefix) instead of the hook process cwd.</li>
+            <li><strong>global-hooks/heartbeat.py</strong>, <strong>global-hooks/context_monitor.py</strong> — legacy <code>{}</code> no-opinion stdout replaced with silent exit 0 (the <code>{}</code> form is not a hook response).</li>
+          </ul>
+          <h4 class="removed">Removed</h4>
+          <ul>
+            <li><strong>hook-templates/</strong> (python.json, javascript.json, universal.json) — never-alive: the first two used a <code>$CLAUDE_TOOL_INPUT</code> protocol that has never existed; universal.json carried the lowercase matchers behind the v1.51–58 guard_kit_writes incident. The CUSTOMIZATION.md section pointing at them goes too.</li>
+            <li><strong>global-hooks/pre-commit</strong> — orphan installed by nothing (setup.sh copies only <code>*.py</code> from global-hooks/), drifting ancestor of <code>.githooks/pre-commit</code>.</li>
+            <li><strong>doe-ci.yml Lighthouse advisory step</strong> — never-alive: gated on <code>execution/lighthouse.sh</code>, which no kit install ever shipped; its dead <code>has_web</code>/<code>web_changed</code> wiring, artifact upload and PR-comment row removed with it. The secret-scan message also stops pointing at <code>.secretignore</code>, a mechanism nothing reads.</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-71-5">
           <div class="release-header">
             <span class="version-badge">v1.71.5</span>
@@ -1162,6 +1203,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>June 2026 (9 releases)</summary>
+
         <div class="release" id="v1-71-1">
           <div class="release-header">
             <span class="version-badge">v1.71.1</span>
@@ -1180,10 +1225,6 @@
             <li><strong>tests/claude_hooks/test_enforce_review_gate.py</strong> &mdash; 8 regression tests: unborn-HEAD repo (non-feature allows, feature blocks with precise reason), non-git dir fail-closed (F15 parity), worktree checkouts (non-feature allows, feature gates with the review reason), quoted-phrase non-invocation, chained-command and env-prefixed invocations still gated. Test runner also scrubs an inherited <code>CLAUDE_PROJECT_DIR</code>.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>June 2026 (8 releases)</summary>
 
         <div class="release" id="v1-71-0">
           <div class="release-header">
