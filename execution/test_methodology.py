@@ -853,12 +853,23 @@ def scenario_scale_consistency(verbose: bool = False):
 # ════════════════════════════════════════════════════════════
 
 def scenario_dag_validation(verbose: bool = False):
-    """Run dispatch_dag.py --validate and check it passes."""
-    executor = PROJECT_ROOT / "execution" / "dispatch_dag.py"
-    vlines = []
+    """Run dispatch_dag.py --validate and check it passes.
 
-    if not executor.exists():
-        return _result("WARN", "execution/dispatch_dag.py not found", vlines)
+    Liveness audit B5: the kit's live copy moved to global-scripts/ while
+    this scenario looked only in execution/ — the DAG was never validated
+    anywhere. (Scenario slated for wholesale deletion with the wave stack
+    in v2.0 Phase 4; until then it points at reality.)
+    """
+    vlines = []
+    executor = None
+    for rel in ("execution/dispatch_dag.py", "global-scripts/dispatch_dag.py"):
+        candidate = PROJECT_ROOT / rel
+        if candidate.exists():
+            executor = candidate
+            break
+
+    if executor is None:
+        return _result("WARN", "dispatch_dag.py not found (checked execution/, global-scripts/)", vlines)
 
     try:
         result = subprocess.run(

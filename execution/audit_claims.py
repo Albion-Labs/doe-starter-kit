@@ -916,14 +916,19 @@ def check_scale_consistency(report: AuditReport):
 @register("universal", fast=False)
 def check_dag_validation(report: AuditReport):
     """dispatch_dag.py --validate passes cleanly."""
-    # Check project execution/ first, fall back to ~/.claude/scripts/
-    executor = PROJECT_ROOT / "execution" / "dispatch_dag.py"
-    if not executor.exists():
-        executor = Path.home() / ".claude" / "scripts" / "dispatch_dag.py"
+    # Liveness audit B5: the live copy is global-scripts/ in the kit repo
+    # (installed to ~/.claude/scripts/ for consumers); the old chain never
+    # found it anywhere, so the DAG was never validated.
+    candidates = [
+        PROJECT_ROOT / "execution" / "dispatch_dag.py",
+        PROJECT_ROOT / "global-scripts" / "dispatch_dag.py",
+        Path.home() / ".claude" / "scripts" / "dispatch_dag.py",
+    ]
+    executor = next((c for c in candidates if c.exists()), None)
 
-    if not executor.exists():
+    if executor is None:
         report.add(Finding(Severity.WARN, "dag_validation",
-                           "dispatch_dag.py not found (checked execution/ and ~/.claude/scripts/)"))
+                           "dispatch_dag.py not found (checked execution/, global-scripts/, ~/.claude/scripts/)"))
         return
 
     try:
