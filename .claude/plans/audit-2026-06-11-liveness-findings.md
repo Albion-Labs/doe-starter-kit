@@ -1,0 +1,61 @@
+# Kit-wide liveness audit — findings (2026-06-11, v1.71.2)
+
+Four parallel execution-verified audits (hooks, invocation chains, prose references, vacuous passes) of the full kit. **Report only — fixes to be tackled in a fresh session.** Every finding below was verified by running the code, not by reading it.
+
+## Tally update
+Never-alive specimens now total **NINE**: scan_docs.py, guard_kit_writes matchers (v1.51–58), check_plan_freshness_hook, copy_plan_to_project (both fixed v1.71.2), **+ five new**: hook-templates/{python,javascript}.json (double-fatal), context_monitor.py (wrong event field), global-hooks/pre-commit (installed by nothing), quality_gate --pre-retro (phantom scenarios), doe_feature_request duplicate-scan (wrong directory).
+
+---
+
+## PR A — `fix/v1.71.3-liveness-batch-1` (urgent: security + broken gates + my regression)
+
+| # | Finding | Severity | Evidence |
+|---|---|---|---|
+| A1 | **`block_secrets_in_code.py` never scans Edit/MultiEdit content** — reads only `content`/`file_text`; `old_string`/`new_string`/`edits[].new_string` unread. Secrets added via Edit or MultiEdit pass silently; only Write is protected. 2 of 3 matched tools unguarded. | HIGH (live security gap) | AKIA key in Edit `new_string` → silent allow (executed) |
+| A2 | **`setup.sh` blind-copies ALL `.github/workflows/*.yml` to consumer projects** — now includes `proof.yml` (red CI in any project lacking `proof/`) and `auto-release.yml` (would autonomously tag/release consumer repos). **Made dangerous by v1.71.0's proof unscoping — own regression, fix first.** `doe_init.py` correctly uses the manifest `github` list; setup.sh must too. | HIGH | setup.sh:382-392 vs manifest github list |
+| A3 | **`quality_gate.py --pre-retro` has never passed once since v1.49.1** — `PRE_RETRO_SCENARIOS` names `invariant_regression` + `completed_feature_hygiene`, which have never existed in test_methodology (exit 2 "Unknown scenario(s)"). The pre-commit retro gate directs users to a command that cannot succeed; only escape is `SKIP_RETRO_GATE=1`. | FATAL | reproduced live |
+| A4 | **`/hq` fails every run as written** — `hq.md` passes `--source auto`; `build_hq.py` argparse has no such flag → exit 2. | HIGH | argparse dump |
+| A5 | **`/sync-doe` Step 0 cannot run in consumer projects** — mandatory `audit_sync.py` pre-flight is in neither `QS_SCRIPTS` nor manifest universal layer; only exists in the kit repo. Also silently no-ops `/wrap`'s drift check everywhere ("runs for EVERY project" claim false). | HIGH | setup.sh:324, manifest dump |
+| A6 | `doe_feature_request.py` scans `kit/commands/` (doesn't exist; real dir `global-commands/`) — duplicate detection has never matched anything. | MED | glob on missing dir = silent empty |
+| A7 | `confirm_pr_merge.py` bare substring trigger — fires on the phrase anywhere (blocked this audit's own driver). The statement-position fix shipped in enforce_review_gate (v1.71.1) and admin-merge (v1.65.1) was never backported. Also `ALLOW_MERGE=1` check is a substring mention, not an assignment. | MED | executed FP |
+| A8 | `guard_kit_writes` registered under `Edit\|Write\|MultiEdit` matcher but acts only on Bash — guaranteed no-op python spawn on every file edit, with a description claiming a guard retired in v1.60.0. | MED | settings.json:63 |
+| A9 | `record_review_result.py` (gate WRITER) unanchored — bare `git branch --show-current` + relative `.tmp/`, while the gate READER anchors to `$CLAUDE_PROJECT_DIR`. Under cwd drift the artifact lands in the wrong `.tmp/` and a passed review blocks. (Bit us live this session — artifacts had to be bridged manually.) Same fix for `persist_review_findings`/recorder path mismatch (persist is worktree-safe, recorder is cwd-relative). | MED | reader/writer asymmetry |
+| A10 | Hook bypass messaging contradictions: enforce_review_gate advertises inline `SKIP_REVIEW_GATE=1` which can't work (env-only read; hooks are siblings not children — and block_dangerous_commands forbids the AI setting it); admin-merge's BLOCKED remedy prints a command that block_dangerous_commands itself blocks. Reword both to the working mechanism (export before launch). | MED | executed both |
+| A11 | TDD-for-guardrails: add corpus faults for A1 (secret via Edit `new_string` — F16) and any other fixed blocking arm, red-first. | — | per plan doctrine |
+
+## PR B — `fix/v1.71.5-vacuous-checkers` (verification that's green over nothing)
+<!-- Renumbered from v1.71.4: that slot was taken by the review-gate cwd-fallback hotfix (PR #113). -->
+
+
+| # | Finding | Severity |
+|---|---|---|
+| B1 | **`health_check.py` scans zero files on the kit and reports "5 pass"** — `tests/config.json` profile `html-app` → `src/js/` which doesn't exist; missing dirs silently skipped; no "0 files scanned" disclosure. Ships universally — any consumer with a mismatched projectType gets permanent vacuous green. Fix: disclose scan counts, WARN on 0. | HIGH |
+| B2 | **`plan_vs_actual` (both checkers) + `check_roadmap_consistency` parse a ROADMAP format the kit stopped using** (`###` headings vs actual `- **bullets**`) — 0 entries parsed, PASS text claims "all deliverables exist". Three independent checkers, same dead format, all degrade green. | HIGH |
+| B3 | **`report_generator_styling` still self-exempts `generate_whats_new.py`** (own `<style>`/`:root`, no html_builder import) while reporting "all 4 generators clean". Known since the first review; confirmed live. Minimal fix: add to scan list (full port lands with docs phase). *(v1.71.5: minimal fix shipped — whats-new in the scan list, WARNs honestly. Full html_builder port DEFERRED to the docs phase: a rendering rewrite of the kit's largest generated page is out of scope for a checker-liveness patch.)* | HIGH |
+| B4 | `discover_version` (audit_claims): all 3 strategies use dead formats (STATE.md label gone; todo regex matches unicode `→` only, kit uses `->`; ROADMAP `###`) → version "unknown" every run, staleness check never exercises. | MED |
+| B5 | `dag_validation` (both checkers) looks in `execution/` + `~/.claude/scripts/` — live copy is `global-scripts/`; never validated anywhere. (Or: delete the scenario when the wave stack dies in Phase 4 — decide there.) | MED |
+| B6 | `verify.py` silently filters [auto] criteria with malformed/missing `Verify:` out of the run set (gate passes on the remainder; contract parser also stops at first non-dash line). Loud-fail instead. | MED |
+| B7 | `proof/run.py --self-test` standalone passes on an empty corpus (guarded only by corpus_check ordering in CI); `metrics.py --repo` on garbage path prints perfect 0%/0% exit 0. Add `injected > 0` assertion + repo-validity check. | MED |
+| B8 | `scale_consistency` compares only files that have scale headings (3 of claimed 6); `review_discipline` keyword list includes "merge" → unfalsifiable on a PR-workflow repo. Tighten or relabel. | MED |
+| B9 | Pre-commit test-freshness gate claims "execution/*.py covered" but implements exactly one execution pair; `doe_init_integration.py` is now run by nothing (wire a CI step or pre-commit pair). | MED |
+| B10 | `health_check.py` full mode permanently red on the kit (`tests/health.json` absent) — normalises ignoring a failing check; gate or fixture it. | LOW |
+
+## PR C — `chore/v1.71.x-distribution-and-docs` (wiring + stale maps)
+
+| # | Finding | Severity |
+|---|---|---|
+| C1 | `hook-templates/python.json` + `javascript.json`: double-fatal (uses `$CLAUDE_TOOL_INPUT` env var that has never existed in the protocol; reads fields at wrong nesting). Never worked. Rewrite as stdin-JSON or delete the directory (universal.json's lowercase matchers also confirmed — the exact template path that produced the v1.51–58 incident). Recommend: delete all three. | FATAL (template corpse) |
+| C2 | `global-hooks/pre-commit`: orphan installed by nothing, drifting ancestor of `.githooks/pre-commit`. Delete. | FATAL (orphan) |
+| C3 | `context_monitor.py` reads `tool_output` (real field: `tool_response`) → token counter blind to the dominant context consumer; 60/80% warnings near-impossible. Already unregistered + slated for Phase 4 deletion — this finding converts "delete vs keep" into just delete (it never worked). `heartbeat.py` same disposition. | FATAL (already inert) |
+| C4 | Manifest/distribution gaps: `gist_sync.py` missing from manifest `global_scripts` (doe_init never installs it); `parallel-worktrees.md` in no manifest layer (template + doe_init's own output point at it); `wrap.md` names `build_session_archive.py` which exists nowhere while `~/.claude/scripts/build_global_archive.py` is installed-but-unversioned (gist_sync class repeat — adopt or excise). | MED |
+| C5 | PostToolUse output protocol: plain stdout at exit 0 may not reach the model (needs `hookSpecificOutput.additionalContext` or exit 2 + stderr) — so v1.71.2's resurrected hooks run but their nudges may not land; `check_completed_feature` same. **Fold into PR 2's dispatcher** (it standardises hook output anyway). | HIGH (defer to PR 2) |
+| C6 | Docs/map staleness with teeth: CHANGELOG.md line 5 documents a heading format (`## [vX.Y.Z] — date`) that auto-release does NOT parse — anyone "correcting" entries to match it kills releases silently. SYSTEM-MAP listings omit 4 hooks/1 script/2 directives/clone-site. `SKIP_PENDING_PR_CHECK` undocumented; `.secretignore` mechanism documented but read by nothing; `lighthouse.sh` advisory CI step never-alive; `delivery-rules` lists project-specific `build.py` unqualified; `request-doe-feature` `--fallback` needs its path arg. | LOW-MED |
+| C7 | Small hook edges: `stamp_todo_timestamps` never stamps lettered steps (`1a.`) that other hooks DO count; `protect_directives` relative-path false-pass edge; admin-merge `[^\n;]*` spans `&&` + gh queries inherit wrong cwd under `cd X &&`; legacy `{}` outputs in global-hooks. | LOW |
+
+## Already covered by the v2 plan (no new action)
+- context_monitor/heartbeat deletion → Phase 4 (now strictly justified).
+- PostToolUse delivery protocol → PR 2 dispatcher.
+- Advisory-hook liveness sensing → PR 2 ledger + Phase 6 `scenario_liveness` (the audit is the manual run of what the ledger automates — nine specimens is the evidence base).
+
+## Verified clean (explicit coverage)
+block_dangerous_commands (all arms), guard_kit_writes Bash arms, protect_directives, enforce_review_gate post-v1.71.1 (all 8 paths), copy_plan_to_project + check_plan_freshness post-v1.71.2, stamp_todo_timestamps core, settings.json matchers/quoting, all .githooks invocation paths + patterns (run against real files, macOS), auto-release extraction vs current CHANGELOG (live-tested), manifest layer files all present, setup.sh copy sources all present, all 20+ command→script flag signatures except /hq (verified against argparse), directive cross-references incl. headings, post-v1.70.0 deletion sweep (zero stale refs), proof corpus_check + metrics --self-test + missing-HOOKS arms all loud.
