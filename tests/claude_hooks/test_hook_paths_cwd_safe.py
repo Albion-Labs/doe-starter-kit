@@ -247,20 +247,26 @@ def test_check_completed_feature_uses_claude_project_dir():
     )
 
 
-def test_enforce_review_gate_uses_claude_project_dir_twice():
-    """Static check: enforce_review_gate.py references CLAUDE_PROJECT_DIR at
-    >= 2 sites (one for tasks/todo.md, one for .tmp/review-passed-*.json).
-    The _project_root() helper counts as one reference; both call sites must
-    route through it (or set the env var directly).
+def test_enforce_review_gate_anchors_paths_to_resolved_root():
+    """Static check: enforce_review_gate.py anchors tasks/todo.md and the
+    .tmp review artifact to the resolved project root, never bare cwd.
+    v1.71.4 replaced the _project_root() helper with
+    _resolve_root_and_branch() (CLAUDE_PROJECT_DIR first, event cwd
+    fallback); both consumers must route through its returned root.
     """
     src = REVIEW_HOOK.read_text()
-    count = src.count("CLAUDE_PROJECT_DIR")
-    assert count >= 1, "enforce_review_gate.py must reference CLAUDE_PROJECT_DIR"
-    # Both internal paths must use the project-anchored helper. The literal
-    # call site count is a proxy for "neither path resolves against cwd".
-    project_root_calls = src.count("_project_root()")
-    assert project_root_calls >= 2, (
-        f"enforce_review_gate.py must route both Path('tasks/todo.md') and "
-        f"Path('.tmp')/... through _project_root(). Found {project_root_calls} "
-        f"call sites; expected >= 2 (todo.md + .tmp artifact)."
+    assert "CLAUDE_PROJECT_DIR" in src, (
+        "enforce_review_gate.py must reference CLAUDE_PROJECT_DIR"
+    )
+    assert "_resolve_root_and_branch(event)" in src, (
+        "git state must come from the shared resolver"
+    )
+    assert "check_steps_complete(root)" in src, (
+        "tasks/todo.md must be read from the resolved root, not cwd"
+    )
+    assert 'root / ".tmp"' in src, (
+        "the review artifact must be read from the resolved root, not cwd"
+    )
+    assert 'Path(".tmp")' not in src and 'Path("tasks")' not in src, (
+        "no cwd-relative paths allowed in the gate"
     )

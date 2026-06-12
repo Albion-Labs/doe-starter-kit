@@ -23,13 +23,26 @@ except ImportError:
         return Path.cwd(), Path.cwd()
 
 
+def _has_git_state(root):
+    try:
+        subprocess.check_output(
+            ["git", "-C", str(root), "branch", "--show-current"],
+            text=True, stderr=subprocess.DEVNULL,
+        )
+        return True
+    except (subprocess.CalledProcessError, OSError):
+        return False
+
+
 def _artifact_root():
     """v1.71.3: same resolution order as record_review_result.py and the
     gate reader (enforce_review_gate.py) -- $CLAUDE_PROJECT_DIR first, then
     the main project root (worktree-safe), then cwd. All three must agree
-    or the recorder can't find findings the subagents persisted."""
+    or the recorder can't find findings the subagents persisted. v1.71.4:
+    a project dir with no git state (e.g. $HOME in background jobs) is
+    skipped, mirroring the reader's fallback."""
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
-    if project_dir:
+    if project_dir and _has_git_state(Path(project_dir)):
         return Path(project_dir)
     main_root, _ = resolve_project_root()
     return main_root

@@ -83,6 +83,21 @@ def test_record_pass_anchors_to_project_dir_under_cwd_drift(tmp_path):
     assert not (drifted / ".tmp").exists()
 
 
+def test_writers_skip_nongit_project_dir(tmp_path):
+    """v1.71.4: a CLAUDE_PROJECT_DIR with no git state (background jobs
+    anchor it to $HOME) must be skipped, falling back to the cwd's repo —
+    where the gate reader (same skip) actually looks."""
+    repo, _ = _make_repo(tmp_path)
+    decoy = tmp_path / "home"
+    decoy.mkdir()
+    p = _run(PERSIST, ["finder", "no findings"], cwd=repo, project_dir=decoy)
+    assert p.returncode == 0, p.stdout + p.stderr
+    p = _run(RECORD, ["PASS"], cwd=repo, project_dir=decoy)
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert (repo / ".tmp" / f"review-passed-{BRANCH}.json").exists()
+    assert not (decoy / ".tmp").exists(), "artifact must not land in the non-git project dir"
+
+
 def test_record_pass_without_finder_artifact_refuses(tmp_path):
     repo, drifted = _make_repo(tmp_path)
     p = _run(RECORD, ["PASS"], cwd=drifted, project_dir=repo)

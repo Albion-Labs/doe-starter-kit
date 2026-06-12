@@ -31,11 +31,25 @@ except ImportError:
         return Path.cwd(), Path.cwd()
 
 
+def _has_git_state(root):
+    try:
+        subprocess.check_output(
+            ["git", "-C", str(root), "branch", "--show-current"],
+            text=True, stderr=subprocess.DEVNULL,
+        )
+        return True
+    except (subprocess.CalledProcessError, OSError):
+        return False
+
+
 def _artifact_root():
     """Same resolution order as the gate reader: $CLAUDE_PROJECT_DIR first,
-    then the main project root (worktree-safe), then cwd."""
+    then the main project root (worktree-safe), then cwd. v1.71.4: a
+    project dir with NO git state (background jobs anchor it to $HOME) is
+    skipped -- writing there would strand the artifact somewhere the gate
+    reader (which applies the same skip) never looks."""
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
-    if project_dir:
+    if project_dir and _has_git_state(Path(project_dir)):
         return Path(project_dir)
     main_root, _ = resolve_project_root()
     return main_root

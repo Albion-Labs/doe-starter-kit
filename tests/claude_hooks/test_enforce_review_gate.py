@@ -20,13 +20,15 @@ HOOK = KIT / ".claude" / "hooks" / "enforce_review_gate.py"
 GH_PR_CREATE = "gh" + " pr" + " create"
 
 
-def _run(command, cwd=None, env_extra=None):
+def _run(command, cwd=None, env_extra=None, event_cwd=None):
     env = os.environ.copy()
     env.pop("SKIP_REVIEW_GATE", None)
     env.pop("CLAUDE_PROJECT_DIR", None)
     if env_extra:
         env.update(env_extra)
     payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+    if event_cwd is not None:
+        payload["cwd"] = str(event_cwd)
     result = subprocess.run(
         ["python3", str(HOOK)],
         input=json.dumps(payload),
@@ -110,6 +112,67 @@ def test_feature_branch_without_review_artifact_blocks(tmp_path):
     decision = _run(f"{GH_PR_CREATE} --title foo", cwd=repo)
     assert decision["decision"] == "block"
     assert "review" in decision["reason"].lower() or "step" in decision["reason"].lower()
+
+
+# --- v1.71.4 (issue #107 class, corpus F18): event-cwd fallback ---
+# Background jobs anchor CLAUDE_PROJECT_DIR to $HOME (not a git repo);
+# the old CPD-only resolution fail-closed on EVERY PR creation from such
+# sessions, including branches the gate doesn't gate.
+
+def test_nongit_project_dir_falls_back_to_event_cwd_nonfeature_allows(tmp_path):
+    (tmp_path / "repo").mkdir()
+    repo = _init_repo(tmp_path / "repo", "fix/v1.0.1-thing")
+    decoy = tmp_path / "home"
+    decoy.mkdir()
+    decision = _run(
+        f"{GH_PR_CREATE} --title foo",
+        env_extra={"CLAUDE_PROJECT_DIR": str(decoy)},
+        event_cwd=repo,
+    )
+    assert decision["decision"] == "allow", decision
+
+
+def test_nongit_project_dir_falls_back_to_event_cwd_feature_still_gated(tmp_path):
+    (tmp_path / "repo").mkdir()
+    repo = _init_repo(tmp_path / "repo", "feature/new-thing-v1.0.0")
+    decoy = tmp_path / "home"
+    decoy.mkdir()
+    decision = _run(
+        f"{GH_PR_CREATE} --title foo",
+        env_extra={"CLAUDE_PROJECT_DIR": str(decoy)},
+        event_cwd=repo,
+    )
+    assert decision["decision"] == "block"
+    assert "git state" not in decision["reason"].lower()
+    assert "review" in decision["reason"].lower() or "step" in decision["reason"].lower()
+
+
+def test_nongit_project_dir_without_event_cwd_fails_closed(tmp_path):
+    """F15 parity: when NO candidate has readable git state, the gate
+    must still block rather than silently pass."""
+    decoy = tmp_path / "home"
+    decoy.mkdir()
+    decision = _run(
+        f"{GH_PR_CREATE} --title foo",
+        env_extra={"CLAUDE_PROJECT_DIR": str(decoy)},
+    )
+    assert decision["decision"] == "block"
+    assert "git state" in decision["reason"].lower()
+
+
+def test_project_dir_takes_priority_over_event_cwd(tmp_path):
+    """When CLAUDE_PROJECT_DIR IS a repo, the event cwd must not override
+    it -- the fallback is strictly for unreadable project dirs."""
+    (tmp_path / "project").mkdir()
+    (tmp_path / "other").mkdir()
+    project = _init_repo(tmp_path / "project", "housekeeping/tidy")
+    other = _init_repo(tmp_path / "other", "feature/elsewhere-v1.0.0")
+    decision = _run(
+        f"{GH_PR_CREATE} --title foo",
+        env_extra={"CLAUDE_PROJECT_DIR": str(project)},
+        event_cwd=other,
+    )
+    assert decision["decision"] == "allow", decision
 
 
 def test_block_reason_advertises_working_bypass_only(tmp_path):
