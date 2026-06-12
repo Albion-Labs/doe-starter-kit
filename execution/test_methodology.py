@@ -348,8 +348,10 @@ def scenario_review_discipline(verbose: bool = False):
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return _result("PASS", "git unavailable — skipping (informational)", vlines)
 
-    # Look for review-related commits
-    review_keywords = ["review", "snagging", "audit", "adversarial", "diff-review", "pr:", "merge"]
+    # Look for review-related commits. "merge" is deliberately NOT a keyword:
+    # on a PR-workflow repo every 'Merge pull request' commit would count as
+    # review evidence, making the no-review WARN unfalsifiable (audit B8).
+    review_keywords = ["review", "snagging", "audit", "adversarial", "diff-review", "pr:"]
     review_commits = [
         c for c in commits
         if any(kw in c.lower() for kw in review_keywords)
@@ -822,6 +824,7 @@ def scenario_scale_consistency(verbose: bool = False):
     expected_headings = {"solo", "informal parallel", "formal parallel"}
 
     files_with_scale = []
+    checked = 0
     inconsistent = []
 
     for d in sorted(directives_dir.rglob("*.md")):
@@ -833,9 +836,13 @@ def scenario_scale_consistency(verbose: bool = False):
             for h in expected_headings:
                 if f"## {h}" in text or f"### {h}" in text:
                     headings.add(h)
-            if headings and headings != expected_headings:
-                missing = expected_headings - headings
-                inconsistent.append(f"{d.name}: missing headings {missing}")
+            # Only files that USE scale headings are comparable; the rest
+            # merely discuss scale in prose and have nothing to check.
+            if headings:
+                checked += 1
+                if headings != expected_headings:
+                    missing = expected_headings - headings
+                    inconsistent.append(f"{d.name}: missing headings {missing}")
 
     vlines.append(f"  Files discussing scale: {len(files_with_scale)}")
     for f in files_with_scale:
@@ -845,7 +852,15 @@ def scenario_scale_consistency(verbose: bool = False):
 
     if inconsistent:
         return _result("WARN", f"{len(inconsistent)} files with inconsistent scale headings", vlines)
-    return _result("PASS", f"{len(files_with_scale)} files use consistent scale terminology", vlines)
+    # Honest coverage label (liveness audit B8): the heading comparison only
+    # applies to files that have scale headings at all — claiming all
+    # scale-DISCUSSING files "use consistent terminology" overstated the check.
+    return _result(
+        "PASS",
+        f"{checked} of {len(files_with_scale)} scale-discussing files have "
+        "headings to compare — all consistent",
+        vlines,
+    )
 
 
 # ════════════════════════════════════════════════════════════
@@ -853,12 +868,23 @@ def scenario_scale_consistency(verbose: bool = False):
 # ════════════════════════════════════════════════════════════
 
 def scenario_dag_validation(verbose: bool = False):
-    """Run dispatch_dag.py --validate and check it passes."""
-    executor = PROJECT_ROOT / "execution" / "dispatch_dag.py"
-    vlines = []
+    """Run dispatch_dag.py --validate and check it passes.
 
-    if not executor.exists():
-        return _result("WARN", "execution/dispatch_dag.py not found", vlines)
+    Liveness audit B5: the kit's live copy moved to global-scripts/ while
+    this scenario looked only in execution/ — the DAG was never validated
+    anywhere. (Scenario slated for wholesale deletion with the wave stack
+    in v2.0 Phase 4; until then it points at reality.)
+    """
+    vlines = []
+    executor = None
+    for rel in ("execution/dispatch_dag.py", "global-scripts/dispatch_dag.py"):
+        candidate = PROJECT_ROOT / rel
+        if candidate.exists():
+            executor = candidate
+            break
+
+    if executor is None:
+        return _result("WARN", "dispatch_dag.py not found (checked execution/, global-scripts/)", vlines)
 
     try:
         result = subprocess.run(
@@ -1092,8 +1118,23 @@ def scenario_plan_vs_actual(verbose: bool = False):
         return _result("PASS", "no ## Complete section in ROADMAP.md", vlines)
 
     complete_text = complete_match.group(1)
+    # Live format: "- **Name (vX.Y.Z)** [TAG] -- ..." bullets; legacy: "### Name (vX.Y.Z)"
+    # headings. Liveness audit B2: only the legacy form was parsed, so the scenario
+    # checked 0 features on every modern ROADMAP and passed vacuously.
     completed_features = re.findall(r"^###\s+(.+?)(?:\s+\(|$)", complete_text, re.MULTILINE)
+    completed_features += re.findall(
+        r"^-\s+\*\*(.+?)(?:\s+\(v\d+\.\d+\.\d+\))?\*\*", complete_text, re.MULTILINE
+    )
     vlines.append(f"  Completed features in ROADMAP: {len(completed_features)}")
+
+    body = re.sub(r"<!--.*?-->", "", complete_text, flags=re.DOTALL).strip()
+    if body and not completed_features:
+        return _result(
+            "WARN",
+            "## Complete has content but 0 entries parsed — ROADMAP format drift "
+            "(this scenario is blind until parser and file agree)",
+            vlines,
+        )
 
     issues = []
     checked = 0
@@ -1116,7 +1157,12 @@ def scenario_plan_vs_actual(verbose: bool = False):
     vlines.append(f"  Plans checked: {checked}")
 
     if not issues:
-        return _result("PASS", f"checked {checked} completed feature plans — all deliverables exist", vlines)
+        return _result(
+            "PASS",
+            f"parsed {len(completed_features)} Complete entries, checked {checked} "
+            "with plan files — all referenced deliverables exist",
+            vlines,
+        )
     return _result("WARN", f"{len(issues)} feature(s) have missing deliverables", vlines)
 
 
@@ -1363,6 +1409,12 @@ def scenario_report_generator_styling(verbose: bool = False):
         "global-scripts/eod_html.py",
         "global-scripts/build_hq.py",
         "execution/generate_test_checklist.py",
+        # Self-exemption ended (liveness audit B3): whats-new carries its own
+        # <style>/:root and is EXPECTED to WARN here until its html_builder
+        # port lands with the docs phase. An honest WARN beats a scan list
+        # that quietly omits the one known offender while claiming "all
+        # generators clean".
+        "execution/generate_whats_new.py",
     ]
     offenders = []
     scanned = 0

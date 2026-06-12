@@ -159,3 +159,117 @@ def test_run_audit_json_serialisable():
     data = json.loads(report.to_json())
     assert "summary" in data
     assert "findings" in data
+
+
+# ── parse_roadmap_complete: live + legacy formats (liveness audit B2) ──
+# The parser matched only "### Name (vX.Y.Z) — desc" headings while the
+# kit's ROADMAP moved to "- **Name (vX.Y.Z)** [TAG] -- desc" bullets, so
+# 0 entries parsed everywhere and roadmap_consistency passed vacuously.
+
+def _roadmap(tmp_path, monkeypatch, body):
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    (tmp_path / "ROADMAP.md").write_text("# Roadmap\n\n## Complete\n" + body)
+
+
+def test_parse_live_bullet_format(tmp_path, monkeypatch):
+    _roadmap(tmp_path, monkeypatch,
+             "- **Proof fault net (v1.71.0)** [INFRA] -- corpus extended. *(shipped 11/06/26)*\n")
+    entries, unparsed = audit_claims.parse_roadmap_complete()
+    assert unparsed == 0
+    assert len(entries) == 1
+    assert entries[0]["name"] == "Proof fault net"
+    assert entries[0]["version"] == "v1.71.0"
+    assert entries[0]["date"] == "11/06/26"
+
+
+def test_parse_legacy_heading_format(tmp_path, monkeypatch):
+    _roadmap(tmp_path, monkeypatch,
+             "### Old feature (v1.2.3) — did a thing\n")
+    entries, unparsed = audit_claims.parse_roadmap_complete()
+    assert unparsed == 0
+    assert [e["version"] for e in entries] == ["v1.2.3"]
+
+
+def test_parse_version_inside_larger_paren(tmp_path, monkeypatch):
+    _roadmap(tmp_path, monkeypatch,
+             "- **Hook commands cwd-safe ($CLAUDE_PROJECT_DIR, v1.62.2)** [INFRA] -- fix. *(shipped 12/05/26)*\n")
+    entries, _ = audit_claims.parse_roadmap_complete()
+    assert entries[0]["version"] == "v1.62.2"
+
+
+def test_parse_reports_unparsed_content_as_drift(tmp_path, monkeypatch):
+    """Content that matches neither format must be COUNTED, not skipped —
+    the checker reports drift instead of passing over a blind spot."""
+    _roadmap(tmp_path, monkeypatch,
+             "* Some bullet in a third format (v9.9.9)\n<!-- a comment -->\n\n")
+    entries, unparsed = audit_claims.parse_roadmap_complete()
+    assert entries == []
+    assert unparsed == 1
+
+
+def test_consistency_warns_on_format_drift(tmp_path, monkeypatch):
+    _roadmap(tmp_path, monkeypatch, "* third format entry\n")
+    report = audit_claims.AuditReport()
+    audit_claims.check_roadmap_consistency(report)
+    assert any(f.severity == audit_claims.Severity.WARN and "format drift" in f.message
+               for f in report.findings)
+
+
+def test_consistency_accepts_git_tag_as_evidence(tmp_path, monkeypatch):
+    """A release tag matching the entry's version is shipped-evidence even
+    when todo/archive carry nothing (PR + tag workflow clears todo.md)."""
+    _roadmap(tmp_path, monkeypatch,
+             "- **Tagged thing (v0.0.1)** [INFRA] -- shipped via PR. *(shipped 01/01/26)*\n")
+    import subprocess as sp
+    env = {"GIT_CONFIG_GLOBAL": "/dev/null", "GIT_CONFIG_SYSTEM": "/dev/null"}
+    sp.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    sp.run(["git", "-c", "user.email=t@t", "-c", "user.name=t",
+            "commit", "--allow-empty", "-q", "-m", "x"], cwd=tmp_path, check=True, env={**env})
+    sp.run(["git", "tag", "v0.0.1"], cwd=tmp_path, check=True)
+    report = audit_claims.AuditReport()
+    audit_claims.check_roadmap_consistency(report)
+    fails = [f for f in report.findings if f.severity == audit_claims.Severity.FAIL]
+    assert not fails, [f.message for f in fails]
+
+
+# ── discover_version: live formats + tag fallback (liveness audit B4) ──
+# All three original strategies used dead formats, so the version was
+# "unknown" on every run and the staleness check never exercised.
+
+def test_discover_version_from_state_md(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    (tmp_path / "STATE.md").write_text("# State\nDOE Starter Kit — current version: v2.3.4\n")
+    assert audit_claims.discover_version() == "v2.3.4"
+
+
+def test_discover_version_from_todo_ascii_arrow(tmp_path, monkeypatch):
+    """The kit writes '->' in todo.md; the old regex matched only the
+    unicode arrow."""
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    (tmp_path / "tasks").mkdir()
+    (tmp_path / "tasks" / "todo.md").write_text(
+        "## Current\n1. [x] Ship the thing -> v1.5.0\n")
+    assert audit_claims.discover_version() == "v1.5.0"
+
+
+def test_discover_version_from_roadmap_bullets(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    (tmp_path / "ROADMAP.md").write_text(
+        "## Complete\n- **Newest (v3.0.0)** [APP] -- x *(shipped 01/06/26)*\n"
+        "- **Older (v2.9.0)** [APP] -- y *(shipped 01/05/26)*\n")
+    assert audit_claims.discover_version() == "v3.0.0"
+
+
+def test_discover_version_falls_back_to_git_tag(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    import subprocess as sp
+    sp.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    sp.run(["git", "-c", "user.email=t@t", "-c", "user.name=t",
+            "commit", "--allow-empty", "-q", "-m", "x"], cwd=tmp_path, check=True)
+    sp.run(["git", "tag", "v0.4.2"], cwd=tmp_path, check=True)
+    assert audit_claims.discover_version() == "v0.4.2"
+
+
+def test_discover_version_none_when_no_sources(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    assert audit_claims.discover_version() is None

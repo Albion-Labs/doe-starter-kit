@@ -307,6 +307,10 @@ def main(argv):
     print(f"  scorecard -> {OUT.relative_to(KIT)}")
     if "--self-test" in argv:
         problems = []
+        # Liveness audit B7: an empty corpus must never self-test green --
+        # "all covered faults caught" is vacuously true over zero faults.
+        if cr["injected"] == 0:
+            problems.append("EMPTY CORPUS: 0 faults injected -- nothing was tested")
         for r in results:
             if r.get("covered") and not r["caught"]:
                 problems.append(f"covered fault {r['id']} NOT caught -- {r['detail']}")

@@ -287,8 +287,10 @@ def parse_todo_contract(step_number=None):
                     "verify": verify,
                     "checked": checked,
                 })
-            elif stripped and not stripped.startswith("-"):
-                break
+            # Non-criterion lines (wrapped prose, notes) are skipped, not a
+            # block terminator: the old `break` here silently DROPPED every
+            # criterion below the first such line (liveness audit B6). The
+            # block is bounded by the next numbered step above.
 
     return criteria
 
@@ -410,7 +412,20 @@ def main():
             print(f"No contract found for step {step_num}")
             sys.exit(2)
 
-        auto_criteria = [c for c in criteria if c["type"] == "auto" and c["verify"]]
+        # Loud-fail on malformed contracts (liveness audit B6): an [auto]
+        # criterion with no Verify: pattern used to be silently filtered out
+        # of the run set, so the gate passed on the remainder while the
+        # unverifiable claim sailed through.
+        auto_all = [c for c in criteria if c["type"] == "auto"]
+        malformed = [c for c in auto_all if not c["verify"]]
+        if malformed:
+            print(f"MALFORMED CONTRACT: {len(malformed)} [auto] criteria without a Verify: pattern:")
+            for c in malformed:
+                print(f"  - {c['text'][:90]}")
+            print("Every [auto] criterion needs 'Verify: <pattern>' — fix the contract or mark the item [manual].")
+            sys.exit(1)
+
+        auto_criteria = auto_all
         if not auto_criteria:
             print(f"No [auto] criteria with Verify: patterns for step {step_num}")
             sys.exit(0)

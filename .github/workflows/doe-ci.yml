@@ -140,6 +140,17 @@ jobs:
             echo "No test_methodology.py found -- skipping"
           fi
 
+      # Script-style runner, deliberately not named test_*.py (module-level
+      # execution at pytest collection time) — so pytest never runs it and
+      # it was run by NOTHING until this step (liveness audit B9).
+      - name: DOE Init Integration
+        run: |
+          if [ -f tests/execution/doe_init_integration.py ]; then
+            python3 tests/execution/doe_init_integration.py
+          else
+            echo "No doe_init_integration.py found -- skipping"
+          fi
+
       - name: Secret pattern scan
         run: |
           echo "Scanning for secret patterns..."

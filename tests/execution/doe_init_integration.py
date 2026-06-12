@@ -76,10 +76,14 @@ def make_config(framework, collab="solo", database=False, personal=False,
 
 
 def run_silent(func, *args, **kwargs):
-    """Run a function while suppressing stdout (bordered cards)."""
+    """Run a function while suppressing stdout (bordered cards). Interactive
+    prompts (e.g. the scaffolding-commit confirm) are answered 'n' — at EOF
+    stdin they raise, doe_init prints 'Aborted.' and sys.exits, which killed
+    this whole suite silently while nothing was running it (audit B9)."""
     buf = io.StringIO()
-    with redirect_stdout(buf):
-        return func(*args, **kwargs)
+    with patch("builtins.input", return_value="n"):
+        with redirect_stdout(buf):
+            return func(*args, **kwargs)
 
 
 # Sandbox global writes: patch Path.home() so install_layer_files
@@ -93,11 +97,13 @@ def _fake_home():
 
 
 def run_sandboxed(func, *args, **kwargs):
-    """Run with stdout suppressed AND global writes sandboxed."""
+    """Run with stdout suppressed, global writes sandboxed, and prompts
+    answered 'n' (see run_silent)."""
     buf = io.StringIO()
     with patch.object(Path, "home", staticmethod(_fake_home)):
-        with redirect_stdout(buf):
-            return func(*args, **kwargs)
+        with patch("builtins.input", return_value="n"):
+            with redirect_stdout(buf):
+                return func(*args, **kwargs)
 
 
 # ── Test 1: Framework detection ──────────────────────────────────────────

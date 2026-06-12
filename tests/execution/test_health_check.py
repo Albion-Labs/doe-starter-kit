@@ -138,3 +138,59 @@ def test_quick_mode_skips_project_checks(tmp_path, monkeypatch):
 
     data = json.loads(out)
     assert data["project_checks"] is None
+
+
+# ── Scan coverage disclosure (liveness audit B1, v1.71.5) ─────
+# The file-scan checks report OK on an empty file list, so a mismatched
+# projectType used to mean permanent vacuous green over zero files.
+
+def _coverage_row(results):
+    return next(r for r in results if r["name"] == "Scan coverage")
+
+
+def test_zero_files_scanned_warns(tmp_path, monkeypatch):
+    """Profile paths missing entirely -> coverage WARN, never silent pass."""
+    monkeypatch.setattr(health_check, "ROOT", tmp_path)
+    (tmp_path / "tasks").mkdir()
+    (tmp_path / "tasks" / "todo.md").write_text("## Current\n")
+    results = health_check.run_universal_checks()
+    row = _coverage_row(results)
+    assert row["status"] == "WARN"
+    assert "0 files scanned" in row["detail"]
+    assert "projectType" in row["detail"]
+
+
+def test_nonzero_files_scanned_reports_count(tmp_path, monkeypatch):
+    """Real files under a profile path -> coverage OK with a count."""
+    monkeypatch.setattr(health_check, "ROOT", tmp_path)
+    (tmp_path / "tasks").mkdir()
+    (tmp_path / "tasks" / "todo.md").write_text("## Current\n")
+    src = tmp_path / "src" / "js"
+    src.mkdir(parents=True)
+    (src / "app.js").write_text("function go() { return 1; }\n")
+    results = health_check.run_universal_checks()
+    row = _coverage_row(results)
+    assert row["status"] == "OK"
+    assert "1 file(s) scanned" in row["detail"]
+
+
+# ── Missing health.json is a disclosed SKIP (liveness audit B10) ──
+
+def test_missing_health_json_is_skip_not_fail(tmp_path, monkeypatch):
+    """Full mode on a project without tests/health.json must SKIP with a
+    pointer, not permanently FAIL (which normalises ignoring a red check)."""
+    monkeypatch.setattr(health_check, "ROOT", tmp_path)
+    (tmp_path / "tests").mkdir()
+    results = health_check.run_project_checks()
+    assert len(results) == 1
+    assert results[0]["status"] == "SKIP"
+    assert "not present" in results[0]["detail"]
+
+
+def test_corrupt_health_json_still_fails(tmp_path, monkeypatch):
+    """A present-but-broken health.json is a real error and stays FAIL."""
+    monkeypatch.setattr(health_check, "ROOT", tmp_path)
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "health.json").write_text("{not json")
+    results = health_check.run_project_checks()
+    assert results[0]["status"] == "FAIL"
