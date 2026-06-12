@@ -7,6 +7,35 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.71.3 (2026-06-12)
+<!-- hero -->
+Batch 1 of the kit-wide liveness audit (2026-06-11): closes a live security gap -- `block_secrets_in_code` scanned only Write content, so secrets arriving via Edit/MultiEdit passed silently -- and stops `setup.sh` blind-copying kit-internal workflows (`auto-release.yml` would tag/release consumer repos; `proof.yml` goes red without `proof/`) into consumer projects. Also unbreaks two commands that could never succeed (`quality_gate --pre-retro` named scenarios that don't exist; `/hq` passed a flag `build_hq.py` doesn't have), ships `audit_sync.py` to consumers for the first time, and fixes four hook defects found by execution, not reading.
+<!-- /hero -->
+<!-- background -->
+Every fix here follows the red-first discipline where a proof fault exists for the class: corpus faults F16 (secret in Edit `new_string`) and F17 (secret in MultiEdit `edits[1].new_string`, behind a benign first edit) were added BEFORE the hook fix and demonstrated the leak against the live gate (self-test red, zero benign false-positives), then went green with the fix. The audit's wider significance: nine never-alive specimens are now documented across the release line, which is the empirical case for the v2.0 dispatcher + liveness ledger (PR 2). Batches 2 (vacuous checkers) and 3 (template corpses + distribution wiring) follow as separate releases.
+<!-- /background -->
+
+### Fixed
+- **.claude/hooks/block_secrets_in_code.py** -- scans every written field (Write `content`/`file_text`, Edit `new_string`, MultiEdit `edits[].new_string`); previously 2 of its 3 matched tools were unguarded. `old_string` is deliberately excluded so removing a secret from a file is never blocked.
+- **setup.sh** -- the CI-workflow copy loop is scoped to `manifest.json`'s `github` lists (mirroring `doe_init.py`) via the new helper, instead of globbing every workflow in the kit.
+- **execution/quality_gate.py** -- `PRE_RETRO_SCENARIOS` dropped `invariant_regression` and `completed_feature_hygiene`, which have never existed in `test_methodology.py`; every `--pre-retro` run since v1.49.1 exited 2 ("Unknown scenario(s)"), so the pre-commit retro gate pointed at a command that could not succeed. Verified passing end-to-end for the first time.
+- **global-commands/hq.md** -- drops `--source auto`; `build_hq.py`'s argparse defines only `--registry/--output/--theme`, so every `/hq` run exited 2.
+- **setup.sh + manifest.json** -- `audit_sync.py` added to `QS_SCRIPTS` and the universal `execution` layer; `/sync-doe` Step 0 and `/wrap`'s drift check silently no-opped in every consumer project because the script was never distributed.
+- **execution/doe_feature_request.py** -- duplicate detection scanned `kit/commands/`, a directory that has never existed (glob on a missing dir is silently empty); now scans `global-commands/` and `.claude/commands/`.
+- **.claude/hooks/confirm_pr_merge.py** -- statement-position trigger (backport of `enforce_review_gate`'s v1.71.1 fix; the bare substring fired on the phrase inside PR bodies and echo'd cards); inline `ALLOW_MERGE=1` now only counts as confirmation in the merge invocation's own env-assignment prefix, never as a quoted mention.
+- **.claude/settings.json** -- `guard_kit_writes` removed from the `Edit|Write|MultiEdit` matcher (the hook acts only on Bash; the registration was a guaranteed no-op python spawn on every file edit, described as a guard retired in v1.60.0); the Bash entry's description now states what it actually blocks.
+- **global-scripts/record_review_result.py + persist_review_findings.py** -- both review-gate writers now anchor branch, SHA, and artifact paths the same way as the gate reader (`$CLAUDE_PROJECT_DIR` first, worktree-resolved main root second, cwd last). Previously the recorder was cwd-relative, so under shell drift a passed review still blocked PR creation.
+- **.claude/hooks/enforce_review_gate.py + block_unnecessary_admin_merge.py** -- bypass messaging now points at the mechanism that works (human exports the flag before launching the session); the old wording advertised inline assignments that never reach the hook's environment and that `block_dangerous_commands` forbids the AI from writing.
+
+### Added
+- **proof/corpus/manifest.json** -- faults F16 (secret-in-edit) + F17 (secret-in-multiedit) with benign twins, added red-first. Corpus: 15 -> 17 faults, 16 covered classes.
+- **proof/run.py** -- indexed `input_field` paths (`edits[1].new_string`) for nested tool inputs; `input_extra` deep-copied so assembled trigger values never leak between the fault and benign arms.
+- **execution/list_distributable_workflows.py** -- prints the workflow basenames named in any manifest layer's `github` list; the single source of truth `setup.sh` now copies from.
+- **tests** -- `tests/execution/test_setup_distribution.py`, `test_quality_gate.py`, `test_command_script_flags.py`, `test_doe_feature_request.py`, `test_review_artifact_paths.py` (drives both review-gate writers from a drifted cwd); `tests/claude_hooks/test_settings_matchers.py` (registration liveness); extended `test_block_secrets_in_code.py` (+6) and `test_confirm_pr_merge.py` (+6).
+
+### Pull impact
+Projects carry the fixed hooks in `.claude/hooks/` and the matcher change in `.claude/settings.json`; both update on the next `/pull-doe`. The review-gate writers and `/hq` live in `~/.claude/` -- re-run `setup.sh --tools-only` (or full `setup.sh`) to refresh them. Projects that already received the kit-internal workflows from an earlier `setup.sh` run should remove them: `rm -f .github/workflows/proof.yml .github/workflows/auto-release.yml` (keep `auto-release.yml` only if the project deliberately adopted CHANGELOG-driven releases).
+
 ## v1.71.2 (2026-06-11)
 <!-- hero -->
 Two PostToolUse hooks -- `check_plan_freshness_hook.py` and `copy_plan_to_project.py` -- have been dead since they shipped: both compared `tool_name` against lowercase strings ("read", "write"/"edit") while real events carry "Read"/"Write"/"Edit", so every invocation took the early-exit path. Same casing class as the v1.59.0 matcher fix. Both now fire; the freshness hook is also anchored to `$CLAUDE_PROJECT_DIR` (script path AND subprocess cwd) per the v1.62.2/v1.63.0 hardening, and both follow the v1.61.3 silent no-opinion convention. First-ever regression tests added for each.
