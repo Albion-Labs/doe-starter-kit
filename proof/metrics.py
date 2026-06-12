@@ -164,6 +164,14 @@ def main(argv):
         print("usage: metrics.py --repo <path> [--window-days N] [--json]")
         return 2
     repo = argv[argv.index("--repo") + 1]
+    # Liveness audit B7: a garbage path made every git call fail silently
+    # (empty stdout -> 0 commits -> perfect 0%/0% metrics, exit 0). Validate
+    # the repo before computing anything.
+    probe = subprocess.run(["git", "-C", str(repo), "rev-parse", "--git-dir"],
+                           capture_output=True, text=True)
+    if probe.returncode != 0:
+        print(f"ERROR: {repo} is not a git repository -- refusing to report metrics over nothing")
+        return 2
     days = int(argv[argv.index("--window-days") + 1]) if "--window-days" in argv else 30
     sc = compute(repo, days)
     OUT.parent.mkdir(parents=True, exist_ok=True)
