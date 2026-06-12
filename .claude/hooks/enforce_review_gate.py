@@ -29,8 +29,17 @@ v1.71.1 (issue #107): branch is resolved before (and independently of)
 HEAD, so unborn-HEAD repos and worktrees on non-feature branches pass
 through instead of tripping the fail-closed arm; the trigger matches an
 actual `gh pr create` invocation at a statement position rather than the
-phrase anywhere in the command string. The fail-closed block for
-unreadable git state is retained and pinned by proof corpus fault F15.
+phrase anywhere in the command string.
+
+v1.71.4 (issue #107 class, pinned by proof corpus fault F18): git state
+resolves from the first candidate that has any -- $CLAUDE_PROJECT_DIR,
+then the event's cwd (the shell the command actually runs in). Sessions
+whose project dir is not a git repo at all (background jobs anchor it to
+$HOME; cross-repo sessions point it elsewhere) previously took the
+fail-closed arm on EVERY `gh pr create`, including fix/* and
+housekeeping/* branches the gate does not gate. The fail-closed block
+for genuinely unreadable git state (no candidate resolves) is retained
+and pinned by proof corpus fault F15.
 """
 import json
 import os
@@ -40,23 +49,40 @@ import sys
 from pathlib import Path
 
 
-def _project_root() -> Path:
-    """Return the project root anchored to $CLAUDE_PROJECT_DIR. v1.63.0
-    hardening: relative paths inside this hook resolve against the agent
-    shell's cwd, which silently false-passes (gate goes quiet) when the
-    shell has drifted to a subdir. Pair with v1.62.2 which fixed the
-    invocation-side path. Fall back to cwd only if the env var is unset --
-    a loud failure beats a silent regression.
+def _resolve_root_and_branch(event):
+    """Return (root, branch) from the first candidate with readable git
+    state: $CLAUDE_PROJECT_DIR, then the event's cwd. (None, None) when
+    nothing resolves -- the caller fail-closes. $CLAUDE_PROJECT_DIR stays
+    first so every existing anchoring behaviour (v1.62.2/v1.63.0) is
+    unchanged whenever it IS a repo; the event cwd is strictly a fallback.
+    Process cwd is used only when neither is present (legacy fallback) --
+    falling back to it when $CLAUDE_PROJECT_DIR is set but unreadable
+    would let an unrelated checkout answer for the project (F15).
     """
+    candidates = []
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
     if project_dir:
-        return Path(project_dir)
-    return Path.cwd()
+        candidates.append(Path(project_dir))
+    event_cwd = event.get("cwd")
+    if event_cwd:
+        candidates.append(Path(event_cwd))
+    if not candidates:
+        candidates.append(Path.cwd())
+    for root in candidates:
+        try:
+            branch = subprocess.check_output(
+                ["git", "-C", str(root), "branch", "--show-current"],
+                text=True, stderr=subprocess.DEVNULL,
+            ).strip()
+            return root, branch
+        except (subprocess.CalledProcessError, OSError):
+            continue
+    return None, None
 
 
-def check_steps_complete():
+def check_steps_complete(root: Path):
     """Return (ok, message). ok=True if all steps complete or no steps exist."""
-    todo_path = _project_root() / "tasks" / "todo.md"
+    todo_path = root / "tasks" / "todo.md"
     if not todo_path.exists():
         return True, ""
 
@@ -114,25 +140,15 @@ def main():
             if target_real != cwd_real and not target_real.startswith(cwd_real + os.sep):
                 sys.exit(0)
 
-    # Anchor git invocations to $CLAUDE_PROJECT_DIR so the hook stays
-    # cwd-safe (v1.63.0).
-    #
     # v1.71.1 (issue #107): resolve the BRANCH first, on its own.
     # `git branch --show-current` succeeds on unborn-HEAD repos (zero
     # commits) and in worktrees (.git is a file), where `rev-parse HEAD`
-    # does not. Pre-fix, both ran in one try-block and ANY failure --
-    # including a project dir that is a zero-commit repo while the PR
-    # targets a different repo entirely -- blocked ALL PR creation.
-    project_root = str(_project_root())
-    try:
-        branch = subprocess.check_output(
-            ["git", "-C", project_root, "branch", "--show-current"],
-            text=True, stderr=subprocess.DEVNULL,
-        ).strip()
-    except (subprocess.CalledProcessError, OSError):
-        # Fail-closed contract (pinned by proof corpus fault F15): a project
-        # dir with no readable git state at all blocks rather than silently
-        # passing -- the gate cannot know what it is gating.
+    # does not.
+    # v1.71.4: resolution falls back from $CLAUDE_PROJECT_DIR to the
+    # event's cwd (see _resolve_root_and_branch); fail-closed only when
+    # NO candidate has readable git state (F15).
+    root, branch = _resolve_root_and_branch(event)
+    if root is None:
         print(json.dumps({
             "decision": "block",
             "reason": (
@@ -143,6 +159,7 @@ def main():
             ),
         }))
         return
+    project_root = str(root)
 
     # Only gate feature branches. Housekeeping/wrap/fix/other branches --
     # and detached HEAD (empty string) -- pass freely, with no need for a
@@ -169,7 +186,7 @@ def main():
         return
 
     # Gate 1: All steps must be complete (no mid-feature PRs)
-    steps_ok, steps_msg = check_steps_complete()
+    steps_ok, steps_msg = check_steps_complete(root)
     if not steps_ok:
         print(json.dumps({
             "decision": "block",
@@ -183,10 +200,11 @@ def main():
         return
 
     # Gate 2: Adversarial review must have passed for current HEAD.
-    # Artifact path is anchored to $CLAUDE_PROJECT_DIR so the gate stays
-    # cwd-safe -- a stale-looking "no artifact" block under shell drift
-    # is the same false-fail class as the silent false-pass v1.63.0 fixes.
-    artifact = _project_root() / ".tmp" / f"review-passed-{branch}.json"
+    # Artifact path is anchored to the SAME resolved root as the git state
+    # so reader and writer can never disagree -- a stale-looking "no
+    # artifact" block under shell drift is the same false-fail class as
+    # the silent false-pass v1.63.0 fixes.
+    artifact = root / ".tmp" / f"review-passed-{branch}.json"
 
     if not artifact.exists():
         print(json.dumps({

@@ -162,7 +162,16 @@ def _fire_hook_value(fa, value, benign=False):
                     _git(tmp, "checkout", "-q", "-b", branch)
                 except (OSError, subprocess.SubprocessError) as ex:
                     return None, f"git fixture setup failed: {ex}"
-            env_extra["CLAUDE_PROJECT_DIR"] = str(tmp)
+            if fa.get("git_fixture_as_event_cwd"):
+                # Issue #107 class: the project dir is a NON-git decoy (a
+                # background job's $HOME) and the repo arrives via the
+                # event's cwd field, exactly as the live harness sends it.
+                decoy = Path(tempfile.mkdtemp(prefix="doe-proof-decoy-"))
+                tmps.append(decoy)
+                env_extra["CLAUDE_PROJECT_DIR"] = str(decoy)
+                event["cwd"] = str(tmp)
+            else:
+                env_extra["CLAUDE_PROJECT_DIR"] = str(tmp)
             # Ceiling stops git's upward discovery at the fixture's parent:
             # without it, a TMPDIR nested inside any git repo makes
             # `git -C <non-git-fixture>` resolve the ENCLOSING repo and

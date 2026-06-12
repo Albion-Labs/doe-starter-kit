@@ -1059,6 +1059,29 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
+        <div class="release" id="v1-71-4">
+          <div class="release-header">
+            <span class="version-badge">v1.71.4</span>
+            <span class="release-date">12 June 2026</span>
+          </div>
+          <h4 class="summary">Summary</h4>
+          <p class="release-hero">Kills the recurring &quot;Could not determine git state&quot; false positive that blocked ALL <code>gh pr create</code> from sessions whose <code>$CLAUDE_PROJECT_DIR</code> is not a git repo (background jobs anchor it to <code>$HOME</code>; cross-repo sessions point it elsewhere) &mdash; the issue #107 class that has now bitten multiple live sessions. The review gate resolves git state from the first candidate that has any: the project dir, then the event&#x27;s <code>cwd</code> (the shell the command actually runs in); the fail-closed block survives only when neither resolves.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">Red-first: corpus fault F18 reproduces the exact incident topology &mdash; <code>CLAUDE_PROJECT_DIR</code> pointing at a non-git decoy while the repo arrives via the event&#x27;s <code>cwd</code> field, as the live harness sends it. Against the pre-fix hook, F18&#x27;s BENIGN twin (housekeeping-branch PR) false-fired with the same fail-closed message both incidents hit, failing the self-test on a measured false positive; post-fix, the fault arm still blocks (feature branch without review, resolved via the event cwd), the benign twin passes, and F15 (genuinely unreadable git state must block) is preserved because the fallback never consults the hook&#x27;s own process cwd when a project dir is set. The review-artifact writers gained the mirror-image guard: a non-git project dir is skipped, so writer and reader can no longer disagree about where <code>.tmp/</code> lives in these sessions.</p>
+          <h4 class="fixed">Fixed</h4>
+          <ul>
+            <li><strong>.claude/hooks/enforce_review_gate.py</strong> &mdash; git state (root, branch, HEAD, todo path, artifact path) resolves from <code>$CLAUDE_PROJECT_DIR</code> first, then the hook event&#x27;s <code>cwd</code>; fail-closed only when no candidate has readable git state. Non-feature branches from non-repo-anchored sessions now pass instead of fail-closing; feature branches stay fully gated against the resolved root.</li>
+            <li><strong>global-scripts/record_review_result.py + persist_review_findings.py</strong> &mdash; <code>$CLAUDE_PROJECT_DIR</code> is trusted only when it has git state; otherwise both writers fall back to the worktree-resolved root, mirroring the reader.</li>
+            <li><strong>setup.sh</strong> &mdash; the kit&#x27;s project hooks (<code>.claude/hooks/*.py</code>) are now mirrored into <code>~/.claude/hooks</code> on every full run. Background sessions anchor <code>$CLAUDE_PROJECT_DIR</code> to <code>$HOME</code>, so the global settings&#x27; hook commands resolve to <code>~/.claude/hooks/*</code> &mdash; every guardrail such a session runs executes those copies, and nothing previously refreshed them (they drifted until hand-synced). Existing customised copies are backed up first, per the standard global-tooling contract.</li>
+          </ul>
+          <h4>Added</h4>
+          <ul>
+            <li><strong>proof/corpus/manifest.json</strong> &mdash; fault F18 (review-gate-cwd-fallback) with benign twin, added red-first. Corpus: 17 -&gt; 18 faults, 17 covered classes.</li>
+            <li><strong>proof/run.py</strong> &mdash; <code>git_fixture_as_event_cwd</code> fixture knob: the git fixture is delivered via the event&#x27;s <code>cwd</code> field while <code>CLAUDE_PROJECT_DIR</code> points at a non-git decoy, matching the background-job topology.</li>
+            <li><strong>tests</strong> &mdash; 4 new gate tests (fallback allows non-feature, keeps gating feature, fails closed with no candidates, project dir keeps priority over event cwd) + 1 writer test (non-git project dir skipped; artifact lands where the reader looks).</li>
+          </ul>
+        </div>
+
         <div class="release" id="v1-71-3">
           <div class="release-header">
             <span class="version-badge">v1.71.3</span>
@@ -1152,6 +1175,10 @@
           </ul>
         </div>
 
+        <details class="month-group">
+
+          <summary>June 2026 (7 releases)</summary>
+
         <div class="release" id="v1-70-0">
           <div class="release-header">
             <span class="version-badge">v1.70.0</span>
@@ -1188,10 +1215,6 @@
             <li><strong>proof/live/index.html</strong> &mdash; unreferenced by any script, doc, or workflow.</li>
           </ul>
         </div>
-
-        <details class="month-group">
-
-          <summary>June 2026 (6 releases)</summary>
 
         <div class="release" id="v1-69-0">
           <div class="release-header">

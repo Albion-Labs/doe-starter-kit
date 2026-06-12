@@ -7,6 +7,27 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.71.4 (2026-06-12)
+<!-- hero -->
+Kills the recurring "Could not determine git state" false positive that blocked ALL `gh pr create` from sessions whose `$CLAUDE_PROJECT_DIR` is not a git repo (background jobs anchor it to `$HOME`; cross-repo sessions point it elsewhere) -- the issue #107 class that has now bitten multiple live sessions. The review gate resolves git state from the first candidate that has any: the project dir, then the event's `cwd` (the shell the command actually runs in); the fail-closed block survives only when neither resolves.
+<!-- /hero -->
+<!-- background -->
+Red-first: corpus fault F18 reproduces the exact incident topology -- `CLAUDE_PROJECT_DIR` pointing at a non-git decoy while the repo arrives via the event's `cwd` field, as the live harness sends it. Against the pre-fix hook, F18's BENIGN twin (housekeeping-branch PR) false-fired with the same fail-closed message both incidents hit, failing the self-test on a measured false positive; post-fix, the fault arm still blocks (feature branch without review, resolved via the event cwd), the benign twin passes, and F15 (genuinely unreadable git state must block) is preserved because the fallback never consults the hook's own process cwd when a project dir is set. The review-artifact writers gained the mirror-image guard: a non-git project dir is skipped, so writer and reader can no longer disagree about where `.tmp/` lives in these sessions.
+<!-- /background -->
+
+### Fixed
+- **.claude/hooks/enforce_review_gate.py** -- git state (root, branch, HEAD, todo path, artifact path) resolves from `$CLAUDE_PROJECT_DIR` first, then the hook event's `cwd`; fail-closed only when no candidate has readable git state. Non-feature branches from non-repo-anchored sessions now pass instead of fail-closing; feature branches stay fully gated against the resolved root.
+- **global-scripts/record_review_result.py + persist_review_findings.py** -- `$CLAUDE_PROJECT_DIR` is trusted only when it has git state; otherwise both writers fall back to the worktree-resolved root, mirroring the reader.
+- **setup.sh** -- the kit's project hooks (`.claude/hooks/*.py`) are now mirrored into `~/.claude/hooks` on every full run. Background sessions anchor `$CLAUDE_PROJECT_DIR` to `$HOME`, so the global settings' hook commands resolve to `~/.claude/hooks/*` -- every guardrail such a session runs executes those copies, and nothing previously refreshed them (they drifted until hand-synced). Existing customised copies are backed up first, per the standard global-tooling contract.
+
+### Added
+- **proof/corpus/manifest.json** -- fault F18 (review-gate-cwd-fallback) with benign twin, added red-first. Corpus: 17 -> 18 faults, 17 covered classes.
+- **proof/run.py** -- `git_fixture_as_event_cwd` fixture knob: the git fixture is delivered via the event's `cwd` field while `CLAUDE_PROJECT_DIR` points at a non-git decoy, matching the background-job topology.
+- **tests** -- 4 new gate tests (fallback allows non-feature, keeps gating feature, fails closed with no candidates, project dir keeps priority over event cwd) + 1 writer test (non-git project dir skipped; artifact lands where the reader looks).
+
+### Pull impact
+Run a FULL `setup.sh` once after this release (not `--tools-only`, which deliberately leaves hooks untouched): it refreshes the `~/.claude/hooks` copies that background sessions execute -- the new mirror step keeps them current from here on -- plus the two writers in `~/.claude/scripts`. Projects carry the hook at `.claude/hooks/enforce_review_gate.py` (updates on `/pull-doe`). Until then, affected sessions keep hitting the false block on PR creation.
+
 ## v1.71.3 (2026-06-12)
 <!-- hero -->
 Batch 1 of the kit-wide liveness audit (2026-06-11): closes a live security gap -- `block_secrets_in_code` scanned only Write content, so secrets arriving via Edit/MultiEdit passed silently -- and stops `setup.sh` blind-copying kit-internal workflows (`auto-release.yml` would tag/release consumer repos; `proof.yml` goes red without `proof/`) into consumer projects. Also unbreaks two commands that could never succeed (`quality_gate --pre-retro` named scenarios that don't exist; `/hq` passed a flag `build_hq.py` doesn't have), ships `audit_sync.py` to consumers for the first time, and fixes four hook defects found by execution, not reading.

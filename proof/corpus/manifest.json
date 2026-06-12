@@ -312,6 +312,33 @@
       "note": "Fail-closed arm: $CLAUDE_PROJECT_DIR pointing at a non-git directory must block, never silently pass. Known false-positive overlap with worktree checkouts is kit issue #107 (fix scheduled in v2.0 PR 2); this fault pins the fail-closed contract that fix must preserve."
     },
     {
+      "id": "F18",
+      "class": "review-gate-cwd-fallback",
+      "gate": "enforce_review_gate",
+      "enforcement": "block",
+      "method": "hook",
+      "hook": "enforce_review_gate.py",
+      "tool_name": "Bash",
+      "input_field": "command",
+      "input_extra": {},
+      "value_parts": [
+        "gh pr cr",
+        "eate --fill"
+      ],
+      "benign_value_parts": [
+        "gh pr cr",
+        "eate --fill"
+      ],
+      "git_fixture": {
+        "fault_branch": "feature/proof-fixture",
+        "benign_branch": "housekeeping/proof-fixture"
+      },
+      "git_fixture_as_event_cwd": true,
+      "expect": "block",
+      "covered": true,
+      "note": "Issue #107 class: CLAUDE_PROJECT_DIR points at a NON-git decoy while the repo arrives via the event's cwd field (background jobs set the project dir to $HOME). The gate must resolve git state from the event cwd: feature branch without artifact still blocks, housekeeping passes. Pre-v1.71.4 the benign arm false-fired (fail-closed on the decoy), blocking ALL PR creation from such sessions."
+    },
+    {
       "id": "F16",
       "class": "secret-in-edit",
       "gate": "block_secrets_in_code",
