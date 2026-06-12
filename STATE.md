@@ -15,11 +15,12 @@ Keep each section short. Replace stale info, don't accumulate. Max ~30 lines of 
 
 ## Current Position
 <!-- What feature/step is in progress. Updated at session start and end. -->
-v2.0 plan in flight (.claude/plans/doe-v2-lean-proof-of-life.md). Phase 0 shipped (v1.70.0). PR 1 (proof fault net, v1.71.0) on feature/proof-fault-net-v1.71.0 — code complete, PR pending. Next: PR 2 (gate dispatcher + telemetry spine, implements #78, fixes #107).
+v2.0 plan in flight (.claude/plans/doe-v2-lean-proof-of-life.md), paused for the liveness-audit tangent (.claude/plans/audit-2026-06-11-liveness-findings.md). Batch A shipped (v1.71.3, PR #112) + hotfix v1.71.4 (PR #113: review-gate event-cwd fallback, ~/.claude/hooks mirror). Next: PR B (vacuous checkers) on fix/v1.71.5-vacuous-checkers — v1.71.5, the .4 slot is taken — then PR C (corpses + distribution), then resume v2.0 PR 2 (gate dispatcher + telemetry spine, implements #78; the remaining #107 worktree-artifact sub-case lands there).
 
 ## Blockers & Edge Cases
 <!-- Known issues, workarounds, things to watch for. Remove when resolved. -->
+Background-job sessions execute all guardrail hooks from ~/.claude/hooks (their CLAUDE_PROJECT_DIR=$HOME resolves the registered paths there). Those copies refresh only on FULL setup.sh runs (v1.71.4 mirror step); --tools-only deliberately skips hooks. Consumer projects' vendored hooks still lag until /pull-doe.
 
 ## Last Session
 <!-- 1-2 sentence summary of what happened last session. Overwritten each session. -->
-Full-kit review → v2.0 Lean + Proof-of-Life plan (merged, #108). Phase 0 lean cuts shipped + auto-released as v1.70.0. Open-issue backlog reconciled into the plan (#25/#17 closed, #78/#24/#28/#35 absorbed). Proof fault net built: corpus 7→15 faults, all blocking hooks covered, CI unscoped.
+Liveness-audit batch A: all 10 PR-A findings fixed and released as v1.71.3 (block_secrets Edit/MultiEdit gap closed red-first via corpus F16/F17; setup.sh workflow leak manifest-scoped; pre-retro gate passing for the first time since v1.49.1). Follow-up v1.71.4 killed the recurring "Could not determine git state" PR-creation false block (event-cwd fallback, corpus F18 red-first via its benign twin) and mirrors kit project hooks into ~/.claude/hooks so background sessions stop running stale guardrails. Both deployed machine-wide.
