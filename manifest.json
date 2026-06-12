@@ -23,6 +23,7 @@
         "starter-kit-pull.md",
         "git-conventions.md",
         "kit-development.md",
+        "parallel-worktrees.md",
         "_TEMPLATE.md"
       ],
       "execution": [
@@ -52,7 +53,7 @@
         "pitch.md", "plan-review.md", "project-recap.md",
         "pull-doe.md", "report-doe-bug.md", "request-doe-feature.md",
         "roast.md", "scope.md", "sync-doe.md", "test-suite.md",
-        "worktree-create.md", "worktree-remove.md"
+        "worktree-create.md", "worktree-remove.md", "clone-site.md"
       ],
       "github": [
         "workflows/doe-ci.yml",
@@ -95,7 +96,9 @@
     "multi_agent.py",
     "build_hq.py",
     "html_builder.py",
-    "check_tools_version.py"
+    "check_tools_version.py",
+    "gist_sync.py",
+    "build_global_archive.py"
   ],
   "triggers": [
     {"situation": "Planning/scoping", "directive": "planning-rules.md", "layer": "universal"},

@@ -129,26 +129,6 @@ Replace the content but keep the concept — a single doc that maps every file, 
 
 ---
 
-## Hook Templates (optional)
-
-The `hook-templates/` directory contains Claude Code hook configurations for language-specific quality checks. These are **not active by default** — they're reference templates you can activate per-project.
-
-| Template | Checks |
-|----------|--------|
-| `javascript.json` | `console.log` usage, non-strict equality (`==`/`!=`) |
-| `python.json` | Bare exception catching (`except:`/`except Exception:`), `shell=True` in subprocess |
-| `universal.json` | Documents the hooks already included in the kit (reference only) |
-
-### Activating a template
-
-1. Open the template file (e.g. `hook-templates/javascript.json`)
-2. Merge its `hooks` array entries into your project's `.claude/settings.json` under `hooks.PreToolUse`
-3. The hooks will fire on Write/Edit tool calls targeting matching file types
-
-These hooks **warn but don't block** — they print to stderr so you see the warning but can proceed.
-
----
-
 ## Upgrading from Older Kit Versions
 
 If your project was set up with an older version of the kit, this section covers what changed and how to upgrade. For a visual walkthrough with terminal mockups and before/after examples, see the [Migration Guide tutorial page](docs/tutorial/migration-guide.html).

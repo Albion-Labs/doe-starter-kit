@@ -12,6 +12,7 @@ on Bash arguments is a heuristic loss, so the Bash branch defaults to
 block-all on directives/ paths.
 """
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -48,6 +49,20 @@ BASH_DIRECTIVE_PATTERNS = [
 ]
 
 
+def _existing_path(path_str):
+    """Existence check that survives cwd drift. A relative path is anchored
+    to $CLAUDE_PROJECT_DIR (the project root Claude Code injects); checking
+    it against the hook process cwd produced a false PASS whenever the two
+    differed, letting edits to existing directives through."""
+    p = Path(path_str)
+    if p.is_absolute():
+        return p.exists()
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    if project_dir and (Path(project_dir) / p).exists():
+        return True
+    return p.exists()
+
+
 def _block(reason):
     print(json.dumps({"decision": "block", "reason": reason}))
 
@@ -69,7 +84,7 @@ def main():
         path = tool_input.get("file_path", "") or tool_input.get("path", "")
         if (
             ("directives/" in path or ".githooks" in path)
-            and Path(path).exists()
+            and _existing_path(path)
         ):
             _block(
                 "GUARDRAIL: Editing existing directives requires explicit "

@@ -65,7 +65,7 @@ Build a structured draft and present it in a bordered box. **Generate programmat
 └────────────────────────────────────────────────────────────┘
 ```
 
-If the user says **yes**: Save the draft as JSON, then run `python3 ~/doe-starter-kit/execution/doe_feature_request.py --file <json_path>`. If gh fails, automatically run `--fallback` to save locally and tell the user where the file is.
+If the user says **yes**: Save the draft as JSON, then run `python3 ~/doe-starter-kit/execution/doe_feature_request.py --file <json_path>`. If gh fails, automatically run `--fallback <json_path>` (the flag requires the JSON path argument) to save locally and tell the user where the file is.
 
 If the user says **edit**: Ask what to change, update the draft, re-present.
 

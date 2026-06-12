@@ -76,8 +76,8 @@ def main():
         )
         _maybe_warn(f"\u26a0\ufe0f {msg}", ppid)
         print(json.dumps({"warning": msg}))
-    else:
-        print(json.dumps({}))
+    # Below the warn threshold: silent exit 0 is the no-opinion
+    # convention -- a bare `{}` on stdout is not a hook response.
 
 
 def _load_tracker(tracker_file, ppid):

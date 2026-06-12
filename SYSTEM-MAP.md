@@ -62,6 +62,9 @@ CLAUDE.md tells Claude to check these before starting work:
 | confirm_pr_merge.py | `./.claude/hooks/` | Blocks gh pr merge unless user approves |
 | copy_plan_to_project.py | `./.claude/hooks/` | Auto-copies plans from ~/.claude/plans/ to project .claude/plans/ |
 | check_plan_freshness_hook.py | `./.claude/hooks/` | Checks plan freshness when .claude/plans/*.md is read |
+| block_unnecessary_admin_merge.py | `./.claude/hooks/` | Blocks reflexive `gh pr merge --admin` when the PR's real merge state doesn't need it |
+| stamp_todo_timestamps.py | `./.claude/hooks/` | Auto-stamps completion timestamps on [x] lines in tasks/todo.md |
+| check_completed_feature.py | `./.claude/hooks/` | Warns when every step in todo.md ## Current is [x] (move to Done) |
 | commit-msg | `./.githooks/` | Strips AI co-author trailers from git commits |
 | pre-commit | `./.githooks/` | Runs fast claim audit checks before every commit. Blocks on FAILs. |
 | pre-push | `./.githooks/` | Runs test_methodology.py --quick before push |
@@ -122,7 +125,7 @@ CLAUDE.md tells Claude to check these before starting work:
 
 All slash commands install to `~/.claude/commands/` so they work across every DOE project. They reference relative paths (`STATE.md`, `tasks/todo.md`, etc.) so they're project-agnostic.
 
-There are **33** commands in total (see `global-commands/` or run `/commands` for the full reference). The table below is a representative subset of the most-used ones.
+There are **34** commands in total (see `global-commands/` or run `/commands` for the full reference). The table below is a representative subset of the most-used ones.
 
 | Command | Purpose |
 |---------|---------|
@@ -244,6 +247,9 @@ PROJECT (lives in your repo, shared via git)
 │   ├── integrations.md
 │   ├── starter-kit-sync.md
 │   ├── starter-kit-pull.md
+│   ├── git-conventions.md
+│   ├── kit-development.md
+│   ├── parallel-worktrees.md
 │   ├── adversarial-review/
 │   └── best-practices/
 │       ├── html-css.md
@@ -272,10 +278,14 @@ PROJECT (lives in your repo, shared via git)
 │   │   ├── protect_directives.py
 │   │   ├── block_secrets_in_code.py
 │   │   ├── block_dangerous_commands.py
+│   │   ├── guard_kit_writes.py
 │   │   ├── enforce_review_gate.py
 │   │   ├── confirm_pr_merge.py
+│   │   ├── block_unnecessary_admin_merge.py
 │   │   ├── copy_plan_to_project.py
-│   │   └── check_plan_freshness_hook.py
+│   │   ├── check_plan_freshness_hook.py
+│   │   ├── stamp_todo_timestamps.py
+│   │   └── check_completed_feature.py
 │   └── agents/                ← custom agents for adversarial review
 │       ├── Finder.md          ← Identifies issues (read-only)
 │       ├── Adversarial.md     ← Filters false positives (read-only)
@@ -291,16 +301,17 @@ PROJECT (lives in your repo, shared via git)
 MACHINE (lives on your computer, applies to all projects)
 ├── ~/.claude/CLAUDE.md          ← Universal learnings
 ├── ~/.claude/settings.json      ← Global settings (PostToolUse hooks merged by setup.sh)
-├── ~/.claude/commands/          ← Slash commands (all 33 — see global-commands/)
+├── ~/.claude/commands/          ← Slash commands (all 34 — see global-commands/)
 │   ├── stand-up.md  crack-on.md  wrap.md  sitrep.md  eod.md  hq.md
 │   ├── audit.md  review.md  agent-verify.md  fact-check.md  snagging.md
 │   ├── code-trace.md  doe-health.md  test-suite.md  report-doe-bug.md
 │   ├── project-recap.md  diff-review.md  plan-review.md  generate-*.md
 │   ├── scope.md  pitch.md  roast.md  agent-launch.md  agent-status.md
 │   ├── pull-doe.md  sync-doe.md  request-doe-feature.md  commands.md
-│   └── codemap.md  worktree-create.md  worktree-remove.md
+│   └── codemap.md  worktree-create.md  worktree-remove.md  clone-site.md
 └── ~/.claude/scripts/
     ├── multi_agent.py  build_hq.py  html_builder.py
     ├── wrap_html.py  eod_html.py  dispatch_dag.py  run_snagging.py
+    ├── gist_sync.py  build_global_archive.py
     └── record_review_result.py  persist_review_findings.py  doe_utils.py  check_tools_version.py
 ```
