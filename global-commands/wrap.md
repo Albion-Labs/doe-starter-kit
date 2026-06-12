@@ -255,7 +255,7 @@ python3 -c "import json; open('docs/wraps/session-<SESSION_NUMBER>.json', 'w').w
 open .tmp/wrap.html
 ```
 
-The `docs/wraps/session-N.json` file is what gets committed. The HTML is generated on demand (by `build_session_archive.py` regenerating it from JSON). The `.tmp/wrap.html` copy is disposable. Commit this file with message "Save session N wrap data" and push.
+The `docs/wraps/session-N.json` file is what gets committed. The HTML is generated on demand (by `~/.claude/scripts/build_global_archive.py` regenerating it from JSON). The `.tmp/wrap.html` copy is disposable. Commit this file with message "Save session N wrap data" and push.
 
 ### 3f: Gist sync (push session to cloud)
 
