@@ -164,3 +164,79 @@ def test_run_all_criteria_returns_list():
     results = verify.run_all_criteria(criteria)
     assert len(results) == 2
     assert all(r["status"] == "PASS" for r in results)
+
+
+# ── Contract parsing + malformed-criteria loud-fail (liveness audit B6) ──
+
+_CONTRACT_TODO = """# Todo
+
+## Current
+
+### Test feature [INFRA]
+
+1. [ ] Build the thing
+   Contract:
+   - [ ] [auto] file exists. Verify: file: README.md exists
+   Note: this prose line used to TERMINATE the parse and drop everything below.
+   - [ ] [auto] second criterion. Verify: run: echo ok
+   - [ ] [manual] looks right in the browser
+
+## Done
+"""
+
+_MALFORMED_TODO = """# Todo
+
+## Current
+
+### Test feature [INFRA]
+
+1. [ ] Build the thing
+   Contract:
+   - [ ] [auto] this one has no verify pattern at all
+   - [ ] [auto] this one is fine. Verify: run: echo ok
+
+## Done
+"""
+
+
+def test_parse_contract_survives_prose_lines(tmp_path, monkeypatch):
+    """Criteria below a non-dash prose line must still be collected — the
+    old parser broke at the first such line and silently dropped them."""
+    monkeypatch.setattr(verify, "ROOT", tmp_path)
+    (tmp_path / "tasks").mkdir()
+    (tmp_path / "tasks" / "todo.md").write_text(_CONTRACT_TODO)
+    criteria = verify.parse_todo_contract(1)
+    assert len(criteria) == 3, [c["text"] for c in criteria]
+    autos = [c for c in criteria if c["type"] == "auto"]
+    assert len(autos) == 2
+    assert all(c["verify"] for c in autos)
+
+
+def test_check_step_loud_fails_on_missing_verify(tmp_path):
+    """An [auto] criterion without Verify: used to be silently filtered out
+    of the run set; the gate then passed on the remainder. Must exit 1 and
+    name the malformed criterion."""
+    import subprocess
+    (tmp_path / "tasks").mkdir()
+    (tmp_path / "tasks" / "todo.md").write_text(_MALFORMED_TODO)
+    script = PROJECT_ROOT / "execution" / "verify.py"
+    p = subprocess.run(
+        [sys.executable, str(script), "--check-step", "1"],
+        capture_output=True, text=True, cwd=tmp_path, timeout=30,
+    )
+    assert p.returncode == 1, p.stdout + p.stderr
+    assert "MALFORMED CONTRACT" in p.stdout
+    assert "no verify pattern" in p.stdout
+
+
+def test_check_step_passes_well_formed_contract(tmp_path):
+    import subprocess
+    (tmp_path / "tasks").mkdir()
+    (tmp_path / "tasks" / "todo.md").write_text(_CONTRACT_TODO.replace(
+        "file: README.md exists", "run: echo first_ok"))
+    script = PROJECT_ROOT / "execution" / "verify.py"
+    p = subprocess.run(
+        [sys.executable, str(script), "--check-step", "1"],
+        capture_output=True, text=True, cwd=tmp_path, timeout=30,
+    )
+    assert p.returncode == 0, p.stdout + p.stderr
