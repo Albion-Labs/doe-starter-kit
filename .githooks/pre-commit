@@ -320,9 +320,13 @@ fi
 
 # ─── Test freshness check (warnings only — never blocks commit) ───
 # Warns when staged source has a sibling test that's not also staged.
-# Covered surfaces: execution/*.py with tests/execution/*, .githooks/*
-# with tests/githooks/*. Each warning names the missing test path so the
-# fix is one ack-and-add away.
+# Covered pairs (exactly these three — NOT a general execution/*.py
+# sweep; the old comment overclaimed that surface, liveness audit B9):
+#   execution/doe_init.py    → tests/execution/test_doe_init.py
+#   .githooks/pre-commit     → tests/githooks/test_pre_commit.py
+#   .githooks/commit-msg     → tests/githooks/test_commit_msg.py
+# Each warning names the missing test path so the fix is one
+# ack-and-add away.
 # Skip with: SKIP_TEST_FRESHNESS=1 git commit ...
 
 if [ "${SKIP_TEST_FRESHNESS:-0}" != "1" ]; then
