@@ -129,6 +129,20 @@ for f in "$HOOKS_SRC"/*.py; do
     HOOK_COUNT=$((HOOK_COUNT + 1))
 done
 
+# 2a. Mirror the kit's project hooks into ~/.claude/hooks (v1.71.4).
+# Background sessions anchor $CLAUDE_PROJECT_DIR to $HOME, so the global
+# settings' "$CLAUDE_PROJECT_DIR/.claude/hooks/..." commands resolve to
+# ~/.claude/hooks/* -- every guardrail such a session runs executes THESE
+# copies. Nothing previously refreshed them, so they silently drifted from
+# the kit until hand-synced.
+if [ -d "$SCRIPT_DIR/.claude/hooks" ]; then
+    for f in "$SCRIPT_DIR"/.claude/hooks/*.py; do
+        [ -f "$f" ] || continue
+        backup_then_copy "$f" "$HOOKS_DST/$(basename "$f")" hooks
+        HOOK_COUNT=$((HOOK_COUNT + 1))
+    done
+fi
+
 # 2b. Install project hooks (if in a DOE project)
 PROJECT_HOOK_COUNT=0
 if [ -f "CLAUDE.md" ] && [ -d "$SCRIPT_DIR/.claude/hooks" ]; then

@@ -1072,6 +1072,7 @@
           <ul>
             <li><strong>.claude/hooks/enforce_review_gate.py</strong> &mdash; git state (root, branch, HEAD, todo path, artifact path) resolves from <code>$CLAUDE_PROJECT_DIR</code> first, then the hook event&#x27;s <code>cwd</code>; fail-closed only when no candidate has readable git state. Non-feature branches from non-repo-anchored sessions now pass instead of fail-closing; feature branches stay fully gated against the resolved root.</li>
             <li><strong>global-scripts/record_review_result.py + persist_review_findings.py</strong> &mdash; <code>$CLAUDE_PROJECT_DIR</code> is trusted only when it has git state; otherwise both writers fall back to the worktree-resolved root, mirroring the reader.</li>
+            <li><strong>setup.sh</strong> &mdash; the kit&#x27;s project hooks (<code>.claude/hooks/*.py</code>) are now mirrored into <code>~/.claude/hooks</code> on every full run. Background sessions anchor <code>$CLAUDE_PROJECT_DIR</code> to <code>$HOME</code>, so the global settings&#x27; hook commands resolve to <code>~/.claude/hooks/*</code> &mdash; every guardrail such a session runs executes those copies, and nothing previously refreshed them (they drifted until hand-synced). Existing customised copies are backed up first, per the standard global-tooling contract.</li>
           </ul>
           <h4>Added</h4>
           <ul>

@@ -94,3 +94,25 @@ def test_audit_sync_in_setup_qs_scripts():
 
 def test_audit_sync_exists_in_kit():
     assert (KIT / "execution" / "audit_sync.py").is_file()
+
+
+# --- v1.71.4: project hooks mirrored into ~/.claude/hooks ---
+# Background sessions anchor $CLAUDE_PROJECT_DIR to $HOME, so the global
+# settings' "$CLAUDE_PROJECT_DIR/.claude/hooks/..." commands resolve to
+# ~/.claude/hooks/*. Every guardrail such a session runs executes those
+# copies; setup.sh must keep them fresh or they silently drift from the kit.
+
+def test_setup_mirrors_project_hooks_to_global_hooks_dir():
+    text = SETUP.read_text()
+    assert 'backup_then_copy "$f" "$HOOKS_DST/$(basename "$f")" hooks' in text
+    # The mirror loop must read from the kit's project-hooks dir.
+    assert '"$SCRIPT_DIR"/.claude/hooks/*.py' in text, (
+        "setup.sh must mirror the kit's .claude/hooks/*.py into ~/.claude/hooks "
+        "(the copies background sessions actually execute)"
+    )
+    mirror_pos = text.find('"$SCRIPT_DIR"/.claude/hooks/*.py')
+    tools_only_exit = text.find("tools-only; hooks/settings unchanged")
+    assert mirror_pos > tools_only_exit, (
+        "the mirror belongs on the full-run path; --tools-only deliberately "
+        "leaves hooks untouched"
+    )

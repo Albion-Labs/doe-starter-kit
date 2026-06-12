@@ -18,6 +18,7 @@ Red-first: corpus fault F18 reproduces the exact incident topology -- `CLAUDE_PR
 ### Fixed
 - **.claude/hooks/enforce_review_gate.py** -- git state (root, branch, HEAD, todo path, artifact path) resolves from `$CLAUDE_PROJECT_DIR` first, then the hook event's `cwd`; fail-closed only when no candidate has readable git state. Non-feature branches from non-repo-anchored sessions now pass instead of fail-closing; feature branches stay fully gated against the resolved root.
 - **global-scripts/record_review_result.py + persist_review_findings.py** -- `$CLAUDE_PROJECT_DIR` is trusted only when it has git state; otherwise both writers fall back to the worktree-resolved root, mirroring the reader.
+- **setup.sh** -- the kit's project hooks (`.claude/hooks/*.py`) are now mirrored into `~/.claude/hooks` on every full run. Background sessions anchor `$CLAUDE_PROJECT_DIR` to `$HOME`, so the global settings' hook commands resolve to `~/.claude/hooks/*` -- every guardrail such a session runs executes those copies, and nothing previously refreshed them (they drifted until hand-synced). Existing customised copies are backed up first, per the standard global-tooling contract.
 
 ### Added
 - **proof/corpus/manifest.json** -- fault F18 (review-gate-cwd-fallback) with benign twin, added red-first. Corpus: 17 -> 18 faults, 17 covered classes.
@@ -25,7 +26,7 @@ Red-first: corpus fault F18 reproduces the exact incident topology -- `CLAUDE_PR
 - **tests** -- 4 new gate tests (fallback allows non-feature, keeps gating feature, fails closed with no candidates, project dir keeps priority over event cwd) + 1 writer test (non-git project dir skipped; artifact lands where the reader looks).
 
 ### Pull impact
-Projects carry the hook at `.claude/hooks/enforce_review_gate.py` (updates on `/pull-doe`); the two writers live in `~/.claude/scripts` -- re-run `setup.sh --tools-only`. Until then, affected sessions keep hitting the false block on PR creation.
+Run a FULL `setup.sh` once after this release (not `--tools-only`, which deliberately leaves hooks untouched): it refreshes the `~/.claude/hooks` copies that background sessions execute -- the new mirror step keeps them current from here on -- plus the two writers in `~/.claude/scripts`. Projects carry the hook at `.claude/hooks/enforce_review_gate.py` (updates on `/pull-doe`). Until then, affected sessions keep hitting the false block on PR creation.
 
 ## v1.71.3 (2026-06-12)
 <!-- hero -->
