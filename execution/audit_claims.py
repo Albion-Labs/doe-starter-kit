@@ -499,35 +499,73 @@ def check_manual_signoff(report: AuditReport):
 # Roadmap parsing
 # ══════════════════════════════════════════════════════════════
 
-_ROADMAP_COMPLETE_RE = re.compile(
+# Live format (one bullet per shipped feature, what the kit's ROADMAP and
+# templates have used since the bullet rewrite):
+#   - **Name (vX.Y.Z)** [TAG] -- description *(shipped DD/MM/YY)*
+# Legacy format (older kits / consumer projects):
+#   ### Name (vX.Y.Z) — description
+# Both parse. Liveness audit B2: this parser matched ONLY the legacy form,
+# so 0 entries parsed on every modern ROADMAP and the consistency checker
+# passed vacuously; the caller now surfaces unparsed content as drift.
+_ROADMAP_COMPLETE_BULLET_RE = re.compile(
+    r"^-\s+\*\*(.+?)(?:\s+\((v\d+\.\d+\.\d+)\))?\*\*\s*(?:\[[\w/]+\])?\s*[—–-]*\s*(.*)$"
+)
+_ROADMAP_COMPLETE_HEADING_RE = re.compile(
     r"^###\s+(.+?)\s+\((v\d+\.\d+\.\d+)\)\s*[—–-]\s*(.+)$"
 )
+_SHIPPED_DATE_RE = re.compile(r"\*\((?:shipped|added)\s+([^)]+)\)\*")
 
 
-def parse_roadmap_complete() -> list[dict]:
-    """Parse entries from ROADMAP.md ## Complete section."""
+def parse_roadmap_complete() -> tuple[list[dict], int]:
+    """Parse entries from ROADMAP.md ## Complete section.
+
+    Returns (entries, unparsed) where unparsed counts non-blank,
+    non-comment section lines that matched neither format — the caller
+    reports format drift instead of silently passing over it.
+    """
     roadmap = PROJECT_ROOT / "ROADMAP.md"
     if not roadmap.exists():
-        return []
+        return [], 0
     text = roadmap.read_text(encoding="utf-8")
     entries = []
+    unparsed = 0
     in_complete = False
+    in_comment = False
     for i, line in enumerate(text.split("\n"), 1):
         if re.match(r"^##\s+Complete", line):
             in_complete = True
             continue
         if in_complete and re.match(r"^##\s+", line):
             break
-        if in_complete:
-            m = _ROADMAP_COMPLETE_RE.match(line)
-            if m:
-                entries.append({
-                    "name": m.group(1).strip(),
-                    "version": m.group(2),
-                    "date": m.group(3).strip(),
-                    "line": i,
-                })
-    return entries
+        if not in_complete:
+            continue
+        stripped = line.strip()
+        if in_comment:
+            if "-->" in stripped:
+                in_comment = False
+            continue
+        if stripped.startswith("<!--"):
+            in_comment = "-->" not in stripped
+            continue
+        if not stripped:
+            continue
+        m = _ROADMAP_COMPLETE_BULLET_RE.match(line) or _ROADMAP_COMPLETE_HEADING_RE.match(line)
+        if m:
+            date_m = _SHIPPED_DATE_RE.search(line)
+            version = m.group(2) or ""
+            if not version:
+                # Version embedded in a larger paren, e.g. "(FOO, v1.62.2)".
+                vm = re.search(r"\bv\d+\.\d+\.\d+\b", m.group(1))
+                version = vm.group(0) if vm else ""
+            entries.append({
+                "name": m.group(1).strip(),
+                "version": version,
+                "date": date_m.group(1).strip() if date_m else "",
+                "line": i,
+            })
+        else:
+            unparsed += 1
+    return entries, unparsed
 
 
 # ══════════════════════════════════════════════════════════════
@@ -546,6 +584,18 @@ def is_git_repo() -> bool:
         return False
 
 
+def version_tag_exists(version: str) -> bool:
+    """True if a git tag named exactly `version` exists."""
+    try:
+        r = subprocess.run(
+            ["git", "tag", "-l", version],
+            capture_output=True, text=True, cwd=PROJECT_ROOT, timeout=5,
+        )
+        return bool(r.stdout.strip())
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        return False
+
+
 def git_log_grep(pattern: str) -> list[str]:
     """Search git log for commits matching pattern. Returns commit subjects."""
     try:
@@ -561,12 +611,21 @@ def git_log_grep(pattern: str) -> list[str]:
 @register("universal", fast=False)
 def check_roadmap_consistency(report: AuditReport):
     """Items in ROADMAP.md 'Complete' have matching evidence in todo/archive."""
-    complete_entries = parse_roadmap_complete()
+    complete_entries, unparsed = parse_roadmap_complete()
     if not complete_entries:
-        report.add(Finding(
-            Severity.PASS, "roadmap_consistency",
-            "No entries in ROADMAP.md ## Complete (or no ROADMAP.md)",
-        ))
+        if unparsed:
+            report.add(Finding(
+                Severity.WARN, "roadmap_consistency",
+                f"## Complete has {unparsed} content line(s) but 0 parsed entries "
+                "— ROADMAP format drift; this checker is blind until the parser "
+                "and the file agree",
+                file="ROADMAP.md",
+            ))
+        else:
+            report.add(Finding(
+                Severity.PASS, "roadmap_consistency",
+                "No entries in ROADMAP.md ## Complete (or no ROADMAP.md)",
+            ))
         return
 
     all_tasks = []
@@ -584,12 +643,21 @@ def check_roadmap_consistency(report: AuditReport):
     for entry in complete_entries:
         name_lower = entry["name"].lower()
         version = entry["version"]
-        has_version = version.lower() in task_text_blob
+        has_version = bool(version) and version.lower() in task_text_blob
         name_words = re.findall(r"\w+", name_lower)
         key_phrase = " ".join(name_words[:3]) if len(name_words) >= 3 else name_lower
         has_name = key_phrase in task_text_blob or key_phrase in heading_blob
 
-        if has_version or has_name:
+        # Git is evidence too — a release tag or commit subject carrying the
+        # entry's version is the strongest record that it actually shipped.
+        # Without this arm, repos that ship via PRs + tags (todo.md cleared
+        # per release) would FAIL every honest Complete entry the moment the
+        # parser could see them (liveness audit B2 follow-on).
+        has_git = bool(version) and (
+            version_tag_exists(version) or bool(git_log_grep(re.escape(version)))
+        )
+
+        if has_version or has_name or has_git:
             matched += 1
         else:
             report.add(Finding(

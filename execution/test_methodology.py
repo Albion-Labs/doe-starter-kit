@@ -1092,8 +1092,23 @@ def scenario_plan_vs_actual(verbose: bool = False):
         return _result("PASS", "no ## Complete section in ROADMAP.md", vlines)
 
     complete_text = complete_match.group(1)
+    # Live format: "- **Name (vX.Y.Z)** [TAG] -- ..." bullets; legacy: "### Name (vX.Y.Z)"
+    # headings. Liveness audit B2: only the legacy form was parsed, so the scenario
+    # checked 0 features on every modern ROADMAP and passed vacuously.
     completed_features = re.findall(r"^###\s+(.+?)(?:\s+\(|$)", complete_text, re.MULTILINE)
+    completed_features += re.findall(
+        r"^-\s+\*\*(.+?)(?:\s+\(v\d+\.\d+\.\d+\))?\*\*", complete_text, re.MULTILINE
+    )
     vlines.append(f"  Completed features in ROADMAP: {len(completed_features)}")
+
+    body = re.sub(r"<!--.*?-->", "", complete_text, flags=re.DOTALL).strip()
+    if body and not completed_features:
+        return _result(
+            "WARN",
+            "## Complete has content but 0 entries parsed — ROADMAP format drift "
+            "(this scenario is blind until parser and file agree)",
+            vlines,
+        )
 
     issues = []
     checked = 0
@@ -1116,7 +1131,12 @@ def scenario_plan_vs_actual(verbose: bool = False):
     vlines.append(f"  Plans checked: {checked}")
 
     if not issues:
-        return _result("PASS", f"checked {checked} completed feature plans — all deliverables exist", vlines)
+        return _result(
+            "PASS",
+            f"parsed {len(completed_features)} Complete entries, checked {checked} "
+            "with plan files — all referenced deliverables exist",
+            vlines,
+        )
     return _result("WARN", f"{len(issues)} feature(s) have missing deliverables", vlines)
 
 
