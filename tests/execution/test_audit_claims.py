@@ -230,3 +230,46 @@ def test_consistency_accepts_git_tag_as_evidence(tmp_path, monkeypatch):
     audit_claims.check_roadmap_consistency(report)
     fails = [f for f in report.findings if f.severity == audit_claims.Severity.FAIL]
     assert not fails, [f.message for f in fails]
+
+
+# ── discover_version: live formats + tag fallback (liveness audit B4) ──
+# All three original strategies used dead formats, so the version was
+# "unknown" on every run and the staleness check never exercised.
+
+def test_discover_version_from_state_md(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    (tmp_path / "STATE.md").write_text("# State\nDOE Starter Kit — current version: v2.3.4\n")
+    assert audit_claims.discover_version() == "v2.3.4"
+
+
+def test_discover_version_from_todo_ascii_arrow(tmp_path, monkeypatch):
+    """The kit writes '->' in todo.md; the old regex matched only the
+    unicode arrow."""
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    (tmp_path / "tasks").mkdir()
+    (tmp_path / "tasks" / "todo.md").write_text(
+        "## Current\n1. [x] Ship the thing -> v1.5.0\n")
+    assert audit_claims.discover_version() == "v1.5.0"
+
+
+def test_discover_version_from_roadmap_bullets(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    (tmp_path / "ROADMAP.md").write_text(
+        "## Complete\n- **Newest (v3.0.0)** [APP] -- x *(shipped 01/06/26)*\n"
+        "- **Older (v2.9.0)** [APP] -- y *(shipped 01/05/26)*\n")
+    assert audit_claims.discover_version() == "v3.0.0"
+
+
+def test_discover_version_falls_back_to_git_tag(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    import subprocess as sp
+    sp.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    sp.run(["git", "-c", "user.email=t@t", "-c", "user.name=t",
+            "commit", "--allow-empty", "-q", "-m", "x"], cwd=tmp_path, check=True)
+    sp.run(["git", "tag", "v0.4.2"], cwd=tmp_path, check=True)
+    assert audit_claims.discover_version() == "v0.4.2"
+
+
+def test_discover_version_none_when_no_sources(tmp_path, monkeypatch):
+    monkeypatch.setattr(audit_claims, "PROJECT_ROOT", tmp_path)
+    assert audit_claims.discover_version() is None

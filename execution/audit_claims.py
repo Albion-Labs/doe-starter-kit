@@ -157,30 +157,51 @@ def register(scope: str, fast: bool = False):
 # ══════════════════════════════════════════════════════════════
 
 def discover_version() -> Optional[str]:
-    """Find the current app version from STATE.md or fallbacks."""
-    # Try STATE.md first
+    """Find the current app version from STATE.md or fallbacks.
+
+    Liveness audit B4: all three original strategies used dead formats
+    (a STATE.md bold label no template writes any more; a todo regex that
+    matched only the unicode arrow while files use '->'; the legacy ROADMAP
+    '###' heading form) — so this returned None on every run and the
+    governed-doc staleness check never exercised. Each strategy is now
+    format-tolerant, and the latest release tag is the final fallback: the
+    one version source that cannot drift with prose conventions.
+    """
+    # Strategy 1: STATE.md version line (tolerant of label/markup variants).
     state = PROJECT_ROOT / "STATE.md"
     if state.exists():
         text = state.read_text(encoding="utf-8")
-        m = re.search(r"\*\*Current app version:\*\*\s*(v\d+\.\d+\.\d+)", text)
+        m = re.search(
+            r"(?:current\s+(?:app\s+)?version|app\s+version)\W{0,5}(v\d+\.\d+\.\d+)",
+            text, re.IGNORECASE,
+        )
         if m:
             return m.group(1)
 
-    # Fallback: latest [x] version in todo.md
+    # Strategy 2: latest [x] version in todo.md ('->' and unicode arrow).
     todo = PROJECT_ROOT / "tasks" / "todo.md"
     if todo.exists():
         text = todo.read_text(encoding="utf-8")
-        versions = re.findall(r"\[x\].*?→\s*(v\d+\.\d+\.\d+)", text)
+        versions = re.findall(r"\[x\].*?(?:→|->)\s*\(?(v\d+\.\d+\.\d+)\)?", text)
         if versions:
             return versions[-1]
 
-    # Fallback: latest Complete entry in ROADMAP.md
-    roadmap = PROJECT_ROOT / "ROADMAP.md"
-    if roadmap.exists():
-        text = roadmap.read_text(encoding="utf-8")
-        m = re.search(r"###\s+.+?\((v\d+\.\d+\.\d+)\)", text)
-        if m:
-            return m.group(1)
+    # Strategy 3: newest ROADMAP ## Complete entry (live + legacy formats).
+    entries, _ = parse_roadmap_complete()
+    if entries and entries[0]["version"]:
+        return entries[0]["version"]
+
+    # Strategy 4: latest release tag.
+    try:
+        r = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            capture_output=True, text=True, cwd=PROJECT_ROOT, timeout=5,
+        )
+        tag = r.stdout.strip()
+        if re.fullmatch(r"v\d+\.\d+\.\d+", tag):
+            return tag
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        pass
 
     return None
 
