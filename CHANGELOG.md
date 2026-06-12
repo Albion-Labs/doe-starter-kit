@@ -2,7 +2,7 @@
 
 All notable changes to the DOE Claude Code Starter Kit.
 
-Format: `## [vX.Y.Z] — YYYY-MM-DD` with sections for Added, Changed, Fixed, Removed.
+Format: `## vX.Y.Z (YYYY-MM-DD)` with sections for Added, Changed, Fixed, Removed. This exact heading form (no brackets, date in parens) is what `auto-release.yml` parses to detect an unreleased version — "correcting" entries to a bracketed keep-a-changelog style silently kills releases.
 Versioning: patch for small fixes, minor for new features/commands/directives, major for breaking changes to CLAUDE.md rules or directory structure.
 
 ---

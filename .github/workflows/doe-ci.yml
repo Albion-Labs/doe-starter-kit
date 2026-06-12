@@ -8,9 +8,6 @@ permissions:
   contents: read
   pull-requests: write
 
-env:
-  LIGHTHOUSE_PERF_THRESHOLD: "80"
-
 jobs:
   # ──────────────────────────────────────────────────────────────
   # Detection: identify stack AND what files changed
@@ -28,14 +25,12 @@ jobs:
       has_playwright: ${{ steps.stack.outputs.has_playwright }}
       has_pytest: ${{ steps.stack.outputs.has_pytest }}
       has_ruff: ${{ steps.stack.outputs.has_ruff }}
-      has_web: ${{ steps.stack.outputs.has_web }}
       has_npm_test: ${{ steps.stack.outputs.has_npm_test }}
       code_changed: ${{ steps.changes.outputs.code }}
       python_changed: ${{ steps.changes.outputs.python }}
       go_changed: ${{ steps.changes.outputs.go }}
       flutter_changed: ${{ steps.changes.outputs.flutter }}
       rust_changed: ${{ steps.changes.outputs.rust }}
-      web_changed: ${{ steps.changes.outputs.web }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
@@ -79,11 +74,6 @@ jobs:
               - '**/*.rs'
               - 'Cargo.toml'
               - 'Cargo.lock'
-            web:
-              - '**/*.html'
-              - '**/*.css'
-              - '**/*.scss'
-              - 'public/**'
 
       # What stack is in this repo?
       - id: stack
@@ -97,7 +87,6 @@ jobs:
           ([ -f playwright.config.ts ] || [ -f playwright.config.js ]) && echo "has_playwright=true" >> "$GITHUB_OUTPUT" || echo "has_playwright=false" >> "$GITHUB_OUTPUT"
           (grep -q "pytest" requirements.txt 2>/dev/null || grep -q "pytest" pyproject.toml 2>/dev/null) && echo "has_pytest=true" >> "$GITHUB_OUTPUT" || echo "has_pytest=false" >> "$GITHUB_OUTPUT"
           (grep -q "ruff" requirements.txt 2>/dev/null || grep -q "ruff" pyproject.toml 2>/dev/null) && echo "has_ruff=true" >> "$GITHUB_OUTPUT" || echo "has_ruff=false" >> "$GITHUB_OUTPUT"
-          ([ -f next.config.ts ] || [ -f next.config.js ] || [ -f next.config.mjs ] || [ -f vite.config.ts ] || [ -f vite.config.js ] || find . -maxdepth 3 -name "*.html" -not -path "./.git/*" 2>/dev/null | grep -q .) && echo "has_web=true" >> "$GITHUB_OUTPUT" || echo "has_web=false" >> "$GITHUB_OUTPUT"
           if [ -f package.json ] && jq -e '.scripts.test // empty | select(. != "echo \"Error: no test specified\" && exit 1")' package.json >/dev/null 2>&1; then
             echo "has_npm_test=true" >> "$GITHUB_OUTPUT"
           else
@@ -166,7 +155,7 @@ jobs:
           if [ -n "$MATCHES" ]; then
             echo "::warning::Potential secret patterns detected -- review before merge:"
             echo "$MATCHES" | head -20
-            echo "If these are false positives, add them to .secretignore"
+            echo "If these are false positives, adjust the exclusion greps in this step (.github/workflows/doe-ci.yml, Secret pattern scan)"
           else
             echo "No secret patterns detected"
           fi
@@ -301,30 +290,10 @@ jobs:
         with:
           node-version: 20
 
-      - name: Lighthouse (threshold ${{ env.LIGHTHOUSE_PERF_THRESHOLD }})
-        id: lighthouse
-        if: needs.detect.outputs.has_web == 'true' && needs.detect.outputs.web_changed == 'true'
-        run: |
-          THRESHOLD="${LIGHTHOUSE_PERF_THRESHOLD:-80}"
-          echo "Performance threshold: $THRESHOLD"
-          if [ -f execution/lighthouse.sh ]; then
-            bash execution/lighthouse.sh
-            if [ -f .tmp/lighthouse.json ]; then
-              SCORE=$(jq '.categories.performance.score // 0' .tmp/lighthouse.json 2>/dev/null | awk '{printf "%.0f", $1 * 100}')
-              echo "lighthouse_score=$SCORE" >> "$GITHUB_OUTPUT"
-              if [ "$SCORE" -lt "$THRESHOLD" ]; then
-                echo "::warning::Lighthouse performance score $SCORE is below threshold $THRESHOLD"
-                echo "lighthouse_pass=false" >> "$GITHUB_OUTPUT"
-              else
-                echo "Lighthouse performance score $SCORE meets threshold $THRESHOLD"
-                echo "lighthouse_pass=true" >> "$GITHUB_OUTPUT"
-              fi
-            fi
-          else
-            echo "No Lighthouse script found -- skipping"
-            echo "lighthouse_score=N/A" >> "$GITHUB_OUTPUT"
-            echo "lighthouse_pass=skipped" >> "$GITHUB_OUTPUT"
-          fi
+      # The Lighthouse advisory step was removed in v1.71.6 (liveness audit
+      # C6): it gated on `execution/lighthouse.sh`, a script no kit install
+      # ever shipped, so the scoring path had never run anywhere. Lighthouse
+      # scoring lives in execution/run_test_suite.py (`/test-suite`).
 
       - name: Playwright
         id: playwright
@@ -349,25 +318,13 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-      - name: Upload Lighthouse report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: needs.detect.outputs.has_web == 'true' && needs.detect.outputs.web_changed == 'true'
-        with:
-          name: lighthouse-report
-          path: .tmp/lighthouse.json
-          retention-days: 14
-
       - name: Post advisory PR comment
         if: github.event_name == 'pull_request'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
-            const lhScore = '${{ steps.lighthouse.outputs.lighthouse_score }}' || 'N/A';
-            const lhPass = '${{ steps.lighthouse.outputs.lighthouse_pass }}' || 'skipped';
             const pwResult = '${{ steps.playwright.outputs.playwright_result }}' || 'skipped';
-            const threshold = process.env.LIGHTHOUSE_PERF_THRESHOLD || '80';
 
-            const lhIcon = lhPass === 'true' ? ':white_check_mark:' : lhPass === 'false' ? ':warning:' : ':skip_forward:';
             const pwIcon = pwResult === 'passed' ? ':white_check_mark:' : pwResult === 'failed' ? ':warning:' : ':skip_forward:';
 
             const body = [
@@ -377,7 +334,6 @@ jobs:
               '',
               `| Check | Result | Details |`,
               `|-------|--------|---------|`,
-              `| ${lhIcon} Lighthouse | Score: ${lhScore} | Threshold: ${threshold} |`,
               `| ${pwIcon} Playwright | ${pwResult} | E2E tests |`,
               '',
               '_Posted by DOE CI advisory tier_'
