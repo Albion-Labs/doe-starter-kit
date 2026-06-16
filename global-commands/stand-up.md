@@ -52,13 +52,10 @@ Show a bordered kick-off card, then present a plan and wait for sign-off:
 │  FOCUS                                            │
 │  · [coaching bullet from stats.json analysis]     │
 │  · [coaching bullet]                              │
-├──────────────────────────────────────────────────┤
-│  Model: [model] · Thinking: [level]              │
 └──────────────────────────────────────────────────┘
 ```
 
 Card rules:
-- MODEL ROW: Final row of the card, separated by `├──┤`. Shows `Model: [name] · Thinking: [level]`. IMPORTANT: This line is always shorter than other content lines. You MUST pad it with trailing spaces so the right `│` is at the exact same character position as every other `│` in the card. Count the inner width of the longest line, then pad the model row to match. No emojis (they break alignment). You know your model ID from your system prompt (look for "The exact model ID is..."). Display names: `claude-opus-4-6` → "Opus 4.6", `claude-sonnet-4-6` → "Sonnet 4.6", `claude-haiku-4-5` → "Haiku 4.5". For thinking level, report your reasoning effort: ≤33 → "low", 34-66 → "medium", ≥67 → "high". If uncertain, show "default". This helps the user decide if they need to switch models before starting work.
 - PROJECT: Right-aligned on the header row, same line as the date. Show `[dir name] vX.Y.Z` (directory name + version from STATE.md "Current app version"). If no version in STATE.md, omit the version. Build the header as: left = `STAND-UP -- HH:MM - DD/MM/YY`, right = `[dir] vX.Y.Z`, then right-align within the line width.
 - FEATURE: from STATE.md "Active feature" line. If no active feature, show "No active feature".
 - BRANCH: Run `git branch --show-current`. Show the current branch name (e.g. `feature/pr-workflow-migration` or `main`).
@@ -119,13 +116,10 @@ Show a bordered status card:
 │  QUEUE        [next feature or "Empty"]           │
 │  SIGN-OFF     N features (M manual items pending) │
 │  OPEN PRS     N open (list titles briefly)        │
-├──────────────────────────────────────────────────┤
-│  Model: [model] · Thinking: [level]              │
 └──────────────────────────────────────────────────┘
 ```
 
 Card rules:
-- MODEL ROW: same as kick-off mode — final row with `Model: [name] · Thinking: [level]`, padded to match the card's full width.
 - WORKING ON: from todo.md ## Current heading — feature name, type tag [APP/INFRA], and version range. If no current feature, show "No active feature" and skip PROGRESS, PHASE GOAL, and SINCE LAST MILESTONE sections.
 - BRANCH: Run `git branch --show-current`. Show the current branch name (e.g. `feature/pr-workflow-migration` or `main`).
 - WORKTREES: Run `git worktree list --porcelain` and count records. If only 1 worktree, omit. If 2+, show condensed form `N active -- branch1, branch2[, +M more]` truncated to fit (max 3 branches shown explicitly). Append `!! Detached: <name>` indented detail if any record has the `detached` flag. No honest-scope footnote in status mode (kick-off card already showed it this session).

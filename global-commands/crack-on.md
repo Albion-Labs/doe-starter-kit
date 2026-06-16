@@ -35,14 +35,11 @@ Show a bordered kick-off card, then immediately pick up the next incomplete step
 │  [1-2 line plain English summary of what you      │
 │   are about to do for this step]                  │
 │                                                   │
-├──────────────────────────────────────────────────┤
-│  Model: [model] -- Thinking: [level]             │
 └──────────────────────────────────────────────────┘
 ```
 
 Card rules:
 - HEADER ROW: "CRACK ON -- HH:MM - DD/MM/YY" left-aligned, project name right-aligned. Project name is the current directory name + version from STATE.md "Current app version" (e.g. "myproject v1.2.3"). If no version in STATE.md, just show the directory name. Build the inner content string first (e.g. `f"{left}{right:>{W - 2 - len(left)}}"`) then pass through `line()`.
-- MODEL ROW: Final row of the card, separated by `├──┤`. Shows `Model: [name] -- Thinking: [level]`. IMPORTANT: This line is always shorter than other content lines. You MUST pad it with trailing spaces so the right `│` is at the exact same character position as every other `│` in the card. Count the inner width of the longest line, then pad the model row to match. No emojis (they break alignment). You know your model ID from your system prompt (look for "The exact model ID is..."). Display names: `claude-opus-4-6` → "Opus 4.6", `claude-sonnet-4-6` → "Sonnet 4.6", `claude-haiku-4-5` → "Haiku 4.5". For thinking level, report your reasoning effort: ≤33 → "low", 34-66 → "medium", ≥67 → "high". If uncertain, show "default". This helps the user decide if they need to switch models before starting work.
 - FEATURE: from STATE.md "Active feature" line. If no active feature, show "No active feature".
 - PROGRESS: count [x] and [ ] steps for the current feature in todo.md ## Current. Bar uses `█` for done, `░` for remaining, scaled to 10 characters. If no current feature, omit this line.
 - BRANCH: Run `git branch --show-current`. Show the current branch name (e.g. `feature/pr-workflow-migration` or `main`).
