@@ -26,13 +26,10 @@ Read STATE.md and tasks/todo.md. Run `git log --oneline` to see this session's c
 │  SIGN-OFF  N features (M manual items pending)    │
 │  ELAPSED   Xh Ym since first commit              │
 │  CONTEXT   ██████░░░░ ~X% — [recommendation]     │
-├─────────────────────────────────────────────────┤
-│  Model: [model] · Thinking: [level]             │
 └─────────────────────────────────────────────────┘
 ```
 
 Rules:
-- MODEL ROW: Final row of the card, separated by `├──┤`. Shows `Model: [name] · Thinking: [level]`. IMPORTANT: This line is always shorter than other content lines. You MUST pad it with trailing spaces so the right `│` is at the exact same character position as every other `│` in the card. Count the inner width of the longest line, then pad the model row to match. No emojis (they break alignment). Model display names: `claude-opus-4-6` → "Opus 4.6", `claude-sonnet-4-6` → "Sonnet 4.6", `claude-haiku-4-5` → "Haiku 4.5". Thinking level from reasoning effort: ≤33 → "low", 34-66 → "medium", ≥67 → "high". If uncertain, show "default".
 - Progress bar: use █ for done steps, ░ for remaining. Scale to 10 characters total.
 - STATUS: one plain-English sentence describing what's actually happening right now in the session. This may differ from the MISSION — e.g. you might be debugging, experimenting, or doing housekeeping unrelated to the current feature step. Look at the conversation history to determine this. If work is aligned with the active step, just summarise that step.
 - ACTIVE section: the step currently being worked on (first unchecked step). If nothing is actively being worked on, show "Awaiting next step". Shown first.

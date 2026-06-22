@@ -7,6 +7,17 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.71.7 (2026-06-16)
+<!-- hero -->
+Removes the self-reported model/thinking footer from the status cards. `/stand-up`, `/crack-on`, and `/sitrep` each ended their bordered card with a `Model: [name] · Thinking: [level]` row (`/crack-on` used `--`) that the AI filled in by guessing its own model ID and reasoning effort from its system prompt. Both halves are unverifiable from inside the model and were wrong often enough to be worse than absent — a confidently-stated `Opus 4.8 -- Thinking: medium` that does not match the actual session reads as a fact when it is a guess. The row is deleted from all three cards along with the per-card MODEL ROW rules that generated it. No deterministic data is lost; nothing computed these values.
+<!-- /hero -->
+
+### Removed
+- **global-commands/crack-on.md** — the `Model: [name] -- Thinking: [level]` card footer (separator + row) and its MODEL ROW card rule.
+- **global-commands/stand-up.md** — the model/thinking footer from both the kick-off and status-mode cards, plus both MODEL ROW rules.
+- **global-commands/sitrep.md** — the model/thinking footer and its MODEL ROW rule.
+- **docs/tutorial/commands.html** — the stale `Model: ... Thinking: ...` row from the rendered `/stand-up` (kick-off + status) and `/sitrep` card mockups, matching the spec change. The `/wrap`, `/eod`, and `/hq` mockups carry a pre-existing copy of this row their specs never generated; that is separate drift, left for its own cleanup.
+
 ## v1.71.6 (2026-06-13)
 <!-- hero -->
 Batch 3 (final) of the kit-wide liveness audit: distribution wiring and stale maps. The never-alive hook templates and the orphan global pre-commit hook are deleted; four installed-but-unversioned global artifacts are adopted into the manifest so `/pull-doe` actually ships them; four small hook edges are fixed with red-first regression tests; and documentation whose staleness had teeth is corrected — headlined by a CHANGELOG header that documented a heading format auto-release cannot parse, primed to kill releases if anyone "corrected" entries to match it.
