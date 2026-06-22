@@ -1065,12 +1065,13 @@
             <span class="release-date">16 June 2026</span>
           </div>
           <h4 class="summary">Summary</h4>
-          <p class="release-hero">Removes the self-reported model/thinking footer from the status cards. <code>/stand-up</code>, <code>/crack-on</code>, and <code>/sitrep</code> each ended their bordered card with a <code>Model: [name] &mdash; Thinking: [level]</code> row that the AI filled in by guessing its own model ID and reasoning effort from its system prompt. Both halves are unverifiable from inside the model and were wrong often enough to be worse than absent — a confidently-stated <code>Opus 4.8 &mdash; Thinking: medium</code> that does not match the actual session reads as a fact when it is a guess. The row is deleted from all three cards along with the per-card MODEL ROW rules that generated it. No deterministic data is lost; nothing computed these values.</p>
+          <p class="release-hero">Removes the self-reported model/thinking footer from the status cards. <code>/stand-up</code>, <code>/crack-on</code>, and <code>/sitrep</code> each ended their bordered card with a <code>Model: [name] · Thinking: [level]</code> row (<code>/crack-on</code> used <code>--</code>) that the AI filled in by guessing its own model ID and reasoning effort from its system prompt. Both halves are unverifiable from inside the model and were wrong often enough to be worse than absent — a confidently-stated <code>Opus 4.8 &mdash; Thinking: medium</code> that does not match the actual session reads as a fact when it is a guess. The row is deleted from all three cards along with the per-card MODEL ROW rules that generated it. No deterministic data is lost; nothing computed these values.</p>
           <h4 class="removed">Removed</h4>
           <ul>
             <li><strong>global-commands/crack-on.md</strong> — the <code>Model: [name] &mdash; Thinking: [level]</code> card footer (separator + row) and its MODEL ROW card rule.</li>
             <li><strong>global-commands/stand-up.md</strong> — the model/thinking footer from both the kick-off and status-mode cards, plus both MODEL ROW rules.</li>
             <li><strong>global-commands/sitrep.md</strong> — the model/thinking footer and its MODEL ROW rule.</li>
+            <li><strong>docs/tutorial/commands.html</strong> — the stale <code>Model: ... Thinking: ...</code> row from the rendered <code>/stand-up</code> (kick-off + status) and <code>/sitrep</code> card mockups, matching the spec change. The <code>/wrap</code>, <code>/eod</code>, and <code>/hq</code> mockups carry a pre-existing copy of this row their specs never generated; that is separate drift, left for its own cleanup.</li>
           </ul>
         </div>
 
