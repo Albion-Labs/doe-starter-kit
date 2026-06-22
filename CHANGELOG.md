@@ -7,6 +7,14 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.71.8 (2026-06-22)
+<!-- hero -->
+Finishes the model/thinking footer removal that v1.71.7 started. The `/wrap`, `/eod`, and `/hq` cards in the command reference still showed a bordered `Model: Opus 4.6 -- Thinking: high` row — pre-existing drift their specs and report generators never produced. The real `/wrap`, `/eod`, and `/hq` output is an HTML report carrying at most a small model badge sourced from recorded session data (no `Thinking` level, no bordered row), so the mockup row was doubly wrong: it invented a card format these commands do not render and a reasoning-effort value nothing computes. The four stale rows are deleted, so the rendered command reference no longer shows a self-reported model/thinking line anywhere.
+<!-- /hero -->
+
+### Removed
+- **docs/tutorial/commands.html** — the four stale `Model: ... -- Thinking: ...` footer rows (separator + row each) from the `/wrap`, `/eod`, and `/hq` card mockups. Completes the v1.71.7 cleanup; the command reference is now free of the self-reported footer. The HTML reports' own model badge (sourced from session data, not a self-guess) is unaffected and out of scope.
+
 ## v1.71.7 (2026-06-16)
 <!-- hero -->
 Removes the self-reported model/thinking footer from the status cards. `/stand-up`, `/crack-on`, and `/sitrep` each ended their bordered card with a `Model: [name] · Thinking: [level]` row (`/crack-on` used `--`) that the AI filled in by guessing its own model ID and reasoning effort from its system prompt. Both halves are unverifiable from inside the model and were wrong often enough to be worse than absent — a confidently-stated `Opus 4.8 -- Thinking: medium` that does not match the actual session reads as a fact when it is a guess. The row is deleted from all three cards along with the per-card MODEL ROW rules that generated it. No deterministic data is lost; nothing computed these values.
