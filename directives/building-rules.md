@@ -28,7 +28,7 @@ Delegate to subagents to preserve context. Spawn when: 3+ files, doc research, 5
 
 ## Parallelise by Default
 
-2+ independent tasks -> parallel subagents. Commit one at a time per branch discipline. For interdependent steps, use serial dispatch -- see `directives/serial-dispatch-protocol.md`.
+2+ independent tasks -> parallel subagents. Commit one at a time per branch discipline. For interdependent steps, sequence them on one branch.
 
 ## Code Hygiene
 
@@ -87,19 +87,12 @@ Source: Doodlestein -- "no reproduction -> no fix" / "no contract -> no merge" /
 
 ## File Ownership in Parallel Work
 
-When working alongside other agents (wave mode or DAG executor), respect the owns list:
+When working in parallel worktrees (`directives/parallel-worktrees.md`), respect the owns list:
 - Only edit files listed in your step's `Owns:` metadata
-- CLAUDE.md, STATE.md, todo.md, learnings.md are shared files -- off-limits to all parallel agents
-- If you need a file you don't own, report `NEEDS_CONTEXT` (subagent status protocol)
-- Pre-commit hooks enforce ownership mechanically in DAG mode
+- CLAUDE.md, STATE.md, todo.md, learnings.md are shared files -- edited from one terminal at a time
+- If you need a file you don't own, sequence the work or coordinate with the other terminal
 
-### DAG Push Mode
-In DAG parallel mode (formal parallel), individual steps do NOT push to the feature branch. Instead:
-1. Each agent works in its own worktree on a sub-branch
-2. After all steps in a wave complete and pass contracts
-3. The executor performs the wave merge into the feature branch
-4. Integration contracts run on the merged result
-5. Feature branch pushes to remote after integration passes
+Each worktree merges its branch back only after its step passes all contract criteria; run any integration contracts on the merged result before starting dependents.
 
 ## Explain Technical Decisions
 When making technical choices during building, explain simply. No jargon without context. If recommending a library, framework, or pattern, explain why in terms the user can evaluate.

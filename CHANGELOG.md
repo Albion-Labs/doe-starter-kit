@@ -7,6 +7,28 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.73.0 (2026-07-02)
+<!-- hero -->
+The wave stack is retired. The old multi-agent / DAG dispatch subsystem — a coordinator (`multi_agent.py`, 2,474 lines), a DAG executor (`dispatch_dag.py`, 858 lines), heartbeat + context-monitor hooks, the `/agent-launch` and `/agent-status` commands, and the `serial-dispatch-protocol` + `multi-agent-coordination` plans — was built before Claude Code shipped native subagents and workflows, which now do the same job better. It's deleted wholesale (~4,600 net lines), along with the two methodology scenarios that only tested it (`dag_validation`, `status_protocol_compliance`). Manual parallel work survives unchanged: the `parallel-worktrees` directive and the `/worktree-create` / `/worktree-remove` commands stay, and the directives that described "formal parallel" are reframed around git worktrees instead of the automated executor.
+<!-- /hero -->
+<!-- background -->
+Second big cut of v2.0 Workstream 1 (Phase 4), after the docs-site removal. Two traps the reference-mapping pass caught before they bit: `global-scripts/doe_utils.py` looks like a wave script but is imported by the live `/review` scripts (`record_review_result.py`, `persist_review_findings.py`), so it stays; and `docs/reference/commands/multi-agent.md` was a live doc, not gone with the tutorial site. The dead code was load-bearing in surprising places — `verify.py` carried an unused wave-JSON parser, `audit_claims.py` had an active-wave check that always passed, and `quality_gate.py`'s pre-retro scenario list named `dag_validation` (caught by its own pinning test mid-PR). `doe_utils.py` is kept because deletion would break `/review`; everything else that referenced the wave stack was either deleted or reframed.
+<!-- /background -->
+
+### Removed
+- **global-scripts/multi_agent.py, global-scripts/dispatch_dag.py** — the wave coordinator and DAG executor.
+- **global-hooks/heartbeat.py, global-hooks/context_monitor.py** — the wave heartbeat and (natively-superseded) context monitor. The now-empty `global-hooks/` dir and its `setup.sh` install block go with them.
+- **global-commands/agent-launch.md, global-commands/agent-status.md** — the wave launch/dashboard commands (command count 34 → 32).
+- **directives/serial-dispatch-protocol.md**, **.claude/plans/multi-agent-coordination.md**, **docs/reference/commands/multi-agent.md** — the wave protocol directive, coordination plan, and reference doc (directive count 37 → 36; reference docs 29 → 28).
+- **tests/claude_hooks/test_global_hooks_no_opinion.py** — tested only the two deleted hooks.
+- **execution/test_methodology.py** — the `dag_validation` and `status_protocol_compliance` scenarios (both tested the dead subsystem); **execution/audit_claims.py** — the paired `check_dag_validation` and the always-passing `check_active_wave`; **execution/verify.py** — the unused `parse_wave_criteria`.
+
+### Changed
+- **execution/quality_gate.py** — `PRE_RETRO_SCENARIOS` drops `dag_validation` (would have made `--pre-retro` unrunnable; caught by `test_quality_gate.py`).
+- **global-commands/agent-verify.md, crack-on.md** — solo/worktree only: the wave-mode branch and the `dispatch_dag` dependency-analysis step are gone.
+- **9 directives reframed** (context-management, building-rules, planning-rules, testing-strategy, framework-evolution, subagent-protocol, self-annealing, delivery-rules, adversarial-review/README) — "formal parallel" now means git worktrees + `Owns:` discipline, not the DAG executor. Kept the subagent status protocol and adversarial-review content intact.
+- **manifest.json, execution/audit_sync.py, setup.sh, README.md, CUSTOMIZATION.md, SYSTEM-MAP.md, CLAUDE.md, templates, docs/reference** — wave entries removed and counts corrected (all pass `readme_claims_match_disk`).
+
 ## v1.72.0 (2026-07-02)
 <!-- hero -->
 The docs site is retired — all of it. The v2.0 plan's docs decision ("keep the site, regenerate from markdown") was made when the kit was heading toward a public audience; the kit is now internal-only and that audience no longer exists, so the decision was revised (2026-07-02) from convert to delete. The 18 hand-written tutorial pages, `whats-new.html` and its generator, the version-stamping machinery, and every gate that policed them are gone — roughly 36,000 lines, over a third of the tracked kit. The release record is CHANGELOG.md, mirrored to GitHub Releases by `auto-release.yml`; the human-facing docs are the 29 markdown files in `docs/reference/`. Recovery, if ever wanted: `git checkout v1.71.8 -- docs/tutorial`.

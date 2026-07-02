@@ -59,7 +59,7 @@ gh pr create --title "..." --body "..."
 <!-- Add project-specific gotchas here as you discover them -->
 
 ## Context Rules
-After context compaction, treat ALL directives as unloaded. Re-read triggers for your current task. In wave/DAG mode: also re-read step assignment and ownership list.
+After context compaction, treat ALL directives as unloaded. Re-read triggers for your current task.
 First session on a brand new project: load `directives/planning-rules.md` + `directives/building-rules.md`.
 **1% rule:** If there is even a 1% chance a trigger applies, load it. See `directives/rationalisation-tables.md` ## 6.
 
@@ -71,7 +71,7 @@ First session on a brand new project: load `directives/planning-rules.md` + `dir
 - Self-annealing / learnings curation -> `directives/self-annealing.md`
 - Platform evolution -> `directives/framework-evolution.md`
 - Adversarial review / `/review` -> `directives/adversarial-review/`
-- Serial dispatch / subagent work -> `directives/serial-dispatch-protocol.md`, `directives/subagent-protocol.md`
+- Subagent work -> `directives/subagent-protocol.md`
 - About to skip a guardrail -> `directives/rationalisation-tables.md`
 - Something went seriously wrong -> `directives/break-glass.md`
 - Importing external data (API, CSV, download) -> `learnings.md` for known API behaviours
@@ -80,7 +80,6 @@ First session on a brand new project: load `directives/planning-rules.md` + `dir
 - DOE kit sync -> `directives/starter-kit-sync.md`
 - Pulling DOE kit updates -> `directives/starter-kit-pull.md`
 - Parallel sessions on same project (worktree setup, branch isolation) -> `directives/parallel-worktrees.md`
-- Wave / DAG dispatch setup -> `.claude/plans/multi-agent-coordination.md`
 - Security-sensitive code (input, auth, rendering, headers) -> `directives/security-rules.md`
 - Writing code -> `directives/best-practices/` for the language
 - Refactoring / architecture -> `directives/architectural-invariants.md`

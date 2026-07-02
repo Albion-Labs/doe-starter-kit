@@ -72,6 +72,6 @@ Claude can spawn helper instances of itself — called subagents — to work on 
 
 Think of it like delegating tasks to assistants. Instead of one Claude doing five things sequentially, it can hand four of them to subagents and coordinate the results. This is faster for multi-step work and also preserves the main conversation's context window — the subagents do the heavy lifting without filling up the primary session.
 
-**In this project:** Subagents are used during `/agent-launch` waves, where multiple independent tasks are distributed across separate Claude sessions and run at the same time. A coordinator Claude monitors progress; worker Claudes do the actual building. The full approach is documented in `.claude/plans/multi-agent-coordination.md`.
+**In this project:** Subagents handle focused sub-tasks — reading a subsystem and reporting back, running a search sweep, drafting a self-contained piece — while the main session keeps the thread. The `directives/subagent-protocol.md` directive defines the STATUS format they report in.
 
-Each subagent gets only the files and context it needs for its specific task — this is both a context-saving measure and a safety guardrail. Subagents on a wave cannot edit shared project files (STATE.md, todo.md) mid-task; those changes are merged by the coordinator at the end.
+Each subagent gets only the files and context it needs for its specific task — this is both a context-saving measure and a safety guardrail.

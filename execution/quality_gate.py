@@ -33,7 +33,6 @@ PRE_RETRO_SCENARIOS = [
     "router_coverage",
     "rule_completeness",
     "scale_consistency",
-    "dag_validation",
     "directive_schema",
     "cross_reference_consistency",
     "agent_definition_integrity",

@@ -35,12 +35,28 @@ FORMAT RULES (Claude: follow these when updating this file)
 
 ## Current
 
-<!-- No active feature — pick from Queue or ROADMAP.md -->
+### Wave-stack removal — retire the old multi-agent/DAG subsystem [INFRA] (v1.73.x)
+v2.0 plan PR 5 (WS1 Phase 4), cuts-first order. The wave stack (multi_agent.py,
+dispatch_dag.py, heartbeat/context_monitor hooks, /agent-launch + /agent-status,
+serial-dispatch-protocol, multi-agent-coordination plan) is superseded by Claude
+Code's native subagents + workflows. Delete it + every reference. Traps (from the
+reference map): `global-scripts/doe_utils.py` STAYS (imported by /review scripts
+record_review_result.py + persist_review_findings.py); `docs/reference/commands/multi-agent.md`
+is a live file. Also drops the dag_validation + status_protocol_compliance methodology
+scenarios (they test the dead subsystem). Plan: .claude/plans/doe-v2-lean-proof-of-life.md (WS1 Phase 4).
+
+1. [x] Delete wave stack + strip all references -> v1.73.0 *(completed 18:48 02/07/26)*
+  Contract:
+  - [x] [auto] All wave files deleted. Verify: run: for f in global-scripts/multi_agent.py global-scripts/dispatch_dag.py global-hooks/heartbeat.py global-hooks/context_monitor.py global-commands/agent-launch.md global-commands/agent-status.md .claude/plans/multi-agent-coordination.md docs/reference/commands/multi-agent.md tests/claude_hooks/test_global_hooks_no_opinion.py directives/serial-dispatch-protocol.md; do test ! -e "$f" || { echo "STILL PRESENT: $f"; exit 1; }; done
+  - [x] [auto] doe_utils.py STAYS (the trap — /review scripts import it). Verify: run: test -f global-scripts/doe_utils.py
+  - [x] [auto] No live references to deleted wave files in operational code (explanatory retirement comments excluded). Verify: run: ! grep -rn "multi_agent\|dispatch_dag\|agent-launch\|agent-status\|serial-dispatch-protocol\|multi-agent-coordination\|heartbeat\|context_monitor" --include="*.py" --include="*.json" --include="*.sh" execution/ global-scripts/ .claude/settings.json manifest.json setup.sh | grep -vE ':[0-9]+: *#'
+  - [x] [auto] dag_validation + status_protocol_compliance scenarios gone. Verify: run: ! grep -rn "dag_validation\|status_protocol_compliance\|scenario_dag_validation\|check_dag_validation" execution/test_methodology.py execution/audit_claims.py
+  - [x] [auto] Methodology + pytest suites green (pytest scoped as usual; the 11 tests/claude_hooks failures are the pre-existing Python-3.9 `type|None` artifact, identical on main; CI runs 3.11). Verify: run: python3 execution/test_methodology.py --quick && /usr/bin/python3 -m pytest tests/githooks tests/execution -q
+  - [x] [manual] Skimmed subagent-protocol.md + agent-verify.md — solo/worktree phrasing reads cleanly, no orphaned wave references.
 
 ## Queue
 
 <!-- Approved features waiting to start. Brief description + link to plan if one exists. -->
-- **Wave-stack deletion + command pruning [INFRA]** — v2.0 plan PR 5, pulled forward in the cuts-first order (decision 2026-07-02). Decisions already resolved in the plan; ~4.5k lines. Plan: .claude/plans/doe-v2-lean-proof-of-life.md (WS1 Phase 4).
 
 ## Awaiting Sign-off
 

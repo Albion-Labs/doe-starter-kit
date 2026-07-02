@@ -4,7 +4,7 @@
 Catch real issues through structured multi-agent review with calibrated scoring incentives. The review is a completion gate -- steps do not release dependents until review passes.
 
 ## When to Use
-Triggered by the `/review` command, by serial dispatch after high blast-radius steps, or by the DAG executor as part of the step completion pipeline.
+Triggered by the `/review` command, or after high blast-radius steps.
 
 ## Review Roles
 
@@ -32,24 +32,22 @@ When in doubt, use FULL. The cost of over-reviewing is time. The cost of under-r
 ## Invocation Modes
 
 ### Automated (prompt-based enforcement)
-`/review` and serial dispatch spawn subagents within the session. The agent files (`.claude/agents/Finder.md`, etc.) provide the prompt content. Tool restrictions are **prompt-based** -- the subagent is told "you are read-only" but inherits parent tool access. Practical enforcement is high (subagents follow review prompts reliably), but not mechanical.
+`/review` spawns subagents within the session. The agent files (`.claude/agents/Finder.md`, etc.) provide the prompt content. Tool restrictions are **prompt-based** -- the subagent is told "you are read-only" but inherits parent tool access. Practical enforcement is high (subagents follow review prompts reliably), but not mechanical.
 
 ### Manual (mechanical + prompt enforcement)
 Run `claude --agent=Finder` in a separate terminal. Tool restrictions are **partially mechanical** -- `tools: Read, Grep, Glob, Bash` in the agent file means only those four tools are available (Edit and Write are mechanically absent from the agent's toolbox). Bash is included (agents need `git log`, `ls`, etc.) but is **prompt-restricted** -- agents are instructed to operate read-only: their job is to inspect code and report findings, with no file writes via Bash redirections. This is high-confidence but not a hard platform guarantee for Bash specifically.
 
 Same agent files serve both paths. Same scoring incentives, same role definition. The difference: automated gets prompt-based restriction (works in practice), manual gets mechanical restriction (guaranteed by platform).
 
-## DAG Integration
+## Review as a completion gate
 
-In the DAG executor pipeline, adversarial review is a completion gate:
+When review is warranted (see the blast-radius matrix), it runs before the step is marked complete:
 
 ```
 build step -> verify contracts -> adversarial review (if warranted) -> mark complete -> release dependents
 ```
 
-The executor checks the blast radius matrix to decide whether review is needed. If review finds issues, the step goes back for fixes -- treated as a contract failure with the same 3-retry limit.
-
-Steps in a parallel wave each run their own independent review. The review only sees that step's changes, not the full wave. Integration review (if needed) runs after wave merge on the combined diff.
+If review finds issues, the step goes back for fixes -- treated as a contract failure with the same 3-retry limit. In parallel worktrees, each step runs its own independent review over its own diff; integration review (if needed) runs after the branches merge.
 
 ## Scoring Calibration
 

@@ -46,19 +46,18 @@ The `[retro: ...]` tag tells you which feature or session produced the learning,
 When something went seriously wrong — wasted more than 30 minutes, broke something, or happened more than once — it gets a structured write-up:
 
 ```markdown
-### Learning: Wave merge lost contract checkmarks
+### Learning: Stale cache produced incomplete results
 
-**What happened:** During a parallel build, the housekeeping task merged first and
-rewrote todo.md, stripping contract checkmarks before other tasks could record theirs.
+**What happened:** Re-running an import with a smaller page size silently returned
+partial data — a leftover cache from the previous run was reused without validation.
 
-**Root cause:** Merge ran all updates at the end instead of incrementally after
-each task.
+**Root cause:** The cache key didn't include the page-size parameter, so a stale
+file looked valid.
 
-**Fix applied:** Changed merge to run todo.md updates after each task merge, not
-once at the end.
+**Fix applied:** Delete the cache before re-running with changed parameters.
 
-**Prevention:** Added "incremental merge" to the wave coordination protocol.
-[retro: wave-1 post-mortem]
+**Prevention:** Added a cache-invalidation note to the import checklist.
+[retro: import-pipeline post-mortem]
 ```
 
 ## The 50-Line Rule

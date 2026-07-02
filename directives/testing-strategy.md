@@ -57,13 +57,10 @@ Rules:
 5. If `[auto]` fails: fix and re-verify (up to 3 attempts)
 
 ### Informal parallel (multiple terminals, manual coordination)
-Same as solo mode per-terminal. Each terminal works on a different step. The user coordinates which steps run where. No shared wave infrastructure — just run `/agent-verify` in each terminal independently. Watch for shared-file contention on STATE.md, learnings.md, and todo.md.
+Same as solo mode per-terminal. Each terminal works on a different step. The user coordinates which steps run where. Run `/agent-verify` in each terminal independently. Watch for shared-file contention on STATE.md, learnings.md, and todo.md.
 
-### Formal parallel (wave/DAG dispatch)
-1. `/agent-launch` validates contracts at pre-flight
-2. Agent implements the feature
-3. `--complete` runs `execution/verify.py` automatically
-4. `--merge` runs regression checks (pre/post comparison)
+### Formal parallel (separate worktrees)
+Each step runs in its own git worktree (see `directives/parallel-worktrees.md`). Verify each with `/agent-verify` before merging its branch, then run integration contracts on the merged result.
 
 ## Build Step
 <!-- If your project has a build step, tests/config.json buildCommand runs before verification -->

@@ -14,7 +14,7 @@ calls — it returns data and Claude decides.
 
 Usage:
   python3 execution/doe_feature_request.py --scan-existing "auto-categorise commands"
-  python3 execution/doe_feature_request.py --search-duplicates "wave mode improvements"
+  python3 execution/doe_feature_request.py --search-duplicates "telemetry improvements"
   python3 execution/doe_feature_request.py --file .tmp/feature-request.json
   python3 execution/doe_feature_request.py --sanitise "text with sk-abc123 secrets"
   python3 execution/doe_feature_request.py --categorise "add new slash command for review"

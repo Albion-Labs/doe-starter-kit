@@ -116,8 +116,7 @@ CLAUDE.md tells Claude to check these before starting work:
 
 | File | Goes to | Purpose |
 |------|---------|---------|
-| dispatch_dag.py | `./execution/` | DAG executor for parallel step dispatch |
-| test_methodology.py | `./execution/` | Structural methodology checks (20 scenarios) |
+| test_methodology.py | `./execution/` | Structural methodology checks |
 | audit_claims.py | `./execution/` | Automated false-positive detection. Extensible with project-specific checks via `@register()` decorator. |
 | wrap_stats.py | `./execution/` | Deterministic session scoring. Gathers git metrics, computes streak/multiplier/score/badges, updates stats.json, outputs JSON for `/wrap` to render. |
 
@@ -125,7 +124,7 @@ CLAUDE.md tells Claude to check these before starting work:
 
 All slash commands install to `~/.claude/commands/` so they work across every DOE project. They reference relative paths (`STATE.md`, `tasks/todo.md`, etc.) so they're project-agnostic.
 
-There are **34** commands in total (see `global-commands/` or run `/commands` for the full reference). The table below is a representative subset of the most-used ones.
+There are **32** commands in total (see `global-commands/` or run `/commands` for the full reference). The table below is a representative subset of the most-used ones.
 
 | Command | Purpose |
 |---------|---------|
@@ -137,16 +136,7 @@ There are **34** commands in total (see `global-commands/` or run `/commands` fo
 | `/audit` | Full claim audit — all checks, detailed explanations |
 | `/sitrep` | Mid-session situation report with progress, commits, elapsed time |
 | `/eod` | End-of-day report aggregating all sessions, commits, features, and position |
-| `/agent-status` | Multi-agent dashboard for wave status, terminal liveness, task progress, merge order |
 | `/sync-doe` | Sync DOE improvements back to the starter kit repo |
-
-### 🔀 Multi-Agent Coordination (global — install once, available in every project)
-
-Multi-agent files install to machine-level locations via `setup.sh`. They use `Path.cwd()` so they work from any project directory.
-
-| File | Goes to | Purpose |
-|------|---------|---------|
-| multi_agent.py | `~/.claude/scripts/` | Wave management, task claiming, session registry, heartbeats, merge protocol, cost tracking. All state in `.tmp/waves/`. Accepts `--project-root DIR` override. |
 
 ## How they feed into each other
 
@@ -177,11 +167,9 @@ DURING WORK
 ├─→ .githooks/pre-commit → runs fast claim audit before every commit
 │
 ├─→ execution/ → Claude runs scripts instead of inline code
-│   ├─→ dispatch_dag.py → DAG executor for parallel step dispatch
 │   ├─→ test_methodology.py → structural methodology checks
 │   ├─→ audit_claims.py → automated false-positive detection
 │   └─→ wrap_stats.py → deterministic session scoring for /wrap
-├─→ ~/.claude/scripts/multi_agent.py → wave coordination for parallel sessions
 ├─→ .claude/plans/ → Claude reads feature designs (version map per step)
 ├─→ .tmp/ → scratch space for intermediate files
 │
@@ -236,7 +224,6 @@ PROJECT (lives in your repo, shared via git)
 │   ├── framework-evolution.md
 │   ├── rationalisation-tables.md
 │   ├── break-glass.md
-│   ├── serial-dispatch-protocol.md
 │   ├── subagent-protocol.md
 │   ├── security-rules.md
 │   ├── incident-response.md
@@ -306,12 +293,12 @@ MACHINE (lives on your computer, applies to all projects)
 │   ├── audit.md  review.md  agent-verify.md  fact-check.md  snagging.md
 │   ├── code-trace.md  doe-health.md  test-suite.md  report-doe-bug.md
 │   ├── project-recap.md  diff-review.md  plan-review.md  generate-*.md
-│   ├── scope.md  pitch.md  roast.md  agent-launch.md  agent-status.md
+│   ├── scope.md  pitch.md  roast.md
 │   ├── pull-doe.md  sync-doe.md  request-doe-feature.md  commands.md
 │   └── codemap.md  worktree-create.md  worktree-remove.md  clone-site.md
 └── ~/.claude/scripts/
-    ├── multi_agent.py  build_hq.py  html_builder.py
-    ├── wrap_html.py  eod_html.py  dispatch_dag.py  run_snagging.py
+    ├── build_hq.py  html_builder.py
+    ├── wrap_html.py  eod_html.py  run_snagging.py
     ├── gist_sync.py  build_global_archive.py
     └── record_review_result.py  persist_review_findings.py  doe_utils.py  check_tools_version.py
 ```

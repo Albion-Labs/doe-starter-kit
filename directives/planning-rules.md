@@ -73,7 +73,7 @@ Source: octolane "Taste" piece -- naming the verifiable bar before scoping.
 - `Verify: file: <path> contains <string>` -- check file content
 - `Verify: html: <path> has <selector>` -- parse HTML, check CSS selector
 
-Anything not matching a pattern is flagged invalid during `/agent-launch` pre-flight.
+Anything not matching a pattern is flagged invalid during `/agent-verify` pre-flight.
 
 ### Manual vs auto criteria
 Before marking a criterion `[manual]`, ask: could a machine determine pass/fail? If the answer involves checking a count, verifying a file exists, or comparing a value -- write it as `[auto]` with a `Verify:` pattern instead. Only keep `[manual]` for things that genuinely need human eyes: visual quality, content clarity, interaction feel, subjective judgment.
@@ -93,7 +93,7 @@ One terminal, one feature. Standard context discipline. For large features (5+ s
 2-3 terminals on independent tasks. Shared-file awareness: edit shared files (STATE.md, learnings.md, todo.md, CLAUDE.md) from one terminal at a time. Check before writing in multi-terminal mode.
 
 ### Formal Parallel
-DAG executor or serial dispatch. Step ownership via `Owns:`. Automatic parallel dispatch with contract-gated chaining. Integration contracts after wave merge. See `directives/serial-dispatch-protocol.md` for the established protocol and `~/.claude/scripts/dispatch_dag.py` for automated dispatch.
+Separate git worktrees, one per step (see `directives/parallel-worktrees.md`). Step ownership via `Owns:` metadata; shared files edited from one terminal at a time. Merge each branch once its step passes contracts, then run integration contracts on the merged result.
 
 ## Session Preparation
 

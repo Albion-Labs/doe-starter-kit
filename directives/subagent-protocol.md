@@ -8,7 +8,6 @@ Tradeoff: Structured status reporting costs the subagent a few lines of report c
 ## When to Use
 - Dispatching any subagent (implementation, review, research, or utility)
 - Receiving results from a subagent
-- Running in serial dispatch mode (SDD) — see `directives/serial-dispatch-protocol.md`
 - Evaluating whether to merge, re-dispatch, or escalate
 
 ## Status Definitions
@@ -80,9 +79,7 @@ When the coordinator dispatches a subagent:
 
 ## Integration with Existing Rules
 
-- **CLAUDE.md Rule 7** references this protocol for all subagent dispatch
-- **CLAUDE.md Rule 10** references this protocol for parallel agent dispatch
-- **Serial dispatch protocol** (`directives/serial-dispatch-protocol.md`) uses this as the communication layer between coordinator, implementer, and reviewer agents
+- **CLAUDE.md** Core Behaviour 7 (shared-file awareness) references this protocol for subagent dispatch
 - **Adversarial review templates** (`directives/adversarial-review/`) include status reporting requirements
 
 ## Edge Cases
@@ -101,14 +98,14 @@ When delegating documentation, summary, or reference-page work, pass the actual 
 Two or more subagents editing the same files in parallel (without worktree isolation) merge into a single commit -- git stages all changes per-file, not per-agent. If separate commits are required, either use worktree isolation or serialise the agents. If one commit is acceptable, parallel dispatch is fine.
 
 ### Monitoring and coordination
-PostToolUse hooks are the right integration point for background monitoring (heartbeats, context tracking, progress signals) -- cheap per-call, invisible to the user, no polling loop needed. Reserve explicit coordination scripts for cross-agent contract verification and merge decisions.
+PostToolUse hooks are the right integration point for background monitoring (progress signals, audit enforcement) -- cheap per-call, invisible to the user, no polling loop needed. Reserve explicit coordination scripts for cross-agent contract verification and merge decisions.
 
 ### Worktree root resolution
 `Path.cwd()` breaks inside worktrees because agents cd into `.tmp/worktrees/<taskId>/`. Any script that uses cwd as the project root will fail silently. Resolve the main repo root by walking up from the script file and detecting the `.git` file (worktrees have a `.git` file, not a directory). Centralise this in a shared utility rather than open-coding in each script.
 
 ## Verification
 - [ ] This directive exists at `directives/subagent-protocol.md`
-- [ ] CLAUDE.md Rule 7 references the status protocol
+- [ ] CLAUDE.md Core Behaviour 7 references the status protocol
 - [ ] All four statuses are documented with coordinator actions
 - [ ] Report format is specified with all required fields
 - [ ] Self-review checklist is included

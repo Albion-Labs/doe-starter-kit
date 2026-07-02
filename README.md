@@ -46,11 +46,10 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 
 - **CLAUDE.md** — 7 operating rules, progressive disclosure triggers, guardrails
 - **STATE.md** — Session memory (blockers, current position)
-- **37 directives** — SOPs for planning, building, delivery, security, testing, architecture, and more
+- **36 directives** — SOPs for planning, building, delivery, security, testing, architecture, and more
 - **18 execution scripts** — Verification, auditing, scoring, test orchestration, and quality gates
 - **Audit system** — Automated false-positive detection with pre-commit hook
-- **Multi-agent coordination** — Wave management, task claiming, heartbeats, merge protocol for parallel Claude Code sessions (`/agent-status` dashboard). Installs globally to `~/.claude/scripts/` and `~/.claude/hooks/`.
-- **34 slash commands** — session lifecycle, quality checks, visual tools, multi-agent, utilities, and infrastructure (see below)
+- **32 slash commands** — session lifecycle, quality checks, visual tools, utilities, and infrastructure (see below)
 - **Session timer** — `/stand-up` (in kick-off mode) and `/crack-on` start a clock, `/sitrep` and `/wrap` report elapsed time
 - **Gamification** — Session scoring, badges, streaks, leaderboard, themed wrap-up cards
 - **Git hooks** — Pre-commit claim audit, commit message cleanup, pre-push methodology check
@@ -59,7 +58,7 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 
 **Documentation**
 
-- **29 markdown reference docs** (`docs/reference/`) — searchable reference for every command, concept, workflow, and file format
+- **28 markdown reference docs** (`docs/reference/`) — searchable reference for every command, concept, workflow, and file format
 - **Release notes** — CHANGELOG.md, mirrored to GitHub Releases by `auto-release.yml`. (The HTML tutorial site and whats-new page were retired in v1.72.0 — the kit is internal-only; recover them any time with `git checkout v1.71.8 -- docs/tutorial`.)
 
 **Guides**
@@ -69,14 +68,13 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 
 ## Slash Commands
 
-34 commands in `global-commands/`. Install with `./setup.sh` or copy manually. Run `/commands` inside Claude Code for the full reference and installation health check.
+32 commands in `global-commands/`. Install with `./setup.sh` or copy manually. Run `/commands` inside Claude Code for the full reference and installation health check.
 
 | Category | Commands | Purpose |
 |----------|----------|---------|
 | **Session Lifecycle** | `/stand-up`, `/crack-on`, `/sitrep`, `/wrap`, `/eod` | Dual-mode stand-up, track progress, gamified wrap-up, end-of-day report |
 | **Quality** | `/audit`, `/fact-check`, `/review`, `/codemap` | Comprehensive audit, accuracy checking, adversarial review, project index |
 | **Visual** | `/project-recap`, `/diff-review`, `/plan-review`, `/generate-visual-plan`, `/generate-web-diagram`, `/generate-slides`, `/clone-site` | HTML visual explainers, diagrams, slide decks, pixel-perfect site cloning |
-| **Multi-Agent** | `/agent-status`, `/agent-launch` | Wave dashboard, automated wave builder + task claiming |
 | **Utility** | `/pitch`, `/roast` | Feature ideas, code roasts |
 | **Infrastructure** | `/sync-doe`, `/pull-doe`, `/commands` | Sync DOE improvements, pull kit updates, installation health check |
 
