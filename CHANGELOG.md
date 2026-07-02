@@ -7,6 +7,30 @@ Versioning: patch for small fixes, minor for new features/commands/directives, m
 
 ---
 
+## v1.72.0 (2026-07-02)
+<!-- hero -->
+The docs site is retired — all of it. The v2.0 plan's docs decision ("keep the site, regenerate from markdown") was made when the kit was heading toward a public audience; the kit is now internal-only and that audience no longer exists, so the decision was revised (2026-07-02) from convert to delete. The 18 hand-written tutorial pages, `whats-new.html` and its generator, the version-stamping machinery, and every gate that policed them are gone — roughly 36,000 lines, over a third of the tracked kit. The release record is CHANGELOG.md, mirrored to GitHub Releases by `auto-release.yml`; the human-facing docs are the 29 markdown files in `docs/reference/`. Recovery, if ever wanted: `git checkout v1.71.8 -- docs/tutorial`.
+<!-- /hero -->
+<!-- background -->
+This is the first big cut of v2.0 Workstream 1/2, taken docs-first. What went with the pages: the ~20-file stamping tax on every release (`stamp_tutorial_version.py` + the auto-release stamp step + `chore(stamp)` commits), the whats-new regen step and its release-time commit, the pre-push tutorial-docs-version gate (which repeatedly false-blocked releases — see the v1.58.0 and session-220 retros), the pre-push whats-new tag-freshness gate, and the entire pre-commit doc-freshness block. Release ceremony after this change: detect CHANGELOG version → tag → push tag → `gh release create` with notes lifted from the CHANGELOG entry — no release-time commits at all. Issue #35 (auto doc sync) is mooted by this release: docs that don't exist can't go stale.
+<!-- /background -->
+
+### Removed
+- **docs/tutorial/** — the entire directory: all 18 tutorial pages, `hooks.md`, `kit-version.js`, `whats-new.html`, and the favicon assets.
+- **execution/stamp_tutorial_version.py**, **execution/generate_whats_new.py**, **tests/execution/test_generate_whats_new.py** — the doc-generation/stamping layer and its tests.
+- **.github/workflows/auto-release.yml** — the whats-new regen, stamp, commit, and push-commit steps (plus the now-unneeded Python setup and git-identity steps). Releases no longer touch the tree.
+- **.githooks/pre-push** — both docs gates (tutorial-docs-version and whats-new tag-freshness). The methodology quick check is the hook's one remaining job.
+- **.githooks/pre-commit** — the doc-freshness warning block entirely (all five mappings and the `SKIP_DOC_FRESHNESS` escape).
+- **CLAUDE.md** — the "Updating CHANGELOG.md → regenerate whats-new" trigger.
+- **directives/starter-kit-sync.md** — the post-sync tutorial checklist and the 7-row "check this tutorial page" table; **directives/kit-development.md** — the stamp/regen steps in the manual release fallback.
+
+### Changed
+- **.githooks/commit-msg** — the version-tag changelog enforcement now requires `CHANGELOG.md` staged (was `whats-new.html`): the gate checks the actual release record instead of the derived page.
+- **execution/doe_bug_report.py** — `--scan-tutorials` now scans the `docs/reference/` markdown tree (same JSON shape; markdown heading extractor replaces the HTML parser).
+- **README.md / CUSTOMIZATION.md / .github/ISSUE_TEMPLATE/config.yml / global-commands/sync-doe.md / directives/testing-strategy.md** — point at `docs/reference/` and CHANGELOG.md-as-release-record; README execution-script count 20 → 18 (caught by `readme_claims_match_disk`).
+- **tests/githooks/test_pre_push.py** — rewritten: regression tests that both retired gates stay gone, plus a methodology-failure-blocks test. Fixture fix: the hook is copied into the fixture repo (it derives PROJECT_ROOT from its own location; the old tests ran it in-place against the real kit's files).
+- **tests/githooks/test_pre_commit.py** — doc-freshness tests replaced by a single regression test that the retired check stays silent.
+
 ## v1.71.8 (2026-06-22)
 <!-- hero -->
 Finishes the model/thinking footer removal that v1.71.7 started. The `/wrap`, `/eod`, and `/hq` cards in the command reference still showed a bordered `Model: Opus 4.6 -- Thinking: high` row — pre-existing drift their specs and report generators never produced. The real `/wrap`, `/eod`, and `/hq` output is an HTML report carrying at most a small model badge sourced from recorded session data (no `Thinking` level, no bordered row), so the mockup row was doubly wrong: it invented a card format these commands do not render and a reasoning-effort value nothing computes. The four stale rows are deleted, so the rendered command reference no longer shows a self-reported model/thinking line anywhere.

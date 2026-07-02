@@ -357,7 +357,7 @@ Tell the user:
 
 ### Step 11: After the merge (Phase 2)
 
-Releases are **automatic**: `auto-release.yml` fires when the merge lands on `main` -- it regenerates `whats-new.html`, stamps the tutorial docs, commits, tags, and creates the GitHub release. See `kit-development.md` ## Release mechanics. Phase 2 is post-merge verification and cleanup only. Step 0.7 (resume detection) routes here when the state file is present and `gh pr view` reports the PR as `MERGED`.
+Releases are **automatic**: `auto-release.yml` fires when the merge lands on `main` -- it tags the merged HEAD and creates the GitHub release with notes from CHANGELOG.md (no release-time commits since v1.72.0). See `kit-development.md` ## Release mechanics. Phase 2 is post-merge verification and cleanup only. Step 0.7 (resume detection) routes here when the state file is present and `gh pr view` reports the PR as `MERGED`.
 
 **Verify the release happened** (allow the workflow a minute or two):
 
@@ -406,17 +406,4 @@ Note: Phase 2 does NOT update the originating project's `STATE.md` — `/sync-do
 - When git pull in Step 2 reveals conflicts, surface the conflict to the user before any merge action -- conflicts are the user's call to resolve
 
 ## Post-Sync Checklist
-- [ ] Tutorial footers auto-stamped by `stamp_tutorial_version.py` (verify in diff)
-- [ ] Check if tutorial docs need updating for framework changes:
-
-| If this changed... | Check this tutorial page |
-|---|---|
-| `setup.sh` | `getting-started.html` (install flow, terminal mockups) |
-| `wrap.md` or `wrap_stats.py` or `wrap_html.py` | `commands.html` (command description), `daily-flow.html` (session end section) |
-| New/removed command in `global-commands/` | `commands.html` (add/remove entry), sidebar in all pages if navigation changed |
-| `.githooks/` or `check_contract.py` | `tips-and-mistakes.html` (hooks section) |
-| `STATE.md` template | `key-concepts.html` (state management), `getting-started.html` (initial setup) |
-| `CLAUDE.md` operating rules | `key-concepts.html` (DOE architecture), `workflows.html` (feature lifecycle) |
-| Multi-agent scripts | `multi-agent.html` (terminal mockups, worked example) |
-
-Only update if the change is user-facing. Internal refactors don't need doc updates.
+- [ ] The docs site (tutorial + whats-new) was retired in v1.72.0 — the release record is CHANGELOG.md + GitHub Releases. Markdown docs live in `docs/reference/`; update those only when a change is user-facing.

@@ -131,7 +131,7 @@ Replace the content but keep the concept — a single doc that maps every file, 
 
 ## Upgrading from Older Kit Versions
 
-If your project was set up with an older version of the kit, this section covers what changed and how to upgrade. For a visual walkthrough with terminal mockups and before/after examples, see the [Migration Guide tutorial page](docs/tutorial/migration-guide.html).
+If your project was set up with an older version of the kit, this section covers what changed and how to upgrade. Per-version upgrade notes live in [`migrations/`](migrations/).
 
 ### Find your version
 

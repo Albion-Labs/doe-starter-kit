@@ -353,48 +353,7 @@ fi
 
 # ---
 
-# ─── Doc freshness check (warnings only — never blocks commit) ───
-# Warns when staged source has a tutorial doc that's not also staged.
-# Mappings:
-#   global-commands/*.md → docs/tutorial/commands.html
-#   .githooks/*          → docs/tutorial/hooks.md
-# Skip with: SKIP_DOC_FRESHNESS=1 git commit ...
-
-if [ "${SKIP_DOC_FRESHNESS:-0}" != "1" ]; then
-    if [ -n "$STAGED_FILES" ]; then
-        cmd_changed=$(echo "$STAGED_FILES" | grep -cE "^global-commands/.*\.md$" || true)
-        cmd_doc_staged=$(echo "$STAGED_FILES" | grep -cF "docs/tutorial/commands.html" || true)
-        if [ "$cmd_changed" -gt "0" ] && [ "$cmd_doc_staged" = "0" ]; then
-            echo "⚠ Doc freshness: global-commands/*.md changed without docs/tutorial/commands.html update" >&2
-        fi
-
-        hook_changed=$(echo "$STAGED_FILES" | grep -cE "^\.githooks/" || true)
-        hook_doc_staged=$(echo "$STAGED_FILES" | grep -cF "docs/tutorial/hooks.md" || true)
-        if [ "$hook_changed" -gt "0" ] && [ "$hook_doc_staged" = "0" ]; then
-            echo "⚠ Doc freshness: .githooks/* changed without docs/tutorial/hooks.md update" >&2
-        fi
-
-        # v1.60.1: extended mappings.
-        # .claude/hooks/*.py -> docs/tutorial/hooks.md (PreToolUse hook docs)
-        claude_hook_changed=$(echo "$STAGED_FILES" | grep -cE "^\.claude/hooks/.*\.py$" || true)
-        if [ "$claude_hook_changed" -gt "0" ] && [ "$hook_doc_staged" = "0" ]; then
-            echo "⚠ Doc freshness: .claude/hooks/*.py changed without docs/tutorial/hooks.md update" >&2
-        fi
-
-        # migrations/*.md -> docs/tutorial/migration-guide.html
-        mig_changed=$(echo "$STAGED_FILES" | grep -cE "^migrations/.*\.md$" || true)
-        mig_doc_staged=$(echo "$STAGED_FILES" | grep -cF "docs/tutorial/migration-guide.html" || true)
-        if [ "$mig_changed" -gt "0" ] && [ "$mig_doc_staged" = "0" ]; then
-            echo "⚠ Doc freshness: migrations/*.md changed without docs/tutorial/migration-guide.html update" >&2
-        fi
-
-        # CHANGELOG.md -> docs/tutorial/whats-new.html (auto-regenerable)
-        cl_changed=$(echo "$STAGED_FILES" | grep -cF "CHANGELOG.md" || true)
-        wn_doc_staged=$(echo "$STAGED_FILES" | grep -cF "docs/tutorial/whats-new.html" || true)
-        if [ "$cl_changed" -gt "0" ] && [ "$wn_doc_staged" = "0" ]; then
-            echo "⚠ Doc freshness: CHANGELOG.md changed without docs/tutorial/whats-new.html update -- run python3 execution/generate_whats_new.py" >&2
-        fi
-    fi
-fi
+# (The doc freshness check was retired in v1.72.0 with the docs site —
+# there are no generated doc pages left to fall stale.)
 
 # ---

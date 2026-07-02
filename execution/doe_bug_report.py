@@ -5,7 +5,7 @@ Handles deterministic operations for bug triage:
   --environment           Capture DOE version, OS, Node, Python, shell
   --version-check         Compare local DOE version to latest upstream release
   --check-gh              Verify gh CLI is installed and authenticated
-  --scan-tutorials WORDS  Scan tutorial HTML files for keyword matches
+  --scan-tutorials WORDS  Scan docs/reference markdown for keyword matches
   --search-duplicates Q   Search existing GitHub issues for duplicates
   --sanitise TEXT         Strip sensitive data from text before filing
 
@@ -29,7 +29,6 @@ import platform
 import re
 import subprocess
 import sys
-from html.parser import HTMLParser
 from pathlib import Path
 
 UPSTREAM_REPO = "Albion-Labs/doe-starter-kit"
@@ -248,45 +247,34 @@ def check_version():
 # --scan-tutorials
 # ---------------------------------------------------------------------------
 
-class _HeadingExtractor(HTMLParser):
-    """Extract h1/h2/h3 headings and their surrounding text from HTML."""
-
-    def __init__(self):
-        super().__init__()
-        self._in_heading = False
-        self._heading_tag = None
-        self._current_text = []
-        self.headings = []  # [{tag, text, pos}]
-
-    def handle_starttag(self, tag, attrs):
-        if tag in ("h1", "h2", "h3"):
-            self._in_heading = True
-            self._heading_tag = tag
-            self._current_text = []
-
-    def handle_endtag(self, tag):
-        if tag == self._heading_tag and self._in_heading:
-            self._in_heading = False
-            text = " ".join("".join(self._current_text).split())
-            if text:
-                self.headings.append({
-                    "tag": self._heading_tag,
-                    "text": text,
-                })
-            self._heading_tag = None
-
-    def handle_data(self, data):
-        if self._in_heading:
-            self._current_text.append(data)
+def _markdown_headings(content):
+    """Extract #/##/### headings from markdown as [{tag, text}]."""
+    headings = []
+    in_fence = False
+    for line in content.split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        m = re.match(r"^(#{1,3})\s+(.+)$", stripped)
+        if m:
+            headings.append({
+                "tag": f"h{len(m.group(1))}",
+                "text": m.group(2).strip(),
+            })
+    return headings
 
 
 def scan_tutorials(keywords):
-    """Scan tutorial HTML files for keyword matches in headings.
+    """Scan the kit's markdown docs for keyword matches in headings.
 
-    Returns ranked list of {page, section, relevance} matches.
+    The HTML tutorial site was retired in v1.72.0; the docs live as markdown
+    under docs/reference/. Returns ranked list of {page, section, relevance}
+    matches (same shape as the old HTML scan).
     """
-    # Scans docs/tutorial/*.html in the DOE starter kit
-    tutorial_dir = DOE_KIT_PATH / "docs" / "tutorial"
+    tutorial_dir = DOE_KIT_PATH / "docs" / "reference"
     result = {
         "tutorial_dir_exists": tutorial_dir.is_dir(),
         "matches": [],
@@ -294,7 +282,7 @@ def scan_tutorials(keywords):
     }
 
     if not tutorial_dir.is_dir():
-        result["error"] = f"Tutorial directory not found: {tutorial_dir}"
+        result["error"] = f"Docs directory not found: {tutorial_dir}"
         return result
 
     # Normalise keywords for matching
@@ -303,23 +291,22 @@ def scan_tutorials(keywords):
         result["error"] = "No usable keywords provided"
         return result
 
-    html_files = sorted(tutorial_dir.glob("*.html"))
+    md_files = sorted(tutorial_dir.glob("**/*.md"))
     matches = []
 
-    for html_file in html_files:
+    for md_file in md_files:
         try:
-            content = html_file.read_text(encoding="utf-8")
+            content = md_file.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
 
-        parser = _HeadingExtractor()
-        parser.feed(content)
-
-        page_name = html_file.stem
+        headings = _markdown_headings(content)
+        page_name = md_file.stem
+        rel_name = str(md_file.relative_to(tutorial_dir))
         content_lower = content.lower()
 
         # Score each heading by keyword overlap
-        for heading in parser.headings:
+        for heading in headings:
             h_lower = heading["text"].lower()
             # Count keyword hits in heading text
             heading_hits = sum(1 for kw in kw_lower if kw in h_lower)
@@ -330,7 +317,7 @@ def scan_tutorials(keywords):
                 relevance = heading_hits * 3 + page_hits
                 matches.append({
                     "page": page_name,
-                    "file": html_file.name,
+                    "file": rel_name,
                     "section": heading["text"],
                     "heading_level": heading["tag"],
                     "relevance": relevance,
@@ -342,8 +329,8 @@ def scan_tutorials(keywords):
             if page_hits >= max(1, len(kw_lower) // 2):
                 matches.append({
                     "page": page_name,
-                    "file": html_file.name,
-                    "section": parser.headings[0]["text"] if parser.headings else page_name,
+                    "file": rel_name,
+                    "section": headings[0]["text"] if headings else page_name,
                     "heading_level": "page",
                     "relevance": page_hits,
                 })
@@ -690,7 +677,7 @@ def main():
     group.add_argument("--check-gh", action="store_true",
                        help="Verify gh CLI availability and auth")
     group.add_argument("--scan-tutorials", metavar="KEYWORDS",
-                       help="Scan tutorial HTML for keyword matches")
+                       help="Scan docs/reference markdown for keyword matches")
     group.add_argument("--search-duplicates", metavar="QUERY",
                        help="Search existing issues for duplicates")
     group.add_argument("--sanitise", metavar="TEXT",

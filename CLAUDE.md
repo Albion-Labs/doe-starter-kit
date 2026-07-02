@@ -92,6 +92,5 @@ First session on a brand new project: load `directives/planning-rules.md` + `dir
 - [APP] feature with visual output -> `directives/chrome-verification.md`
 - Database / SQL / data protection -> `directives/data-safety.md`
 - Security incident or breach -> `directives/incident-response.md`
-- Updating CHANGELOG.md -> regenerate whats-new.html: `python3 execution/generate_whats_new.py`
 
 <!-- Add project-specific triggers here as the system grows -->

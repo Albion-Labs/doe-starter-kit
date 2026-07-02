@@ -1409,12 +1409,8 @@ def scenario_report_generator_styling(verbose: bool = False):
         "global-scripts/eod_html.py",
         "global-scripts/build_hq.py",
         "execution/generate_test_checklist.py",
-        # Self-exemption ended (liveness audit B3): whats-new carries its own
-        # <style>/:root and is EXPECTED to WARN here until its html_builder
-        # port lands with the docs phase. An honest WARN beats a scan list
-        # that quietly omits the one known offender while claiming "all
-        # generators clean".
-        "execution/generate_whats_new.py",
+        # generate_whats_new.py was deleted in v1.72.0 with the rest of the
+        # docs site (the liveness audit's B3 exemption note died with it).
     ]
     offenders = []
     scanned = 0

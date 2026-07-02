@@ -53,11 +53,11 @@ For a fresh sync (no state file):
 
 Routed here from Step 0.7 when the state file is present and `gh pr view` reports `MERGED`.
 
-12. **Verify PR merged**, pull main, stamp + commit + tag + push + release:
+12. **Verify PR merged**, pull main, tag + push + release:
     - **Verify with `gh` exit-code guard** (don't conflate transient `gh` failures with "not merged"): `PR_STATE=$(gh pr view "$PR_NUMBER" --repo Albion-Labs/doe-starter-kit --json state --jq .state) || abort "gh pr view failed"`; then `[ "$PR_STATE" = "MERGED" ] || abort`
     - `cd ~/doe-starter-kit && git checkout main && git pull origin main`
     - **Idempotency check** (Phase 2 may resume after a partial failure): `TAG_EXISTS=$(git rev-parse "$VERSION" 2>/dev/null && echo 1 || echo 0)` and `RELEASE_EXISTS=$(gh release view "$VERSION" --repo Albion-Labs/doe-starter-kit >/dev/null 2>&1 && echo 1 || echo 0)`
-    - If `TAG_EXISTS=0`: `python3 execution/generate_whats_new.py` → `python3 execution/stamp_tutorial_version.py "$VERSION"` → `SKIP_MAIN_PROTECTION=1 SKIP_STEP_MARK_CHECK=1 git commit -am "chore(stamp): $VERSION"` → `git tag "$VERSION"` → `git push origin "$VERSION"` (tag first) → `SKIP_MAIN_PROTECTION=1 git push` (then commit)
+    - If `TAG_EXISTS=0`: `git tag "$VERSION"` → `git push origin "$VERSION"` (release notes come straight from CHANGELOG.md — no regen step since v1.72.0)
     - If `RELEASE_EXISTS=0`: `gh release create "$VERSION" --repo Albion-Labs/doe-starter-kit --title "..." --notes "..."`
     - Drop the Step 6 safety stash (if any): `git stash list | grep -q "Pre-sync backup" && git stash drop`
     - `rm ~/doe-starter-kit/.tmp/.sync-doe-pending-release.json`
