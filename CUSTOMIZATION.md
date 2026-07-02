@@ -10,7 +10,7 @@ These files work in any project without modification.
 
 | File | What it does |
 |------|-------------|
-| `global-commands/*.md` | All 31 slash commands — `/stand-up`, `/crack-on`, `/wrap`, `/eod`, `/sitrep`, `/sync-doe`, `/commands`, `/roast`, `/pitch`, `/audit`, `/review`, `/agent-status`, `/agent-launch`, and more |
+| `global-commands/*.md` | All slash commands — `/stand-up`, `/crack-on`, `/wrap`, `/eod`, `/sitrep`, `/sync-doe`, `/commands`, `/roast`, `/pitch`, `/audit`, `/review`, and more |
 | `global-commands/README.md` | Documents all slash commands |
 | `directives/_TEMPLATE.md` | Template for creating new SOP directives |
 | `directives/starter-kit-sync.md` | How to sync improvements back to this repo |
@@ -236,7 +236,6 @@ After upgrading, run these checks:
 
 - **Core Behaviour rules** — these are always-on for a reason. Removing one removes a safety net.
 - **Post-compaction recovery** — if you modify the recovery instructions in context-management.md, test by running `/clear` mid-feature and checking if the agent recovers correctly
-- **Shared file list** — the SHARED_FILES constant in dispatch_dag.py defines which files are off-limits to parallel agents. Adding files to this list is safe; removing files risks merge conflicts.
 
 ## Do Not Change
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Shared verification engine for DOE contract criteria.
 
-Parses and executes Verify: patterns from todo.md contracts and wave JSON.
+Parses and executes Verify: patterns from todo.md contracts.
 Four executable patterns:
   - run: <shell command>       -- execute, check exit code 0
   - file: <path> exists        -- check file existence
@@ -97,8 +97,7 @@ def run_criterion(criterion, working_dir=None):
     Args:
         criterion: either a string (Verify: pattern) or a dict with 'verify' key.
         working_dir: optional path (str or Path) for resolving relative file paths
-                     and running commands. Defaults to project root. Used by wave
-                     agents to verify files in worktree context.
+                     and running commands. Defaults to project root.
 
     Returns:
         {"status": "PASS"|"FAIL"|"SKIP", "detail": str}
@@ -293,37 +292,6 @@ def parse_todo_contract(step_number=None):
             # block is bounded by the next numbered step above.
 
     return criteria
-
-
-def parse_wave_criteria(criteria_list):
-    """Parse acceptance criteria from wave JSON format.
-
-    Handles both old flat-string format and new structured format.
-
-    Args:
-        criteria_list: list of strings or dicts
-
-    Returns:
-        list of {"text": str, "type": "auto"|"manual", "verify": str}
-    """
-    results = []
-    for item in criteria_list:
-        if isinstance(item, dict):
-            results.append({
-                "text": item.get("text", ""),
-                "type": item.get("type", "auto"),
-                "verify": item.get("verify", ""),
-            })
-        else:
-            # Old flat-string format -- auto-promote
-            text = str(item)
-            vm = re.match(r".*?Verify:\s+(.+)$", text)
-            results.append({
-                "text": text,
-                "type": "auto",
-                "verify": vm.group(1) if vm else text,
-            })
-    return results
 
 
 def validate_pattern(verify_text):

@@ -66,6 +66,6 @@ Track these signals across sessions (via `.claude/stats.json`):
 
 ## Retro Quality
 
-Every feature gets a mandatory retro. The retro is where self-annealing happens. For the canonical retro format (quick/full levels, procedure, wave deferred retros), see `directives/delivery-rules.md` ## Retro Discipline.
+Every feature gets a mandatory retro. The retro is where self-annealing happens. For the canonical retro format (quick/full levels, procedure), see `directives/delivery-rules.md` ## Retro Discipline.
 
 The purpose of retros is to feed the self-annealing loop. A retro that logs nothing is fine if nothing surprising happened. A retro that SHOULD have logged something but didn't is a system failure.

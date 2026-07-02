@@ -154,10 +154,6 @@ Code that runs automatically before or after Claude uses a tool. A PreToolUse ho
 
 A separate Claude instance spawned by the main conversation to handle a specific task. The main Claude sends the subagent a focused brief ("read these 3 files and write a summary"), the subagent does the work, and the result comes back. This keeps the main conversation's context clean. Subagents don't see the full project — only what they're given.
 
-### Wave (multi-agent)
-
-A way to run multiple Claude Code sessions in parallel, each working on a different task in its own isolated copy of the codebase. Useful for building several independent features at once. A coordinator merges the results when all tasks are done. Advanced usage — not needed for most projects.
-
 ### Context window
 
 The amount of text Claude can "see" at once in a single conversation. Think of it as Claude's working memory — everything in the conversation (your messages, code it's read, tool outputs) takes up space in the context window. When it fills up, older content gets pushed out. DOE's progressive disclosure system helps manage this by only loading information when it's needed.

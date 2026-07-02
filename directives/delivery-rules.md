@@ -36,7 +36,6 @@ Retro discipline: every feature gets a mandatory retro as its final step. Includ
 
 - **Quick** (default): `[x] Retro [quick: nothing to log]` or `[quick: logged to learnings.md]`
 - **Full** (escalate when: failure, approach change, workaround, repeatable pattern, time exceeded, prevented past failure): `[x] Retro [full: logged to learnings.md + prevention added]`
-- Wave agents defer: `[quick: deferred to merge]` or `[full: deferred to merge]`
 - **Refresh** (always present, third bracketed field): `[refresh: <next-feature-id> <one-line finding>]` for substantive updates, `[refresh: <next-feature-id> no-op]` when the scan confirms no change is needed. The field documents that Step 7 (Plan refresh) ran and what it produced. Skip the field only when there is genuinely no `## Current` or `## Queue` to scan.
 
 ### Match merge patterns before authoring
@@ -77,7 +76,7 @@ Source: Junghwan Na harness pipeline article -- recent merged PRs are the produc
 - **Kit edits go through branches and PRs.** The kit's `.githooks/pre-commit` 'no direct-to-main' hook plus PR review are the canonical gate; the `guard_kit_writes` PreToolUse hook backs that up by blocking only irreversible Bash operations (recursive removal, force-push to kit main). For project-originated changes, `/sync-doe` is the translation tooling that strips project content, opens a kit branch, and opens the PR.
 - **Destructive git operations require explicit user approval.** Force-push, revert, branch delete: show the diff and ask before acting.
 - **When a hook blocks an action, fix the underlying issue and report back with evidence.** Show what was flagged, what changed, and the verification (re-run, grep, test pass).
-- **Wave agents edit only files in their `Owns:` declaration.** Shared files (`todo.md`, `CLAUDE.md`, `learnings.md`, `STATE.md`) are written by the coordinator after `--merge`.
+- **In parallel worktrees, edit only files in your step's `Owns:` declaration.** Shared files (`todo.md`, `CLAUDE.md`, `learnings.md`, `STATE.md`) are reconciled one terminal at a time.
 
 ## Performance Budget
 

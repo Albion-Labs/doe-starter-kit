@@ -9,7 +9,7 @@ Tradeoff: Context discipline costs upfront recovery time after compaction or `/c
 Loaded when working in parallel, managing context limits, recovering from compaction, or scaling from solo to multi-terminal work.
 
 ## Core Principle
-Every terminal is an independent pipeline: load context -> build -> verify contracts -> commit -> next step. Scale by opening more terminals, not by cramming more into one. The DAG executor automates this; solo mode approximates it through discipline.
+Every terminal is an independent pipeline: load context -> build -> verify contracts -> commit -> next step. Scale by opening more terminals, not by cramming more into one. Solo mode does this through discipline; parallel worktrees (`directives/parallel-worktrees.md`) do it across terminals.
 
 ## Post-Compaction Recovery
 
@@ -19,7 +19,7 @@ After context compaction, the thin router (CLAUDE.md) is all the agent retains. 
 1. Treat ALL directives as unloaded -- re-read each one before acting on its rules
 2. Identify which triggers in CLAUDE.md apply to your current task
 3. Re-read those directives before your next action
-4. In wave/DAG mode: also re-read your step assignment and ownership list from todo.md
+4. In parallel worktrees: also re-read your step assignment and `Owns:` list from todo.md
 5. Check STATE.md for current position and any blockers
 
 **Why this matters:** A compacted agent that skips recovery may violate guardrails it previously loaded, miss triggers it previously knew about, or duplicate work already completed. The 1% rule (CLAUDE.md) applies with extra force after compaction -- if there's any chance a directive applies, load it.
@@ -51,21 +51,10 @@ Standard single-terminal work. Context discipline matters most here because you 
 
 ## Formal Parallel
 
-DAG executor (`~/.claude/scripts/dispatch_dag.py`) or serial dispatch (`directives/serial-dispatch-protocol.md`). Step ownership via `Owns:` metadata in todo.md. Every step declares which files it will modify.
+Run genuinely parallel steps in separate git worktrees, one per step (see `directives/parallel-worktrees.md`). Each worktree is its own independent pipeline on its own branch. Discipline, not automation, keeps them from colliding:
 
-**Mechanical collision prevention:**
-- Pre-commit hooks in each worktree enforce the ownership list -- agents cannot commit files outside their `Owns:` declaration
-- Shared files (CLAUDE.md, STATE.md, todo.md, learnings.md) are off-limits to all parallel agents
-- The executor's merge phase is the only code that touches shared files
+- Each terminal edits only the files its step owns; declare them in the step's `Owns:` metadata in todo.md.
+- Shared files (CLAUDE.md, STATE.md, todo.md, learnings.md) are edited from one terminal at a time.
+- Merge each branch back once its step passes all contract criteria, then run any integration contracts on the merged result before starting dependents.
 
-**Contract-gated chaining:** A step's dependents only start after the step passes ALL its contract criteria. Failed steps retry (up to 3x) without blocking independent steps. Blocked steps escalate to the human.
-
-**Integration contracts:** After a wave of parallel steps merges, integration contracts verify cross-step consistency. These are written during planning alongside step contracts.
-
-**The independent pipeline principle:** Each terminal running a step gets a fresh session with minimal context: the step contract, the `Owns:` list, relevant plan sections, and the directives triggered by its task. No cross-terminal state sharing. No shared memory between agents. This is the ideal: maximum context quality, minimum context pollution.
-
-**Recovery after merge:** When parallel steps merge into the feature branch, the coordinator:
-1. Runs integration contracts on the merged result
-2. Updates todo.md with completion status
-3. Identifies the next wave of eligible steps
-4. Dispatches or continues serially based on user preference
+**The independent pipeline principle:** Each terminal gets a fresh session with minimal context -- the step contract, the `Owns:` list, relevant plan sections, and the directives its task triggers. No cross-terminal state sharing. Maximum context quality, minimum pollution.

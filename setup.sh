@@ -11,7 +11,6 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 COMMANDS_SRC="$SCRIPT_DIR/global-commands"
 COMMANDS_DST="$HOME/.claude/commands"
-HOOKS_SRC="$SCRIPT_DIR/global-hooks"
 HOOKS_DST="$HOME/.claude/hooks"
 SCRIPTS_SRC="$SCRIPT_DIR/global-scripts"
 SCRIPTS_DST="$HOME/.claude/scripts"
@@ -120,14 +119,12 @@ for f in "$COMMANDS_SRC"/*.md; do
     COMMAND_COUNT=$((COMMAND_COUNT + 1))
 done
 
-# 2. Install global hooks
+# 2. Prepare the global hooks dir.
+# (The global-hooks/ source dir was retired in v1.73.0 with the wave stack —
+# its only members were the heartbeat + context_monitor hooks. ~/.claude/hooks
+# is now populated solely by the project-hook mirror in 2a.)
 mkdir -p "$HOOKS_DST"
 HOOK_COUNT=0
-for f in "$HOOKS_SRC"/*.py; do
-    [ -f "$f" ] || continue
-    backup_then_copy "$f" "$HOOKS_DST/$(basename "$f")" hooks
-    HOOK_COUNT=$((HOOK_COUNT + 1))
-done
 
 # 2a. Mirror the kit's project hooks into ~/.claude/hooks (v1.71.4).
 # Background sessions anchor $CLAUDE_PROJECT_DIR to $HOME, so the global
@@ -426,7 +423,7 @@ write_tools_stamp
 
 echo ""
 echo "✓ $COMMAND_COUNT commands installed to ~/.claude/commands/"
-echo "✓ $HOOK_COUNT global hooks installed to ~/.claude/hooks/"
+echo "✓ $HOOK_COUNT hooks mirrored to ~/.claude/hooks/"
 echo "✓ $SCRIPT_COUNT scripts installed to ~/.claude/scripts/"
 if [ "$PROJECT_HOOK_COUNT" -gt 0 ]; then
     echo "✓ $PROJECT_HOOK_COUNT project hooks installed to .claude/hooks/"

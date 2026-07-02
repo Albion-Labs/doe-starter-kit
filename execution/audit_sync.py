@@ -95,7 +95,6 @@ KIT_ONLY = {
     "stamp_tutorial_version.py",
     "wrap_html.py",
     "eod_html.py",
-    "dispatch_dag.py",
     "run_snagging.py",
     "record_review_result.py",
     "persist_review_findings.py",

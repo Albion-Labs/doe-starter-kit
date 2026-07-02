@@ -1,21 +1,15 @@
-Verify contract criteria for the current task. Works in both solo mode (todo.md) and wave mode (wave JSON).
+Verify contract criteria for the current task (from `tasks/todo.md`).
 
-## Step 1: Determine mode and load criteria
+## Step 1: Load criteria
 
-Check if you're in a wave worktree:
+Read criteria from `tasks/todo.md` using:
 ```
-python3 ~/.claude/scripts/multi_agent.py --dashboard --json 2>/dev/null
+python3 -c "
+import json, sys; sys.path.insert(0, '.'); from execution.verify import parse_todo_contract
+criteria = parse_todo_contract()
+print(json.dumps(criteria, indent=2))
+"
 ```
-
-- **Wave mode** (active wave with a claimed task): extract `acceptanceCriteria` from the task JSON.
-- **Solo mode** (no active wave or not in a worktree): read criteria from `tasks/todo.md` using:
-  ```
-  python3 -c "
-  import json, sys; sys.path.insert(0, '.'); from execution.verify import parse_todo_contract
-  criteria = parse_todo_contract()
-  print(json.dumps(criteria, indent=2))
-  "
-  ```
 
 If no criteria are found, show "No contract criteria found for the current step" and stop.
 
@@ -125,7 +119,7 @@ Show final summary:
 +--------------------------------------------------+
 ```
 
-If all pass, the step is ready to be marked `[x]` in todo.md (solo) or `--complete` (wave).
+If all pass, the step is ready to be marked `[x]` in todo.md.
 
 ## Important notes
 

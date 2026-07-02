@@ -699,35 +699,6 @@ def check_roadmap_consistency(report: AuditReport):
         ))
 
 
-@register("universal", fast=True)
-def check_active_wave(report: AuditReport):
-    """Warn if a multi-agent wave is active (results may be incomplete)."""
-    waves_dir = TMP / "waves"
-    if not waves_dir.is_dir():
-        return  # No waves directory — single-terminal mode, skip silently
-
-    for wave_file in sorted(waves_dir.glob("*.json")):
-        try:
-            data = json.loads(wave_file.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            continue
-        if data.get("status") == "active":
-            wave_id = data.get("waveId", wave_file.stem)
-            task_count = len(data.get("tasks", []))
-            report.add(Finding(
-                Severity.WARN, "active_wave",
-                f"Wave '{wave_id}' is active ({task_count} tasks) — audit results may be incomplete until merge",
-                file=f".tmp/waves/{wave_file.name}",
-            ))
-            return
-
-    # If waves dir exists but no active wave, all clear
-    report.add(Finding(
-        Severity.PASS, "active_wave",
-        "No active wave — audit results are complete",
-    ))
-
-
 @register("universal", fast=False)
 def check_orphan_claims(report: AuditReport):
     """Done items without corresponding git commits."""
@@ -884,7 +855,7 @@ def check_scale_consistency(report: AuditReport):
         report.add(Finding(Severity.WARN, "scale_consistency", "directives/ not found"))
         return
 
-    scale_terms = ["solo", "informal parallel", "formal parallel", "wave", "dag"]
+    scale_terms = ["solo", "informal parallel", "formal parallel"]
     expected_headings = {"solo", "informal parallel", "formal parallel"}
 
     files_with_scale = []
@@ -911,41 +882,6 @@ def check_scale_consistency(report: AuditReport):
     if not inconsistent:
         report.add(Finding(Severity.PASS, "scale_consistency",
                            f"{len(files_with_scale)} scale files use consistent headings"))
-
-
-@register("universal", fast=False)
-def check_dag_validation(report: AuditReport):
-    """dispatch_dag.py --validate passes cleanly."""
-    # Liveness audit B5: the live copy is global-scripts/ in the kit repo
-    # (installed to ~/.claude/scripts/ for consumers); the old chain never
-    # found it anywhere, so the DAG was never validated.
-    candidates = [
-        PROJECT_ROOT / "execution" / "dispatch_dag.py",
-        PROJECT_ROOT / "global-scripts" / "dispatch_dag.py",
-        Path.home() / ".claude" / "scripts" / "dispatch_dag.py",
-    ]
-    executor = next((c for c in candidates if c.exists()), None)
-
-    if executor is None:
-        report.add(Finding(Severity.WARN, "dag_validation",
-                           "dispatch_dag.py not found (checked execution/, global-scripts/, ~/.claude/scripts/)"))
-        return
-
-    try:
-        result = subprocess.run(
-            [sys.executable, str(executor), "--validate"],
-            capture_output=True, text=True, cwd=PROJECT_ROOT, timeout=30,
-        )
-        if result.returncode == 0:
-            report.add(Finding(Severity.PASS, "dag_validation", "DAG validation passed"))
-        else:
-            report.add(Finding(Severity.WARN, "dag_validation",
-                               "DAG validation found issues",
-                               file="execution/dispatch_dag.py"))
-    except subprocess.TimeoutExpired:
-        report.add(Finding(Severity.WARN, "dag_validation", "DAG validation timed out"))
-    except OSError as e:
-        report.add(Finding(Severity.WARN, "dag_validation", f"cannot run DAG validator: {e}"))
 
 
 @register("universal", fast=True)

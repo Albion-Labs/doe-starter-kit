@@ -379,51 +379,6 @@ def scenario_review_discipline(verbose: bool = False):
 
 
 # ════════════════════════════════════════════════════════════
-# Scenario 7: status_protocol_compliance
-# ════════════════════════════════════════════════════════════
-
-def scenario_status_protocol_compliance(verbose: bool = False):
-    """Check .tmp/waves/ agent reports for STATUS: field compliance."""
-    waves_dir = PROJECT_ROOT / ".tmp" / "waves"
-    vlines = []
-
-    if not waves_dir.exists():
-        vlines.append("  No .tmp/waves/ directory — single-terminal mode")
-        return _result("PASS", "no waves directory (single-terminal mode)", vlines)
-
-    import json
-    reports = list(waves_dir.glob("*.json"))
-    vlines.append(f"  Wave report files: {len(reports)}")
-
-    if not reports:
-        return _result("PASS", "waves dir exists but no reports found", vlines)
-
-    compliant = 0
-    non_compliant = []
-    for rp in sorted(reports):
-        try:
-            data = json.loads(rp.read_text(encoding="utf-8"))
-            if "STATUS" in str(data) or "status" in data:
-                compliant += 1
-            else:
-                non_compliant.append(rp.name)
-                vlines.append(f"  Missing STATUS field: {rp.name}")
-        except (json.JSONDecodeError, OSError) as e:
-            vlines.append(f"  Cannot parse {rp.name}: {e}")
-            non_compliant.append(rp.name)
-
-    vlines.append(f"  Compliant: {compliant}/{len(reports)}")
-
-    if non_compliant:
-        return _result(
-            "WARN",
-            f"{len(non_compliant)} wave report(s) missing STATUS field",
-            vlines,
-        )
-    return _result("PASS", f"all {len(reports)} wave reports have STATUS field", vlines)
-
-
-# ════════════════════════════════════════════════════════════
 # Scenario 8: claude_md_quality
 # ════════════════════════════════════════════════════════════
 
@@ -820,7 +775,7 @@ def scenario_scale_consistency(verbose: bool = False):
     if not directives_dir.exists():
         return _result("WARN", "directives/ not found", vlines)
 
-    scale_terms = ["solo", "informal parallel", "formal parallel", "wave", "dag"]
+    scale_terms = ["solo", "informal parallel", "formal parallel"]
     expected_headings = {"solo", "informal parallel", "formal parallel"}
 
     files_with_scale = []
@@ -861,46 +816,6 @@ def scenario_scale_consistency(verbose: bool = False):
         "headings to compare — all consistent",
         vlines,
     )
-
-
-# ════════════════════════════════════════════════════════════
-# Scenario 13: dag_validation
-# ════════════════════════════════════════════════════════════
-
-def scenario_dag_validation(verbose: bool = False):
-    """Run dispatch_dag.py --validate and check it passes.
-
-    Liveness audit B5: the kit's live copy moved to global-scripts/ while
-    this scenario looked only in execution/ — the DAG was never validated
-    anywhere. (Scenario slated for wholesale deletion with the wave stack
-    in v2.0 Phase 4; until then it points at reality.)
-    """
-    vlines = []
-    executor = None
-    for rel in ("execution/dispatch_dag.py", "global-scripts/dispatch_dag.py"):
-        candidate = PROJECT_ROOT / rel
-        if candidate.exists():
-            executor = candidate
-            break
-
-    if executor is None:
-        return _result("WARN", "dispatch_dag.py not found (checked execution/, global-scripts/)", vlines)
-
-    try:
-        result = subprocess.run(
-            [sys.executable, str(executor), "--validate"],
-            capture_output=True, text=True, cwd=PROJECT_ROOT, timeout=30,
-        )
-        output = result.stdout + result.stderr
-        vlines.extend([f"  {l}" for l in output.splitlines()[:20]])
-
-        if result.returncode == 0:
-            return _result("PASS", "DAG validation passed", vlines)
-        return _result("WARN", "DAG validation found issues", vlines)
-    except subprocess.TimeoutExpired:
-        return _result("WARN", "DAG validation timed out", vlines)
-    except OSError as e:
-        return _result("WARN", f"cannot run DAG validator: {e}", vlines)
 
 
 # ════════════════════════════════════════════════════════════
@@ -1456,13 +1371,11 @@ SCENARIOS = [
     ("rationalisation_coverage",    scenario_rationalisation_coverage),
     ("trigger_completeness",        scenario_trigger_completeness),
     ("review_discipline",           scenario_review_discipline),
-    ("status_protocol_compliance",  scenario_status_protocol_compliance),
     ("claude_md_quality",           scenario_claude_md_quality),
     ("execution_script_tests",      scenario_execution_script_tests),
     ("router_coverage",             scenario_router_coverage),
     ("rule_completeness",           scenario_rule_completeness),
     ("scale_consistency",           scenario_scale_consistency),
-    ("dag_validation",              scenario_dag_validation),
     ("directive_schema",            scenario_directive_schema),
     ("cross_reference_consistency", scenario_cross_reference_consistency),
     ("agent_definition_integrity",  scenario_agent_definition_integrity),
@@ -1518,13 +1431,11 @@ Scenarios:
   rationalisation_coverage       YOU MUST rules covered in rationalisation-tables.md
   trigger_completeness           Every directive has a trigger in CLAUDE.md
   review_discipline              Features shipped with review evidence (informational)
-  status_protocol_compliance     Wave agent reports have STATUS field
   claude_md_quality              Score CLAUDE.md against quality rubric (grades A-F)
   execution_script_tests         Run pytest against tests/execution/ (full mode only)
   router_coverage                CLAUDE.md triggers cover all directive files
   rule_completeness              Core Behaviour rules have directive pointers
   scale_consistency              Scale headings (Solo/Parallel) are consistent
-  dag_validation                 Run dispatch_dag.py --validate
   directive_schema               Directives have Goal + When to Use sections
   cross_reference_consistency    Cross-references point to real files
   agent_definition_integrity     Agent files match README claims

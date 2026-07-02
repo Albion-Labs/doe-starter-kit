@@ -23,9 +23,9 @@ When a native Claude Code feature reaches parity with a custom DOE system:
 ## Native Features to Track
 
 ### Currently Used by DOE
-- `claude -w` (worktrees) -- used by DAG executor for parallel step isolation. Native since Claude Code launch. DOE adds contract verification and ownership enforcement on top.
+- `claude -w` (worktrees) -- used for parallel step isolation across terminals. Native since Claude Code launch. DOE adds contract verification and ownership discipline on top.
 - Custom agents (`.claude/agents/`) -- used for adversarial review roles (Finder, Adversarial, Referee). Platform-enforced tool restrictions when run via `claude --agent=X`.
-- Hooks (PostToolUse, PreToolUse, SessionStart) -- used for heartbeats, context tracking, audit enforcement. Native hook system.
+- Hooks (PostToolUse, PreToolUse, SessionStart) -- used for audit enforcement and guardrails. Native hook system.
 
 ### Watch for Parity
 - `/loop` (recurring task automation) -- potential for PR babysitting, deployment monitoring. Currently manual.

@@ -58,7 +58,7 @@ End-of-day report. Aggregates all sessions, commits, features, and position into
 Comprehensive project audit — claims (governed docs, task format, roadmap consistency, staleness), workspace health (git status, stale temp files, STATE.md alignment), and DOE framework integrity (required files, hooks, commands, kit sync). Single bordered output with all findings. **Use at:** before releases, periodic validation, any time you want a full health check.
 
 ### `/agent-verify`
-Verifies contract criteria for the current task. Runs all `[auto]` criteria with auto-fix loop (up to 3 attempts), presents `[manual]` criteria as a checklist. Works in solo and wave mode. **Use at:** after completing a task step.
+Verifies contract criteria for the current task. Runs all `[auto]` criteria with auto-fix loop (up to 3 attempts), presents `[manual]` criteria as a checklist. **Use at:** after completing a task step.
 
 ### `/fact-check`
 Verifies the factual accuracy of a document against the actual codebase. Identifies inaccuracies and corrects them in place with a verification summary. **Use at:** after major changes, before releases, or when docs may have drifted from reality.
@@ -118,16 +118,6 @@ Syncs universal DOE framework improvements from the current project back to the 
 
 ### `/pull-doe`
 Syncs improvements from the starter kit into the current project. Compares versions, shows diffs, proposes updates, merges additively. **Use when:** the kit has a newer version than your project.
-
----
-
-## Multi-Agent
-
-### `/agent-launch`
-Launches a multi-agent wave. Checks contracts, identifies parallelisable features, creates plans, builds wave file, previews, and launches. **Use when:** starting parallel Claude Code sessions.
-
-### `/agent-status`
-Multi-agent dashboard for parallel Claude Code sessions. Shows wave status, terminal liveness, task progress, cost estimates, and merge order. Modes: `--plan`, `--preview`, `--launch`, `--merge`, `--reclaim`, `--abort`, `--watch`. **Use when:** monitoring or managing an active wave.
 
 ---
 

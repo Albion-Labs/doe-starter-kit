@@ -6,7 +6,7 @@ Quick reference for all custom `/commands`. These are global — available in ev
 
 **DOE Kit awareness:** `/stand-up` (kick-off), `/crack-on`, `/sitrep`, and `/wrap` check `~/doe-starter-kit` if it exists. All use smart diffing for CLAUDE.md (only universal sections trigger `*`, project-specific sections are ignored). Kit version is pinned in STATE.md.
 
-**Contract enforcement:** `/stand-up` (kick-off) surfaces contract health for the next step (informational). `/crack-on` validates contracts before starting work and runs verification before marking steps done. Both enforce the same discipline that `--complete` provides in wave mode.
+**Contract enforcement:** `/stand-up` (kick-off) surfaces contract health for the next step (informational). `/crack-on` validates contracts before starting work and runs verification before marking steps done.
 
 ---
 
@@ -39,7 +39,7 @@ Comprehensive project audit — claims (governed docs, task format, roadmap cons
 *Added 28/02/26 · Updated 06/03/26 (merged /quick-audit, /vitals, /doe-health)*
 
 ### `/agent-verify`
-Verifies contract criteria for the current task. Runs all `[auto]` criteria with auto-fix loop (up to 3 attempts), presents `[manual]` criteria as a checklist. Works in solo and wave mode.
+Verifies contract criteria for the current task. Runs all `[auto]` criteria with auto-fix loop (up to 3 attempts), presents `[manual]` criteria as a checklist.
 *Added 05/03/26*
 
 ### `/fact-check`
@@ -103,16 +103,6 @@ Generates a beautiful standalone HTML diagram and opens it in the browser.
 ### `/generate-slides`
 Generates a stunning magazine-quality slide deck as a self-contained HTML page. Opens in browser.
 *Added 04/03/26*
-
-## Multi-Agent
-
-### `/agent-status`
-Multi-agent dashboard. Shows wave status, task claims, session health, and coordination info. Modes: `--plan`, `--preview`, `--launch`, `--merge`, `--reclaim`, `--abort`, `--watch`.
-*Added 03/03/26 · Updated 06/03/26 (renamed from /hq)*
-
-### `/agent-launch`
-Dual-mode command. **Launch mode** (no active wave): scans Queue and Current for missing contracts, auto-generates them with user approval, identifies parallelisable features, builds wave JSON, previews conflicts and cost, launches, then auto-claims the first task and starts working. **Join mode** (active wave exists): claims the next unclaimed task and starts working immediately. One command for both — run `/agent-launch` in every terminal.
-*Added 04/03/26 · Updated 05/03/26*
 
 ## Product
 
