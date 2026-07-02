@@ -10,47 +10,9 @@ set -e
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$HOOK_DIR/.." && pwd)"
 
-# (The tutorial docs version gate was retired in v1.72.0 along with the
-# tutorial site itself — whats-new.html is the only generated page left,
-# and it has its own freshness gate below.)
-
-# Whats-new freshness on tag pushes
-# When pushing a tag matching v*.*.* (a release tag), fail-fast unless
-# whats-new.html contains a matching release section. Catches the common
-# failure where a release tag goes out without generate_whats_new.py having
-# been run to refresh whats-new.html.
-#
-# Pre-v1.63.1 this check had a CHANGELOG.md fallback. Because CHANGELOG is
-# always written before the tag, the fallback always passed and the gate
-# silently no-op'd -- v1.62.2 and v1.63.0 both shipped with a stale
-# whats-new.html as a result. The fallback is removed: the gate now
-# enforces what its name says.
-#
-# Skip with: SKIP_WHATSNEW_CHECK=1 git push origin <tag>
-if [ "${SKIP_WHATSNEW_CHECK:-0}" != "1" ]; then
-    while read -r local_ref local_sha remote_ref remote_sha; do
-        case "$remote_ref" in
-            refs/tags/v[0-9]*.[0-9]*.[0-9]*)
-                tag="${remote_ref#refs/tags/}"
-                if [ -f "$PROJECT_ROOT/docs/tutorial/whats-new.html" ]; then
-                    if ! grep -q ">$tag<" "$PROJECT_ROOT/docs/tutorial/whats-new.html"; then
-                        echo ""
-                        echo "Whats-new freshness check failed for $tag"
-                        echo ""
-                        echo "  Tag $tag is being pushed but docs/tutorial/whats-new.html"
-                        echo "  has no matching release section."
-                        echo ""
-                        echo "  Run: python3 execution/generate_whats_new.py"
-                        echo "  Then: git add docs/tutorial/whats-new.html && git commit -m 'docs(tutorial): regen whats-new for $tag'"
-                        echo ""
-                        echo "  Skip with: SKIP_WHATSNEW_CHECK=1 git push origin $tag"
-                        exit 1
-                    fi
-                fi
-                ;;
-        esac
-    done < /dev/stdin || true
-fi
+# (Both docs gates — the tutorial-docs version gate and the whats-new
+# freshness gate — were retired in v1.72.0 with the docs site. The release
+# record is CHANGELOG.md, enforced at commit time by commit-msg.)
 
 echo "Running methodology checks (--quick)..."
 

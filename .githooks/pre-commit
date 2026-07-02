@@ -353,22 +353,7 @@ fi
 
 # ---
 
-# ─── Doc freshness check (warnings only — never blocks commit) ───
-# v1.72.0: the tutorial-page mappings were retired with the tutorial site;
-# the only generated doc left is whats-new.html (from CHANGELOG.md).
-# Mappings:
-#   CHANGELOG.md → docs/tutorial/whats-new.html
-# Skip with: SKIP_DOC_FRESHNESS=1 git commit ...
-
-if [ "${SKIP_DOC_FRESHNESS:-0}" != "1" ]; then
-    if [ -n "$STAGED_FILES" ]; then
-        # CHANGELOG.md -> docs/tutorial/whats-new.html (auto-regenerable)
-        cl_changed=$(echo "$STAGED_FILES" | grep -cF "CHANGELOG.md" || true)
-        wn_doc_staged=$(echo "$STAGED_FILES" | grep -cF "docs/tutorial/whats-new.html" || true)
-        if [ "$cl_changed" -gt "0" ] && [ "$wn_doc_staged" = "0" ]; then
-            echo "⚠ Doc freshness: CHANGELOG.md changed without docs/tutorial/whats-new.html update -- run python3 execution/generate_whats_new.py" >&2
-        fi
-    fi
-fi
+# (The doc freshness check was retired in v1.72.0 with the docs site —
+# there are no generated doc pages left to fall stale.)
 
 # ---

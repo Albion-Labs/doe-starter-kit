@@ -82,7 +82,7 @@ One paragraph (no line breaks within) answering "do I care about this release?" 
 - **path/to/file** — what was broken and how it's fixed now.
 ```
 
-The `<!-- hero -->` ... `<!-- /hero -->` block is the lead — it answers "do I care?" in 1-3 sentences. The optional `<!-- background -->` ... `<!-- /background -->` block carries postmortem prose for releases where the why-context is load-bearing (e.g. v1.62.2's "every install was broken by a single cd" mechanism). Most patch releases skip the background block. Both blocks are extracted by `gh release create` as release notes (HTML comment markers strip cleanly under GitHub's markdown renderer; prose flows naturally). The page renderer in `execution/generate_whats_new.py` emits `<h4>Summary</h4>` above the hero and `<h4>Background</h4>` above the background when present.
+The `<!-- hero -->` ... `<!-- /hero -->` block is the lead — it answers "do I care?" in 1-3 sentences. The optional `<!-- background -->` ... `<!-- /background -->` block carries postmortem prose for releases where the why-context is load-bearing (e.g. v1.62.2's "every install was broken by a single cd" mechanism). Most patch releases skip the background block. Both blocks are extracted by `gh release create` as release notes (HTML comment markers strip cleanly under GitHub's markdown renderer; prose flows naturally).
 
 The `### Added` / `### Changed` / `### Fixed` sections are for the diligent reader who wants the per-file detail. **The hero is not a re-prose of these bullets** — if the hero is duplicating bullet content, push the duplication into the bullets and tighten the hero.
 
@@ -94,7 +94,7 @@ Kit content (CHANGELOG.md, docs/tutorial/, directives/, ROADMAP.md, kit PR descr
 
 **Never name specific consumer projects.** The kit is a product; consumer projects (the ones running `/pull-doe`) are not. Naming a consumer project in kit content leaks the user's project list into a shared artefact and creates an awkward asymmetry where some projects are "famous" and others aren't. Refer to consumer projects generically: "consumer projects", "projects using the kit", "a project", "a consuming project". Provenance attribution (e.g. "source: <project> session N retro") goes in the kit PR's commit messages or local notes, not the kit's CHANGELOG. This rule applies to ALL kit-visible content, including pre-existing entries when they get touched.
 
-**Never include empty sections.** A `### Removed` heading followed by "Nothing removed" (or any equivalent "Nothing to report") is bloat — it signals diligence that wasn't required and adds a row of noise to the whats-new page. Omit the section entirely if there's nothing to put in it. Same applies to `### Changed` / `### Fixed` when not applicable. The four-section structure in ## CHANGELOG structure is a menu, not a contract; pick the sections that have content.
+**Never include empty sections.** A `### Removed` heading followed by "Nothing removed" (or any equivalent "Nothing to report") is bloat — it signals diligence that wasn't required and adds a row of noise to the release notes. Omit the section entirely if there's nothing to put in it. Same applies to `### Changed` / `### Fixed` when not applicable. The four-section structure in ## CHANGELOG structure is a menu, not a contract; pick the sections that have content.
 
 ## Release mechanics
 
@@ -106,9 +106,9 @@ On every push to main:
 
 1. Extract the top `## vX.Y.Z` heading (pre-release tags like `vX.Y.Z-rc.1` excluded by regex)
 2. If `git rev-parse refs/tags/vX.Y.Z` succeeds, no-op and exit
-3. Otherwise: regen `whats-new.html`, run `stamp_tutorial_version.py`, commit `chore(stamp): vX.Y.Z`, **push commit**, **tag locally**, **push tag**, `gh release create` with notes from the CHANGELOG entry
+3. Otherwise: **tag locally**, **push tag**, `gh release create` with notes from the CHANGELOG entry
 
-The workflow uses **commit-first / tag-second** ordering. This is the safe order for partial-failure recovery: if the tag push fails, the commit is already on origin and re-runs detect it (skip the redundant commit, tag the existing HEAD, push tag) -- recoverable. Tag-first would risk leaving an orphaned tag pointing to a SHA the runner had locally but never pushed; re-runs would see the tag and no-op, leaving the kit in a broken state.
+Since v1.72.0 releases make no commits (the whats-new regen and tutorial stamp died with the docs site), so there is no commit/tag ordering concern left — the tag is cut directly on the merged HEAD.
 
 The manual fallback (below) uses the OPPOSITE order -- tag-first -- because the local pre-push tutorial-docs-version gate fires when pushing the branch and requires the tag to already match. GH Actions runners don't activate `.githooks/`, so the gate doesn't apply there and the workflow picks the safer ordering.
 
@@ -138,12 +138,8 @@ Don't add a skip flag to the workflow file -- every flag is a foot-gun.
 ```bash
 cd ~/doe-starter-kit
 git checkout main && git pull
-python3 execution/generate_whats_new.py
-git add docs/tutorial/whats-new.html
-SKIP_MAIN_PROTECTION=1 git commit -m "chore(release): regen whats-new for vX.Y.Z"
 git tag vX.Y.Z
-git push origin vX.Y.Z         # tag first -- whats-new gate passes (section just regenerated)
-git push                       # branch push
+git push origin vX.Y.Z
 
 awk -v v="vX.Y.Z" '
   in_section && /^## v[0-9]+\.[0-9]+\.[0-9]+/ { exit }
@@ -154,7 +150,7 @@ awk -v v="vX.Y.Z" '
 gh release create vX.Y.Z --title "vX.Y.Z" --notes-file /tmp/release-notes.md
 ```
 
-`SKIP_MAIN_PROTECTION=1` goes on the **commit** (the kit's pre-commit hook does the no-direct-to-main check). `SKIP_WHATSNEW_CHECK=1` on pre-push exists from v1.60.1 for genuine emergencies where regeneration itself fails.
+No skip flags needed: the fallback makes no commits, and the pre-push docs gates were retired in v1.72.0.
 
 The CHANGELOG is the source of truth -- both the workflow and the manual fallback lift release notes from it.
 

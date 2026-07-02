@@ -44,11 +44,12 @@ FORMAT RULES (Claude: follow these when updating this file)
 
 ## Awaiting Sign-off
 
-### Docs site removal — tutorial retired, whats-new kept [INFRA] (v1.72.0)
+### Docs site removal — tutorial + whats-new retired [INFRA] (v1.72.0)
 v2.0 lean cut, docs-first order (decision 2026-07-02, supersedes plan decision #6 "convert"):
 the kit is internal-only, the tutorial's external audience no longer exists, and
-`docs/reference/` (markdown) already covers the content. Delete the 18 tutorial HTML
-pages + stamping machinery; keep `whats-new.html` (auto-generated release notes).
+`docs/reference/` (markdown) already covers the content. Step 1 deleted the 18 tutorial
+pages + stamping machinery; step 2 (same session, William's call) removed `whats-new.html`
+and its generator too — CHANGELOG.md + GitHub Releases are the release record.
 Git history (`v1.71.8`) is the archive. Plan: .claude/plans/doe-v2-lean-proof-of-life.md (WS2, decision revised).
 
 1. [x] Delete tutorial pages + stamp machinery; make whats-new standalone -> v1.72.0 *(completed 11:25 02/07/26)*
@@ -57,7 +58,13 @@ Git history (`v1.71.8`) is the archive. Plan: .claude/plans/doe-v2-lean-proof-of
   - [x] [auto] No live references to the stamp script in operational code (audit_sync.py's KIT_ONLY legacy-suppression entry is the deliberate exception — it keeps stale consumer copies from being flagged). Verify: run: ! grep -rn "stamp_tutorial_version" --include="*.py" --include="*.yml" --include="*.sh" --exclude=audit_sync.py execution/ .githooks/ .github/ global-commands/
   - [x] [auto] whats-new regenerates cleanly with no links to deleted pages. Verify: run: python3 execution/generate_whats_new.py && ! grep -qE 'href="(index|getting-started|key-concepts|commands|workflows|multi-agent|faq|glossary|context|daily-flow|first-session|new-project|pr-workflow|testing|tips-and-mistakes|troubleshooting|migration-guide|ide-setup)\.html' docs/tutorial/whats-new.html
   - [x] [auto] Methodology + pytest suites green (pytest scoped to the suites this PR touches; tests/claude_hooks needs Python 3.10+, runs in CI). Verify: run: python3 execution/test_methodology.py --quick && /usr/bin/python3 -m pytest tests/githooks tests/execution -q
-  - [ ] [manual] Open docs/tutorial/whats-new.html in a browser: renders correctly, sidebar shows only Changelog, no broken nav.
+  - [x] [manual] Obsoleted by step 2 — whats-new.html was removed before merge, nothing left to render-check.
+
+2. [x] Remove whats-new + generator; retire the remaining docs gates -> v1.72.0 *(completed 11:59 02/07/26)*
+  Contract:
+  - [x] [auto] docs/tutorial gone entirely; generator and its test gone. Verify: run: test ! -d docs/tutorial && test ! -f execution/generate_whats_new.py && test ! -f tests/execution/test_generate_whats_new.py
+  - [x] [auto] No whats-new references left in operational code (hooks, CI, commands, execution, router) — explanatory retirement comments excluded. Verify: run: ! grep -rn "whats.new\|whats_new" execution/ .githooks/ .github/ global-commands/ global-scripts/ CLAUDE.md | grep -vE ':[0-9]+: *#'
+  - [x] [auto] Methodology + pytest suites green (pytest scoped to the suites this PR touches; tests/claude_hooks needs Python 3.10+, runs in CI). Verify: run: python3 execution/test_methodology.py --quick && /usr/bin/python3 -m pytest tests/githooks tests/execution -q
 
 ## Done
 

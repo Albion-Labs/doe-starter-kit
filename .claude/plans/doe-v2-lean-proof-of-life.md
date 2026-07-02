@@ -60,7 +60,8 @@ Positioning: **Claude Code owns the harness layer** (commands→skills, subagent
 > **REVISED 2026-07-02 — resolved by DELETION, shipped as v1.72.0.** Decision #6 ("convert")
 > was made when the kit was heading toward a public audience; the kit is now internal-only and
 > that audience no longer exists. The 18 tutorial pages + stamping machinery + docs gates were
-> deleted (~30.7k lines); `whats-new.html` survives as the sole generated page; markdown docs
+> deleted (~36k lines — including `whats-new.html` + its generator, removed same day on
+> William's call; CHANGELOG.md + GitHub Releases are the release record); markdown docs
 > live in `docs/reference/`. Recovery: `git checkout v1.71.8 -- docs/tutorial`. Issue #35 is
 > mooted; PRs 3–4 in the implementation map are superseded by the one deletion PR. The
 > architecture below is retained for reference only (it's the "want docs again" path).

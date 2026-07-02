@@ -1,8 +1,8 @@
-"""Tests for .githooks/pre-push gates.
+"""Tests for .githooks/pre-push.
 
-v1.72.0: the tutorial-docs version gate was retired with the tutorial site.
-What remains: the whats-new freshness gate on release-tag pushes, and the
-methodology quick check. These tests run the REAL hook against a fixture repo.
+v1.72.0: the tutorial-docs version gate AND the whats-new freshness gate were
+retired with the docs site. The hook's one remaining job is the methodology
+quick check. These tests run the REAL hook against a fixture repo.
 """
 
 import os
@@ -13,9 +13,9 @@ KIT_ROOT = Path(__file__).resolve().parent.parent.parent
 HOOK_PATH = KIT_ROOT / ".githooks" / "pre-push"
 
 
-def _setup_fixture(tmpdir: Path, whats_new_tags=("v0.1.0",)) -> dict:
-    """Init a repo on main with a whats-new.html carrying the given release
-    sections and a stub methodology test that exits 0."""
+def _setup_fixture(tmpdir: Path, methodology_exit: int = 0) -> dict:
+    """Init a repo on main with the real hook copied in and a stub
+    methodology test exiting with the given code."""
     env = {
         **os.environ,
         "GIT_AUTHOR_NAME": "Test",
@@ -38,15 +38,11 @@ def _setup_fixture(tmpdir: Path, whats_new_tags=("v0.1.0",)) -> dict:
     hook_copy.write_bytes(HOOK_PATH.read_bytes())
     hook_copy.chmod(0o755)
 
-    docs = tmpdir / "docs" / "tutorial"
-    docs.mkdir(parents=True)
-    sections = "".join(f"<h2>{t}</h2>\n" for t in whats_new_tags)
-    (docs / "whats-new.html").write_text(f"<html>{sections}</html>\n")
-
-    # Methodology test must exit 0 so the hook reaches its final `exit 0`
     exec_dir = tmpdir / "execution"
     exec_dir.mkdir()
-    (exec_dir / "test_methodology.py").write_text("import sys\nsys.exit(0)\n")
+    (exec_dir / "test_methodology.py").write_text(
+        f"import sys\nsys.exit({methodology_exit})\n"
+    )
 
     subprocess.run(["git", "-C", str(tmpdir), "add", "-A"], check=True, capture_output=True, env=env)
     subprocess.run(
@@ -58,7 +54,7 @@ def _setup_fixture(tmpdir: Path, whats_new_tags=("v0.1.0",)) -> dict:
 
 
 def _run_hook(tmpdir: Path, env: dict, stdin: str = "") -> subprocess.CompletedProcess:
-    """Invoke the real pre-push hook against tmpdir.
+    """Invoke the fixture's pre-push hook.
 
     stdin mimics git's pre-push ref lines:
     "<local_ref> <local_sha> <remote_ref> <remote_sha>"
@@ -69,12 +65,12 @@ def _run_hook(tmpdir: Path, env: dict, stdin: str = "") -> subprocess.CompletedP
     )
 
 
-def test_branch_push_passes_without_tutorial_pages(tmp_path):
+def test_branch_push_passes_without_docs(tmp_path):
     """v1.72.0 regression: the retired tutorial-docs gate must not fire.
 
-    Pre-v1.72.0 this fixture (docs stamped ahead of the tag) blocked pushes
-    from main. With the tutorial site gone the hook must pass straight
-    through to the methodology check.
+    Pre-v1.72.0 this fixture (a tag behind the docs stamp) blocked pushes
+    from main. With the docs site gone the hook must pass straight through
+    to the methodology check.
     """
     env = _setup_fixture(tmp_path)
     subprocess.run(
@@ -93,22 +89,15 @@ def test_branch_push_passes_without_tutorial_pages(tmp_path):
     assert "Tutorial docs version mismatch" not in (result.stdout + result.stderr)
 
 
-def test_tag_push_blocked_when_whats_new_stale(tmp_path):
-    """Pushing a release tag with no matching whats-new section must block."""
-    env = _setup_fixture(tmp_path, whats_new_tags=("v0.1.0",))
+def test_tag_push_passes_without_whats_new(tmp_path):
+    """v1.72.0 regression: the retired whats-new freshness gate must not fire.
 
-    result = _run_hook(
-        tmp_path, env,
-        stdin="refs/tags/v0.2.0 aaa refs/tags/v0.2.0 0000\n",
-    )
-
-    assert result.returncode != 0, "Stale whats-new must block a release-tag push"
-    assert "Whats-new freshness check failed" in (result.stdout + result.stderr)
-
-
-def test_tag_push_passes_when_whats_new_current(tmp_path):
-    """Pushing a release tag whose whats-new section exists must pass."""
-    env = _setup_fixture(tmp_path, whats_new_tags=("v0.1.0", "v0.2.0"))
+    Pre-v1.72.0, pushing a release tag without a matching whats-new.html
+    section blocked. whats-new.html no longer exists; release-tag pushes
+    must pass (CHANGELOG.md is the release record, checked at commit time
+    by commit-msg).
+    """
+    env = _setup_fixture(tmp_path)
 
     result = _run_hook(
         tmp_path, env,
@@ -116,5 +105,21 @@ def test_tag_push_passes_when_whats_new_current(tmp_path):
     )
 
     assert result.returncode == 0, (
-        f"Current whats-new should pass.\nstdout: {result.stdout}\nstderr: {result.stderr}"
+        f"Tag push was blocked.\nstdout: {result.stdout}\nstderr: {result.stderr}"
     )
+    assert "Whats-new freshness check failed" not in (result.stdout + result.stderr)
+
+
+def test_methodology_failure_blocks_push(tmp_path):
+    """The one remaining gate: a failing methodology quick check blocks."""
+    env = _setup_fixture(tmp_path, methodology_exit=1)
+
+    result = _run_hook(
+        tmp_path, env,
+        stdin="refs/heads/main aaa refs/heads/main bbb\n",
+    )
+
+    # Note: the hook's `set -e` exits on the failing python call before the
+    # "Pre-push blocked" message line is reached — the nonzero exit code is
+    # the blocking mechanism, so that's what we assert.
+    assert result.returncode != 0, "Failing methodology check must block the push"

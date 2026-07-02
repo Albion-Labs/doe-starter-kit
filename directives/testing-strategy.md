@@ -220,7 +220,7 @@ The signpost: a new auto tool that overlaps with criteria currently sitting unde
 
 ### Doc freshness counterpart
 
-Code changes that ship without doc updates rot the docs. The tutorial site was retired in v1.72.0; the one generated doc left is `docs/tutorial/whats-new.html`, and pre-commit warns when `CHANGELOG.md` changes without it (fix: `python3 execution/generate_whats_new.py`). Same rule as tests: the warning is a nudge, the change still ships.
+The doc-freshness pre-commit check was retired in v1.72.0 with the docs site — there are no generated doc pages left to fall stale. The release record is CHANGELOG.md, enforced at commit time by the commit-msg changelog gate; the markdown docs in `docs/reference/` are updated by hand when a change is user-facing.
 
 ## Verification
 - [ ] This directive exists and is referenced from CLAUDE.md triggers

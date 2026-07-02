@@ -357,7 +357,7 @@ Tell the user:
 
 ### Step 11: After the merge (Phase 2)
 
-Releases are **automatic**: `auto-release.yml` fires when the merge lands on `main` -- it regenerates `whats-new.html`, stamps the tutorial docs, commits, tags, and creates the GitHub release. See `kit-development.md` ## Release mechanics. Phase 2 is post-merge verification and cleanup only. Step 0.7 (resume detection) routes here when the state file is present and `gh pr view` reports the PR as `MERGED`.
+Releases are **automatic**: `auto-release.yml` fires when the merge lands on `main` -- it tags the merged HEAD and creates the GitHub release with notes from CHANGELOG.md (no release-time commits since v1.72.0). See `kit-development.md` ## Release mechanics. Phase 2 is post-merge verification and cleanup only. Step 0.7 (resume detection) routes here when the state file is present and `gh pr view` reports the PR as `MERGED`.
 
 **Verify the release happened** (allow the workflow a minute or two):
 
@@ -406,4 +406,4 @@ Note: Phase 2 does NOT update the originating project's `STATE.md` — `/sync-do
 - When git pull in Step 2 reveals conflicts, surface the conflict to the user before any merge action -- conflicts are the user's call to resolve
 
 ## Post-Sync Checklist
-- [ ] `whats-new.html` regen is automated (auto-release regenerates it from CHANGELOG.md on merge). The tutorial site was retired in v1.72.0 — markdown docs live in `docs/reference/`; update those only when a change is user-facing.
+- [ ] The docs site (tutorial + whats-new) was retired in v1.72.0 — the release record is CHANGELOG.md + GitHub Releases. Markdown docs live in `docs/reference/`; update those only when a change is user-facing.

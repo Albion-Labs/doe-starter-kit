@@ -47,7 +47,7 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 - **CLAUDE.md** — 7 operating rules, progressive disclosure triggers, guardrails
 - **STATE.md** — Session memory (blockers, current position)
 - **37 directives** — SOPs for planning, building, delivery, security, testing, architecture, and more
-- **19 execution scripts** — Verification, auditing, scoring, test orchestration, and quality gates
+- **18 execution scripts** — Verification, auditing, scoring, test orchestration, and quality gates
 - **Audit system** — Automated false-positive detection with pre-commit hook
 - **Multi-agent coordination** — Wave management, task claiming, heartbeats, merge protocol for parallel Claude Code sessions (`/agent-status` dashboard). Installs globally to `~/.claude/scripts/` and `~/.claude/hooks/`.
 - **34 slash commands** — session lifecycle, quality checks, visual tools, multi-agent, utilities, and infrastructure (see below)
@@ -60,7 +60,7 @@ The wizard detects your existing code (package.json, go.mod, etc.), infers the f
 **Documentation**
 
 - **29 markdown reference docs** (`docs/reference/`) — searchable reference for every command, concept, workflow, and file format
-- **Release notes** (`docs/tutorial/whats-new.html`) — auto-generated from CHANGELOG.md on every release. (The HTML tutorial site was retired in v1.72.0 — the kit is internal-only; recover it any time with `git checkout v1.71.8 -- docs/tutorial`.)
+- **Release notes** — CHANGELOG.md, mirrored to GitHub Releases by `auto-release.yml`. (The HTML tutorial site and whats-new page were retired in v1.72.0 — the kit is internal-only; recover them any time with `git checkout v1.71.8 -- docs/tutorial`.)
 
 **Guides**
 
