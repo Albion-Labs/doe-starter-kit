@@ -29,15 +29,19 @@ EXPANDED_COUNT = 5
 
 
 def get_kit_version():
-    """Get the current kit version from kit-version.js, git tag, or CHANGELOG."""
-    # Primary: read from kit-version.js (single source of truth)
-    version_js = KIT_ROOT / "docs" / "tutorial" / "kit-version.js"
-    if version_js.exists():
-        m = re.search(r"var VERSION = '(v[\d.]+)'", version_js.read_text(encoding="utf-8"))
-        if m:
-            return m.group(1)
-    # Fallback: git tag
-    import subprocess
+    """Get the current kit version from the top CHANGELOG entry, or git tag.
+
+    CHANGELOG is primary: auto-release regenerates this page BEFORE the new
+    tag exists, so the latest git tag is stale-by-one at exactly that moment.
+    The top CHANGELOG heading is what the release workflow itself treats as
+    the version being released.
+    """
+    if CHANGELOG.exists():
+        for line in CHANGELOG.read_text(encoding="utf-8").split("\n"):
+            m = re.match(r"^##\s+\[?(v[\d.]+)\]?", line)
+            if m:
+                return m.group(1)
+    # Fallback: latest git tag
     try:
         result = subprocess.run(
             ["git", "describe", "--tags", "--abbrev=0"],
@@ -47,12 +51,6 @@ def get_kit_version():
             return result.stdout.strip()
     except FileNotFoundError:
         pass
-    # Fallback: parse first version from CHANGELOG
-    if CHANGELOG.exists():
-        for line in CHANGELOG.read_text(encoding="utf-8").split("\n"):
-            m = re.match(r"^##\s+\[?(v[\d.]+)\]?", line)
-            if m:
-                return m.group(1)
     return "v0.0.0"
 
 
@@ -1257,63 +1255,16 @@ def generate_page(entries):
   <div class="layout">
 
     <!-- Sidebar -->
+    <!-- The tutorial site was retired in v1.72.0 (kit is internal-only; docs/reference/
+         holds the markdown docs). This page is the sole survivor, so the sidebar is
+         just the brand + changelog. -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">{kit_version}</span></a>
+      <a class="sidebar-brand" href="whats-new.html">DOE Starter Kit <span class="sidebar-version">{kit_version}</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
           <div class="sidebar-section-title">What's New</div>
           <a class="sidebar-link active" href="whats-new.html">Changelog</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Getting Started</div>
-          <a class="sidebar-link" href="index.html">Welcome</a>
-          <a class="sidebar-link" href="getting-started.html">Installation</a>
-          <a class="sidebar-link" href="new-project.html">Starting a New Project</a>
-          <a class="sidebar-link" href="first-session.html">Your First Session</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Core Concepts</div>
-          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
-          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
-          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
-          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
-          <a class="sidebar-link" href="context.html">Context &amp; Sessions</a>
-          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
-          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
-          <a class="sidebar-link" href="key-concepts.html#thin-router">Thin Router</a>
-          <a class="sidebar-link" href="key-concepts.html#adversarial-review">Adversarial Review</a>
-          <a class="sidebar-link" href="key-concepts.html#defence-in-depth">Defence in Depth</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Commands</div>
-          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
-          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
-          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
-          <a class="sidebar-link nested" href="commands.html#planning">Planning &amp; Ideas</a>
-          <a class="sidebar-link nested" href="commands.html#multiagent">Advanced</a>
-          <a class="sidebar-link nested" href="commands.html#maintenance">Maintenance</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Workflows</div>
-          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
-          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
-          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
-          <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Reference</div>
-          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
-          <a class="sidebar-link" href="migration-guide.html">Migration Guide</a>
-          <a class="sidebar-link" href="faq.html">FAQ</a>
-          <a class="sidebar-link" href="ide-setup.html">IDE Compatibility</a>
-          <a class="sidebar-link nested" href="ide-setup.html#cursor">Cursor Setup</a>
-          <a class="sidebar-link" href="glossary.html">Glossary</a>
         </div>
 
       </div>
@@ -1327,14 +1278,6 @@ def generate_page(entries):
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
 {content}
-
-        <!-- Pagination -->
-        <div class="pagination">
-          <a href="glossary.html">
-            <div class="pg-label">Previous</div>
-            <div class="pg-title">&larr; Glossary</div>
-          </a>
-        </div>
 
         <footer class="site-footer">DOE Starter Kit {kit_version}</footer>
 
@@ -1384,7 +1327,6 @@ def generate_page(entries):
       overlay.addEventListener('click', close);
     }})();
   </script>
-  <script src="kit-version.js"></script>
 
 </body>
 </html>"""

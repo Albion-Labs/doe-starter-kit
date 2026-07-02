@@ -220,7 +220,7 @@ The signpost: a new auto tool that overlaps with criteria currently sitting unde
 
 ### Doc freshness counterpart
 
-Code changes that ship without doc updates rot the tutorial. Pre-commit warns when `global-commands/*.md` change without `docs/tutorial/commands.html`, or `.githooks/*` change without `docs/tutorial/hooks.md`. Same rule as tests: the warning is a nudge, the change still ships, but `kit-development.md` expects the doc to land in the same PR where reasonable.
+Code changes that ship without doc updates rot the docs. The tutorial site was retired in v1.72.0; the one generated doc left is `docs/tutorial/whats-new.html`, and pre-commit warns when `CHANGELOG.md` changes without it (fix: `python3 execution/generate_whats_new.py`). Same rule as tests: the warning is a nudge, the change still ships.
 
 ## Verification
 - [ ] This directive exists and is referenced from CLAUDE.md triggers

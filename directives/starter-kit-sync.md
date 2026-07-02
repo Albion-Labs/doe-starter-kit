@@ -406,17 +406,4 @@ Note: Phase 2 does NOT update the originating project's `STATE.md` — `/sync-do
 - When git pull in Step 2 reveals conflicts, surface the conflict to the user before any merge action -- conflicts are the user's call to resolve
 
 ## Post-Sync Checklist
-- [ ] Tutorial footers auto-stamped by `stamp_tutorial_version.py` (verify in diff)
-- [ ] Check if tutorial docs need updating for framework changes:
-
-| If this changed... | Check this tutorial page |
-|---|---|
-| `setup.sh` | `getting-started.html` (install flow, terminal mockups) |
-| `wrap.md` or `wrap_stats.py` or `wrap_html.py` | `commands.html` (command description), `daily-flow.html` (session end section) |
-| New/removed command in `global-commands/` | `commands.html` (add/remove entry), sidebar in all pages if navigation changed |
-| `.githooks/` or `check_contract.py` | `tips-and-mistakes.html` (hooks section) |
-| `STATE.md` template | `key-concepts.html` (state management), `getting-started.html` (initial setup) |
-| `CLAUDE.md` operating rules | `key-concepts.html` (DOE architecture), `workflows.html` (feature lifecycle) |
-| Multi-agent scripts | `multi-agent.html` (terminal mockups, worked example) |
-
-Only update if the change is user-facing. Internal refactors don't need doc updates.
+- [ ] `whats-new.html` regen is automated (auto-release regenerates it from CHANGELOG.md on merge). The tutorial site was retired in v1.72.0 — markdown docs live in `docs/reference/`; update those only when a change is user-facing.

@@ -192,16 +192,46 @@ def test_test_freshness_silent_for_unrelated(tmp_path):
 # ── v1.58.0: Doc freshness check ─────────────────────────────────────────
 
 
-def test_doc_freshness_commands_warn(tmp_path):
-    """Staging global-commands/*.md without docs/tutorial/commands.html
-    emits a Doc freshness warning on stderr; commit still succeeds."""
+def test_doc_freshness_changelog_warn(tmp_path):
+    """Staging CHANGELOG.md without docs/tutorial/whats-new.html emits a
+    Doc freshness warning on stderr; commit still succeeds."""
+    _init_repo_on_feature_branch(tmp_path)
+
+    cl = tmp_path / "CHANGELOG.md"
+    cl.write_text("## v0.1.0\n- change\n")
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "add", "CHANGELOG.md"],
+        check=True, capture_output=True,
+    )
+
+    result = subprocess.run(
+        ["git", "-C", str(tmp_path), "commit", "-m", "chore(release): changelog"],
+        env=_make_env(), capture_output=True, text=True,
+    )
+
+    assert result.returncode == 0, f"Doc freshness must not block: {result.stderr}"
+    assert "Doc freshness" in result.stderr, (
+        f"Expected Doc freshness warning, got:\n{result.stderr}"
+    )
+    assert "whats-new.html" in result.stderr, (
+        "Warning must name the missing doc path"
+    )
+
+
+def test_doc_freshness_retired_mappings_silent(tmp_path):
+    """v1.72.0 regression: the tutorial-page mappings are retired. Staging
+    global-commands/*.md or .githooks/* alone must emit NO doc-freshness
+    warning (their target docs no longer exist)."""
     _init_repo_on_feature_branch(tmp_path)
 
     cmd = tmp_path / "global-commands" / "wrap.md"
     cmd.parent.mkdir()
     cmd.write_text("# wrap command\n")
+    hook = tmp_path / ".githooks" / "post-commit"
+    hook.write_text("#!/bin/sh\necho hi\n")
     subprocess.run(
-        ["git", "-C", str(tmp_path), "add", "global-commands/wrap.md"],
+        ["git", "-C", str(tmp_path), "add",
+         "global-commands/wrap.md", ".githooks/post-commit"],
         check=True, capture_output=True,
     )
 
@@ -210,56 +240,29 @@ def test_doc_freshness_commands_warn(tmp_path):
         env=_make_env(), capture_output=True, text=True,
     )
 
-    assert result.returncode == 0, f"Doc freshness must not block: {result.stderr}"
-    assert "Doc freshness" in result.stderr, (
-        f"Expected Doc freshness warning, got:\n{result.stderr}"
+    assert result.returncode == 0, f"Commit failed: {result.stderr}"
+    assert "Doc freshness" not in result.stderr, (
+        f"Retired mappings must stay silent, got:\n{result.stderr}"
     )
-    assert "commands.html" in result.stderr, (
-        "Warning must name the missing doc path"
-    )
-
-
-def test_doc_freshness_hooks_warn(tmp_path):
-    """Staging .githooks/* without docs/tutorial/hooks.md emits a warning."""
-    _init_repo_on_feature_branch(tmp_path)
-
-    hook = tmp_path / ".githooks" / "post-commit"
-    hook.write_text("#!/bin/sh\necho hi\n")
-    subprocess.run(
-        ["git", "-C", str(tmp_path), "add", ".githooks/post-commit"],
-        check=True, capture_output=True,
-    )
-
-    result = subprocess.run(
-        ["git", "-C", str(tmp_path), "commit", "-m", "feat(githooks): add post-commit"],
-        env=_make_env(), capture_output=True, text=True,
-    )
-
-    assert result.returncode == 0, f"Doc freshness must not block: {result.stderr}"
-    assert "Doc freshness" in result.stderr, (
-        f"Expected Doc freshness warning, got:\n{result.stderr}"
-    )
-    assert "hooks.md" in result.stderr, "Warning must name the missing doc path"
 
 
 def test_doc_freshness_silent_when_doc_staged(tmp_path):
-    """Staging the source AND its tutorial doc together emits no warning."""
+    """Staging CHANGELOG.md AND whats-new.html together emits no warning."""
     _init_repo_on_feature_branch(tmp_path)
 
-    cmd = tmp_path / "global-commands" / "wrap.md"
-    cmd.parent.mkdir()
-    cmd.write_text("# wrap\n")
-    doc = tmp_path / "docs" / "tutorial" / "commands.html"
+    cl = tmp_path / "CHANGELOG.md"
+    cl.write_text("## v0.1.0\n- change\n")
+    doc = tmp_path / "docs" / "tutorial" / "whats-new.html"
     doc.parent.mkdir(parents=True)
     doc.write_text("<html>updated</html>\n")
     subprocess.run(
         ["git", "-C", str(tmp_path), "add",
-         "global-commands/wrap.md", "docs/tutorial/commands.html"],
+         "CHANGELOG.md", "docs/tutorial/whats-new.html"],
         check=True, capture_output=True,
     )
 
     result = subprocess.run(
-        ["git", "-C", str(tmp_path), "commit", "-m", "feat(commands): wrap + doc"],
+        ["git", "-C", str(tmp_path), "commit", "-m", "chore(release): changelog + whats-new"],
         env=_make_env(), capture_output=True, text=True,
     )
 

@@ -139,12 +139,11 @@ Don't add a skip flag to the workflow file -- every flag is a foot-gun.
 cd ~/doe-starter-kit
 git checkout main && git pull
 python3 execution/generate_whats_new.py
-python3 execution/stamp_tutorial_version.py vX.Y.Z
-git add docs/tutorial/
-SKIP_MAIN_PROTECTION=1 git commit -m "chore(stamp): vX.Y.Z"
+git add docs/tutorial/whats-new.html
+SKIP_MAIN_PROTECTION=1 git commit -m "chore(release): regen whats-new for vX.Y.Z"
 git tag vX.Y.Z
-git push origin vX.Y.Z         # tag first -- local pre-push gate doesn't fire on tag-only push
-git push                       # branch push -- gate now sees matching tag+docs, passes
+git push origin vX.Y.Z         # tag first -- whats-new gate passes (section just regenerated)
+git push                       # branch push
 
 awk -v v="vX.Y.Z" '
   in_section && /^## v[0-9]+\.[0-9]+\.[0-9]+/ { exit }

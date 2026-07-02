@@ -40,10 +40,24 @@ FORMAT RULES (Claude: follow these when updating this file)
 ## Queue
 
 <!-- Approved features waiting to start. Brief description + link to plan if one exists. -->
+- **Wave-stack deletion + command pruning [INFRA]** — v2.0 plan PR 5, pulled forward in the cuts-first order (decision 2026-07-02). Decisions already resolved in the plan; ~4.5k lines. Plan: .claude/plans/doe-v2-lean-proof-of-life.md (WS1 Phase 4).
 
 ## Awaiting Sign-off
 
-<!-- Code-complete features with unchecked [manual] contracts. User tests, reports pass/fail. Moves to Done when all [manual] are [x]. -->
+### Docs site removal — tutorial retired, whats-new kept [INFRA] (v1.72.0)
+v2.0 lean cut, docs-first order (decision 2026-07-02, supersedes plan decision #6 "convert"):
+the kit is internal-only, the tutorial's external audience no longer exists, and
+`docs/reference/` (markdown) already covers the content. Delete the 18 tutorial HTML
+pages + stamping machinery; keep `whats-new.html` (auto-generated release notes).
+Git history (`v1.71.8`) is the archive. Plan: .claude/plans/doe-v2-lean-proof-of-life.md (WS2, decision revised).
+
+1. [x] Delete tutorial pages + stamp machinery; make whats-new standalone -> v1.72.0 *(completed 11:25 02/07/26)*
+  Contract:
+  - [x] [auto] Tutorial pages gone, whats-new survives. Verify: run: test ! -f docs/tutorial/index.html && test ! -f execution/stamp_tutorial_version.py && test -f docs/tutorial/whats-new.html
+  - [x] [auto] No live references to the stamp script in operational code (audit_sync.py's KIT_ONLY legacy-suppression entry is the deliberate exception — it keeps stale consumer copies from being flagged). Verify: run: ! grep -rn "stamp_tutorial_version" --include="*.py" --include="*.yml" --include="*.sh" --exclude=audit_sync.py execution/ .githooks/ .github/ global-commands/
+  - [x] [auto] whats-new regenerates cleanly with no links to deleted pages. Verify: run: python3 execution/generate_whats_new.py && ! grep -qE 'href="(index|getting-started|key-concepts|commands|workflows|multi-agent|faq|glossary|context|daily-flow|first-session|new-project|pr-workflow|testing|tips-and-mistakes|troubleshooting|migration-guide|ide-setup)\.html' docs/tutorial/whats-new.html
+  - [x] [auto] Methodology + pytest suites green (pytest scoped to the suites this PR touches; tests/claude_hooks needs Python 3.10+, runs in CI). Verify: run: python3 execution/test_methodology.py --quick && /usr/bin/python3 -m pytest tests/githooks tests/execution -q
+  - [ ] [manual] Open docs/tutorial/whats-new.html in a browser: renders correctly, sidebar shows only Changelog, no broken nav.
 
 ## Done
 

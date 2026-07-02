@@ -57,7 +57,15 @@ Positioning: **Claude Code owns the harness layer** (commands→skills, subagent
 
 ## Workstream 2 — Docs site: keep it, generate it, prune in the same pass
 
-**Decision: site stays, same look/URL structure, generated from markdown, content pruned during conversion (Option A — one pass).** Today: 19 hand-written pages, 34,349 lines, 60.5% duplicated boilerplate, 19 drifted CSS copies + a 20th inside `generate_whats_new.py`, zero pages documenting `doe init`.
+> **REVISED 2026-07-02 — resolved by DELETION, shipped as v1.72.0.** Decision #6 ("convert")
+> was made when the kit was heading toward a public audience; the kit is now internal-only and
+> that audience no longer exists. The 18 tutorial pages + stamping machinery + docs gates were
+> deleted (~30.7k lines); `whats-new.html` survives as the sole generated page; markdown docs
+> live in `docs/reference/`. Recovery: `git checkout v1.71.8 -- docs/tutorial`. Issue #35 is
+> mooted; PRs 3–4 in the implementation map are superseded by the one deletion PR. The
+> architecture below is retained for reference only (it's the "want docs again" path).
+
+**Original decision (superseded): site stays, same look/URL structure, generated from markdown, content pruned during conversion (Option A — one pass).** Today: 19 hand-written pages, 34,349 lines, 60.5% duplicated boilerplate, 19 drifted CSS copies + a 20th inside `generate_whats_new.py`, zero pages documenting `doe init`.
 
 ### Architecture
 ```

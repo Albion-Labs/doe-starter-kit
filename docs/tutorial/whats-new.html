@@ -990,63 +990,16 @@
   <div class="layout">
 
     <!-- Sidebar -->
+    <!-- The tutorial site was retired in v1.72.0 (kit is internal-only; docs/reference/
+         holds the markdown docs). This page is the sole survivor, so the sidebar is
+         just the brand + changelog. -->
     <nav class="sidebar" id="sidebar">
-      <a class="sidebar-brand" href="index.html">DOE Starter Kit <span class="sidebar-version">v1.71.8</span></a>
+      <a class="sidebar-brand" href="whats-new.html">DOE Starter Kit <span class="sidebar-version">v1.72.0</span></a>
       <div class="sidebar-nav">
 
         <div class="sidebar-section">
           <div class="sidebar-section-title">What's New</div>
           <a class="sidebar-link active" href="whats-new.html">Changelog</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Getting Started</div>
-          <a class="sidebar-link" href="index.html">Welcome</a>
-          <a class="sidebar-link" href="getting-started.html">Installation</a>
-          <a class="sidebar-link" href="new-project.html">Starting a New Project</a>
-          <a class="sidebar-link" href="first-session.html">Your First Session</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Core Concepts</div>
-          <a class="sidebar-link" href="key-concepts.html">DOE Architecture</a>
-          <a class="sidebar-link nested" href="key-concepts.html#directives">Directives</a>
-          <a class="sidebar-link nested" href="key-concepts.html#execution">Execution Scripts</a>
-          <a class="sidebar-link" href="first-session.html#state">Sessions &amp; State</a>
-          <a class="sidebar-link" href="context.html">Context &amp; Sessions</a>
-          <a class="sidebar-link" href="key-concepts.html#contracts">Contracts</a>
-          <a class="sidebar-link" href="key-concepts.html#self-annealing">Self-Annealing</a>
-          <a class="sidebar-link" href="key-concepts.html#thin-router">Thin Router</a>
-          <a class="sidebar-link" href="key-concepts.html#adversarial-review">Adversarial Review</a>
-          <a class="sidebar-link" href="key-concepts.html#defence-in-depth">Defence in Depth</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Commands</div>
-          <a class="sidebar-link" href="commands.html">Session Lifecycle</a>
-          <a class="sidebar-link" href="commands.html#quality">Quality &amp; Review</a>
-          <a class="sidebar-link" href="commands.html#reports">Visual Reports</a>
-          <a class="sidebar-link nested" href="commands.html#planning">Planning &amp; Ideas</a>
-          <a class="sidebar-link nested" href="commands.html#multiagent">Advanced</a>
-          <a class="sidebar-link nested" href="commands.html#maintenance">Maintenance</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Workflows</div>
-          <a class="sidebar-link" href="daily-flow.html">A Day with DOE</a>
-          <a class="sidebar-link" href="workflows.html">Feature Lifecycle</a>
-          <a class="sidebar-link" href="workflows.html#planning">Planning &amp; Prompts</a>
-          <a class="sidebar-link" href="multi-agent.html">Multi-Agent</a>
-        </div>
-
-        <div class="sidebar-section">
-          <div class="sidebar-section-title">Reference</div>
-          <a class="sidebar-link" href="tips-and-mistakes.html">Tips &amp; Mistakes</a>
-          <a class="sidebar-link" href="migration-guide.html">Migration Guide</a>
-          <a class="sidebar-link" href="faq.html">FAQ</a>
-          <a class="sidebar-link" href="ide-setup.html">IDE Compatibility</a>
-          <a class="sidebar-link nested" href="ide-setup.html#cursor">Cursor Setup</a>
-          <a class="sidebar-link" href="glossary.html">Glossary</a>
         </div>
 
       </div>
@@ -1059,13 +1012,31 @@
         <h1>What's New</h1>
         <p style="font-size: 17px; color: var(--text-secondary); margin-bottom: 32px;">Every release of the DOE Starter Kit, newest first.</p>
 
-        <div class="release" id="v1-71-8">
+        <div class="release" id="v1-72-0">
           <div class="release-header">
-            <span class="version-badge">v1.71.8</span>
-            <span class="release-date">22 June 2026</span>
+            <span class="version-badge">v1.72.0</span>
+            <span class="release-date">2 July 2026</span>
           </div>
           <h4 class="summary">Summary</h4>
-          <p class="release-hero">Finishes the model/thinking footer removal that v1.71.7 started. The <code>/wrap</code>, <code>/eod</code>, and <code>/hq</code> cards in the command reference still showed a bordered <code>Model: Opus 4.6 &mdash; Thinking: high</code> row — pre-existing drift their specs and report generators never produced. The real <code>/wrap</code>, <code>/eod</code>, and <code>/hq</code> output is an HTML report carrying at most a small model badge sourced from recorded session data (no <code>Thinking</code> level, no bordered row), so the mockup row was doubly wrong: it invented a card format these commands do not render and a reasoning-effort value nothing computes. The four stale rows are deleted, so the rendered command reference no longer shows a self-reported model/thinking line anywhere.</p>
+          <p class="release-hero">The tutorial site is retired. The v2.0 plan&#x27;s docs decision (&quot;keep the site, regenerate from markdown&quot;) was made when the kit was heading toward a public audience; the kit is now internal-only and that audience no longer exists, so the decision was revised (2026-07-02) from convert to delete. The 18 hand-written tutorial pages, their version-stamping machinery, and every gate that policed them are gone — roughly 30,700 lines, a third of the tracked kit. <code>whats-new.html</code> survives as the sole generated page (release notes from CHANGELOG.md, zero maintenance). The markdown docs in <code>docs/reference/</code> (29 files) remain the human-facing documentation. Recovery, if ever wanted: <code>git checkout v1.71.8 &mdash; docs/tutorial</code>.</p>
+          <h4 class="background">Background</h4>
+          <p class="release-background">This is the first big cut of v2.0 Workstream 1/2, taken docs-first. What went with the pages: the ~20-file stamping tax on every release (<code>stamp_tutorial_version.py</code> + the auto-release stamp step + <code>chore(stamp)</code> commits), the pre-push tutorial-docs-version gate (which repeatedly false-blocked releases — see the v1.58.0 and session-220 retros), and four pre-commit doc-freshness mappings pointing at pages that no longer exist. The whats-new generator is now standalone: minimal sidebar (brand + changelog), no <code>kit-version.js</code> dependency, version read from the top CHANGELOG entry (the same source auto-release itself trusts, and correct at the moment of regeneration when the new tag doesn&#x27;t exist yet). Issue #35 (auto doc sync) is mooted by this release: docs that don&#x27;t exist can&#x27;t go stale.</p>
+          <h4 class="removed">Removed</h4>
+          <ul>
+            <li><strong>docs/tutorial/</strong> — all 18 tutorial pages (<code>index</code>, <code>getting-started</code>, <code>new-project</code>, <code>first-session</code>, <code>key-concepts</code>, <code>context</code>, <code>commands</code>, <code>daily-flow</code>, <code>workflows</code>, <code>multi-agent</code>, <code>testing</code>, <code>pr-workflow</code>, <code>tips-and-mistakes</code>, <code>troubleshooting</code>, <code>migration-guide</code>, <code>faq</code>, <code>ide-setup</code>, <code>glossary</code>), plus <code>hooks.md</code> and <code>kit-version.js</code>. <code>whats-new.html</code> and the favicon assets stay.</li>
+            <li><strong>execution/stamp_tutorial_version.py</strong> — the version-stamping script, and its step in <code>auto-release.yml</code> (releases no longer produce <code>chore(stamp)</code> commits; the workflow commits only the whats-new regen).</li>
+            <li><strong>.githooks/pre-push</strong> — the tutorial-docs-version gate (main-only <code>index.html</code>-vs-tag check). The whats-new tag-freshness gate and the methodology check remain.</li>
+            <li><strong>.githooks/pre-commit</strong> — the four retired doc-freshness mappings (<code>global-commands/*.md → commands.html</code>, <code>.githooks/* → hooks.md</code>, <code>.claude/hooks/*.py → hooks.md</code>, <code>migrations/*.md → migration-guide.html</code>). The <code>CHANGELOG.md → whats-new.html</code> warning remains.</li>
+            <li><strong>directives/starter-kit-sync.md</strong> — the post-sync tutorial checklist and the 7-row &quot;check this tutorial page&quot; table; <strong>directives/kit-development.md</strong> — the stamp steps in the manual release fallback.</li>
+          </ul>
+          <h4 class="changed">Changed</h4>
+          <ul>
+            <li><strong>execution/generate_whats_new.py</strong> — standalone page: sidebar trimmed to brand + Changelog (no links to deleted pages), pagination footer removed, <code>kit-version.js</code> script tag dropped; <code>get_kit_version()</code> reads the top CHANGELOG entry first (git tag fallback).</li>
+            <li><strong>execution/doe_bug_report.py</strong> — <code>--scan-tutorials</code> now scans the <code>docs/reference/</code> markdown tree (same JSON shape; markdown heading extractor replaces the HTML parser).</li>
+            <li><strong>README.md / CUSTOMIZATION.md / .github/ISSUE_TEMPLATE/config.yml / global-commands/sync-doe.md / directives/testing-strategy.md</strong> — point at <code>docs/reference/</code> and the automated whats-new regen instead of the tutorial site; README execution-script count 20 → 19 (caught by <code>readme_claims_match_disk</code>).</li>
+            <li><strong>tests/githooks/test_pre_push.py</strong> — rewritten around the surviving gates: whats-new tag-freshness block/pass pairs plus a v1.72.0 regression test that the retired docs gate stays gone. Fixture fix: the hook is copied into the fixture repo (it derives PROJECT_ROOT from its own location; the old tests ran it in-place against the real kit&#x27;s docs).</li>
+            <li><strong>tests/githooks/test_pre_commit.py</strong> — doc-freshness tests updated: CHANGELOG→whats-new warn/silence pairs plus a regression test that the retired mappings stay silent.</li>
+          </ul>
           <h4 class="removed">Removed</h4>
           <ul>
             <li><strong>docs/tutorial/commands.html</strong> — the four stale <code>Model: ... &mdash; Thinking: ...</code> footer rows (separator + row each) from the <code>/wrap</code>, <code>/eod</code>, and <code>/hq</code> card mockups. Completes the v1.71.7 cleanup; the command reference is now free of the self-reported footer. The HTML reports&#x27; own model badge (sourced from session data, not a self-guess) is unaffected and out of scope.</li>
@@ -4365,15 +4336,7 @@
 
         </details>
 
-        <!-- Pagination -->
-        <div class="pagination">
-          <a href="glossary.html">
-            <div class="pg-label">Previous</div>
-            <div class="pg-title">&larr; Glossary</div>
-          </a>
-        </div>
-
-        <footer class="site-footer">DOE Starter Kit v1.71.8</footer>
+        <footer class="site-footer">DOE Starter Kit v1.72.0</footer>
 
       </div><!-- /content -->
     </div><!-- /content-area -->
@@ -4421,7 +4384,6 @@
       overlay.addEventListener('click', close);
     })();
   </script>
-  <script src="kit-version.js"></script>
 
 </body>
 </html>

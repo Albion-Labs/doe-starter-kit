@@ -15,7 +15,7 @@ Keep each section short. Replace stale info, don't accumulate. Max ~30 lines of 
 
 ## Current Position
 <!-- What feature/step is in progress. Updated at session start and end. -->
-v2.0 plan in flight (.claude/plans/doe-v2-lean-proof-of-life.md), paused for the liveness-audit tangent (.claude/plans/audit-2026-06-11-liveness-findings.md — now tracked, with per-item resolutions). Batches A (v1.71.3) and B (v1.71.5) shipped + hotfix v1.71.4. Next: PR C (template corpses + distribution wiring, chore branch, pre-approved deletions: hook-templates/ all three files, global-hooks/pre-commit; leave heartbeat/context_monitor for Phase 4). Then resume v2.0 PR 2 (gate dispatcher + telemetry spine, implements #78; remaining #107 worktree-artifact sub-case lands there).
+v2.0 plan in flight (.claude/plans/doe-v2-lean-proof-of-life.md), **cuts-first order (decision 2026-07-02)**: docs site → wave stack → structural merges, then PR 2 (gate dispatcher + telemetry spine #78 + specimen-13 pytest-in-CI). Liveness audit fully shipped (v1.71.3–.6). Docs-site removal (v1.72.0, plan WS2 revised convert→delete, ~30.7k lines) is code-complete on chore/v2.0-docs-site-removal awaiting PR merge + manual whats-new render check. Next: wave-stack deletion + command pruning (plan PR 5, in todo Queue). Note: plan's ~42k target is really ~60k pre-cull; PR 2's "fixes #107" line is stale (#107 closed via PR #110/#113).
 
 ## Blockers & Edge Cases
 <!-- Known issues, workarounds, things to watch for. Remove when resolved. -->
@@ -23,4 +23,4 @@ Background-job sessions execute all guardrail hooks from ~/.claude/hooks (their 
 
 ## Last Session
 <!-- 1-2 sentence summary of what happened last session. Overwritten each session. -->
-Liveness-audit batch B shipped as v1.71.5 (PR #115): all ten vacuous-checker findings fixed with disclosure-plus-WARN-at-zero (health_check scan coverage, the three ROADMAP parsers sighted with release tags as shipped-evidence, verify.py loud-fails malformed contracts, proof harness refuses empty corpus / garbage repo paths). Headline specimen: the 358-check doe-init integration suite — run by nothing — had silently broken on doe_init's interactive commit prompt; fixed and wired into CI. Housekeeping PR #114 merged.
+Plan-vs-reality review (plan holds; Phase 0 already done, PR 1 half-done, big cuts untouched), then the first big cut: tutorial site retired as v1.72.0 — 18 pages + kit-version.js + stamp_tutorial_version.py + the pre-push docs gate + four pre-commit doc-freshness mappings deleted (~30.7k lines); whats-new.html survives standalone (CHANGELOG-first versioning); --scan-tutorials repointed at docs/reference markdown; pre-push tests rewritten (old ones exercised the real kit's files via PROJECT_ROOT — fixture now copies the hook in).

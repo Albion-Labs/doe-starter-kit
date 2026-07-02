@@ -1410,8 +1410,10 @@ def scenario_report_generator_styling(verbose: bool = False):
         "global-scripts/build_hq.py",
         "execution/generate_test_checklist.py",
         # Self-exemption ended (liveness audit B3): whats-new carries its own
-        # <style>/:root and is EXPECTED to WARN here until its html_builder
-        # port lands with the docs phase. An honest WARN beats a scan list
+        # <style>/:root and is EXPECTED to WARN here. The docs phase resolved
+        # as deletion (v1.72.0 — tutorial site retired, whats-new is the sole
+        # survivor keeping its Mintlify-style template), so the WARN is now a
+        # standing, deliberate exception. An honest WARN beats a scan list
         # that quietly omits the one known offender while claiming "all
         # generators clean".
         "execution/generate_whats_new.py",

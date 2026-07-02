@@ -2,7 +2,7 @@ name: Auto-release on CHANGELOG version bump
 
 # Fires on every push to main (PR merges + direct pushes).
 # Detects whether the top CHANGELOG entry has been tagged yet; if not, runs the
-# full release ceremony (whats-new regen, tutorial stamp, tag, push, gh release).
+# full release ceremony (whats-new regen, tag, push, gh release).
 # Idempotent — no-ops when the top CHANGELOG version is already tagged.
 
 on:
@@ -76,28 +76,22 @@ jobs:
         if: steps.tag_check.outputs.needed == 'true'
         run: python3 execution/generate_whats_new.py
 
-      - name: Stamp tutorial for version
-        if: steps.tag_check.outputs.needed == 'true'
-        env:
-          VERSION: ${{ steps.changelog.outputs.version }}
-        run: python3 execution/stamp_tutorial_version.py "${VERSION}"
-
-      - name: Commit stamp artifacts (if any)
+      - name: Commit whats-new regen (if changed)
         if: steps.tag_check.outputs.needed == 'true'
         id: stamp_commit
         env:
           VERSION: ${{ steps.changelog.outputs.version }}
         run: |
-          git add docs/tutorial/
+          git add docs/tutorial/whats-new.html
           if git diff --cached --quiet; then
-            echo "No tutorial changes — already stamped"
+            echo "whats-new already current — nothing to commit"
             echo "committed=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "chore(stamp): ${VERSION}"
+            git commit -m "chore(release): regen whats-new for ${VERSION}"
             echo "committed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Push stamp commit to main
+      - name: Push whats-new commit to main
         # Commit-first ordering: if tag push later fails, the commit on origin
         # lets a re-run recover (re-stamp is a no-op, the existing commit gets
         # tagged, tag pushes). Tag-first ordering would risk leaving an
